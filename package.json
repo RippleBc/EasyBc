@@ -1,0 +1,21 @@
+{
+  "name": "esaybc",
+  "version": "1.0.0",
+  "description": "a tiny block chain client",
+  "main": "index.js",
+  "dependencies": {
+    "leveldown": "^4.0.1",
+    "levelup": "^4.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "block",
+    "chain"
+  ],
+  "author": "walker",
+  "license": "ISC",
+  "nodeVersion": "v10.15.0"
+}
