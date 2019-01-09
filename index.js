@@ -1,13 +1,8 @@
-var levelup = require("levelup");
-var leveldown = require("leveldown");
+var util = require("./utils");
+const Buffer = require("safe-buffer").Buffer;
 
-var db = levelup(leveldown('./data'));
- 
-db.put('foo', 'bar')
-  .then(function () { 
-  	return db.get('foo') 
-  }).then(function (value) { 
-  	console.log(value) 
-  }).catch(function (err) { 
-  	console.error(err) 
-  });
+let privateKey = util.createPrivateKey();
+let publicKey = util.privateToPublic(privateKey);
+
+console.log(publicKey.toString("hex"));
+console.log(privateKey.toString("hex"));

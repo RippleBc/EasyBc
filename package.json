@@ -11,7 +11,8 @@
     "levelup": "^4.0.0",
     "rlp": "^2.2.1",
     "safe-buffer": "^5.1.2",
-    "secp256k1": "^3.6.1"
+    "secp256k1": "^3.6.1",
+    "strip-hex-prefix": "^1.0.0"
   },
   "devDependencies": {},
   "scripts": {
