@@ -1,7 +1,7 @@
 var levelup = require("levelup");
 var leveldown = require("leveldown");
 
-var db = levelup(leveldown('./data/my-db'));
+var db = levelup(leveldown('./data'));
  
 db.put('foo', 'bar')
   .then(function () { 
