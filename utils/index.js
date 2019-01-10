@@ -7,6 +7,7 @@ const Buffer = require("safe-buffer").Buffer
 const { randomBytes } = require('crypto')
 
 exports.stripHexPrefix = require('strip-hex-prefix');
+exports.BN = require('bn.js');
 
 const SANITIZED_PUBLIC_KEY = 64;
 const PREFIX_OF_UNSANITIZED_PUBLIC_KEY = 0x04;
@@ -164,6 +165,26 @@ exports.ecverify = function(msgHash, signature, publicKey)
   return secp256k1.verify(msgHash, sig, compressedPulickKey);
 }
 
+/**
+ * ECDSA public key recovery from signature
+ * @param {Buffer} msgHash
+ * @param {Number} v
+ * @param {Buffer} r
+ * @param {Buffer} s
+ * @return {Buffer} publicKey
+ */
+exports.ecrecover = function (msgHash, v, r, s) {
+  const signature = Buffer.concat([exports.setLength(r, 32), exports.setLength(s, 32)], 64);
+  const recovery = v - 27;
+  if (recovery !== 0 && recovery !== 1)
+  {
+    throw new Error('Invalid signature v value')
+  }
+  const senderPubKey = secp256k1.recover(msgHash, signature, recovery);
+  
+  return secp256k1.publicKeyConvert(senderPubKey, false).slice(1)
+}
+
 /***************************************** ecc end *****************************************/
 
 /***************************************** sha-3 begin *****************************************/
@@ -295,6 +316,37 @@ exports.toBuffer = function(value)
 }
 
 /***************************************** buffer end *****************************************/
+
+/**
+ * Left Pads an Array or Buffer with leading zeros till it has length bytes or it truncates the beginning if it exceeds.
+ * @param {Buffer|Array} msg the value to pad
+ * @param {Number} length the number of bytes the output should be
+ * @param {Boolean} [right=false] whether to start padding form the left or right
+ * @return {Buffer}
+ */
+exports.setLength = function(msg, length, right) {
+  const buf = Buffer.alloc(length);
+  msg = exports.toBuffer(msg);
+
+  if(right)
+  {
+    if(msg.length < length)
+    {
+      msg.copy(buf);
+      return buf;
+    }
+    return msg.slice(0, length);
+  }
+  else
+  {
+    if(msg.length < length)
+    {
+      msg.copy(buf, length - msg.length);
+      return buf;
+    }
+    return msg.slice(-length);
+  }
+}
 
 /**
  * Converts a Buffer or Array to hex string

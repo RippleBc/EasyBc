@@ -11,7 +11,7 @@ console.log("publicKey: " + publicKey.toString("hex"));
 
 let textHash = util.keccak("fadsffljzvomawpo[jfsmjv[pawjfijnpzs'mv]awjfma'vmzskcvpjqgpmadf");
 let sig = util.ecsign(textHash, privateKey);
-console.log("sig, r: " + sig.r.toString("hex") + ", s: " + sig.s.toString("hex"));
+console.log("sig, r: " + sig.r.toString("hex") + ", s: " + sig.s.toString("hex") + ", v: " + sig.v);
 assert(util.ecverify(textHash, sig, publicKey) === true);
 
 privateKey = util.createPrivateKey();
@@ -21,5 +21,5 @@ console.log("privateKey: " + privateKey.toString("hex"));
 console.log("publicKey: " + publicKey.toString("hex"));
 
 sig = util.ecsign(textHash, privateKey);
-console.log("sig, r: " + sig.r.toString("hex") + ", s: " + sig.s.toString("hex"));
+console.log("sig, r: " + sig.r.toString("hex") + ", s: " + sig.s.toString("hex") + ", v: " + sig.v);
 assert(util.ecverify(textHash, sig, publicKey) === true);

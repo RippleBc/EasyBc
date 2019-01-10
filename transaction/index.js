@@ -1,40 +1,47 @@
-class Transaction {
-  constructor (data, opt) {
-    data = data || {}
-    opt = opt || {}
+'use strict'
+const util = require('../util')
+const Common = require('../common')
+const BN = util.BN;
+
+class Transaction
+{
+  constructor(data)
+  {
+    data = data || {};
+
     // Define Properties
     const fields = [{
-      name: 'nonce',
+      name: "nonce",
       length: 32,
       allowLess: true,
       default: new Buffer([])
     }, {
-      name: 'to',
+      name: "to",
       allowZero: true,
       length: 20,
       default: new Buffer([])
     }, {
-      name: 'value',
+      name: "value",
       length: 32,
       allowLess: true,
       default: new Buffer([])
     }, {
-      name: 'data',
-      alias: 'input',
+      name: "data",
+      alias: "input",
       allowZero: true,
       default: new Buffer([])
     }, {
-      name: 'v',
+      name: "v",
       allowZero: true,
       default: new Buffer([0x1c])
     }, {
-      name: 'r',
+      name: "r",
       length: 32,
       allowZero: true,
       allowLess: true,
       default: new Buffer([])
     }, {
-      name: 's',
+      name: "s",
       length: 32,
       allowZero: true,
       allowLess: true,
@@ -166,7 +173,7 @@ class Transaction {
    * sign a transaction with a given private key
    * @param {Buffer} privateKey
    */
-  sign (privateKey) {
+  sign(privateKey) {
     const msgHash = this.hash(false)
     const sig = util.ecsign(msgHash, privateKey)
     if (this._chainId > 0) {
@@ -176,24 +183,25 @@ class Transaction {
   }
 
   /**
-   * validates the signature and checks to see if it has enough gas
+   * validates the signature
    * @param {Boolean} [stringError=false] whether to return a string with a description of why the validation failed or return a Boolean
    * @return {Boolean|String}
    */
   validate (stringError) {
-    const errors = []
-    if (!this.verifySignature()) {
-      errors.push('Invalid Signature')
+    const errors = [];
+
+    if (!this.verifySignature())
+    {
+      errors.push("Invalid Signature");
     }
 
-    if (this.getBaseFee().cmp(new BN(this.gasLimit)) > 0) {
-      errors.push([`gas limit is too low. Need at least ${this.getBaseFee()}`])
+    if (stringError === undefined || stringError === false)
+    {
+      return errors.length === 0;
     }
-
-    if (stringError === undefined || stringError === false) {
-      return errors.length === 0
-    } else {
-      return errors.join(' ')
+    else
+    {
+      return errors.join(" ");
     }
   }
 }
