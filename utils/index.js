@@ -8,6 +8,8 @@ const { randomBytes } = require('crypto')
 
 exports.stripHexPrefix = require('strip-hex-prefix');
 
+const SANITIZED_PUBLIC_KEY = 64;
+const PREFIX_OF_UNSANITIZED_PUBLIC_KEY = 0x04;
 /***************************************** ecc begin *****************************************/
 
 /**
@@ -17,6 +19,7 @@ exports.stripHexPrefix = require('strip-hex-prefix');
 exports.createPrivateKey = function()
 {
   let privateKey = Buffer.alloc(32);
+
   // generate privateKey
   do 
   {
@@ -39,16 +42,16 @@ exports.isValidPrivate = function(privateKey)
 
 /**
  * Verify an ECDSA publicKey.
- * @param {Buffer} publicKey The two points of an uncompressed key, unless sanitize is enabled
+ * @param {Buffer} publicKey an uncompressed publickkey
  * @param {Boolean} [sanitize=false] Accept public keys in other formats
  * @return {Boolean}
  */
 exports.isValidPublic = function(publicKey, sanitize)
 {
-  if(publicKey.length === 64)
+  if(publicKey.length === SANITIZED_PUBLIC_KEY)
   {
     // Convert to SEC1 for secp256k1, the formal publickey is 65 bytes length, add the prefix 0x04 for publickey
-    return secp256k1.publicKeyVerify(Buffer.concat([Buffer.from([4]), publicKey]));
+    return secp256k1.publicKeyVerify(Buffer.concat([Buffer.from([PREFIX_OF_UNSANITIZED_PUBLIC_KEY]), publicKey]));
   }
 
   if(!sanitize)
@@ -56,50 +59,62 @@ exports.isValidPublic = function(publicKey, sanitize)
     return false;
   }
 
-  // verify an compressed publick key
+  assert(publicKey.length !== SANITIZED_PUBLIC_KEY);
+
+  // verify an uncompressed publick key
   return secp256k1.publicKeyVerify(publicKey);
 }
 
 /**
- * Convert a publicKey to uncompressed form.
- * @param {Buffer} publicKey The two points of an uncompressed key, unless sanitize is enabled
+ * Convert a publicKey to address form.
+ * @param {Buffer|Array|String} publicKey an uncompressed key
  * @param {Boolean} [sanitize=false] Accept public keys in other formats
  * @return {Buffer}
  */
 exports.publicToAddress = function(publicKey, sanitize)
 {
   publicKey = exports.toBuffer(publicKey);
-  if(sanitize && (publicKey.length !== 64))
+
+  // Convert an compressed publicKey to sanitized uncompressed publicKey.
+  if(sanitize && (publicKey.length !== SANITIZED_PUBLIC_KEY))
   {
-    publicKey = secp256k1.publicKeyConvert(publicKey, false).slice(1)
+    publicKey = secp256k1.publicKeyConvert(publicKey, false).slice(1);
   }
-  assert(publicKey.length === 64);
-  // Only take the lower 160bits of the hash
-  return exports.keccak(publicKey).slice(-20)
+
+  // Check if public key is sanitized uncompressed form
+  assert(publicKey.length === SANITIZED_PUBLIC_KEY);
+
+  // Only take the lower 20 bytes of the hash
+  return exports.keccak(publicKey).slice(-20);
 }
 
 /**
- * Compute the public key for a privateKey.
- * @param {Buffer} privateKey A private key must be 256 bits wide
+ * Compute an sanitzied uncompressed publickkey.
+ * @param {Buffer|Array|String} privateKey A private key must be 64 bytes wide
  * @return {Buffer}
  */
-const privateToPublic = exports.privateToPublic = function (privateKey) {
-  privateKey = exports.toBuffer(privateKey)
-  // skip the type flag and use the X, Y points
+exports.privateToPublic = function(privateKey)
+{
+  privateKey = exports.toBuffer(privateKey);
+
   return secp256k1.publicKeyCreate(privateKey, false).slice(1);
 }
 
 /**
- * Convert a publicKey to compressed or uncompressed form.
- * @param {Buffer} publicKey
+ * Convert uncompressed publicKey to sanitized uncompressed form.
+ * @param {Buffer|Array|String} publicKey
  * @return {Buffer}
  */
-exports.importPublic = function (publicKey) {
-  publicKey = exports.toBuffer(publicKey)
-  if (publicKey.length !== 64) {
-    publicKey = secp256k1.publicKeyConvert(publicKey, false).slice(1)
+exports.importPublic = function(publicKey)
+{
+  publicKey = exports.toBuffer(publicKey);
+
+  if(publicKey.length !== SANITIZED_PUBLIC_KEY)
+  {
+    publicKey = secp256k1.publicKeyConvert(publicKey, false).slice(1);
   }
-  return publicKey
+
+  return publicKey;
 }
 
 /**
@@ -108,14 +123,45 @@ exports.importPublic = function (publicKey) {
  * @param {Buffer} privateKey
  * @return {Object}
  */
-exports.ecsign = function (msgHash, privateKey) {
-  const sig = secp256k1.sign(msgHash, privateKey)
+exports.ecsign = function(msgHash, privateKey)
+{
+  if(!exports.isValidPrivate(privateKey))
+  {
+    throw new Error(`utils ecsign, privatekey is invalid ${privateKey.toString("hex")}.`);
+  }
 
-  const ret = {}
-  ret.r = sig.signature.slice(0, 32)
-  ret.s = sig.signature.slice(32, 64)
-  ret.v = sig.recovery + 27
-  return ret
+  const sig = secp256k1.sign(msgHash, privateKey);
+
+  const ret = {};
+  ret.r = sig.signature.slice(0, 32);
+  ret.s = sig.signature.slice(32, 64);
+  ret.v = sig.recovery + 27;
+  return ret;
+}
+
+/**
+ * ECDSA verify
+ * @param {Buffer} msgHash
+ * @param {Object} signature
+ * @param {Buffer} publicKey sanitized uncompressed publickey
+ * @return {Boolean}
+ */
+exports.ecverify = function(msgHash, signature, publicKey)
+{
+  if(!exports.isValidPublic(publicKey))
+  {
+    throw new Error(`utils ecsign, publickey is invalid ${publicKey.toString("hex")}.`);
+  }
+
+  const sig = Buffer.concat([signature.r, signature.s]);
+
+  // Convert sanitized uncompressed publickey to uncompressed publickey
+  const unsanitizedPublickKey = Buffer.concat([Buffer.from([4]), publicKey]);
+
+  // Convert uncompressed publickey to compressed publickey
+  const compressedPulickKey = secp256k1.publicKeyConvert(unsanitizedPublickKey, true);
+
+  return secp256k1.verify(msgHash, sig, compressedPulickKey);
 }
 
 /***************************************** ecc end *****************************************/
@@ -123,24 +169,30 @@ exports.ecsign = function (msgHash, privateKey) {
 /***************************************** sha-3 begin *****************************************/
 /**
  * Creates Keccak hash of the input
- * @param {Buffer|Array|String|Number} a the input data
+ * @param {Buffer|Array|String|Number} value the input data
  * @param {Number} [bits=256] the Keccak width
  * @return {Buffer}
  */
-exports.keccak = function (a, bits) {
-  a = exports.toBuffer(a)
-  if (!bits) bits = 256
+exports.keccak = function(value, bits)
+{
+  value = exports.toBuffer(value);
 
-  return createKeccakHash('keccak' + bits).update(a).digest()
+  if(!bits)
+  {
+    bits = 256;
+  }
+
+  return createKeccakHash('keccak' + bits).update(value).digest();
 }
 
 /**
- * Creates Keccak-256 hash of the input, alias for keccak(a, 256)
- * @param {Buffer|Array|String|Number} a the input data
+ * Creates Keccak-256 hash of the input, alias for keccak(value, 256)
+ * @param {Buffer|Array|String|Number} value the input data
  * @return {Buffer}
  */
-exports.keccak256 = function (a) {
-  return exports.keccak(a)
+exports.keccak256 = function(value)
+{
+  return exports.keccak(value);
 }
 
 /**
@@ -149,7 +201,7 @@ exports.keccak256 = function (a) {
  * @param {Number} [bits=256] the SHA-3 width
  * @return {Buffer}
  */
-exports.sha3 = exports.keccak
+exports.sha3 = exports.keccak;
 
 /***************************************** sha-3 end *****************************************/
 
