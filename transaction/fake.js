@@ -1,7 +1,7 @@
 'use strict'
 
 const Transaction = require('./index.js')
-const util = require('../util')
+const util = require('../utils')
 
 /**
  * Creates a new transaction object that doesn't need to be signed
@@ -12,8 +12,6 @@ const util = require('../util')
  * @example
  * var rawTx = {
  *   nonce: '0x00',
- *   gasPrice: '0x09184e72a000',
- *   gasLimit: '0x2710',
  *   to: '0x0000000000000000000000000000000000000000',
  *   value: '0x00',
  *   data: '0x7f7465737432000000000000000000000000000000000000000000000000000000600057',
@@ -33,26 +31,28 @@ const util = require('../util')
  */
 class FakeTransaction extends Transaction
 {
-  constructor (data) {
-    super(data)
+  constructor(data) {
+    super(data);
 
-    var self = this
+    let self = this;
 
     /**
      * @prop {Buffer} from (read/write) Set from address to bypass transaction signing.
      */
-    Object.defineProperty(this, 'from', {
+    Object.defineProperty(this, "from", {
       enumerable: true,
       configurable: true,
       get: this.getSenderAddress.bind(self),
-      set: function (val) {
-        if (val) {
-          self._from = util.toBuffer(val)
+      set: function(val) 
+      {
+        if(val)
+        {
+          self._from = util.toBuffer(val);
         }
       }
-    })
+    });
 
-    this.from = data.from
+    this.from = data.from;
   }
 
   /**
@@ -60,14 +60,15 @@ class FakeTransaction extends Transaction
    * @param {Boolean} [includeSignature=true] whether or not to inculde the signature
    * @return {Buffer}
    */
-  hash (includeSignature = true) {
-    if (includeSignature && this._from && this._from.toString('hex') !== '') {
+  hash(includeSignature = true)
+  {
+    if(includeSignature && this._from && this._from.toString("hex") !== "") {
       // include a fake signature using the from address as a private key
-      let fakeKey = Buffer.concat([this._from, this._from.slice(0, 12)])
-      this.sign(fakeKey)
+      let fakeKey = Buffer.concat([this._from, this._from.slice(0, 12)]);
+      this.sign(fakeKey);
     }
 
-    return super.hash(includeSignature)
+    return super.hash(includeSignature);
   }
 }
 

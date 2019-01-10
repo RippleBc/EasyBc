@@ -11,7 +11,7 @@ let sig = util.ecsign(textHash, privateKey);
 
 assert(util.ecrecover(textHash, sig.v, sig.r, sig.s).toString("hex") !== publicKey.toString("hex"), "ecrecover error.");
 
-assert(util.ecverify(textHash, sig, publicKey) === false);
+assert(util.ecverify(textHash, sig.r, sig.s, publicKey) === false);
 
 privateKey = util.createPrivateKey();
 publicKey = util.privateToPublic(privateKey);
@@ -20,6 +20,6 @@ sig = util.ecsign(textHash, privateKey);
 
 assert(util.ecrecover(textHash, sig.v, sig.r, sig.s).toString("hex") === publicKey.toString("hex"), "ecrecover error.");
 
-assert(util.ecverify(textHash, sig, publicKey) === true);
+assert(util.ecverify(textHash, sig.r, sig.s, publicKey) === true);
 
 console.log("test ok!!!");

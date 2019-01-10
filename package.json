@@ -27,6 +27,7 @@
   "nodeVersion": "v10.15.0",
   "scripts": {
     "dev": "node index.js",
-    "testUtil": "node utils/test/index.js"
+    "testUtil": "node utils/test/index.js",
+    "testTransaction": "node transaction/test/index.js"
   }
 }

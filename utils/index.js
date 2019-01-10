@@ -1,13 +1,14 @@
 const createKeccakHash = require("keccak")
 const secp256k1 = require("secp256k1")
 const assert = require("assert")
-const rlp = require("rlp")
 const createHash = require("create-hash")
-const Buffer = require("safe-buffer").Buffer
-const { randomBytes } = require('crypto')
+const { randomBytes } = require("crypto")
 
-exports.stripHexPrefix = require('strip-hex-prefix');
-exports.BN = require('bn.js');
+const Buffer = exports.Buffer = require("safe-buffer").Buffer
+const rlp = exports.rlp = require("rlp");
+const BN = exports.BN = require("bn.js");
+
+exports.stripHexPrefix = require("strip-hex-prefix");
 
 const SANITIZED_PUBLIC_KEY = 64;
 const PREFIX_OF_UNSANITIZED_PUBLIC_KEY = 0x04;
@@ -143,18 +144,19 @@ exports.ecsign = function(msgHash, privateKey)
 /**
  * ECDSA verify
  * @param {Buffer} msgHash
- * @param {Object} signature
+ * @param {Buffer} r
+ * @param {Buffer} s
  * @param {Buffer} publicKey sanitized uncompressed publickey
  * @return {Boolean}
  */
-exports.ecverify = function(msgHash, signature, publicKey)
+exports.ecverify = function(msgHash, r, s, publicKey)
 {
   if(!exports.isValidPublic(publicKey))
   {
     throw new Error(`utils ecsign, publickey is invalid ${publicKey.toString("hex")}.`);
   }
 
-  const sig = Buffer.concat([signature.r, signature.s]);
+  const sig = Buffer.concat([r, s]);
 
   // Convert sanitized uncompressed publickey to uncompressed publickey
   const unsanitizedPublickKey = Buffer.concat([Buffer.from([4]), publicKey]);
@@ -173,16 +175,17 @@ exports.ecverify = function(msgHash, signature, publicKey)
  * @param {Buffer} s
  * @return {Buffer} publicKey
  */
-exports.ecrecover = function (msgHash, v, r, s) {
+exports.ecrecover = function(msgHash, v, r, s)
+{
   const signature = Buffer.concat([exports.setLength(r, 32), exports.setLength(s, 32)], 64);
   const recovery = v - 27;
   if (recovery !== 0 && recovery !== 1)
   {
-    throw new Error('Invalid signature v value')
+    throw new Error("ecrecover, Invalid signature v value");
   }
   const senderPubKey = secp256k1.recover(msgHash, signature, recovery);
-  
-  return secp256k1.publicKeyConvert(senderPubKey, false).slice(1)
+
+  return secp256k1.publicKeyConvert(senderPubKey, false).slice(1);
 }
 
 /***************************************** ecc end *****************************************/
@@ -203,7 +206,7 @@ exports.keccak = function(value, bits)
     bits = 256;
   }
 
-  return createKeccakHash('keccak' + bits).update(value).digest();
+  return createKeccakHash("keccak" + bits).update(value).digest();
 }
 
 /**
@@ -263,6 +266,41 @@ exports.isHexString = function(value, length) {
   }
 
   return true;
+}
+
+/**
+ * Converts a Number into a hex String
+ * @param {Number} value
+ * @return {String}
+ */
+exports.intToHex = function(value)
+{
+  var hex = value.toString(16); // eslint-disable-line
+
+  return `0x${hex}`;
+}
+
+/**
+ * Converts an Number to a Buffer
+ * @param {Number} value
+ * @return {Buffer}
+ */
+exports.intToBuffer = function(value)
+{
+  const hexString = exports.intToHex(value);
+
+  return new Buffer(exports.padToEven(hexString.slice(2)), "hex");
+}
+
+/**
+ * Converts a Buffer to a Number
+ * @param {Buffer} value
+ * @return {Number}
+ * @throws If the input number exceeds 53 bits.
+ */
+exports.bufferToInt = function(value)
+{
+  return (new BN(value)).toNumber();
 }
 
 /**
@@ -411,11 +449,6 @@ exports.defineProperties = function(self, fields, data) {
 
   fields.forEach((field, i) => {
 
-    if(field.length <= 0)
-    {
-      throw new Error("util defineProperties, The field " + field.name + " property length can not be zero.");
-    }
-
     self._fields.push(field.name);
 
     function getter()
@@ -434,7 +467,7 @@ exports.defineProperties = function(self, fields, data) {
       }
 
       // if value is zero, as zero hex string will be truncated, so value can be any byte length
-      if(!field.allowZero)
+      if(!field.allowZero && field.length)
       {
         if(field.allowLess)
         {
@@ -476,7 +509,7 @@ exports.defineProperties = function(self, fields, data) {
   {
     if(typeof data === "string")
     {
-      data = Buffer.from(exports.stripHexPrefix(data), 'hex');
+      data = Buffer.from(exports.stripHexPrefix(data), "hex");
     }
 
     if(Buffer.isBuffer(data))
@@ -488,15 +521,14 @@ exports.defineProperties = function(self, fields, data) {
     {
       if(data.length > self._fields.length)
       {
-        throw new Error('uitl defineProperties, wrong number of fields in data');
+        throw new Error("uitl defineProperties, wrong number of fields in data");
       }
 
       data.forEach((d, i) => {
         self[self._fields[i]] = exports.toBuffer(d);
       });
     }
-
-    if(typeof data === "object") {
+    else if(typeof data === "object") {
       const keys = Object.keys(data);
 
       fields.forEach((field) => {
@@ -510,7 +542,9 @@ exports.defineProperties = function(self, fields, data) {
         }
       });
     } 
-  
-    throw new Error('invalid data');
+    else
+    {
+      throw new Error("util defineProperties, invalid data");
+    }
   }
 }
