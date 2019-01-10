@@ -24,5 +24,9 @@
   ],
   "author": "walker",
   "license": "ISC",
-  "nodeVersion": "v10.15.0"
+  "nodeVersion": "v10.15.0",
+  "scripts": {
+    "dev": "node index.js",
+    "testUtil": "node utils/test/index.js"
+  }
 }
