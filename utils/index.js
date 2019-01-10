@@ -467,7 +467,6 @@ exports.baToHexString = function(value)
  * * default - the default value
  * * length - the number of bytes the field can have
  * * allowLess - if the field can be less than the length
- * * allowEmpty - if the field can be null or undefined
  * @param {rlp serialize data|hex string|Object|Array} data data to be validated against the definitions
  */
 exports.defineProperties = function(self, fields, data) {

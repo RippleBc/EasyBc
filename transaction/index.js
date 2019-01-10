@@ -57,7 +57,9 @@ class Transaction
       default: util.Buffer.alloc(0)
     }, {
       name: "data",
+      length: 32,
       alias: "input",
+      allowLess: true,
       allowZero: true,
       default: util.Buffer.alloc(0)
     }, {
@@ -195,16 +197,16 @@ class Transaction
    * @param {Boolean} [stringError=false] whether to return a string with a description of why the validation failed or return a Boolean
    * @return {Boolean|String}
    */
-  validate (stringError)
+  validate(stringError)
   {
     const errors = [];
 
-    if (!this.verifySignature())
+    if(!this.verifySignature())
     {
       errors.push("Invalid Signature");
     }
 
-    if (stringError === undefined || stringError === false)
+    if(stringError === undefined || stringError === false)
     {
       return errors.length === 0;
     }
