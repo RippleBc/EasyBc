@@ -20,7 +20,8 @@
   "scripts": {
     "dev": "node index.js",
     "testUtil": "node utils/test/index.js",
-    "testTransaction": "node transaction/test/index.js"
+    "testTransaction": "node transaction/test/index.js",
+    "testData": "node data/test/index.js"
   },
   "keywords": [
     "block",
