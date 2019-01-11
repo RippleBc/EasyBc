@@ -9,7 +9,7 @@ const Buffer = util.Buffer;
  * @class
  * @param {Buffer | Array | Object} data
  * @prop {Buffer} parentHash the blocks' parent's hash
- * @prop {Buffer} stateRoot The root of a Merkle Patricia tree
+ * @prop {Buffer} stateRoot The root of Trie containing the account info
  * @prop {Buffer} transactionTrie the root of a Trie containing the transactions
  * @prop {Buffer} timestamp
  * @prop {Buffer} extraData
@@ -64,12 +64,14 @@ class BlockHeader
    * @param {Blockchain} blockChain the blockchain that this block is validating against
    * @param {Function} cb the callback function. The callback is given an error if the block is invalid
    */
-  function validate(blockchain, height, cb)
+  validate function(blockchain, cb)
   {
-    if(this.isGenesis())
+    // geneies block, no not need check
+    if()
     {
-      return cb();
+      cb();
     }
+
 
     // find the blocks parent
     blockchain.getBlock(self.parentHash, function(err, parentBlock)
@@ -88,6 +90,7 @@ class BlockHeader
         return cb("class Block validate, invalid number");
       }
 
+      // check block timestamp
       if(utils.bufferToInt(self.timestamp) <= utils.bufferToInt(parentBlock.header.timestamp))
       {
         return cb("class Block validate, invalid timestamp");
@@ -102,10 +105,15 @@ class BlockHeader
    * @method hash
    * @return {Buffer}
    */
-  hash function()
+  function hash()
   {
     let rlpEncodedText = this.serialize();
     return utils.keccak256(rlpEncodedText);
+  }
+
+  function isGenesis()
+  {
+    return !this.parentHash;
   }
 }
 
