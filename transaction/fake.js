@@ -1,5 +1,3 @@
-'use strict'
-
 const Transaction = require('./index.js')
 const util = require('../utils')
 

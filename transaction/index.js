@@ -1,4 +1,3 @@
-'use strict'
 const util = require('../utils')
 const BN = util.BN;
 

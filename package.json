@@ -6,13 +6,17 @@
   "dependencies": {
     "bn.js": "^4.11.8",
     "create-hash": "^1.2.0",
+    "flow-stoplight": "^1.0.0",
+    "functional-red-black-tree": "^1.0.1",
     "keccak": "^2.0.0",
     "leveldown": "^4.0.1",
     "levelup": "^4.0.0",
+    "lru-cache": "^5.1.1",
     "merkle-patricia-tree": "^3.0.0",
     "rlp": "^2.2.1",
     "safe-buffer": "^5.1.2",
     "secp256k1": "^3.6.1",
+    "semaphore": "^1.1.0",
     "strip-hex-prefix": "^1.0.0",
     "sync": "^0.2.5"
   },
