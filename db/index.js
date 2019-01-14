@@ -5,7 +5,7 @@ const path = require("path");
 
 module.exports = function()
 {
-	let dbDir = path.join(__dirname, "../data");
+	let dbDir = path.join(__dirname, "./data");
 	return levelup(leveldown(dbDir));
 }
 
