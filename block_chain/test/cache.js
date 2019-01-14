@@ -7,7 +7,7 @@ const util = require("../../utils");
 const Account = require("../../account");
 
 let db = createDb();
-let trie = new Trie(db, "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421");
+let trie = new Trie(db);
 
 let cacheInstance = new Cache(trie);
 
@@ -35,9 +35,9 @@ account1 = cacheInstance.get(accountAddress1);
 account2 = cacheInstance.get(accountAddress2);
 account3 = cacheInstance.get(accountAddress3);
 
-console.log("account1 info: " + util.bufferToInt(account1.balance) + ", exists: " + account1.exists);
-console.log("account2 info: " + util.bufferToInt(account2.balance) + ", exists: " + account2.exists);
-console.log("account3 info: " + util.bufferToInt(account3.balance) + ", exists: " + account3.exists);
+assert(util.bufferToInt(account1.balance) === 100);
+assert(util.bufferToInt(account2.balance) === 200);
+assert(util.bufferToInt(account3.balance) === 300);
 
 async.waterfall([
 	function(cb) {
@@ -46,11 +46,13 @@ async.waterfall([
 			{
 				return cb("commit fail");
 			}
-			console.log("trie root: " + trie.root.toString("hex"));
 			cb();
 		});
 	},
+	// 
 	function(cb) {
+		trie = new Trie(db);
+		cacheInstance = new Cache(trie);
 		cacheInstance.getOrLoad(util.toBuffer(accountAddress1, "hex"), cb);
 	},
 	function(account, cb) {
@@ -63,9 +65,36 @@ async.waterfall([
 	},
 	function(account, cb) {
 		account3 = account;
-		console.log("account1 info: " +  util.bufferToInt(account1.balance) + ", exists: " + account1.exists);
-		console.log("account2 info: " +  util.bufferToInt(account2.balance) + ", exists: " + account2.exists);
-		console.log("account3 info: " +  util.bufferToInt(account3.balance) + ", exists: " + account3.exists);
+		assert(account1.exists === false);
+		assert(account2.exists === false);
+		assert(account3.exists === false);
+		cb();
+	},
+	// 
+	function(cb) {
+		trie = new Trie(db, "0x212bb6b233098f1cec5cea7c5f8a0fb08a3a9eb385879c30a9b73b8ed69fc0e4");
+		cacheInstance = new Cache(trie);
+		cacheInstance.getOrLoad(util.toBuffer(accountAddress1, "hex"), cb);
+	},
+	function(account, cb) {
+		account1 = account;
+		cacheInstance.getOrLoad(util.toBuffer(accountAddress2, "hex"), cb);
+	},
+	function(account, cb) {
+		account2 = account;
+		cacheInstance.getOrLoad(util.toBuffer(accountAddress3, "hex"), cb);
+	},
+	function(account, cb) {
+		account3 = account;
+
+		assert(account1.exists === true);
+		assert(account2.exists === true);
+		assert(account3.exists === true);
+
+		assert(util.bufferToInt(account1.balance) === 100);
+		assert(util.bufferToInt(account2.balance) === 200);
+		assert(util.bufferToInt(account3.balance) === 300);
+		cb();
 	}
 	], function(err) {
 		if(!!err)
@@ -73,14 +102,5 @@ async.waterfall([
 			console.log(err);
 			return;
 		}
+		console.log("test ok");
 	});
-
-
-
-
-// privateKey = util.createPrivateKey();
-// publicKey = util.privateToPublic(privateKey);
-// address = util.publicToAddress(publicKey)
-// console.log(privateKey.toString("hex"))
-// console.log(publicKey.toString("hex"))
-// console.log(address.toString("hex"))

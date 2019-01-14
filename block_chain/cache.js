@@ -106,7 +106,7 @@ class Cache
   commit(cb)
   {
     let self = this;
-    
+
     async.waterfall([
       function(cb) {
         self._flush(cb);
@@ -147,7 +147,6 @@ class Cache
       {
         it.value.modified = false;
         it.value.val = it.value.val.serialize();
-        console.log("_flush: " + it.key);
         self._trie.put(Buffer.from(it.key, "hex"), it.value.val, function() {
           next = it.hasNext;
           it.next();
@@ -193,7 +192,6 @@ class Cache
     */
   _lookupAccountFromDb(address, cb)
   {
-    console.log("_lookupAccountFromDb: " + address.toString("hex"));
     this._trie.get(address, function(err, raw) {
       if(err) 
       {
