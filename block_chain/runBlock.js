@@ -1,48 +1,34 @@
-const Buffer = require('safe-buffer').Buffer
-const async = require('async')
-const util = require('../../util')
-const Bloom = require('./bloom.js')
+const Buffer = require("safe-buffer").Buffer
+const async = require("async")
+const util = require("../../util")
+const Bloom = require("./bloom.js")
 const rlp = util.rlp
-const Trie = require('merkle-patricia-tree')
+const Trie = require("merkle-patricia-tree")
 const BN = util.BN
 
 /**
- * process the transaction in a block and pays the miners
+ * process the transaction in a block
  * @param opts
  * @param opts.block {Block} the block we are processing
  * @param opts.generate {Boolean} [gen=false] whether to generate the stateRoot
+ * @param opts.root {Buffer} the parent block stateRoot
  * @param cb {Function} the callback which is given an error string
  */
-module.exports = function (opts, cb) {
-  const self = this
+module.exports = function(opts, cb) {
+  const self = this;
 
-  // block对象
-  const block = opts.block 
-  // 是否需要生成对应的stateRoot
-  const generateStateRoot = !!opts.generate 
-  // 是否需要校验stateRoot（处理本地客户端mined区块，则无需进行校验，处理远程客户端的mined区块，需要进行验证）
-  const validateStateRoot = !generateStateRoot
-  // 初始化一个布隆过滤器
-  const bloom = new Bloom()
-  // 初始化一个receiptTrie，用来记录transaction receipt
-  const receiptTrie = new Trie()
-  // 处理当前区块时，消耗的gas
-  var gasUsed = new BN(0)
-  // miner account
-  var minerAccount
-  // 记录transction receipt
-  var receipts = []
-  // 记录transaction的处理结果
+  const block = opts.block;
+  const ifGenerateStateRoot = !!opts.generate 
+  const validateStateRoot = !ifGenerateStateRoot
+
   var txResults = []
   var result
 
-  // 表示parentBlock的stateRoot值，如果是genesisRoot，opt.root = null
   if (opts.root) {
     self.stateManager.trie.root = opts.root
   }
 
-  // 设立一个检查点
-  self.stateManager.trie.checkpoint()
+  self.stateManager.trie.checkpoint();
 
   // run everything
   async.series([
@@ -51,7 +37,7 @@ module.exports = function (opts, cb) {
     processTransactions
   ], parseBlockResults)
 
-  function beforeBlock (cb) {
+  function beforeBlock(cb) {
     self.emit('beforeBlock', opts.block, cb)
   }
 
@@ -66,10 +52,6 @@ module.exports = function (opts, cb) {
     block.transactions.forEach(function (tx) {
       accounts.add(tx.getSenderAddress().toString('hex'))
       accounts.add(tx.to.toString('hex'))
-    })
-
-    block.uncleHeaders.forEach(function (uh) {
-      accounts.add(uh.coinbase.toString('hex'))
     })
 
     self.populateCache(accounts, cb)
@@ -114,7 +96,7 @@ module.exports = function (opts, cb) {
         // combine blooms via bitwise OR
         bloom.or(result.bloom)
 
-        if (generateStateRoot) {
+        if (ifGenerateStateRoot) {
           block.header.bloom = bloom.bitvector
         }
 
@@ -151,10 +133,7 @@ module.exports = function (opts, cb) {
       return
     }
 
-    // 发放区块奖励
-    payOmmersAndMiner()
-
-    if (generateStateRoot) {
+    if (ifGenerateStateRoot) {
       block.header.stateRoot = self.stateManager.trie.root
     }
 
@@ -192,42 +171,5 @@ module.exports = function (opts, cb) {
         afterBlock(cb.bind(this, err, result))
       })
     })
-  }
-
-  // 发放区块奖励
-  function payOmmersAndMiner () {
-    var ommers = block.uncleHeaders
-    // 给uncleHeader发放奖励
-    ommers.forEach(rewardOmmer)
-
-    // 计算miner奖励
-    var minerReward = new BN(self._common.param('pow', 'minerReward'))
-    var niblingReward = minerReward.divn(32)
-    var totalNiblingReward = niblingReward.muln(ommers.length)
-    minerAccount = self.stateManager.cache.get(block.header.coinbase)
-    // 修改header.coinBase对应的account的余额，写入缓存中
-    minerAccount.balance = new BN(minerAccount.balance)
-      .add(minerReward)
-      .add(totalNiblingReward)
-    self.stateManager.cache.put(block.header.coinbase, minerAccount)
-  }
-
-  // 对uncle节点发放奖励
-  function rewardOmmer (ommer) {
-    // 计算奖励
-    var minerReward = new BN(self._common.param('pow', 'minerReward'))
-    // uncleHeader不应当与当前的header的高度相差超过8
-    var heightDiff = new BN(block.header.number).sub(new BN(ommer.number))
-    // uncleHeader与当前header的高度差越小，奖励越多（线性函数）
-    var reward = ((new BN(8)).sub(heightDiff)).mul(minerReward.divn(8))
-
-    if (reward.ltn(0)) {
-      reward = new BN(0)
-    }
-
-    // 修改uncleHeader中coinBase对应的account的余额，放入缓存中
-    var ommerAccount = self.stateManager.cache.get(ommer.coinbase)
-    ommerAccount.balance = reward.add(new BN(ommerAccount.balance))
-    self.stateManager.cache.put(ommer.coinbase, ommerAccount)
   }
 }

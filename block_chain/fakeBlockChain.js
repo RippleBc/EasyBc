@@ -2,8 +2,8 @@ const Buffer = require('safe-buffer').Buffer
 const util = require('../../util')
 
 module.exports = {
-  getBlock: function (blockTag, cb) {
-    var hash
+  getBlock: function(blockTag, cb) {
+    let hash;
 
     if (Buffer.isBuffer(blockTag)) {
       hash = util.keccak256(blockTag)
