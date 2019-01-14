@@ -1,6 +1,6 @@
 const Buffer = require("safe-buffer").Buffer
 const Tree = require("functional-red-black-tree")
-const Account = require("../../account")
+const Account = require("../account")
 const async = require("async")
 
 class Cache
@@ -14,23 +14,23 @@ class Cache
   }
 
   /**
-   * @param {Buffer} key
+   * @param {Buffer} address
    * @param {Buffer} val
-   * @param {Boolean} fromTrie if key-value is from db
+   * @param {Boolean} fromTrie if address-value is from db
    */
-  function put(key, val, fromTrie)
+  put(address, val, fromTrie)
   {
     let modified = !fromTrie;
 
-    this._updateToCache(key, val, modified, true);
+    this._updateToCache(address, val, modified, true);
   }
 
   /**
-   * @param {Buffer} key
+   * @param {Buffer} address
    */
-  function get(key)
+  get(address)
   {
-    let account = this._lookupAccountFromCache(key);
+    let account = this._lookupAccountFromCache(address);
 
     if(!account)
     {
@@ -42,24 +42,24 @@ class Cache
   }
 
   /**
-   * @param {Buffer} key
+   * @param {Buffer} address
    */
-  function getOrLoad(key, cb)
+  getOrLoad(address, cb)
   {
     var self = this;
-    var account = this._lookupAccountFromCache(key);
+    var account = this._lookupAccountFromCache(address);
     if(account)
     {
       cb(null, account);
     }
     else
     {
-      self._lookupAccountFromDb(key, function(err, account) {
+      self._lookupAccountFromDb(address, function(err, account) {
         if(err)
         {
           return cb(err);
         }
-        self._updateToCache(key, account, false, accout.exists);
+        self._updateToCache(address, account, false, account.exists);
         cb(null, account);
       })
     }
@@ -68,7 +68,7 @@ class Cache
   /**
    * @param {Array} addresses the item of addresses is Buffer
    */
-  function warm(addresses, cb)
+  warm(addresses, cb)
   {
     var self = this;
 
@@ -93,40 +93,49 @@ class Cache
     }, cb);
   }
 
-  function checkpoint()
+  checkpoint()
   {
     this._checkpoints.push(this._cache);
   }
 
-  function revert()
+  revert()
   {
     this._cache = this._checkpoints.pop();
   }
 
-  function commit()
+  commit(cb)
   {
-    this._flush();
-    this._checkpoints.pop();
+    let self = this;
+    
+    async.waterfall([
+      function(cb) {
+        self._flush(cb);
+      },
+      function(cb) {
+        self._checkpoints.pop();
+        self._clear();
+        cb();
+      }], cb);
   }
 
-  function clear()
+  del(address)
+  {
+    this._deletes.push(address);
+    address = address.toString("hex");
+    this._cache = this._cache.remove(address);
+  }
+
+  _clear()
   {
     this._deletes = [];
     this._cache = Tree();
-  }
-
-  function del(key)
-  {
-    this._deletes.push(key);
-    key = key.toString("hex");
-    this._cache = this._cache.remove(key);
   }
 
   /**
    * flush cache to db
    * @method flush
    */
-  function _flush(cb)
+  _flush(cb)
   {
     var it = this._cache.begin;
     var self = this;
@@ -138,6 +147,7 @@ class Cache
       {
         it.value.modified = false;
         it.value.val = it.value.val.serialize();
+        console.log("_flush: " + it.key);
         self._trie.put(Buffer.from(it.key, "hex"), it.value.val, function() {
           next = it.hasNext;
           it.next();
@@ -151,8 +161,8 @@ class Cache
         done();
       }
     }, function() {
-      async.eachSeries(self._deletes, function (address, done) {
-        self._trie.del(address, done);
+      async.eachSeries(self._deletes, function(address, done) {
+        self._trie.del(Buffer.from(address, "hex"), done);
       }, function () {
         self._deletes = [];
         cb();
@@ -163,7 +173,7 @@ class Cache
   /**
     * @param {Buffer} address 
     */
-  function _lookupAccountFromCache(address)
+  _lookupAccountFromCache(address)
   {
     address = address.toString("hex");
 
@@ -181,8 +191,9 @@ class Cache
   /**
     * @param {Buffer} address 
     */
-  function _lookupAccountFromDb(address, cb)
+  _lookupAccountFromDb(address, cb)
   {
+    console.log("_lookupAccountFromDb: " + address.toString("hex"));
     this._trie.get(address, function(err, raw) {
       if(err) 
       {
@@ -199,14 +210,14 @@ class Cache
   }
 
   /**
-    * @param {Buffer} key 
+    * @param {Buffer} address 
     * @param {Buffer} val 
     * @param {Boolean} modified 
     */
-  function _updateToCache(key, val, modified, exists)
+  _updateToCache(address, val, modified, exists)
   {
-    key = key.toString("hex");
-    var it = this._cache.find(key);
+    address = address.toString("hex");
+    var it = this._cache.find(address);
 
     if(it.node)
     {
@@ -218,7 +229,7 @@ class Cache
     }
     else
     {
-      this._cache = this._cache.insert(key, {
+      this._cache = this._cache.insert(address, {
         val: val,
         modified: modified,
         exists: exists

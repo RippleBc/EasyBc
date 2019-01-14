@@ -1,4 +1,4 @@
-const util = require('../util')
+const util = require('../utils')
 
 const Buffer = util.Buffer;
 
@@ -27,7 +27,7 @@ class Account
    * @return {Buffer}
    */
 
-  function isEmpty()
+  isEmpty()
   {
     return this.balance.toString("hex") === "" && this.nonce.toString("hex") === "";
   }
