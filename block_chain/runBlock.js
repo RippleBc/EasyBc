@@ -24,8 +24,11 @@ module.exports = function(opts, cb) {
   var txResults = []
   var result
 
-  if (opts.root) {
-    self.stateManager.trie.root = opts.root
+  if(opts.root)
+  {
+    let db = createDb();
+    let trie = new Trie(db);
+    self.stateManager.trie.root = new Tire()
   }
 
   self.stateManager.trie.checkpoint();

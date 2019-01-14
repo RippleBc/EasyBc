@@ -1,6 +1,6 @@
 const Cache = require("../cache")
 const createDb = require("../../db")
-const Trie = require("merkle-patricia-tree")
+const Trie = require("merkle-patricia-tree/secure")
 const async = require("async")
 const assert = require("assert");
 const util = require("../../utils");
@@ -72,8 +72,9 @@ async.waterfall([
 	},
 	// 
 	function(cb) {
-		trie = new Trie(db, "0x212bb6b233098f1cec5cea7c5f8a0fb08a3a9eb385879c30a9b73b8ed69fc0e4");
+		trie = new Trie(db, "0x742511f8fbffaafa6f1c587595f31e1c1d57aefdd9bfe5ccf387626da8fb41fe");
 		cacheInstance = new Cache(trie);
+
 		cacheInstance.getOrLoad(util.toBuffer(accountAddress1, "hex"), cb);
 	},
 	function(account, cb) {
