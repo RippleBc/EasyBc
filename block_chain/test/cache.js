@@ -1,12 +1,12 @@
 const Cache = require("../cache")
-const createDb = require("../../db")
+const initDb = require("../../db")
 const Trie = require("merkle-patricia-tree/secure")
 const async = require("async")
 const assert = require("assert");
 const util = require("../../utils");
 const Account = require("../../account");
 
-let db = createDb();
+let db = initDb();
 let trie = new Trie(db);
 
 let cacheInstance = new Cache(trie);

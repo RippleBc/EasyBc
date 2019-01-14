@@ -6,7 +6,7 @@ const Trie = require("merkle-patricia-tree/secure")
 const async = require("async")
 const assert = require("assert")
 const path = require("path")
-const createDb = require("../index.js")
+const initDb = require("../index.js")
 const fs = require("fs");
 
 let trieRoot1 = "0xb9d8383aa98018c00454f43a0a8d74632d1d81ec04747ee9d0caa21c9c23ed24"; // record test 1
@@ -37,7 +37,7 @@ function deleteall(path)
 
 deleteall(path.join(__dirname, "../data"));
 
-let db = createDb();
+let db = initDb();
 
 let test1 = function(cb)
 {

@@ -3,10 +3,18 @@ const leveldown = require("leveldown")
 const Trie = require("merkle-patricia-tree")
 const path = require("path");
 
+
+let db = undefined;
+
 module.exports = function()
 {
-	let dbDir = path.join(__dirname, "./data");
-	return levelup(leveldown(dbDir));
+	if(!db)
+	{
+		let dbDir = path.join(__dirname, "./data");
+		db = levelup(leveldown(dbDir));
+	}
+	
+	return db;
 }
 
 

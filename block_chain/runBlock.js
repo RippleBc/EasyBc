@@ -18,19 +18,19 @@ module.exports = function(opts, cb) {
   const self = this;
 
   const block = opts.block;
-  const ifGenerateStateRoot = !!opts.generate 
-  const validateStateRoot = !ifGenerateStateRoot
+  const ifGenerateStateRoot = !!opts.generate;
+  const validateStateRoot = !ifGenerateStateRoot;
 
-  var txResults = []
-  var result
+  var txResults = [];
+  var result;
 
   if(opts.root)
   {
-    let db = createDb();
-    let trie = new Trie(db);
-    self.stateManager.trie.root = new Tire()
+    let db = initDb();
+    self.stateManager.trie = new Trie(db, opts.root);
   }
 
+  // create a check point
   self.stateManager.trie.checkpoint();
 
   // run everything
@@ -40,24 +40,25 @@ module.exports = function(opts, cb) {
     processTransactions
   ], parseBlockResults)
 
-  function beforeBlock(cb) {
-    self.emit('beforeBlock', opts.block, cb)
+  function beforeBlock(cb)
+  {
+    self.emit("beforeBlock", opts.block, cb);
   }
 
-  function afterBlock (cb) {
-    self.emit('afterBlock', result, cb)
+  function afterBlock(cb)
+  {
+    self.emit("afterBlock", result, cb);
   }
 
-  // 遍历transactions，将address对应的account放入缓存中
-  function populateCache (cb) {
-    var accounts = new Set()
-    accounts.add(block.header.coinbase.toString('hex'))
-    block.transactions.forEach(function (tx) {
-      accounts.add(tx.getSenderAddress().toString('hex'))
-      accounts.add(tx.to.toString('hex'))
-    })
+  function populateCache(cb)
+  {
+    var accounts = new Set();
+    block.transactions.forEach(function(tx) {
+      accounts.add(tx.getSenderAddress().toString('hex'));
+      accounts.add(tx.to.toString('hex'));
+    });
 
-    self.populateCache(accounts, cb)
+    self.populateCache(accounts, cb);
   }
 
   /**
