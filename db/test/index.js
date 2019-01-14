@@ -13,15 +13,21 @@ let trieRoot1 = "0xb9d8383aa98018c00454f43a0a8d74632d1d81ec04747ee9d0caa21c9c23e
 let trieRoot2 = "0x1623775a3d081a17e3fa27d4dce063e3dac382414362572a2b20c8b598c0dd2f"; // record test 2
 let trieRoot3 = "0xd7bc9196736d3f6f7633c774d5dac4dd318f87cab7932403902e42a214784a60"; // record test 1 and 3
 
-function deleteall(path) {
+function deleteall(path)
+{
   var files = [];
-  if(fs.existsSync(path)) {
+  if(fs.existsSync(path))
+  {
     files = fs.readdirSync(path);
-    files.forEach(function(file, index) {
+    files.forEach(function(file, index)
+    {
       var curPath = path + "/" + file;
-      if(fs.statSync(curPath).isDirectory()) { // recurse
+      if(fs.statSync(curPath).isDirectory())
+      { // recurse
         deleteall(curPath);
-      } else { // delete file
+      } 
+      else
+      { // delete file
         fs.unlinkSync(curPath);
       }
     });
