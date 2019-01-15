@@ -53,6 +53,11 @@ class BlockHeader
       length: 32,
       allowLess: true,
       default: Buffer.alloc(0)
+    }, {
+      name: "transactionSizeLimit",
+      length: 2,
+      allowLess: true,
+      default: util.intToBuffer(50)
     }];
 
     utils.defineProperties(this, fields, data);

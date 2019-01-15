@@ -11,9 +11,11 @@ tx.data = "hello";
 
 
 tx.sign(privateKey);
-assert(tx.verifySignature() === true, "error");
+assert(tx.validate() !== true, "validate error");
 
-assert(tx.serialize().toString("hex") == "f84c0180028568656c6c6f1ca01d8e9a407c32a01aec73661e21c57e5c5cd11b11db2dc49060ed0432e8fc6bafa06e55ef3fbf4aa6ae009de11b76c93330e233ab3afde74cbbb264f1a000c12fd7", "error");
+tx.to = "0x12";
+tx.sign(privateKey);
+assert(tx.validate() === true, "validate error");
 
 var rawTx = [
   "0x01",
@@ -27,7 +29,7 @@ var rawTx = [
 
 var tx2 = new Transaction(rawTx);
 
-assert(tx2.verifySignature() === true, "error");
+assert(tx2.validate() === true, "validate error");
 
 assert(tx2.getSenderAddress().toString("hex") === "e277542de133732bd11ab15bca9d16f021f9e018", "error");
 

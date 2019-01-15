@@ -101,14 +101,6 @@ class Transaction
   }
 
   /**
-   * If the tx's to is equal to the creation address
-   * @return {Boolean}
-   */
-  toCreationAddress () {
-    return this.to.toString("hex") === this.getSenderAddress();
-  }
-
-  /**
    * Computes a sha3-256 hash of the serialized tx
    * @param {Boolean} [includeSignature=true] whether or not to inculde the signature
    * @return {Buffer}
@@ -135,7 +127,7 @@ class Transaction
   }
 
   /**
-   * returns the sender's address
+   * Returns the sender's address
    * @return {Buffer}
    */
   getSenderAddress()
@@ -150,7 +142,7 @@ class Transaction
   }
 
   /**
-   * returns the public key of the sender
+   * Returns the public key of the sender
    * @return {Buffer}
    */
   getSenderPublicKey()
@@ -162,6 +154,15 @@ class Transaction
       this._senderPubKey = util.ecrecover(msgHash, v, this.r, this.s);
     }
     return this._senderPubKey;
+  }
+
+  /**
+   * The up front amount that an account must have for this transaction to be valid
+   * @return {BN}
+   */
+  getUpfrontCost()
+  {
+    return new BN(this.value);
   }
 
   /**
@@ -200,9 +201,19 @@ class Transaction
   {
     const errors = [];
 
+    if(this.to.toString("hex") === "")
+    {
+      errors.push("class Transaction validate, property to can not be empty");
+    }
+
+    if(this.to.toString("hex") === this.getSenderAddress().toString("hex"))
+    {
+      errors.push("class Transaction validate, property from can not be equal to property to");
+    }
+
     if(!this.verifySignature())
     {
-      errors.push("Invalid Signature");
+      errors.push("class Transaction validate, Invalid Signature");
     }
 
     if(stringError === undefined || stringError === false)
