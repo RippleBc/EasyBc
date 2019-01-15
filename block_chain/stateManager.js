@@ -109,33 +109,18 @@ class StateManager
   checkpoint()
   {
     this.trie.checkpoint();
-    this.cache.checkpoint();
   }
 
   commit(cb)
   {
-    const self = this;
-
-    async.waterfall([
-      function(cb)
-      {
-        self.trie.commit(function() {
-          cb();
-        });
-      },
-      function(cb)
-      {
-        self.cache.commit(cb);
-      }], cb);
+    this.trie.commit(function() {
+      cb();
+    });
   }
 
   revert(cb)
   {
-    var self = this;
-
-    self.cache.revert();
-
-    self.trie.revert(function() {
+    this.trie.revert(function() {
       cb();
     });
   }

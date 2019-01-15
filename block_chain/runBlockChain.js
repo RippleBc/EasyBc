@@ -54,7 +54,7 @@ module.exports = function(blockchain, cb)
         block: block,
         root: parentState
       }, function (err, results) {
-        if (err)
+        if(err)
         {
           console.info("runBlockchain, Invalid block error:", err);
           blockchain.delBlock(block.header.hash(), cb);

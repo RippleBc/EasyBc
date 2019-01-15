@@ -21,8 +21,7 @@ module.exports = function(opts, cb) {
   const ifGenerateStateRoot = !!opts.generate;
   const validateStateRoot = !ifGenerateStateRoot;
 
-  var txResults = [];
-  var result;
+  let failedTransactions = [];
 
   if(opts.root)
   {
@@ -30,13 +29,10 @@ module.exports = function(opts, cb) {
     self.stateManager.trie = new Trie(db, opts.root);
   }
 
-  // create a check point
-  self.stateManager.trie.checkpoint();
-
   async.series([
     populateCache,
     processTransactions
-  ], )
+  ], parseBlockResults);
 
   function populateCache(cb)
   {
@@ -49,52 +45,36 @@ module.exports = function(opts, cb) {
     self.populateCache(accounts, cb);
   }
 
-  /**
-   * Processes all of the transaction in the block
-   * @method processTransaction
-   * @param {Function} cb the callback is given error if there are any
-   */
   function processTransactions(cb)
   {
     var validReceiptCount = 0
 
     if(block.transactions.length > util.bufferToInt(block.header.transactionSizeLimit))
     {
-      return cb(new Error("runBlock, transaction size is bigger than the the limit of block"));
+      return cb("runBlock, transaction size is bigger than the the limit of block");
     }
 
-    async.eachSeries(block.transactions, processTx, cb);
-
-    function processTx(tx, cb)
-    {
-
+    async.eachSeries(block.transactions, function processTx(tx, cb) {
       self.runTx({
         tx: tx,
         block: block,
-      }, parseTxResult)
-
-      function parseTxResult(err) {
-        txResults.push(result);
-
+      }, function(err) {
         // abort if error
-        if (err) {
-          receipts.push(null)
-          cb(err)
-          return
+        if(!!err)
+        {
+          failedTransactions.push(tx);
+          return cb(err);
         }
         cb()
-      }
-    }
+      });
+    }, cb);
   }
 
-  // handle results or error from block run
   function parseBlockResults(err)
   {
-    if(err)
+    if(!!err)
     {
-      self.stateManager.trie.revert();
-      cb(err);
-      return
+      return cb(err);
     }
 
     if(ifGenerateStateRoot)
@@ -102,11 +82,13 @@ module.exports = function(opts, cb) {
       block.header.stateRoot = self.stateManager.trie.root;
     }
 
+    self.stateManager.checkpoint();
+
     async.waterfall([
       function(cb) {
         self.stateManager.cache.flush(function() {
           if(validateStateRoot && self.stateManager.trie.root.toString("hex") !== block.header.stateRoot.toString("hex")) {
-            return cb(new Error((err || "") + "runBlock, invalid block stateRoot"));
+            return cb("runBlock, invalid block stateRoot");
           }
           cb();
         })
@@ -115,6 +97,15 @@ module.exports = function(opts, cb) {
         self.stateManager.trie.commit(function() {
           cb();
         })
-      }], cb);
+      }, 
+      function(cb) {
+        self.stateManager.cache.clear();
+        cb();
+      }], function(err) {
+        if(!!err)
+        {
+          self.stateManager.trie.revert();
+        }
+      });
   }
 }
