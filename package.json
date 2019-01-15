@@ -26,7 +26,8 @@
     "testUtil": "node utils/test/index.js",
     "testTransaction": "node transaction/test/index.js",
     "testDb": "node db/test/index.js",
-    "testBlockChain": "node block_chain/test/cache.js"
+    "testBlockChain": "node block_chain/test/index.js",
+    "test": "node utils/test/index.js && node transaction/test/index.js && node db/test/index.js && node block_chain/test/index.js"
   },
   "keywords": [
     "block",

@@ -33,4 +33,4 @@ assert(tx2.validate() === true, "validate error");
 
 assert(tx2.getSenderAddress().toString("hex") === "e277542de133732bd11ab15bca9d16f021f9e018", "error");
 
-console.log("test ok");
+console.log("test ok!!!");

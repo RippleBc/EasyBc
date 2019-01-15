@@ -8,7 +8,6 @@ class Cache
   constructor(trie)
   {
     this._cache = Tree();
-    this._checkpoints = [];
     this._deletes = [];
     this._trie = trie;
   }
@@ -93,31 +92,6 @@ class Cache
     }, cb);
   }
 
-  checkpoint()
-  {
-    this._checkpoints.push(this._cache);
-  }
-
-  revert()
-  {
-    this._cache = this._checkpoints.pop();
-  }
-
-  commit(cb)
-  {
-    let self = this;
-
-    async.waterfall([
-      function(cb) {
-        self._flush(cb);
-      },
-      function(cb) {
-        self._checkpoints.pop();
-        self._clear();
-        cb();
-      }], cb);
-  }
-
   del(address)
   {
     this._deletes.push(address);
@@ -125,7 +99,7 @@ class Cache
     this._cache = this._cache.remove(address);
   }
 
-  _clear()
+  clear()
   {
     this._deletes = [];
     this._cache = Tree();
@@ -135,7 +109,7 @@ class Cache
    * flush cache to db
    * @method flush
    */
-  _flush(cb)
+  flush(cb)
   {
     var it = this._cache.begin;
     var self = this;
@@ -162,7 +136,7 @@ class Cache
     }, function() {
       async.eachSeries(self._deletes, function(address, done) {
         self._trie.del(Buffer.from(address, "hex"), done);
-      }, function () {
+      }, function() {
         self._deletes = [];
         cb();
       });

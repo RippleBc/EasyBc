@@ -41,10 +41,10 @@ assert(util.bufferToInt(account3.balance) === 300);
 
 async.waterfall([
 	function(cb) {
-		cacheInstance.commit(function(err) {
+		cacheInstance.flush(function(err) {
 			if(err)
 			{
-				return cb("commit fail");
+				return cb("flush fail");
 			}
 			cb();
 		});
@@ -103,5 +103,5 @@ async.waterfall([
 			console.log(err);
 			return;
 		}
-		console.log("test ok");
+		console.log("test ok!!!");
 	});

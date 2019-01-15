@@ -69,7 +69,7 @@ class BlockHeader
    * @param {Blockchain} blockChain the blockchain that this block is validating against
    * @param {Function} cb the callback function. The callback is given an error if the block is invalid
    */
-  validate function(blockchain, cb)
+  validate(blockchain, cb)
   {
     // geneies block, no not need check
     if()
@@ -110,15 +110,15 @@ class BlockHeader
    * @method hash
    * @return {Buffer}
    */
-  function hash()
+  hash()
   {
     let rlpEncodedText = this.serialize();
     return utils.keccak256(rlpEncodedText);
   }
 
-  function isGenesis()
+  isGenesis()
   {
-    return !this.parentHash;
+    return this.parentHash.toString("hex") === "";
   }
 }
 
