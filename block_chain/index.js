@@ -71,7 +71,7 @@ BlockChain.prototype.getBlockByNumber = function(number, cb)
 {
   async.waterfall([
     function(cb) {
-      this.getBlockHashByNumber(number, cb)
+      this.getBlockHashByNumber(number, cb);
     },
     function(hash, cb) {
       if(hash === null)
@@ -158,16 +158,16 @@ Block.prototype.putBlock = function(block, cb)
         {
           if(err.notFound)
           {
-            cb(null, ebUtil.toBuffer(0));
+            cb(null, new BN("0"));
           }
           return cb(err);
         }
         
-        cb(null, number);
+        cb(null, new BN(number));
       });
     },
     function(number, cb) {
-      block.number = new BN(number).iaddn(1);
+      block.number = number.iaddn(1);
       db.put(maxBlockNumberKey, block.number, cb);
     },
     function(cb) {
@@ -201,6 +201,27 @@ Block.prototype.getBlockHashByNumber = function(number, cb)
       return cb("BlockChain getBlockHashByNumber, " + err);
     }
     cb(null, hash);
+  });
+}
+
+/**
+ * Get max block number
+ */
+Block.prototype.getMaxBlockNumber = function(cb)
+{
+  let db = initDb();
+
+  db.get(maxBlockNumberKey, function(err, number) {
+    if(!!err)
+    {
+      if(err.notFound)
+      {
+        cb(null, util.intToBuffer(0));
+      }
+      return cb(err);
+    }
+    
+    cb(null, number);
   });
 }
 

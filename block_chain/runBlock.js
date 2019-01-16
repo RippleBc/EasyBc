@@ -12,9 +12,15 @@ const Buffer = util.Buffer;
  * @param opts.block {Block} the block we are processing
  * @param opts.generate {Boolean} [gen=false] whether to generate the stateRoot
  * @param opts.root {Buffer} the parent block stateRoot
- * @param cb {Function} the callback which is given an error string
+ * @param cb {Function} the callback which is given arguments errString, errCode and failedTransactions
  */
 module.exports = function(opts, cb) {
+  // errCode
+  // 0 indicate transaction process err
+  // 1 indicate populateCache err
+  // 2 indicate processTransactions err
+  // 3 indicate validateStateRoot err
+  // 4 indicate trie.commit err
   const self = this;
 
   const block = opts.block;
@@ -42,7 +48,12 @@ module.exports = function(opts, cb) {
       accounts.add(tx.to.toString("hex"));
     });
 
-    self.populateCache(accounts, cb);
+    self.populateCache(accounts, function(err) {
+      if(!!err)
+      {
+        cb(err, 1);
+      }
+    });
   }
 
   function processTransactions(cb)
@@ -51,30 +62,28 @@ module.exports = function(opts, cb) {
 
     if(block.transactions.length > util.bufferToInt(block.header.transactionSizeLimit))
     {
-      return cb("runBlock, transaction size is bigger than the the limit of block");
+      return cb("runBlock, transaction size is bigger than the the limit of block", 2);
     }
 
-    async.eachSeries(block.transactions, function processTx(tx, cb) {
+    async.eachSeries(block.transactions, function(tx, cb) {
       self.runTx({
         tx: tx,
         block: block,
       }, function(err) {
-        // abort if error
         if(!!err)
         {
           failedTransactions.push(tx);
-          return cb(err);
         }
         cb()
       });
     }, cb);
   }
 
-  function parseBlockResults(err)
+  function parseBlockResults(err, errCode)
   {
     if(!!err)
     {
-      return cb(err);
+      return cb(err, errCode);
     }
 
     if(ifGenerateStateRoot)
@@ -88,7 +97,7 @@ module.exports = function(opts, cb) {
       function(cb) {
         self.stateManager.cache.flush(function() {
           if(validateStateRoot && self.stateManager.trie.root.toString("hex") !== block.header.stateRoot.toString("hex")) {
-            return cb("runBlock, invalid block stateRoot");
+            return cb("runBlock, invalid block stateRoot", 3);
           }
           cb();
         })
@@ -97,14 +106,23 @@ module.exports = function(opts, cb) {
         self.stateManager.trie.commit(function() {
           cb();
         })
-      }, 
+      },
       function(cb) {
         self.stateManager.cache.clear();
         cb();
-      }], function(err) {
+      }], function(err, errCode) {
         if(!!err)
         {
           self.stateManager.trie.revert();
+          return cb(err, errCode)
+        }
+        if(failedTransactions.length === 0)
+        {
+          return cb(null);
+        }
+        else
+        {
+          return cb("runBlock, some transactions is invalid", 0, failedTransactions);
         }
       });
   }

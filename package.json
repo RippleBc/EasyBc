@@ -28,7 +28,9 @@
     "testTransaction": "node transaction/test/index.js",
     "testDb": "node db/test/index.js",
     "testBlockChain": "node block_chain/test/index.js",
-    "test": "node utils/test/index.js && node transaction/test/index.js && node db/test/index.js && node block_chain/test/index.js"
+    "testAccount": "node account/test/index.js",
+    "testBlock": "node block/test/index.js",
+    "test": "node utils/test/index.js && node transaction/test/index.js && node db/test/index.js && node block_chain/test/index.js && node account/test/index.js && node block/test/index.js"
   },
   "keywords": [
     "block",

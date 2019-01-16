@@ -80,4 +80,5 @@ async.waterfall([
 		block.validate(new BlockChain(), cb);
 	}], function(err) {
 		assert(!!err === false, "err");
+		console.log("test!!!")
 	});
