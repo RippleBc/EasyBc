@@ -2,6 +2,8 @@ const util = require("../../utils");
 const assert = require("assert");
 const Buffer = require("safe-buffer").Buffer;
 
+const BN = util.BN;
+
 let textHash = util.keccak("fadsffljzvomawpo[jfsmjv[pawjfijnpzs'mv]awjfma'vmzskcvpjqgpmadf");
 
 let privateKey = util.toBuffer("0xa2b7c064bec5dc347b06b12bf85c32ace7335464a9a8ace7a88a992b8c7cf392");
@@ -22,4 +24,11 @@ assert(util.ecrecover(textHash, sig.v, sig.r, sig.s).toString("hex") === publicK
 
 assert(util.ecverify(textHash, sig.r, sig.s, publicKey) === true);
 
+let a = util.intToBuffer(255);
+let b = util.toBuffer(new BN(a));
+let c = util.bufferToInt(b);
+
+assert(c === 255);
+
 console.log("test ok!!!");
+

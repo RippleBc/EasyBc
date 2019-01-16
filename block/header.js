@@ -120,7 +120,7 @@ class BlockHeader
 
   isGenesis()
   {
-    return util.bufferToInt(this.parentHash) === 0;
+    return new util.BN(this.parentHash).eq(new util.BN(0));
   }
 }
 

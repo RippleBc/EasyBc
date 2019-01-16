@@ -1,82 +1,57 @@
-// const async = require("async")
+const async = require("async")
+const util = require("../utils")
 
-// /**
-//  * processes blocks and adds them to the blockchain
-//  * @param blockchain
-//  */
-// module.exports = function(blockchain, cb)
-// {
-//   const self = this
-//   let headBlock, parentState
+const BN = util.BN;
 
-//   if (typeof blockchain === "function")
-//   {
-//     cb = blockchain;
-//     blockchain = undefined;
-//   }
+/**
+ * processes blocks and adds them to the blockchain
+ * @param blockchain
+ */
+module.exports = function(data, cb)
+{
+  let parentState, headBlock;
 
-//   blockchain = blockchain || self.stateManager.blockchain;
+  blockchain = data.blockchain || this.stateManager.blockchain;
 
-//   async.waterfall([
-//     function(cb) {
-//       blockchain.getMaxBlockNumber(cb);
-//     },
-//     function(maxBlockNumber, cb) {
-//       if(util.bufferToInt(maxBlockNumber) == 0)
-//       {
-//         cb();
-//       }
-//       processBlocks(maxBlockNumber, cb);
-//     }]);
-//   // setup blockchain iterator
-//   blockchain.iterator("vm", processBlock, cb);
-//   function processBlock(block, reorg, cb)
-//   {
-//     async.series([
-//       getStartingState,
-//       runBlock
-//     ], cb)
+  blockchain.eachSeries(data.blocks, processBlock, cb);
 
-//     // 获取stateRoot的值
-//     function getStartingState (cb)
-//     {
-//       // headBlock（当前正在处理的block的parentBlock）不存在或者
-//       if (!headBlock || reorg) {
-//         // 从blockChain中获取headBlock
-//         blockchain.getBlock(block.header.parentHash, function(err, parentBlock) {
-//           parentState = parentBlock.header.stateRoot
-//           // generate genesis state if we are at the genesis block
-//           // we don't have the genesis state
-//           if (!headBlock) {
-//             return self.stateManager.generateCanonicalGenesis(cb)
-//           } else {
-//             cb(err)
-//           }
-//         })
-//       } else {
-//         parentState = headBlock.header.stateRoot
-//         cb()
-//       }
-//     }
+  function processBlock(block, reorg, cb)
+  {
+    async.series([
+      getStartingState,
+      runBlock
+    ], cb);
 
-//     function runBlock(cb)
-//     {
-//       self.runBlock({
-//         block: block,
-//         root: parentState
-//       }, function (err, results) {
-//         if(err)
-//         {
-//           console.info("runBlockchain, Invalid block error:", err);
-//           blockchain.delBlock(block.header.hash(), cb);
-//         }
-//         else
-//         {
-//           // set as new head block
-//           headBlock = block
-//           cb();
-//         }
-//       })
-//     }
-//   }
-// }
+    function getStartingState (cb) {
+      if(headBlock)
+      {
+        parentState = headBlock.header.stateRoot;
+        cb();
+      } 
+      else
+      {
+        blockchain.getBlock(block.header.parentHash, function(err, parentBlock) {
+          parentState = parentBlock.header.stateRoot;
+          cb(err);
+        });
+      }
+    }
+
+    function runBlock (cb) {
+      self.runBlock({
+        block: block,
+        root: parentState
+      }, function (err, results) {
+        if(!!err)
+        {
+          blockchain.delBlock(block.header.hash(), cb)
+        }
+        else
+        {
+          headBlock = block;
+          cb();
+        }
+      })
+    }
+  }
+}

@@ -158,7 +158,7 @@ Block.prototype.putBlock = function(block, cb)
         {
           if(err.notFound)
           {
-            cb(null, new BN("0"));
+            cb(null, new BN(0));
           }
           return cb(err);
         }
@@ -167,7 +167,7 @@ Block.prototype.putBlock = function(block, cb)
       });
     },
     function(number, cb) {
-      block.number = number.iaddn(1);
+      block.number = util.toBuffer(number.iaddn(1));
       db.put(maxBlockNumberKey, block.number, cb);
     },
     function(cb) {
@@ -216,12 +216,12 @@ Block.prototype.getMaxBlockNumber = function(cb)
     {
       if(err.notFound)
       {
-        cb(null, util.intToBuffer(0));
+        cb(null, new BN(0));
       }
       return cb(err);
     }
     
-    cb(null, number);
+    cb(null, new BN(number));
   });
 }
 
