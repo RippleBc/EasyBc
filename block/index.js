@@ -117,10 +117,8 @@ class Block {
     {
       return txT === this.txTrie.root.toString("hex")
     }
-    else 
-    {
-      return txT === util.SHA3_RLP.toString("hex")
-    }
+   
+    return txT === util.SHA3_RLP.toString("hex")
   }
 
   /**
@@ -145,17 +143,15 @@ class Block {
     {
       return errors.length === 0;
     }
-    else
-    {
-      return arrayToString(errors);
-    }
+   
+    return this.arrayToString(errors);
   }
 
   /**
    * Validates the entire block. Returns a string to the callback if block is invalid
    * @method validate
    * @param {BlockChain} blockChain the blockchain that this block wants to be part of
-   * @param {Function} cb the callback which is given a String if the block is not valid
+   * @param {Function} cb the callback which is given arguments result{null|String}
    */
   validate(blockChain, cb)
   {
@@ -168,7 +164,7 @@ class Block {
       // generate the transaction trie
       self.genTxTrie.bind(self)
     ], function(err) {
-      if(err)
+      if(!!err)
       {
         errors.push(err);
       }
@@ -184,7 +180,12 @@ class Block {
         errors.push(txErrors);
       }
 
-      cb(arrayToString(errors));
+      if(errors.length === 0)
+      {
+        return cb();
+      }
+
+      cb(self.arrayToString(errors));
     })
   }
 

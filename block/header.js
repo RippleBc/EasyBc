@@ -71,17 +71,19 @@ class BlockHeader
    */
   validate(blockchain, cb)
   {
+    const self = this;
+
     // geneies block, no not need check
     if(this.isGenesis())
     {
-      cb();
+      return cb();
     }
 
 
     // find the blocks parent
     blockchain.getBlockByHash(self.parentHash, function(err, parentBlock)
     {
-      if(err)
+      if(!!err)
       {
         return cb("class Block validate, could not find parent block");
       }
@@ -118,7 +120,7 @@ class BlockHeader
 
   isGenesis()
   {
-    return this.parentHash.toString("hex") === "";
+    return util.bufferToInt(this.parentHash) === 0;
   }
 }
 

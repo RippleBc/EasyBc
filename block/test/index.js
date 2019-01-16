@@ -3,6 +3,7 @@ const Block = require("../index.js")
 const assert = require("assert")
 const async = require("async")
 const Transaction = require("../../transaction")
+const BlockChain = require("../../block_chain");
 
 const Buffer = util.Buffer;
 
@@ -74,7 +75,9 @@ async.waterfall([
 		assert(block.transactions[0].v.toString("hex") === "1c" , "err");
 		assert(block.transactions[0].r.toString("hex") === "04bc34b177b6c0c86166f85aa3e0e5897565383685c39b76b9deb3b93e8c6a41" , "err");
 		assert(block.transactions[0].s.toString("hex") === "4d0b2c4ae473ac5f862c7291d57bbe7725dcad6d40f0d181030d6236f11f14e5" , "err");
-
 		assert(block.validateTransactionsTrie() === true, "err");
 		assert(block.validateTransactions() === true, "err");
-	}]);
+		block.validate(new BlockChain(), cb);
+	}], function(err) {
+		assert(!!err === false, "err");
+	});

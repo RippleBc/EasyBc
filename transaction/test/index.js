@@ -9,7 +9,6 @@ tx.nonce = 1;
 tx.value = 2;
 tx.data = "hello";
 
-
 tx.sign(privateKey);
 assert(tx.validate() !== true, "validate error");
 
@@ -28,6 +27,14 @@ var rawTx = [
 ];
 
 var tx2 = new Transaction(rawTx);
+
+assert(tx2.nonce.toString("hex") == "01", "err");
+assert(tx2.to.toString("hex") == "09184e72a000", "err");
+assert(tx2.value.toString("hex") == "2710", "err");
+assert(tx2.data.toString() == "hello", "err");
+assert(tx2.v.toString("hex") == "1c", "err");
+assert(tx2.r.toString("hex") == "04bc34b177b6c0c86166f85aa3e0e5897565383685c39b76b9deb3b93e8c6a41", "err");
+assert(tx2.s.toString("hex") == "4d0b2c4ae473ac5f862c7291d57bbe7725dcad6d40f0d181030d6236f11f14e5", "err");
 
 assert(tx2.validate() === true, "validate error");
 

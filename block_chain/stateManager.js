@@ -1,8 +1,8 @@
 const Trie = require("merkle-patricia-tree/secure.js")
 const async = require("async")
-const Account = require("../../account")
+const Account = require("../account")
 const Cache = require("./cache.js")
-const util = require("../../utils")
+const util = require("../utils")
 
 const BN = util.BN;
 const rlp = util.rlp;

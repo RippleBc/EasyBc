@@ -1,5 +1,5 @@
 const util = require("util")
-const ebUtil = require("../../util")
+const ebUtil = require("../utils")
 const StateManager = require("./stateManager.js")
 const AsyncEventEmitter = require("async-eventemitter")
 const Block = require("../block")
@@ -9,7 +9,7 @@ const async = require("async")
 const BN = ebUtil.BN;
 const Buffer = ebUtil.Buffer;
 
-const maxBlockNumberKey = util.toBuffer("maxBlockNumberKey");
+const maxBlockNumberKey = ebUtil.toBuffer("maxBlockNumberKey");
 
 /**
  * @constructor
@@ -29,7 +29,7 @@ function BlockChain(opts)
 
 util.inherits(BlockChain, AsyncEventEmitter);
 
-BlockChain.prototype.runBlockchain = require("./runBlockchain.js");
+BlockChain.prototype.runBlockchain = require("./runBlockChain.js");
 BlockChain.prototype.runBlock = require("./runBlock.js");
 BlockChain.prototype.runTx = require("./runTx.js");
 
@@ -48,7 +48,7 @@ BlockChain.prototype.populateCache = function(addresses, cb)
 BlockChain.prototype.getBlockByHash = function(hash, cb) {
   const db = initDb();
 
-  hash = util.toBuffer(hash);
+  hash = ebUtil.toBuffer(hash);
 
   db.get(hash, function(err, raw) {
     if(!!err)
@@ -89,7 +89,7 @@ BlockChain.prototype.delBlockByHash = function(hash, cb)
 {
   const db = initDb();
 
-  hash = util.toBuffer(hash);
+  hash = ebUtil.toBuffer(hash);
 
   db.del(hash, function(err) {
     if(!!err)
@@ -158,7 +158,7 @@ Block.prototype.putBlock = function(block, cb)
         {
           if(err.notFound)
           {
-            cb(null, util.toBuffer(0));
+            cb(null, ebUtil.toBuffer(0));
           }
           return cb(err);
         }
@@ -170,7 +170,7 @@ Block.prototype.putBlock = function(block, cb)
       block.number = new BN(number).iaddn(1);
       db.put(maxBlockNumberKey, block.number, cb);
     },
-    funtion(cb) {
+    function(cb) {
       this.updateBlock(block, cb);
     }], function(err) {
       if(!!err)
@@ -189,7 +189,7 @@ Block.prototype.getBlockHashByNumber = function(number, cb)
 {
   let db = initDb();
 
-  number = util.toBuffer(number);
+  number = ebUtil.toBuffer(number);
 
   db.get(number, function(err, hash) {
     if(!!err)

@@ -1,7 +1,7 @@
-const util = require("../../utils")
+const util = require("../utils")
 const Trie = require("merkle-patricia-tree/secure")
 const async = require("async")
-const initDb = require("../../db")
+const initDb = require("../db")
 
 const rlp = util.rlp;
 const BN = util.BN;

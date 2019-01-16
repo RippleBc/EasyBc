@@ -1,9 +1,9 @@
-const Buffer = require('safe-buffer').Buffer
-const async = require('async')
-const util = require('../../util')
-const BN = util.BN
-const Bloom = require('./bloom.js')
-const Block = require('../../block')
+const Buffer = require("safe-buffer").Buffer
+const async = require("async")
+const util = require("../utils")
+const Block = require("../block")
+
+const BN = util.BN;
 
 /**
  * Process a transaction. Transfers coin. Checks balances.
