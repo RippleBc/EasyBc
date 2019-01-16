@@ -22,7 +22,8 @@ module.exports = function(data, cb)
       runBlock
     ], cb);
 
-    function getStartingState (cb) {
+    function getStartingState(cb)
+    {
       if(headBlock)
       {
         parentState = headBlock.header.stateRoot;
@@ -37,14 +38,15 @@ module.exports = function(data, cb)
       }
     }
 
-    function runBlock (cb) {
+    function runBlock(cb)
+    {
       self.runBlock({
         block: block,
         root: parentState
       }, function (err, results) {
         if(!!err)
         {
-          blockchain.delBlock(block.header.hash(), cb)
+          blockchain.delBlockByHash(block.header.hash(), cb);
         }
         else
         {
