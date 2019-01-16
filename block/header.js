@@ -32,7 +32,7 @@ class BlockHeader
     }, {
       name: "transactionsTrie",
       length: 32,
-      default: utils.SHA3_RLP
+      default: util.SHA3_RLP
     }, {
       name: "number",
       length: 32,
@@ -60,7 +60,7 @@ class BlockHeader
       default: util.intToBuffer(50)
     }];
 
-    utils.defineProperties(this, fields, data);
+    util.defineProperties(this, fields, data);
   }
 
   /**
@@ -72,14 +72,14 @@ class BlockHeader
   validate(blockchain, cb)
   {
     // geneies block, no not need check
-    if()
+    if(this.isGenesis())
     {
       cb();
     }
 
 
     // find the blocks parent
-    blockchain.getBlock(self.parentHash, function(err, parentBlock)
+    blockchain.getBlockByHash(self.parentHash, function(err, parentBlock)
     {
       if(err)
       {
@@ -96,7 +96,7 @@ class BlockHeader
       }
 
       // check block timestamp
-      if(utils.bufferToInt(self.timestamp) <= utils.bufferToInt(parentBlock.header.timestamp))
+      if(util.bufferToInt(self.timestamp) <= util.bufferToInt(parentBlock.header.timestamp))
       {
         return cb("class Block validate, invalid timestamp");
       }
@@ -113,7 +113,7 @@ class BlockHeader
   hash()
   {
     let rlpEncodedText = this.serialize();
-    return utils.keccak256(rlpEncodedText);
+    return util.keccak256(rlpEncodedText);
   }
 
   isGenesis()
