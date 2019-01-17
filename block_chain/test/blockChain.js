@@ -9,7 +9,7 @@ const initDb = require("../../db")
 
 const BN = util.BN;
 
-function test1(cb)
+function addGenesis(cb)
 {
 	var rawTx = [
 	  "0x01",
@@ -101,7 +101,7 @@ function test1(cb)
 		});
 }
 
-function test2(cb)
+function addNoGenesis(cb)
 {
 	var rawTx = [
 	  "0x01",
@@ -197,8 +197,8 @@ function test2(cb)
 }
 
 async.waterfall([
-	test1,
-	test2
+	addGenesis,
+	addNoGenesis
 	], function(err) {
 		assert(!err, "err");
 		console.log("test ok!!!")
