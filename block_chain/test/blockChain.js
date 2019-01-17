@@ -32,11 +32,8 @@ function test1(cb)
 	};
 
 	let block = new Block([rawHeader, [rawTx]]);
-	let blockChain = new BlockChain({
-		stateTrie: null
-	});
-
-
+	let blockChain = new BlockChain();
+	
 	let tx1;
 
 	async.waterfall([
@@ -48,6 +45,7 @@ function test1(cb)
 			block.validate(blockChain, cb);
 		},
 		function(cb) {
+			assert(util.SHA3_RLP_S === blockChain.stateManager.trie.root.toString("hex"), "err");
 			blockChain.runBlock({block: block, generate: true}, function(err, errCode, failedTransactions) {
 				if(!!err && errCode === blockChain.TX_PROCESS_ERR)
 				{
@@ -96,9 +94,9 @@ function test1(cb)
 				cb(err);
 				return;
 			}
-			console.log(block.header.hash().toString("hex"))
-			console.log(blockChain.stateManager.trie.root.toString("hex"))
-			console.log("test ok!!!")
+			assert("9ea454e199854287cdfc811520757c3f91f86005f427ee00c2b159bc5a75b5a5" === block.header.hash().toString("hex"))
+			assert("762e0cb00b55a409cc821904baf8ba8904298a47d204802d9414561e54026ab6" === blockChain.stateManager.trie.root.toString("hex"), "err");
+
 			cb();
 		});
 }
@@ -131,7 +129,7 @@ function test2(cb)
 	let db = initDb();
 	let trie = new Trie(db, "0x762e0cb00b55a409cc821904baf8ba8904298a47d204802d9414561e54026ab6");
 
-	let blockChain = new BlockChain();
+	let blockChain = new BlockChain({stateTrie: trie});
 
 	let tx1 = block.transactions[0];
 	assert(tx1.nonce.toString("hex") == "01", "err");
@@ -141,8 +139,19 @@ function test2(cb)
 	assert(tx1.v.toString("hex") == "1c", "err");
 	assert(tx1.r.toString("hex") == "f25dcf0fbbd3a8b629ab6f0a758cae100c2432a2fd761d75a81b9b08352156da", "err");
 	assert(tx1.s.toString("hex") == "3504bcfe0b27a31658ba34c292dbf05818c7e560dbd193f7cdb6500ccfbda94a", "err");
-
+	//e277542de133732bd11ab15bca9d16f021f9e018
 	async.waterfall([
+		function(cb) {
+			blockChain.stateManager.getAccountBalance(tx1.from, cb);
+		},
+		function(balance, cb) {
+			assert(new BN(balance).eq(new BN("38f0", 16)), "err");
+			blockChain.stateManager.getAccountBalance(tx1.to, cb);
+		},
+		function(balance, cb) {
+			assert(new BN(balance).eq(new BN("8710", 16)), "err");
+			cb();
+		},
 		function(cb) {
 			block.genTxTrie(cb);
 		},
@@ -151,7 +160,7 @@ function test2(cb)
 			block.validate(blockChain, cb);
 		},
 		function(cb) {
-			blockChain.runBlock({block: block, generate: true, state: "0x762e0cb00b55a409cc821904baf8ba8904298a47d204802d9414561e54026ab6"}, function(err, errCode, failedTransactions) {
+			blockChain.runBlock({block: block, generate: true}, function(err, errCode, failedTransactions) {
 				if(!!err && errCode === blockChain.TX_PROCESS_ERR)
 				{
 					for(let i = 0; i < failedTransactions.length; i++)
@@ -174,39 +183,23 @@ function test2(cb)
 			assert(util.bufferToInt(block.header.nonce) === 100, "err");
 			assert(block.header.extraData.toString("hex") === "0123", "err");
 			assert(util.bufferToInt(block.header.transactionSizeLimit) === 2, "err");
-
-			tx1 = block.transactions[0];
-			assert(tx1.nonce.toString("hex") == "01", "err");
-			assert(tx1.to.toString("hex") == "1234567891123456789112345678911234567891", "err");
-			assert(tx1.value.toString("hex") == "2710", "err");
-			assert(tx1.data.toString() == "hello", "err");
-			assert(tx1.v.toString("hex") == "1c", "err");
-			assert(tx1.r.toString("hex") == "f25dcf0fbbd3a8b629ab6f0a758cae100c2432a2fd761d75a81b9b08352156da", "err");
-			assert(tx1.s.toString("hex") == "3504bcfe0b27a31658ba34c292dbf05818c7e560dbd193f7cdb6500ccfbda94a", "err");
 			
 			blockChain.stateManager.getAccountBalance(tx1.from, cb);
 		},
 		function(balance, cb) {
-			console.log(balance.toString("hex"))
 			assert(new BN(balance).eq(new BN("11e0", 16)), "err");
 			blockChain.stateManager.getAccountBalance(tx1.to, cb);
 		},
 		function(balance, cb) {
 			assert(new BN(balance).eq(new BN("ae20", 16)), "err");
 			cb(null);
-		}], function(err) {
-			if(!!err)
-			{
-				return cb(err);
-			}
-			console.log("test ok!!!");
-			cb();
-		});
+		}], cb);
 }
 
 async.waterfall([
 	test1,
 	test2
 	], function(err) {
-
+		assert(!err, "err");
+		console.log("test ok!!!")
 	})

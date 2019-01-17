@@ -46,8 +46,8 @@ module.exports = function(opts, cb) {
   {
     var accounts = new Set();
     block.transactions.forEach(function(tx) {
-      accounts.add(tx.getSenderAddress().toString("hex"));
-      accounts.add(tx.to.toString("hex"));
+      accounts.add(tx.getSenderAddress());
+      accounts.add(tx.to);
     });
 
     self.populateCache(accounts, function(err) {

@@ -42,7 +42,7 @@ assert(util.bufferToInt(account3.balance) === 300);
 async.waterfall([
 	function(cb) {
 		cacheInstance.flush(function(err) {
-			if(err)
+			if(!!err)
 			{
 				return cb("flush fail");
 			}

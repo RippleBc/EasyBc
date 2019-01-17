@@ -79,7 +79,7 @@ class Cache
         accountArr.push(val);
       }
     });
-
+    
     async.eachSeries(accountArr, function(address, done) {
       self._lookupAccountFromDb(address, function(err, account) {
         if(err)
