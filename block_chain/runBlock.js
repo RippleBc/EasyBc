@@ -29,6 +29,7 @@ module.exports = function(opts, cb) {
   const validateStateRoot = !ifGenerateStateRoot;
 
   let failedTransactions = [];
+  let failedTransactionsError = [];
 
   if(opts.root)
   {
@@ -74,6 +75,7 @@ module.exports = function(opts, cb) {
       }, function(err) {
         if(!!err)
         {
+          failedTransactionsError.push(err);
           failedTransactions.push(tx);
         }
         cb()
@@ -108,7 +110,7 @@ module.exports = function(opts, cb) {
         self.stateManager.commit(function(err) {
           if(!!err)
           {
-            return cb("runBlock, commit err", self.TRIE_COMMIT_ERR)
+            return cb("runBlock, commit err, " + err, self.TRIE_COMMIT_ERR)
           }
           cb();
         });
@@ -122,7 +124,7 @@ module.exports = function(opts, cb) {
           self.stateManager.revert(function(err) {
             if(!!err)
             {
-              return cb("runBlock, revert err", self.TRIE_REVERT_ERR);
+              return cb("runBlock, revert err, " + err, self.TRIE_REVERT_ERR);
             }
             return cb(err, errCode);
           });
@@ -134,7 +136,7 @@ module.exports = function(opts, cb) {
           return cb();
         }
        
-        return cb("runBlock, some transactions is invalid", self.TX_PROCESS_ERR, failedTransactions);
+        return cb("runBlock, some transactions is invalid, " + failedTransactionsError.toString(), self.TX_PROCESS_ERR, failedTransactions);
       });
   }
 }
