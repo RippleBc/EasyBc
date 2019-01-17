@@ -42,28 +42,31 @@ class Transaction
     const fields = [{
       name: "nonce",
       length: 32,
+      allowZero: true,
       allowLess: true,
       default: util.Buffer.alloc(0)
     }, {
       name: "to",
-      allowZero: true,
       length: 20,
-      default: util.Buffer.alloc(0)
+      default: util.Buffer.alloc(20)
     }, {
       name: "value",
       length: 32,
+      allowZero: true,
       allowLess: true,
       default: util.Buffer.alloc(0)
     }, {
       name: "data",
       length: 32,
       alias: "input",
-      allowLess: true,
       allowZero: true,
+      allowLess: true,
       default: util.Buffer.alloc(0)
     }, {
       name: "v",
+      length: 1,
       allowZero: true,
+      allowLess: true,
       default: util.Buffer.from([0x1c])
     }, {
       name: "r",
@@ -201,7 +204,7 @@ class Transaction
   {
     const errors = [];
 
-    if(this.to.toString("hex") === "")
+    if(this.to.toString("hex") === "0000000000000000000000000000000000000000")
     {
       errors.push("class Transaction validate, property to can not be empty");
     }

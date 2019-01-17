@@ -506,21 +506,31 @@ exports.defineProperties = function(self, fields, data) {
       // note!!! if value is a hex string, prefix zero will be deleted
       value = exports.toBuffer(value);
 
-      // if(exports.stripHexPrefix(value.toString("hex")) === "" && !field.allowZero)
-      // {
-      //   throw new Error("util defineProperties, The field " + field.name + " can not be zero.");
-      // }
+      if(value.toString("hex") === "" && !field.allowZero)
+      {
+        throw new Error("util defineProperties, The field " + field.name + " can not be zero.");
+      }
 
       // if value is zero, as zero hex string will be truncated, so value can be any byte length
-      if(!field.allowZero && field.length)
+      if(field.length)
       {
-        if(field.allowLess)
+        if(field.allowZero)
         {
-          assert(field.length >= value.length, "uitl defineProperties, The field " + field.name + " must not have more " + field.length + " bytes");
+          if(field.allowLess)
+          {
+            assert(field.length >= value.length, "uitl defineProperties, The field " + field.name + " must not have more " + field.length + " bytes");
+          }
         }
         else
         {
-          assert(field.length === value.length, "uitl defineProperties, The field " + field.name + " must have byte length of " + field.length);
+          if(field.allowLess)
+          {
+            assert(field.length >= value.length, "uitl defineProperties, The field " + field.name + " must not have more " + field.length + " bytes");
+          }
+          else
+          {
+            assert(field.length === value.length, "uitl defineProperties, The field " + field.name + " must have byte length of " + field.length);
+          }
         }
       }
 
