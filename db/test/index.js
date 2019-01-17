@@ -60,7 +60,11 @@ let test1 = function(cb)
       });
     },
     function(cb) {
-      trie1.commit(function() {
+      trie1.commit(function(err) {
+        if(!!err)
+        {
+          return cb(err);
+        }
         cb();
       });
     },

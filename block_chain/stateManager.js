@@ -113,14 +113,24 @@ class StateManager
 
   commit(cb)
   {
-    this.trie.commit(function() {
+    this.trie.commit(function(err) {
+      if(!!err)
+      {
+        return cb(err);
+      }
+
       cb();
     });
   }
 
   revert(cb)
   {
-    this.trie.revert(function() {
+    this.trie.revert(function(err) {
+      if(!!err)
+      {
+        return cb(err);
+      }
+      
       cb();
     });
   }

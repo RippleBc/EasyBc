@@ -24,6 +24,12 @@ function BlockChain(opts)
     blockChain: this
   })
 
+  this.TX_PROCESS_ERR = 0;
+  this.POPULATE_CACHE_ERR = 1;
+  this.TX_SIZE_ERR = 2;
+  this.TRIE_STATE_ERR = 3;
+  this.TRIE_COMMIT_ERR = 4;
+  this.TRIE_REVERT_ERR = 5;
   AsyncEventEmitter.call(this);
 }
 

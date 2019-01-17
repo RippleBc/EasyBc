@@ -6,12 +6,13 @@ const initDb = require("../db")
 const rlp = util.rlp;
 const BN = util.BN;
 const Buffer = util.Buffer;
+
 /**
  * process the transaction in a block
  * @param opts
  * @param opts.block {Block} the block we are processing
- * @param opts.generate {Boolean} [gen=false] whether to generate the stateRoot
  * @param opts.root {Buffer} the parent block stateRoot
+ * @param opts.generate {Boolean} [gen=false] whether to generate the stateRoot
  * @param cb {Function} the callback which is given arguments errString, errCode and failedTransactions
  */
 module.exports = function(opts, cb) {
@@ -51,8 +52,9 @@ module.exports = function(opts, cb) {
     self.populateCache(accounts, function(err) {
       if(!!err)
       {
-        cb(err, 1);
+        return cb(err, self.POPULATE_CACHE_ERR);
       }
+      cb();
     });
   }
 
@@ -62,7 +64,7 @@ module.exports = function(opts, cb) {
 
     if(block.transactions.length > util.bufferToInt(block.header.transactionSizeLimit))
     {
-      return cb("runBlock, transaction size is bigger than the the limit of block", 2);
+      return cb("runBlock, transaction size is bigger than the the limit of block", self.TX_SIZE_ERR);
     }
 
     async.eachSeries(block.transactions, function(tx, cb) {
@@ -97,15 +99,19 @@ module.exports = function(opts, cb) {
       function(cb) {
         self.stateManager.cache.flush(function() {
           if(validateStateRoot && self.stateManager.trie.root.toString("hex") !== block.header.stateRoot.toString("hex")) {
-            return cb("runBlock, invalid block stateRoot", 3);
+            return cb("runBlock, invalid block stateRoot", self.TRIE_STATE_ERR);
           }
           cb();
         })
       },
       function(cb) {
-        self.stateManager.trie.commit(function() {
+        self.stateManager.commit(function(err) {
+          if(!!err)
+          {
+            return cb("runBlock, commit err", self.TRIE_COMMIT_ERR)
+          }
           cb();
-        })
+        });
       },
       function(cb) {
         self.stateManager.cache.clear();
@@ -113,17 +119,22 @@ module.exports = function(opts, cb) {
       }], function(err, errCode) {
         if(!!err)
         {
-          self.stateManager.trie.revert();
-          return cb(err, errCode)
+          self.stateManager.revert(function(err) {
+            if(!!err)
+            {
+              return cb("runBlock, revert err", self.TRIE_REVERT_ERR);
+            }
+            return cb(err, errCode);
+          });
+          return;
         }
+
         if(failedTransactions.length === 0)
         {
           return cb(null);
         }
-        else
-        {
-          return cb("runBlock, some transactions is invalid", 0, failedTransactions);
-        }
+       
+        return cb("runBlock, some transactions is invalid", self.TX_PROCESS_ERR, failedTransactions);
       });
   }
 }

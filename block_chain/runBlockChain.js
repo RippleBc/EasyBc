@@ -4,18 +4,18 @@ const util = require("../utils")
 const BN = util.BN;
 
 /**
- * processes blocks and adds them to the blockchain
+ * processes blocks and adds them to the blockchain, blocks should be ordered by block.number like a, a+1, a+1, a+2, a+3 ..., a+n, the block with same block.number is allowed.
  * @param blockchain
  */
 module.exports = function(data, cb)
 {
-  let parentState, headBlock;
+  let parentState, parentBlock;
 
   blockchain = data.blockchain || this.stateManager.blockchain;
 
   blockchain.eachSeries(data.blocks, processBlock, cb);
 
-  function processBlock(block, reorg, cb)
+  function processBlock(block, cb)
   {
     async.series([
       getStartingState,
@@ -24,18 +24,16 @@ module.exports = function(data, cb)
 
     function getStartingState(cb)
     {
-      if(headBlock)
+      if(parentBlock)
       {
-        parentState = headBlock.header.stateRoot;
-        cb();
+        parentState = parentBlock.header.stateRoot;
+        return cb();
       } 
-      else
-      {
-        blockchain.getBlock(block.header.parentHash, function(err, parentBlock) {
-          parentState = parentBlock.header.stateRoot;
-          cb(err);
-        });
-      }
+      
+      blockchain.getBlockByHash(block.header.parentHash, function(err, parentBlock) {
+        parentState = parentBlock.header.stateRoot;
+        cb(err);
+      });
     }
 
     function runBlock(cb)
@@ -43,14 +41,14 @@ module.exports = function(data, cb)
       self.runBlock({
         block: block,
         root: parentState
-      }, function (err, results) {
+      }, function(err, results) {
         if(!!err)
         {
           blockchain.delBlockByHash(block.header.hash(), cb);
         }
         else
         {
-          headBlock = block;
+          parentBlock = block;
           cb();
         }
       })
