@@ -11,7 +11,7 @@ const Buffer = util.Buffer;
  * process the transaction in a block
  * @param opts
  * @param opts.block {Block} the block we are processing
- * @param opts.root {Buffer} the parent block stateRoot
+ * @param opts.root {Buffer|String} the parent block stateRoot
  * @param opts.generate {Boolean} [gen=false] whether to generate the stateRoot
  * @param cb {Function} the callback which is given arguments errString, errCode and failedTransactions
  */
@@ -89,12 +89,10 @@ module.exports = function(opts, cb) {
     {
       return cb(err, errCode);
     }
-
     if(ifGenerateStateRoot)
     {
       block.header.stateRoot = self.stateManager.trie.root;
     }
-
     self.stateManager.checkpoint();
 
     async.waterfall([

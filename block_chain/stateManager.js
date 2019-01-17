@@ -31,16 +31,6 @@ class StateManager
     this.cache = new Cache(this.trie);
   }
 
-
-  /**
-   * @param {Buffer} address
-   */
-  getAccount(address, cb)
-  {
-    this.cache.getOrLoad(address, cb);
-  }
-
-
   /**
    * @param {Buffer} address
    */
@@ -54,6 +44,14 @@ class StateManager
 
       cb(err, account.exists);
     })
+  }
+
+  /**
+   * @param {Buffer} address
+   */
+  getAccount(address, cb)
+  {
+    this.cache.getOrLoad(address, cb);
   }
 
   /**

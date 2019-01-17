@@ -167,6 +167,11 @@ BlockChain.prototype.putBlock = function(block, cb)
 
   async.waterfall([
     function(cb) {
+      if(block.header.isGenesis())
+      {
+        return cb(null, new BN(0));
+      }
+
       db.get(maxBlockNumberKey, function(err, number) {
         if(!!err)
         {

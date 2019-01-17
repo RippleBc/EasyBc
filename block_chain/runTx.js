@@ -29,37 +29,36 @@ module.exports = function(opts, cb)
   function subTxValue(cb)
   {
     let fromAccount = self.stateManager.cache.get(tx.from);
-    let message;
 
     if(!opts.skipBalance && new BN(fromAccount.balance).lt(tx.getUpfrontCost()))
     {
       message = "sender doesn't have enough funds to send tx. The upfront cost is: " + tx.getUpfrontCost().toString() + " and the sender's account only has: " + new BN(fromAccount.balance).toString();
-      return cb(new Error(message));
+      return cb(message);
     } 
-    else if(!opts.skipNonce && !(new BN(fromAccount.nonce).eq(new BN(tx.nonce))))
-    {
-      message = "the tx doesn't have the correct nonce. account has nonce of: " + new BN(fromAccount.nonce).toString() + " and tx has nonce of: " + new BN(tx.nonce).toString();
-      return cb(new Error(message));
-    }
+    // else if(!opts.skipNonce && !(new BN(fromAccount.nonce).eq(new BN(tx.nonce))))
+    // {
+    //   message = "the tx doesn't have the correct nonce. account has nonce of: " + new BN(fromAccount.nonce).toString() + " and tx has nonce of: " + new BN(tx.nonce).toString();
+    //   return cb(message);
+    // }
 
     // increment the nonce
     fromAccount.nonce = new BN(fromAccount.nonce).addn(1);
 
     // sub coin
-    let newBalance = new BN(fromAccount.balance).sub(txValue);
-    fromAccount.balance = newBalance;
+    let newBalance = new BN(fromAccount.balance).sub(new BN(tx.value));
+    fromAccount.balance = util.toBuffer(newBalance);
 
-    stateManager.putAccountBalance(util.toBuffer(caller), newBalance, cb)
+    self.stateManager.putAccount(tx.from, fromAccount, cb);
   }
   
   function addTxValue(cb)
   {
-    toAccount = stateManager.cache.get(toAddress);
+    let toAccount = self.stateManager.cache.get(tx.to);
 
     // add coin
-    var newBalance = new BN(toAccount.balance).add(txValue);
-    toAccount.balance = newBalance;
-    
-    stateManager.putAccount(util.toBuffer(toAddress), toAccount, cb);
+    var newBalance = new BN(toAccount.balance).add(new BN(tx.value));
+    toAccount.balance = util.toBuffer(newBalance);
+
+    self.stateManager.putAccount(tx.to, toAccount, cb);
   }
 }

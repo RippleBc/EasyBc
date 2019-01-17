@@ -20,7 +20,7 @@ class Account
       name: "balance",
       allowZero: true,
       allowLess: true,
-      default: util.toBuffer(1000000000)
+      default: util.toBuffer("0x6000")
     }];
 
     util.defineProperties(this, fields, data);
