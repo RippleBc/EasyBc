@@ -17,11 +17,13 @@ const maxBlockNumberKey = ebUtil.toBuffer("maxBlockNumberKey");
  */
 function BlockChain(opts)
 {
+  const self = this;
+
   opts = opts || {};
 
   this.stateManager = new StateManager({
     trie: opts.stateTrie,
-    blockChain: this
+    blockChain: self
   })
 
   this.TX_PROCESS_ERR = 0;
@@ -75,16 +77,18 @@ BlockChain.prototype.getBlockByHash = function(hash, cb) {
  */
 BlockChain.prototype.getBlockByNumber = function(number, cb)
 {
+  const self = this;
+
   async.waterfall([
     function(cb) {
-      this.getBlockHashByNumber(number, cb);
+      self.getBlockHashByNumber(number, cb);
     },
     function(hash, cb) {
       if(hash === null)
       {
-        return cb(`BlockChain getBlockByNumber, block, number: ${number.toString("hex")} not exist`);
+        return cb(`BlockChain getBlockByNumber, block, number: ${ebUtil.toBuffer(number).toString("hex")} not exist`);
       }
-      this.getBlockByHash(hash, cb);
+      self.getBlockByHash(hash, cb);
     }], cb);
 }
 
@@ -111,16 +115,18 @@ BlockChain.prototype.delBlockByHash = function(hash, cb)
  */
 BlockChain.prototype.delBlockByNumber = function(number, cb)
 {
+  const self = this;
+
   async.waterfall([
     function(cb) {
-      this.getBlockHashByNumber(number, cb)
+      self.getBlockHashByNumber(number, cb)
     },
     function(hash, cb) {
       if(hash === null)
       {
-        return cb(`BlockChain delBlockByNumber, block, number: ${number.toString("hex")} not exist`);
+        return cb(`BlockChain delBlockByNumber, block, number: ${ebUtil.toBuffer(number).toString("hex")} not exist`);
       }
-      this.delBlockByHash(hash, cb);
+      self.delBlockByHash(hash, cb);
     }], cb);
 }
 
@@ -132,7 +138,7 @@ BlockChain.prototype.updateBlock = function(block, cb)
   const db = initDb();
 
   const blockHash = block.hash();
-  const number = block.number;
+  const number = block.header.number;
 
   async.waterfall([
     function(cb) {
@@ -153,8 +159,10 @@ BlockChain.prototype.updateBlock = function(block, cb)
  * Add new block to block chain
  * @param {Block} block
  */
-Block.prototype.putBlock = function(block, cb)
+BlockChain.prototype.putBlock = function(block, cb)
 {
+  const self = this;
+
   let db = initDb();
 
   async.waterfall([
@@ -164,7 +172,7 @@ Block.prototype.putBlock = function(block, cb)
         {
           if(err.notFound)
           {
-            cb(null, new BN(0));
+            return cb(null, new BN(0));
           }
           return cb(err);
         }
@@ -173,11 +181,11 @@ Block.prototype.putBlock = function(block, cb)
       });
     },
     function(number, cb) {
-      block.number = util.toBuffer(number.iaddn(1));
-      db.put(maxBlockNumberKey, block.number, cb);
+      block.header.number = ebUtil.toBuffer(number.iaddn(1));
+      db.put(maxBlockNumberKey, block.header.number, cb);
     },
     function(cb) {
-      this.updateBlock(block, cb);
+      self.updateBlock(block, cb);
     }], function(err) {
       if(!!err)
       {
@@ -191,7 +199,7 @@ Block.prototype.putBlock = function(block, cb)
  * @param {*} number
  * @return cb a callback function which is given the arguments err - for errors that may have occured and value - the found value in a Buffer or if no value was found null
  */
-Block.prototype.getBlockHashByNumber = function(number, cb)
+BlockChain.prototype.getBlockHashByNumber = function(number, cb)
 {
   let db = initDb();
 
@@ -202,7 +210,7 @@ Block.prototype.getBlockHashByNumber = function(number, cb)
     {
       if(err.notFound)
       {
-        cb(null, null);
+        return cb(null, null);
       }
       return cb("BlockChain getBlockHashByNumber, " + err);
     }
@@ -213,7 +221,7 @@ Block.prototype.getBlockHashByNumber = function(number, cb)
 /**
  * Get max block number
  */
-Block.prototype.getMaxBlockNumber = function(cb)
+BlockChain.prototype.getMaxBlockNumber = function(cb)
 {
   let db = initDb();
 
@@ -222,7 +230,7 @@ Block.prototype.getMaxBlockNumber = function(cb)
     {
       if(err.notFound)
       {
-        cb(null, new BN(0));
+        return cb(null, new BN(0));
       }
       return cb(err);
     }

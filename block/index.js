@@ -149,6 +149,7 @@ class Block {
 
   /**
    * Validates the entire block. Returns a string to the callback if block is invalid
+   * Checks parent block's hash, timestamp, number and current block's transactionTrieRoot and the valid of transactions
    * @method validate
    * @param {BlockChain} blockChain the blockchain that this block wants to be part of
    * @param {Function} cb the callback which is given arguments result{null|String}
@@ -171,7 +172,7 @@ class Block {
 
       if(!self.validateTransactionsTrie())
       {
-        errors.push("class Block, invalid transaction true");
+        errors.push("class Block, invalid transaction trie");
       }
 
       let txErrors = self.validateTransactions(true);

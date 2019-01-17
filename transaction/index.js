@@ -196,7 +196,8 @@ class Transaction
   }
 
   /**
-   * validates the signature
+   * Validates the signature
+   * Checks transaction's property and signature
    * @param {Boolean} [stringError=false] whether to return a string with a description of why the validation failed or return a Boolean
    * @return {Boolean|String}
    */
@@ -204,9 +205,21 @@ class Transaction
   {
     const errors = [];
 
+    let bnZero = new BN(0);
+
+    if(new BN(this.nonce).eq(bnZero))
+    {
+      errors.push("class Transaction validate, property nonce can not be zero");
+    }
+
+    if(new BN(this.value).eq(bnZero))
+    {
+      errors.push("class Transaction validate, property value can not be zero");
+    }
+
     if(this.to.toString("hex") === "0000000000000000000000000000000000000000")
     {
-      errors.push("class Transaction validate, property to can not be empty");
+      errors.push("class Transaction validate, property to can not be zero");
     }
 
     if(this.to.toString("hex") === this.getSenderAddress().toString("hex"))

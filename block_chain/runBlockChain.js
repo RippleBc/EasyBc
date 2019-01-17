@@ -28,8 +28,13 @@ module.exports = function(data, cb)
       {
         parentState = parentBlock.header.stateRoot;
         return cb();
-      } 
-      
+      }
+
+      if(block.isGenesis())
+      {
+        return cb();
+      }
+
       blockchain.getBlockByHash(block.header.parentHash, function(err, parentBlock) {
         parentState = parentBlock.header.stateRoot;
         cb(err);
@@ -41,16 +46,13 @@ module.exports = function(data, cb)
       self.runBlock({
         block: block,
         root: parentState
-      }, function(err, results) {
+      }, function(err, errCode, failedTransactions) {
         if(!!err)
         {
           blockchain.delBlockByHash(block.header.hash(), cb);
+          return;
         }
-        else
-        {
-          parentBlock = block;
-          cb();
-        }
+        parentBlock = block;
       })
     }
   }

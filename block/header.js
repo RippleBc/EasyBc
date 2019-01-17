@@ -78,12 +78,18 @@ class BlockHeader
   {
     const self = this;
 
+    let bnZero = new BN(0);
+
     // geneies block, no not need check
     if(this.isGenesis())
     {
       return cb();
     }
 
+    if(new BN(this.nonce).eq(bnZero))
+    {
+      return cb("class Block validate, property nonce can not be zero");
+    }
 
     // find the blocks parent
     blockchain.getBlockByHash(self.parentHash, function(err, parentBlock)
@@ -125,7 +131,7 @@ class BlockHeader
 
   isGenesis()
   {
-    return new util.BN(this.parentHash).eq(new util.BN(0));
+    return this.parentHash.toString("hex") === "0000000000000000000000000000000000000000000000000000000000000000";
   }
 }
 
