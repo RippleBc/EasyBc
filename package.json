@@ -7,6 +7,7 @@
     "async-eventemitter": "^0.2.4",
     "bn.js": "^4.11.8",
     "create-hash": "^1.2.0",
+    "express": "^4.16.4",
     "flow-stoplight": "^1.0.0",
     "functional-red-black-tree": "^1.0.1",
     "keccak": "^2.0.0",
@@ -23,6 +24,8 @@
   },
   "devDependencies": {},
   "scripts": {
+    "server": "node server/index.js",
+    "client": "node server/index.js",
     "dev": "node index.js",
     "testUtil": "node utils/test/index.js",
     "testTransaction": "node transaction/test/index.js",
