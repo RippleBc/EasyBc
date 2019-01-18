@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "async-eventemitter": "^0.2.4"
+  }
+}
