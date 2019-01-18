@@ -226,6 +226,7 @@ class BlockChain extends AsyncEventEmitter
 
   /**
    * Get max block number
+   * @param cb a function with arguments err and {BN}maxBlockNumber
    */
   getMaxBlockNumber(cb)
   {

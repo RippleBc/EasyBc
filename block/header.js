@@ -3,7 +3,7 @@ const util = require("../utils")
 const BN = util.BN;
 const Buffer = util.Buffer;
 
-const MAX_TRANSACTION_SIZE =  util.intToBuffer(50);
+const DEFAULT_TRANSACTION_SIZE =  util.intToBuffer(50);
 
 /**
  * Creates a new BlockHeader object
@@ -62,7 +62,7 @@ class BlockHeader
       name: "transactionSizeLimit",
       length: 32,
       allowLess: true,
-      default: MAX_TRANSACTION_SIZE
+      default: DEFAULT_TRANSACTION_SIZE
     }];
 
     util.defineProperties(this, fields, data);
