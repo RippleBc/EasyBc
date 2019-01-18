@@ -1,14 +1,23 @@
 const semaphore = require("semaphore")
 
+/**
+ * Creates a new pool object
+ *
+ * @class
+ * @constructor
+ * @prop 
+ */
 class Pool
 {
 	constructor()
 	{
 		const self = this;
 
-		this.sem = semaphore(1);
+		self.sem = semaphore(1);
 		self.data = [];
 		self.defineProperty("length", {
+			enumerable: true,
+      configurable: true,
 			get: function() {
 				return self.data.length;
 			}
@@ -17,6 +26,8 @@ class Pool
 
 	splice(begin, end, cb)
 	{
+		const self = this;
+
 		self.sem.take(function() {
 			//
 			if(end)
@@ -33,13 +44,15 @@ class Pool
 		});
 	}
 
-	batchPush(value, cb)
+	batchPush(transactions, cb)
 	{
+		const self = this;
+
 		self.sem.take(function() {
 			//
-			for(let i = 0; i < value.length; i++)
+			for(let i = 0; i < transactions.length; i++)
 			{
-				self.data.push(value[i]);
+				self.data.push(transactions[i]);
 			}
 
 			self.sem.leave();
@@ -47,11 +60,60 @@ class Pool
 		});
 	}
 
-	push(value, cb)
+	push(transaction, cb)
 	{
+		const self = this;
+
 		self.sem.take(function() {
 			// 
-			self.data.push(value);
+			self.data.push(transaction);
+
+			self.sem.leave();
+			cb();
+		});
+	}
+
+	get(index)
+	{
+		const self = this;
+
+		return self.data[index];
+	}
+
+	del(transaction, cb)
+	{
+		const self = this;
+
+		self.sem.take(function() {
+			for(let i = 0; i < self.data.length; i++)
+			{
+				if(transaction.hash().toString("hex") === self.data[i].hash().toString("hex"))
+				{
+					self.data[i].splice(i, i + 1);
+				}
+			}
+
+			self.sem.leave();
+			cb();
+		});
+	}
+
+	delBatch(transactions, cb)
+	{
+		const self = this;
+
+		self.sem.take(function() {
+			
+			for(let i = 0; i < transactions.length; i++)
+			{
+				for(let j = 0; j < self.data.length; j++)
+				{
+					if(transactions[i].hash().toString("hex") === self.data[j].hash().toString("hex"))
+					{
+						self.data[j].splice(j, j + 1);
+					}
+				}
+			}
 
 			self.sem.leave();
 			cb();
