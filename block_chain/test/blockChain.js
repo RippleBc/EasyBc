@@ -46,7 +46,7 @@ function addGenesis(cb)
 		},
 		function(cb) {
 			assert(util.SHA3_RLP_S === blockChain.stateManager.trie.root.toString("hex"), "err");
-			blockChain.runBlock({block: block, generate: true}, function(err, errCode, failedTransactions) {
+			blockChain.runBlock({block: block, generate: true, skipNonce: true}, function(err, errCode, failedTransactions) {
 				if(!!err && errCode === blockChain.TX_PROCESS_ERR)
 				{
 					for(let i = 0; i < failedTransactions.length; i++)
@@ -160,7 +160,7 @@ function addNoGenesis(cb)
 			block.validate(blockChain, cb);
 		},
 		function(cb) {
-			blockChain.runBlock({block: block, generate: true}, function(err, errCode, failedTransactions) {
+			blockChain.runBlock({block: block, generate: true, skipNonce: true}, function(err, errCode, failedTransactions) {
 				if(!!err && errCode === blockChain.TX_PROCESS_ERR)
 				{
 					for(let i = 0; i < failedTransactions.length; i++)

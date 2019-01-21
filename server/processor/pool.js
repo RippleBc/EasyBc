@@ -24,20 +24,18 @@ class Pool
 		});
 	}
 
-	splice(begin, end, cb)
+	slice(begin, end)
+	{
+		return this.data.slice(begin, end);
+	}
+
+	splice(begin, number, cb)
 	{
 		const self = this;
 
 		self.sem.take(function() {
-			//
-			if(end)
-			{
-				self.data.splice(begin, end);
-			}
-			else
-			{
-				self.data.splice(begin);
-			}
+		
+			self.data.splice(begin, number);
 
 			self.sem.leave();
 			cb();
@@ -73,13 +71,6 @@ class Pool
 		});
 	}
 
-	get(index)
-	{
-		const self = this;
-
-		return self.data[index];
-	}
-
 	del(transaction, cb)
 	{
 		const self = this;
@@ -89,7 +80,7 @@ class Pool
 			{
 				if(transaction.hash().toString("hex") === self.data[i].hash().toString("hex"))
 				{
-					self.data[i].splice(i, i + 1);
+					self.data[i].splice(i, 1);
 				}
 			}
 
@@ -108,9 +99,9 @@ class Pool
 			{
 				for(let j = 0; j < self.data.length; j++)
 				{
-					if(transactions[i].hash().toString("hex") === self.data[j].hash().toString("hex"))
+					if(transactions[i].hash(true).toString("hex") === self.data[j].hash(true).toString("hex"))
 					{
-						self.data.splice(j, j + 1);
+						self.data.splice(j, 1);
 					}
 				}
 			}

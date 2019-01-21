@@ -5,12 +5,14 @@ const Consensus = require("../consensus")
 const util = require("util")
 const AsyncEventEmitter = require("async-eventemitter")
 const FlowStoplight = require("flow-stoplight")
+const semaphore = require("semaphore")
 const async = require("async")
 const Pool = require("./pool")
 const Trie = require("merkle-patricia-tree/secure.js")
 const initDb = require("../../db")
 
 const BLOCK_TRANSACTIONS_SIZE_LIMIT = 2;
+const ERR_TRANSACTION_SIZE_NOT_REACH = 1;
 /**
  * Creates a new processor object
  *
@@ -26,10 +28,10 @@ class Processor extends AsyncEventEmitter
 
 		const self = this;
 
+		this.transactionsPoolSem = semaphore(1);
+		this.consistentTransactionsPoolSem = semaphore(1);
 		this.stoplight = new FlowStoplight();
 		this.blockChain = new BlockChain();
-
-		initBlockChainState(self);
 
 		this.consensus = new Consensus(self);
 		this.transactionsPool = new Pool(100);
@@ -39,6 +41,8 @@ class Processor extends AsyncEventEmitter
 				processBlock(self);
 				next();		
 		});
+
+		initBlockChainState(self);
 	}
 	/**
 	 * @param {Buffer|String|Array|Object}
@@ -64,14 +68,24 @@ class Processor extends AsyncEventEmitter
 				return cb(e);
 			}
 
-			self.transactionsPool.push(transaction, function(err) {
-				if(!!err)
-				{
-					return cb(err);
-				}
-				self.emit("transaction");
-				cb();
-			});
+			self.transactionsPoolSem.take(function(semaphoreLeaveFunc) {
+
+				// push to transaction pool
+				self.transactionsPool.push(transaction, function(err) {
+
+					self.transactionsPoolSem.leave();
+
+					if(!!err)
+					{
+						return cb(err);
+					}
+
+					self.emit("transaction");
+					cb();
+				});
+
+			})
+			
 		});
 	}
 }
@@ -98,7 +112,6 @@ function initBlockChainState(processor)
 
 		getLastestBlockState(bnNumber);
 	});
-
 
 	function getLastestBlockState(bnNumber)
 	{
@@ -129,11 +142,7 @@ function initBlockChainState(processor)
  */
 function processBlock(processor)
 {
-	if(processor.consistentTransactionsPool.length < BLOCK_TRANSACTIONS_SIZE_LIMIT)
-	{
-		return;
-	}
-	const waitingProcessTransactionSize = processor.consistentTransactionsPool.length < BLOCK_TRANSACTIONS_SIZE_LIMIT ? processor.consistentTransactionsPool.length : BLOCK_TRANSACTIONS_SIZE_LIMIT;
+	let waitingProcessTransactionSize;
 
 	let rawHeader = {
 		parentHash: Buffer.alloc(32),
@@ -148,6 +157,21 @@ function processBlock(processor)
 	let block;
 
 	async.waterfall([
+		function(cb) {
+			// lock
+			processor.consistentTransactionsPoolSem.take(function(semaphoreLeaveFunc){
+				cb();
+			});
+		},
+		function(cb) {
+			if(processor.consistentTransactionsPool.length < BLOCK_TRANSACTIONS_SIZE_LIMIT)
+			{
+				return cb(ERR_TRANSACTION_SIZE_NOT_REACH);
+			}
+
+			waitingProcessTransactionSize = processor.consistentTransactionsPool.length < BLOCK_TRANSACTIONS_SIZE_LIMIT ? processor.consistentTransactionsPool.length : BLOCK_TRANSACTIONS_SIZE_LIMIT;
+			cb();
+		},
 		function(cb) {
 			// get lastest block number
 			processor.blockChain.getLastestBlockNumber(cb);
@@ -168,10 +192,14 @@ function processBlock(processor)
 			
 			// init block
 			let rawBLock = {header: rawHeader, transactions: []};
-			for(let i = 0; i < waitingProcessTransactionSize; i++)
-			{
-				rawBLock.transactions.push(processor.consistentTransactionsPool.get(i));
-			}
+			rawBLock.transactions = processor.consistentTransactionsPool.slice(0, waitingProcessTransactionSize);
+
+			// console.log("processing transaction: ")
+			// for(let i = 0; i < rawBLock.transactions.length; i++)
+			// {
+			// 	console.log("hash: " + rawBLock.transactions[i].hash(true).toString("hex") + ", nonce: " + rawBLock.transactions[i].nonce.toString("hex"));
+			// }
+
 			block = new Block(rawBLock);
 
 			// generate transactionsTrie
@@ -185,9 +213,10 @@ function processBlock(processor)
 			processor.blockChain.runBlock({block: block, generate: true}, function(err, errCode, failedTransactions) {
 				if(!!err && errCode === processor.blockChain.TX_PROCESS_ERR)
 				{
+					console.log("failed transactions: ")
 					for(let i = 0; i < failedTransactions.length; i++)
 					{
-						console.log("failedTransactions: index: " + i + ", hash: " + failedTransactions[i].hash(true).toString("hex"));
+						console.log("hash: " + failedTransactions[i].hash(true).toString("hex") + ", nonce: " + failedTransactions[i].nonce.toString("hex"));
 					}
 
 					// process failed transaction
@@ -200,8 +229,15 @@ function processBlock(processor)
 		function(cb) {
 			processor.consistentTransactionsPool.splice(0, waitingProcessTransactionSize, cb);
 		}], function(err) {
+
+			processor.consistentTransactionsPoolSem.leave();
+
 			if(!!err)
 			{
+				if(err === ERR_TRANSACTION_SIZE_NOT_REACH)
+				{
+					return;
+				}
 				throw Error("class Processor processBlock, " + err)
 			}
 		});

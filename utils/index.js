@@ -151,7 +151,7 @@ exports.privateToPublic = function(privateKey)
 }
 
 /**
- * Convert uncompressed publicKey to sanitized uncompressed form.
+ * Convert publicKey.
  * @param {Buffer|Array|String} publicKey
  * @return {Buffer}
  */

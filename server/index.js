@@ -36,8 +36,6 @@ app.post("/transaction", function(req, res) {
         });
         return;
     }
-
-
 })
 
 app.post("/account", function(req, res) {

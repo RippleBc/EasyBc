@@ -13,6 +13,8 @@ const Buffer = util.Buffer;
  * @param opts.block {Block} the block we are processing
  * @param opts.root {Buffer|String} the parent block stateRoot
  * @param opts.generate {Boolean} [gen=false] whether to generate the stateRoot
+ * @param opts.skipNonce {Boolean} if ignore transaction nonce check
+ * @param opts.skipBalance {Boolean} if ignore transaction balance check
  * @param cb {Function} the callback which is given arguments errString, errCode and failedTransactions
  */
 module.exports = function(opts, cb) {
@@ -72,6 +74,8 @@ module.exports = function(opts, cb) {
       self.runTx({
         tx: tx,
         block: block,
+        skipNonce: opts.skipNonce,
+        skipBalance: opts.skipBalance
       }, function(err) {
         if(!!err)
         {
