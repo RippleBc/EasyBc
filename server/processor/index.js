@@ -1,4 +1,4 @@
-const Transaction = require("../../Transaction")
+const Transaction = require("../../transaction")
 const Block = require("../../block")
 const BlockChain = require("../../block_chain")
 const Consensus = require("../consensus")
@@ -6,11 +6,11 @@ const util = require("util")
 const AsyncEventEmitter = require("async-eventemitter")
 const FlowStoplight = require("flow-stoplight")
 const async = require("async")
-const Pool = rquire("./pool")
+const Pool = require("./pool")
 const Trie = require("merkle-patricia-tree/secure.js")
 const initDb = require("../../db")
 
-const BLOCK_TRANSACTIONS_SIZE_LIMIT = 10;
+const BLOCK_TRANSACTIONS_SIZE_LIMIT = 2;
 /**
  * Creates a new processor object
  *
@@ -27,7 +27,7 @@ class Processor extends AsyncEventEmitter
 		const self = this;
 
 		this.stoplight = new FlowStoplight();
-		processor.blockChain = new BlockChain();
+		this.blockChain = new BlockChain();
 
 		initBlockChainState(self);
 
@@ -51,9 +51,9 @@ class Processor extends AsyncEventEmitter
 			try
 			{
 				// check transaction
-				let tranasction = new Transaction(tranasction);
+				transaction = new Transaction(transaction);
 
-				let errString = tranasction.validate(true);
+				let errString = transaction.validate(true);
 				if(errString !== "")
 				{
 					return cb(errString);
@@ -64,7 +64,7 @@ class Processor extends AsyncEventEmitter
 				return cb(e);
 			}
 
-			self.transactionsPool.push(tranasction, functioin(err) {
+			self.transactionsPool.push(transaction, function(err) {
 				if(!!err)
 				{
 					return cb(err);
@@ -76,10 +76,12 @@ class Processor extends AsyncEventEmitter
 	}
 }
 
-
+/**
+ * Init stateTrie
+ *
+ */
 function initBlockChainState(processor)
 {
-
 	// get lastest block number
 	processor.blockChain.getLastestBlockNumber(function(err, bnNumber) {
 		if(!!err)
@@ -90,18 +92,18 @@ function initBlockChainState(processor)
 		// genesis block
 		if(bnNumber.eqn(0))
 		{
-			self.stoplight.go();
+			processor.stoplight.go();
 			return;
 		}
 
-		getLastestBlockState(bnNumber)
+		getLastestBlockState(bnNumber);
 	});
 
 
 	function getLastestBlockState(bnNumber)
 	{
 		async.waterfall([
-			function() {
+			function(cb) {
 				// get latest block
 				processor.blockChain.getBlockByNumber(bnNumber, cb);
 			},
@@ -117,7 +119,7 @@ function initBlockChainState(processor)
 				{
 					throw new Error("class Processor initBlockChainState, getLastestBlockState err " + err);
 				}
-				self.stoplight.go();
+				processor.stoplight.go();
 			});
 	}
 }
@@ -127,12 +129,13 @@ function initBlockChainState(processor)
  */
 function processBlock(processor)
 {
-	if(processor.transactionsPool.length < BLOCK_TRANSACTIONS_SIZE_LIMIT)
+	console.log("a")
+	if(processor.consistentTransactionsPool.length < BLOCK_TRANSACTIONS_SIZE_LIMIT)
 	{
 		return;
 	}
-
-	const waitingProcessTransactionSize = processor.transactionsPool.length < BLOCK_TRANSACTIONS_SIZE_LIMIT ? processor.transactionsPool.length : BLOCK_TRANSACTIONS_SIZE_LIMIT;
+	console.log("b")
+	const waitingProcessTransactionSize = processor.consistentTransactionsPool.length < BLOCK_TRANSACTIONS_SIZE_LIMIT ? processor.consistentTransactionsPool.length : BLOCK_TRANSACTIONS_SIZE_LIMIT;
 
 	let rawHeader = {
 		parentHash: Buffer.alloc(32),
@@ -166,7 +169,7 @@ function processBlock(processor)
 			}
 			
 			// init block
-			let rawBLock = [{header: rawHeader, transactions: []}];
+			let rawBLock = {header: rawHeader, transactions: []};
 			for(let i = 0; i < waitingProcessTransactionSize; i++)
 			{
 				rawBLock.transactions.push(processor.consistentTransactionsPool.get(i));
@@ -178,11 +181,11 @@ function processBlock(processor)
 		},
 		function(cb) {
 			// init transactionsTrie
-			block.header.transactionsTrie = block.trie.root;
+			block.header.transactionsTrie = block.txTrie.root;
 
 			// run block and init stateRoot
 			processor.blockChain.runBlock({block: block, generate: true}, function(err, errCode, failedTransactions) {
-				if(!!err && errCode === blockChain.TX_PROCESS_ERR)
+				if(!!err && errCode === processor.blockChain.TX_PROCESS_ERR)
 				{
 					for(let i = 0; i < failedTransactions.length; i++)
 					{
@@ -207,3 +210,5 @@ function processBlock(processor)
 }
 
 util.inherits(BlockChain, AsyncEventEmitter);
+
+module.exports = Processor;

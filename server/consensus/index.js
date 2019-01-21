@@ -20,6 +20,9 @@ class Consensus
 	}
 }
 
+/**
+ * Process unconsistent transactions
+ */
 function processTransactions(processor, next)
 {
 	async.waterfall([
@@ -33,3 +36,5 @@ function processTransactions(processor, next)
 			next();
 		});
 }
+
+module.exports = Consensus;

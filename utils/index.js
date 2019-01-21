@@ -3,6 +3,8 @@ const secp256k1 = require("secp256k1")
 const assert = require("assert")
 const createHash = require("create-hash")
 const { randomBytes } = require("crypto")
+const path = require("path")
+const fs = require("fs")
 
 const Buffer = exports.Buffer = require("safe-buffer").Buffer
 const rlp = exports.rlp = require("rlp");
@@ -469,7 +471,8 @@ exports.baToHexString = function(value)
  * * allowLess - if the field can be less than the length
  * @param {rlp serialize data|hex string|Object|Array} data data to be validated against the definitions
  */
-exports.defineProperties = function(self, fields, data) {
+exports.defineProperties = function(self, fields, data)
+{
   self.raw = [];
   self._fields = [];
 
@@ -605,3 +608,30 @@ exports.defineProperties = function(self, fields, data) {
     }
   }
 }
+
+/**
+ * @param {String} path absolute path of the dir
+ */
+exports.delDir = function(path)
+{
+  var files = [];
+  if(fs.existsSync(path))
+  {
+    files = fs.readdirSync(path);
+    files.forEach(function(file, index)
+    {
+      var curPath = path + "/" + file;
+      if(fs.statSync(curPath).isDirectory())
+      { 
+        // recurse
+        exports.delDir(curPath);
+      } 
+      else
+      { 
+        // delete file
+        fs.unlinkSync(curPath);
+      }
+    });
+    fs.rmdirSync(path);
+  }
+};

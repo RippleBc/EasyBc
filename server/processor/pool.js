@@ -15,13 +15,13 @@ class Pool
 
 		self.sem = semaphore(1);
 		self.data = [];
-		self.defineProperty("length", {
+		Object.defineProperty(self, "length", {
 			enumerable: true,
       configurable: true,
 			get: function() {
 				return self.data.length;
 			}
-		})
+		});
 	}
 
 	splice(begin, end, cb)
@@ -120,3 +120,5 @@ class Pool
 		});
 	}
 }
+
+module.exports = Pool;
