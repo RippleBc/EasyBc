@@ -87,9 +87,7 @@ class Processor extends AsyncEventEmitter
 					self.emit("transaction");
 					cb();
 				});
-
-			})
-			
+			});
 		});
 	}
 }
