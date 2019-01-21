@@ -1,15 +1,20 @@
 const process = require("process")
 const express = require("express");
 const Processor = require("./processor");
+const log4js= require("./logConfig");
+const logger = log4js.getLogger();
+const errlogger = log4js.getLogger("err");
+const othlogger = log4js.getLogger("oth");
 
 const PARAM_ERR = 1;
 
 process.on("uncaughtException", function (err) {
-    console.error("An uncaught error occurred!");
-    console.error(err.stack);
+    errlogger.err(err.stack);
 });
 
 const app = express();
+log4js.useLogger(app, logger);
+
 const server = app.listen(9090, function() {
     let host = server.address().address;
     let port = server.address().port;

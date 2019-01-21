@@ -13,6 +13,7 @@
     "keccak": "^2.0.0",
     "leveldown": "^4.0.1",
     "levelup": "^4.0.0",
+    "log4js": "^3.0.6",
     "lru-cache": "^5.1.1",
     "merkle-patricia-tree": "^3.0.0",
     "rlp": "^2.2.1",
@@ -35,7 +36,8 @@
     "testBlockChain": "node block_chain/test/index.js",
     "testAccount": "node account/test/index.js",
     "testBlock": "node block/test/index.js",
-    "test": "node utils/test/index.js && node transaction/test/index.js && node db/test/index.js && node block_chain/test/index.js && node account/test/index.js && node block/test/index.js"
+    "testServer": "mocha server/test/index.js",
+    "test": "node utils/test/index.js && node transaction/test/index.js && node db/test/index.js && node block_chain/test/index.js && node account/test/index.js && node block/test/index.js && mocha server/test/index.js"
   },
   "keywords": [
     "block",

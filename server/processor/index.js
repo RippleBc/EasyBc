@@ -10,6 +10,10 @@ const async = require("async")
 const Pool = require("./pool")
 const Trie = require("merkle-patricia-tree/secure.js")
 const initDb = require("../../db")
+const log4js= require("../logConfig");
+const logger = log4js.getLogger();
+const errLogger = log4js.getLogger("err");
+const othLogger = log4js.getLogger("oth");
 
 const BLOCK_TRANSACTIONS_SIZE_LIMIT = 2;
 const ERR_TRANSACTION_SIZE_NOT_REACH = 1;
@@ -194,11 +198,11 @@ function processBlock(processor)
 			let rawBLock = {header: rawHeader, transactions: []};
 			rawBLock.transactions = processor.consistentTransactionsPool.slice(0, waitingProcessTransactionSize);
 
-			// console.log("processing transaction: ")
-			// for(let i = 0; i < rawBLock.transactions.length; i++)
-			// {
-			// 	console.log("hash: " + rawBLock.transactions[i].hash(true).toString("hex") + ", nonce: " + rawBLock.transactions[i].nonce.toString("hex"));
-			// }
+			logger.info("processing transaction: ")
+			for(let i = 0; i < rawBLock.transactions.length; i++)
+			{
+				logger.info("hash: " + rawBLock.transactions[i].hash(true).toString("hex") + ", transaction: " + JSON.stringify(rawBLock.transactions[i].toJSON(true)));
+			}
 
 			block = new Block(rawBLock);
 
@@ -213,10 +217,10 @@ function processBlock(processor)
 			processor.blockChain.runBlock({block: block, generate: true}, function(err, errCode, failedTransactions) {
 				if(!!err && errCode === processor.blockChain.TX_PROCESS_ERR)
 				{
-					console.log("failed transactions: ")
+					errLogger.error("failed transactions: ")
 					for(let i = 0; i < failedTransactions.length; i++)
 					{
-						console.log("hash: " + failedTransactions[i].hash(true).toString("hex") + ", nonce: " + failedTransactions[i].nonce.toString("hex"));
+						errLogger.error("hash: " + failedTransactions[i].hash(true).toString("hex") + ", transaction: " + JSON.stringify(failedTransactions[i].toJSON(true)));
 					}
 
 					// process failed transaction

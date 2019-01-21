@@ -476,6 +476,20 @@ exports.defineProperties = function(self, fields, data)
   self.raw = [];
   self._fields = [];
 
+  // attach the toJSON
+  self.toJSON = function(label)
+  {
+    if(label)
+    {
+      const obj = {};
+      self._fields.forEach((field) => {
+        obj[field] = "0x" + self[field].toString("hex");
+      });
+      return obj;
+    }
+    return exports.baToJSON(this.raw);
+  }
+
   // attach the toHexString
   self.toHexString = function(label)
   {
@@ -635,3 +649,26 @@ exports.delDir = function(path)
     fs.rmdirSync(path);
   }
 };
+
+
+/**
+ * Converts a Buffer or Array to JSON
+ * @param {Buffer|Array} ba
+ * @return {Array|String|null}
+ */
+exports.baToJSON = function(ba)
+{
+  if(Buffer.isBuffer(ba))
+  {
+    return '0x' + ba.toString('hex')
+  }
+
+  if(ba instanceof Array)
+  {
+    const array = []
+    for (let i = 0; i < ba.length; i++) {
+      array.push(exports.baToJSON(ba[i]))
+    }
+    return array;
+  }
+}
