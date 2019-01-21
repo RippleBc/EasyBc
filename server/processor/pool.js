@@ -110,7 +110,7 @@ class Pool
 				{
 					if(transactions[i].hash().toString("hex") === self.data[j].hash().toString("hex"))
 					{
-						self.data[j].splice(j, j + 1);
+						self.data.splice(j, j + 1);
 					}
 				}
 			}

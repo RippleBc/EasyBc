@@ -42,4 +42,19 @@ describe("process transaction", function() {
   	this.timeout(10000);
   	processor.processTransaction(rawTx, done);
   });
+
+  it("step 5", function(done) {
+  	this.timeout(10000);
+  	processor.processTransaction(rawTx, done);
+  });
+
+  it("step 6", function(done) {
+  	this.timeout(10000);
+  	processor.processTransaction(rawTx, done);
+  });
+
+  it("step 7", function(done) {
+  	this.timeout(10000);
+  	processor.processTransaction(rawTx, done);
+  });
 });

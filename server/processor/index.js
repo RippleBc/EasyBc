@@ -129,12 +129,10 @@ function initBlockChainState(processor)
  */
 function processBlock(processor)
 {
-	console.log("a")
 	if(processor.consistentTransactionsPool.length < BLOCK_TRANSACTIONS_SIZE_LIMIT)
 	{
 		return;
 	}
-	console.log("b")
 	const waitingProcessTransactionSize = processor.consistentTransactionsPool.length < BLOCK_TRANSACTIONS_SIZE_LIMIT ? processor.consistentTransactionsPool.length : BLOCK_TRANSACTIONS_SIZE_LIMIT;
 
 	let rawHeader = {
