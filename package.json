@@ -29,7 +29,7 @@
   },
   "scripts": {
     "server": "node server/index.js",
-    "client": "node server/index.js",
+    "client": "node client/index.js",
     "dev": "node index.js",
     "testUtil": "node utils/test/index.js",
     "testTransaction": "node transaction/test/index.js",

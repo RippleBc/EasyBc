@@ -45,7 +45,7 @@ export default {
 
   created()
   {
-		axios.get('user/login', {
+		axios.get("user/login", {
 		    "a": "b"
 		}, response => {
 				if (response.status >= 200 && response.status < 300)
