@@ -1,29 +1,41 @@
 <template>
 	<div>
-		<h1>Welcome to Easy Block Chain Coin System</h1>
-		<dvi>
-			<span>from history:</span>
-			<ul id="example-1">
-				<li v-for="from in froms">
-					<p @click="chooseFrom(from)">{{from}}</p>
-				</li>
-			</ul>
-		</dvi>
-		<div>
-			<span>to history:</span>
-			<ul id="example-3">
-				<li v-for="to in tos">
-					<p @click="chooseTo(to)">{{to}}</p>
-				</li>
-			</ul>
+		<h1 style="text-align:center;">Welcome to Easy Block Chain Coin System</h1>
+		<div style="display:flex;justify-content;center;height:300px;margin:20px">
+			<dvi style="height:100%;width:50%;overflow:auto">
+				<span>from history:</span>
+				<ul id="fromHistory">
+					<li v-for="from in froms">
+						<p @click="chooseFrom(from)">{{from}}</p>
+					</li>
+				</ul>
+			</dvi>
+			<div style="height:100%;width:50%;overflow:auto">
+				<span>to history:</span>
+				<ul id="toHistory">
+					<li v-for="to in tos">
+						<p @click="chooseTo(to)">{{to}}</p>
+					</li>
+				</ul>
+			</div>
 		</div>
-		<div>
-			<span>from: </span><span>{{from}}</span>
+		
+		<div style="display:flex;flex-direction:column;justify-content;center;">
+			<div style="display:flex;align-items:center;">
+				<span style="width:50px;">from: </span><input style="width:100%;margin:20px;" v-model="from"/>
+			</div>
+			<div style="display:flex;align-items:center;">
+				<span style="width:50px;">to: </span><input style="width:100%;margin:20px;" v-model="to"/>
+			</div>
+			<div style="display:flex;align-items:center;">
+				<span style="width:50px;">value: </span><input style="width:100%;margin:20px;" v-model="value"/>
+			</div>
 		</div>
-		<div>
-			<span>to: </span><span>{{to}}</span>
+		
+		<div style="display:flex;justify-content:flex-end;;margin:20px">
+			<button @click="generateKeyPiar">generate key piar</button>
+		  <button @click="sendTransaction">send transaction</button>
 		</div>
-	  <button @click="sendTransaction">send transaction</button>
 	</div>
 </template>
 
@@ -39,24 +51,15 @@ export default {
     	froms: [],
     	tos: [],
     	from: "",
-    	to: ""
+    	to: "",
+    	value: 0
     }
   },
 
   created()
   {
-		axios.get("user/login", {
-		    "a": "b"
-		}, response => {
-				if (response.status >= 200 && response.status < 300)
-				{
-					alert(response.data);
-				}
-				else
-				{
-					alert(response.message);
-				}
-		});
+		this.getFromHistory();
+		this.getToHistory();
   },
 
   methods:
@@ -71,9 +74,101 @@ export default {
 			this.to = value;
   	},
 
-    sendTransaction: function(){
-      alert("yes")
-    }
+  	generateKeyPiar: function()
+  	{
+  		const self = this;
+  		axios.get("generateKeyPiar", {}, response => {
+				if(response.status >= 200 && response.status < 300)
+				{
+					if(response.data.code === 0)
+					{
+						self.getFromHistory();
+					}
+					else
+					{
+						alert(response.data.msg);
+					}
+				}
+				else
+				{
+					alert(response);
+				}
+			});
+  	},
+
+    getFromHistory: function()
+    {
+    	const self = this;
+
+    	axios.get("getFromHistory", {}, response => {
+				if (response.status >= 200 && response.status < 300)
+				{
+					if(response.data.code === 0)
+					{
+						self.froms = response.data.data;
+					}
+					else
+					{
+						alert(response.data.msg);
+					}
+				}
+				else
+				{
+					alert(response);
+				}
+			});
+    },
+
+    getToHistory: function()
+    {
+    	const self = this;
+
+    	axios.get("getToHistory", {}, response => {
+				if (response.status >= 200 && response.status < 300)
+				{
+					if(response.data.code === 0)
+					{
+						self.tos = response.data.data;
+					}
+					else
+					{
+						alert(response.data.msg);
+					}
+				}
+				else
+				{
+					alert(response);
+				}
+			});
+    },
+
+    sendTransaction: function()
+    {
+    	const self = this;
+
+      axios.get("sendTransaction", {
+      	from: self.from,
+      	to: self.to,
+      	value: self.value
+      }, response => {
+				if (response.status >= 200 && response.status < 300)
+				{
+					if(response.data.code === 0)
+					{
+						self.getToHistory();
+						alert("success");
+					}
+					else
+					{
+						alert(response.data.msg);
+					}
+				}
+				else
+				{
+					alert(response);
+				}
+			});
+    },
   }
 }
 </script>
