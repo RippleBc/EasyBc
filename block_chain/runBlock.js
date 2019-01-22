@@ -93,6 +93,12 @@ module.exports = function(opts, cb) {
     {
       return cb(err, errCode);
     }
+
+    if(failedTransactions.length >= 0)
+    {
+      return cb("runBlock, some transactions is invalid, " + failedTransactionsError.toString(), self.TX_PROCESS_ERR, failedTransactions);
+    }
+
     if(ifGenerateStateRoot)
     {
       block.header.stateRoot = self.stateManager.trie.root;
@@ -101,8 +107,13 @@ module.exports = function(opts, cb) {
 
     async.waterfall([
       function(cb) {
-        self.stateManager.cache.flush(function() {
-          if(validateStateRoot && self.stateManager.trie.root.toString("hex") !== block.header.stateRoot.toString("hex")) {
+        self.stateManager.cache.flush(function(err) {
+          if(!!err)
+          {
+            return cb("runBlock, flush err, " + err, self.CACHE_FLUSH_ERR);
+          }
+          if(validateStateRoot && self.stateManager.trie.root.toString("hex") !== block.header.stateRoot.toString("hex"))
+          {
             return cb("runBlock, invalid block stateRoot", self.TRIE_STATE_ERR);
           }
           cb();
@@ -133,12 +144,7 @@ module.exports = function(opts, cb) {
           return;
         }
 
-        if(failedTransactions.length === 0)
-        {
-          return cb();
-        }
-       
-        return cb("runBlock, some transactions is invalid, " + failedTransactionsError.toString(), self.TX_PROCESS_ERR, failedTransactions);
+        cb();
       });
   }
 }

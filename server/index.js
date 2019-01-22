@@ -11,8 +11,13 @@ const SUCCESS = 0;
 const PARAM_ERR = 1;
 const OTH_ERR = 1;
 
+const processor = new Processor();
+
 process.on("uncaughtException", function (err) {
     errlogger.err(err.stack);
+
+    //
+    processor.reset();
 });
 
 const app = express();
@@ -29,8 +34,6 @@ const server = app.listen(8080, function() {
     let port = server.address().port;
     console.log("server listening at http://%s:%s", host, port);
 });
-
-const processor = new Processor();
 
 //设置跨域访问
 app.all('*', function(req, res, next) {

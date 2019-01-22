@@ -121,7 +121,12 @@ class Cache
       {
         it.value.modified = false;
         it.value.val = it.value.val.serialize();
-        self._trie.put(Buffer.from(it.key, "hex"), it.value.val, function() {
+        self._trie.put(Buffer.from(it.key, "hex"), it.value.val, function(err) {
+          if(!!err)
+          {
+            return done(err);
+          }
+
           next = it.hasNext;
           it.next();
           done();
@@ -133,10 +138,19 @@ class Cache
         it.next();
         done();
       }
-    }, function() {
+    }, function(err) {
+      if(!!err)
+      {
+        return cb(err);
+      }
+      
       async.eachSeries(self._deletes, function(address, done) {
         self._trie.del(Buffer.from(address, "hex"), done);
-      }, function() {
+      }, function(err) {
+        if(!!err)
+        {
+          return cb(err);
+        }
         self._deletes = [];
         cb();
       });

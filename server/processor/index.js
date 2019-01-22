@@ -16,7 +16,10 @@ const errLogger = log4js.getLogger("err");
 const othLogger = log4js.getLogger("oth");
 
 const BLOCK_TRANSACTIONS_SIZE_LIMIT = 2;
+
 const ERR_TRANSACTION_SIZE_NOT_REACH = 1;
+const ERR_SOME_TRANSACTIONS_INVALID = 2;
+
 /**
  * Creates a new processor object
  *
@@ -48,6 +51,16 @@ class Processor extends AsyncEventEmitter
 
 		initBlockChainState(self);
 	}
+
+	/**
+	 * reset stateManager
+	 */
+	reset()
+	{
+		initBlockChainState(this);
+	}
+
+
 	/**
 	 * @param {Buffer|String|Array|Object}
 	 */
@@ -214,19 +227,36 @@ function processBlock(processor)
 			block.header.transactionsTrie = block.txTrie.root;
 
 			// run block and init stateRoot
-			processor.blockChain.runBlock({block: block, generate: true, skipNonce: true}, function(err, errCode, failedTransactions) {
-				if(!!err && errCode === processor.blockChain.TX_PROCESS_ERR)
+			// skipNonce: true
+			processor.blockChain.runBlock({block: block, generate: true}, function(err, errCode, failedTransactions) {
+				if(!!err)
 				{
-					errLogger.error(err);
-					errLogger.error("failed transactions: ")
-					for(let i = 0; i < failedTransactions.length; i++)
+					if(errCode === processor.blockChain.TX_PROCESS_ERR)
 					{
-						errLogger.error("hash: " + failedTransactions[i].hash(true).toString("hex") + ", transaction: " + JSON.stringify(failedTransactions[i].toJSON(true)));
+						errLogger.error(err);
+						errLogger.error("failed transactions: ")
+						for(let i = 0; i < failedTransactions.length; i++)
+						{
+							errLogger.error("hash: " + failedTransactions[i].hash(true).toString("hex") + ", transaction: " + JSON.stringify(failedTransactions[i].toJSON(true)));
+						}
+
+						// process failed transaction
+						processor.consistentTransactionsPool.delBatch(failedTransactions, function(err) {
+							if(!!err)
+							{
+								return cb(err)
+							}
+							cb(ERR_SOME_TRANSACTIONS_INVALID);
+						});
+						return;
 					}
 
-					// process failed transaction
-					processor.consistentTransactionsPool.delBatch(failedTransactions, cb);
-					return;
+					if(errCode === processor.blockChain.POPULATE_CACHE_ERR || 
+						errCode === processor.blockChain.TX_SIZE_ERR ||
+						errCode === processor.blockChain.TRIE_STATE_ERR)
+					{
+						return cb(ERR_SOME_TRANSACTIONS_INVALID);
+					}
 				}
 				cb(err);
 			});
@@ -240,6 +270,10 @@ function processBlock(processor)
 			if(!!err)
 			{
 				if(err === ERR_TRANSACTION_SIZE_NOT_REACH)
+				{
+					return;
+				}
+				if(err === ERR_SOME_TRANSACTIONS_INVALID)
 				{
 					return;
 				}

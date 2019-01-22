@@ -36,6 +36,7 @@ class BlockChain extends AsyncEventEmitter
     this.TRIE_STATE_ERR = 3;
     this.TRIE_COMMIT_ERR = 4;
     this.TRIE_REVERT_ERR = 5;
+    this.CACHE_FLUSH_ERR = 6;
 
     this.runBlockchain = require("./runBlockChain.js");
     this.runBlock = require("./runBlock.js");
