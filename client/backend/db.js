@@ -228,7 +228,7 @@ exports.sendTransaction = function(transaction, cb)
 {
 	let from = Buffer.from(transaction.from, "hex");
 	let to = Buffer.from(transaction.to, "hex");
-	let bnValue = new BN(util.intToBuffer(transaction.value));
+	let bnValue = new BN(Buffer.from(transaction.value, "hex"));
 
 	let db = getDb();
 
