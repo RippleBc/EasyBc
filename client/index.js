@@ -1,20 +1,17 @@
-const express = require("express");
-const path = require("path");
-const db = require("./backend/db");
-const log4js= require("./logConfig");
-const logger = log4js.getLogger();
-const errlogger = log4js.getLogger("err");
-const othlogger = log4js.getLogger("oth");
-
-const SUCCESS = 0;
-const PARAM_ERR = 1;
-const OTH_ERR = 2;
+const express = require("express")
+const path = require("path")
+const db = require("./backend/db")
+const {SUCCESS, PARAM_ERR, OTH_ERR} = require("./constant")
+const log4js= require("./logConfig")
+const logger = log4js.getLogger()
+const errlogger = log4js.getLogger("err")
+const othlogger = log4js.getLogger("oth")
 
 const app = express();
 log4js.useLogger(app, logger);
 app.use("/", express.static(path.join(__dirname + "/dist")));
 
-const server = app.listen(8080, function() {
+const server = app.listen(9090, function() {
     let host = server.address().address;
     let port = server.address().port;
     console.log("server listening at http://%s:%s", host, port);
@@ -75,11 +72,10 @@ app.get("/sendTransaction", function(req, res) {
     return;
   }
 
-  db.sendTransaction(req.query, function(err, value) {
+  db.sendTransaction(req.query, function(err) {
   	res.send({
         code: !!err ? OTH_ERR : SUCCESS,
-        msg: err,
-        data: value
+        msg: err
     });
   });
 });

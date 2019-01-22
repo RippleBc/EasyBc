@@ -1,15 +1,22 @@
 import axios from "axios";
 
 let http = axios.create({
-  baseURL: "http://localhost:8080/",
+  baseURL: "http://localhost:9090/",
   withCredentials: true,
   headers: {
     "Content-Type": "application/x-www-form-urlencoded;charset=utf-8"
   },
+  // transformRequest allows changes to the request data before it is sent to the server
+  // This is only applicable for request methods PUT, POST, and PATCH
+  // The last function in the array must return a string or an instance of Buffer, ArrayBuffer,
+  // FormData or Stream
+  // You may modify the headers object.
   transformRequest: [function(data) {
     let newData = "";
-    for (let k in data) {
-      if (data.hasOwnProperty(k) === true) {
+    for(let k in data)
+    {
+      if(data.hasOwnProperty(k) === true)
+      {
         newData += encodeURIComponent(k) + "=" + encodeURIComponent(data[k]) + "&";
       }
     }
@@ -28,7 +35,7 @@ function apiAxios(method, url, params, response)
     response(res);
   }).catch(function(err) {
     response(err);
-  })
+  });
 }
 
 export default {

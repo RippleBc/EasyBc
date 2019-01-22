@@ -6,6 +6,12 @@ const util = require("../../utils")
 const async = require("async")
 const Account = require("../../account");
 const Transaction = require("../../transaction");
+const {post} = require("../../http/request");
+const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../constant");
+const log4js= require("../logConfig");
+const logger = log4js.getLogger();
+const errlogger = log4js.getLogger("err");
+const othlogger = log4js.getLogger("oth");
 
 const rlp = util.rlp;
 const Buffer = util.Buffer;
@@ -227,6 +233,7 @@ exports.sendTransaction = function(transaction, cb)
 	let db = getDb();
 
 	let privateKey;
+	let tx;
 
 	if(from.length !== 20)
 	{
@@ -275,7 +282,7 @@ exports.sendTransaction = function(transaction, cb)
 			exports.getAccountInfo(accountAddress, cb);
 		},
 		function(account, cb) {
-			let tx = new Transaction();
+			tx = new Transaction();
 			tx.nonce = new BN(account.nonce).addn(1);
 			tx.value = bnValue;
 			tx.data = "";
@@ -290,8 +297,7 @@ exports.sendTransaction = function(transaction, cb)
 			cb();
 		},
 		function(cb) {
-			// send transaction to work node
-			cb();
+			sendTransactionToWorkNodes(tx, cb);
 		}], function(err) {
 			if(!!err)
 			{
@@ -301,4 +307,22 @@ exports.sendTransaction = function(transaction, cb)
 			// save to address
 			exports.saveTo(to, cb);
 		});
+}
+
+function sendTransactionToWorkNodes(tx, cb)
+{
+	post(logger, "http://localhost:8080/sendTransaction", {tx: util.baToHexString(tx.serialize())}, function(err, data) {
+		if(!!err)
+		{
+			return cb(err);
+		}
+
+		console.log("************* data.code: " + data.code + ", SUCCESS: " + SUCCESS)
+		if(data.code !== SUCCESS)
+		{
+			return cb(data.msg);
+		}
+		
+		cb(null);
+	});
 }

@@ -72,6 +72,8 @@ class Processor extends AsyncEventEmitter
 				return cb(e);
 			}
 
+			logger.info("receive transaction, hash: " + transaction.hash(true).toString("hex") + ", transaction: " + JSON.stringify(transaction.toJSON(true)));
+
 			self.transactionsPoolSem.take(function(semaphoreLeaveFunc) {
 
 				// push to transaction pool
