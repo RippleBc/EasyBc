@@ -226,9 +226,9 @@ exports.getAccountInfo = function(address, cb)
  */
 exports.sendTransaction = function(transaction, cb)
 {
-	let from = util.toBuffer("0x" + transaction.from);
-	let to = util.toBuffer("0x" + transaction.to);
-	let bnValue = new BN(util.toBuffer(transaction.value));
+	let from = Buffer.from(transaction.from, "hex");
+	let to = Buffer.from(transaction.to, "hex");
+	let bnValue = new BN(util.intToBuffer(transaction.value));
 
 	let db = getDb();
 

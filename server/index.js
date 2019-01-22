@@ -16,10 +16,12 @@ process.on("uncaughtException", function (err) {
 });
 
 const app = express();
-// app.use(bodyParser.json({limit: "1mb"}));
-// app.use(bodyParser.urlencoded({
-//   extended: true
-// }));
+
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
+app.use(bodyParser.json({limit: "1mb"}));
+
 log4js.useLogger(app, logger);
 
 const server = app.listen(8080, function() {
@@ -41,28 +43,14 @@ app.all('*', function(req, res, next) {
 });
 
 app.post("/sendTransaction", function(req, res) {
-    var body = '', jsonStr;
-    req.on('data', function (chunk) {
-        body += chunk; //读取参数流转化为字符串
-    });
-    req.on('end', function () {
-        //读取参数流结束后将转化的body字符串解析成 JSON 格式
-        try {
-            jsonStr = JSON.parse(body);
-        } catch (err) {
-            jsonStr = null;
-        }
-        console.log("**************** " + JSON.stringify(jsonStr));
-    });
-
-    if(!req.query.tx) {
+    if(!req.body.tx) {
         res.send({
             code: PARAM_ERR,
             msg: "param error, need tx"
         });
         return;
     }
-    processor.processTransaction(req.query.tx, function(err) {
+    processor.processTransaction(req.body.tx, function(err) {
         if(!!err)
         {
             res.send({
@@ -81,7 +69,7 @@ app.post("/sendTransaction", function(req, res) {
 })
 
 app.post("/getAccountInfo", function(req, res) {
-	if(!req.query.data) {
+	if(!req.body.data) {
         res.send({
             code: PARAM_ERR,
             msg: "param error, need data"

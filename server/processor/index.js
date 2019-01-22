@@ -214,9 +214,10 @@ function processBlock(processor)
 			block.header.transactionsTrie = block.txTrie.root;
 
 			// run block and init stateRoot
-			processor.blockChain.runBlock({block: block, generate: true}, function(err, errCode, failedTransactions) {
+			processor.blockChain.runBlock({block: block, generate: true, skipNonce: true}, function(err, errCode, failedTransactions) {
 				if(!!err && errCode === processor.blockChain.TX_PROCESS_ERR)
 				{
+					errLogger.error(err);
 					errLogger.error("failed transactions: ")
 					for(let i = 0; i < failedTransactions.length; i++)
 					{

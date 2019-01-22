@@ -33,7 +33,7 @@ module.exports = function(opts, cb)
     // check balance
     if(!opts.skipBalance && new BN(fromAccount.balance).lt(tx.getUpfrontCost()))
     {
-      message = "sender doesn't have enough funds to send tx. The upfront cost is: " + tx.getUpfrontCost().toString() + " and the sender's account only has: " + new BN(fromAccount.balance).toString();
+      message = "sender " + tx.from.toString("hex") + " doesn't have enough funds to send tx. The upfront cost is: " + tx.getUpfrontCost().toString() + " and the sender's account only has: " + new BN(fromAccount.balance).toString();
       return cb(message);
     } 
 
@@ -43,7 +43,7 @@ module.exports = function(opts, cb)
     // check nonce
     if(!opts.skipNonce && !(new BN(fromAccount.nonce).eq(new BN(tx.nonce))))
     {
-      message = "the tx doesn't have the correct nonce. account has nonce of: " + new BN(fromAccount.nonce).toString() + " and tx has nonce of: " + new BN(tx.nonce).toString();
+      message = "the tx doesn't have the correct nonce. account " + tx.from.toString("hex") + " has nonce of: " + new BN(fromAccount.nonce).toString() + " and tx has nonce of: " + new BN(tx.nonce).toString();
       return cb(message);
     }
 
