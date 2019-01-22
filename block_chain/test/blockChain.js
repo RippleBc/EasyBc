@@ -1,6 +1,7 @@
 const Block = require("../../block")
 const BlockChain =  require("../index.js")
 const async = require("async")
+const path = require("path")
 const util = require("../../utils")
 const assert = require("assert")
 const Transaction = require("../../transaction")
@@ -8,6 +9,8 @@ const Trie = require("merkle-patricia-tree/secure.js")
 const initDb = require("../../db")
 
 const BN = util.BN;
+
+let blockChain;
 
 function addGenesis(cb)
 {
@@ -32,7 +35,7 @@ function addGenesis(cb)
 	};
 
 	let block = new Block([rawHeader, [rawTx]]);
-	let blockChain = new BlockChain();
+	blockChain = new BlockChain();
 	
 	let tx1;
 
@@ -129,7 +132,7 @@ function addNoGenesis(cb)
 	let db = initDb();
 	let trie = new Trie(db, "0x762e0cb00b55a409cc821904baf8ba8904298a47d204802d9414561e54026ab6");
 
-	let blockChain = new BlockChain({stateTrie: trie});
+	blockChain = new BlockChain({stateTrie: trie});
 
 	let tx1 = block.transactions[0];
 	assert(tx1.nonce.toString("hex") == "01", "err");
@@ -199,7 +202,7 @@ function addNoGenesis(cb)
 async.waterfall([
 	addGenesis,
 	addNoGenesis
-	], function(err) {
+	], function(err, errCode) {
 		assert(!err, "err");
 		console.log("test ok!!!")
 	})

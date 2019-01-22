@@ -228,7 +228,7 @@ function processBlock(processor)
 
 			// run block and init stateRoot
 			// skipNonce: true
-			processor.blockChain.runBlock({block: block, generate: true}, function(err, errCode, failedTransactions) {
+			processor.blockChain.runBlock({block: block, generate: true, skipNonce: true}, function(err, errCode, failedTransactions) {
 				if(!!err)
 				{
 					if(errCode === processor.blockChain.TX_PROCESS_ERR)

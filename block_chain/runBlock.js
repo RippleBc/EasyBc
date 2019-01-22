@@ -94,7 +94,7 @@ module.exports = function(opts, cb) {
       return cb(err, errCode);
     }
 
-    if(failedTransactions.length >= 0)
+    if(failedTransactions.length > 0)
     {
       return cb("runBlock, some transactions is invalid, " + failedTransactionsError.toString(), self.TX_PROCESS_ERR, failedTransactions);
     }
