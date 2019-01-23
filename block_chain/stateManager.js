@@ -38,6 +38,8 @@ class StateManager
    */
   exists(address, cb)
   {
+    address = util.toBuffer(address);
+
     this.cache.getOrLoad(address, function(err, account) {
       if(!!err)
       {
@@ -53,6 +55,8 @@ class StateManager
    */
   getAccount(address, cb)
   {
+    address = util.toBuffer(address);
+
     this.cache.getOrLoad(address, cb);
   }
 
@@ -62,6 +66,8 @@ class StateManager
    */
   putAccount(address, account, cb)
   {
+    address = util.toBuffer(address);
+
     this.cache.put(address, account);
     cb();
   }
@@ -72,6 +78,8 @@ class StateManager
    */
   getAccountBalance(address, cb)
   {
+    address = util.toBuffer(address);
+
     this.getAccount(address, function(err, account) {
       if(!!err)
       {
@@ -88,6 +96,9 @@ class StateManager
    */
   putAccountBalance(address, balance, cb)
   {
+    address = util.toBuffer(address);
+    balance = util.toBuffer(balance);
+
     const self = this;
 
     self.getAccount(address, function(err, account) {

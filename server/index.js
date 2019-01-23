@@ -1,11 +1,15 @@
 const process = require("process")
 const express = require("express");
-const bodyParser = require("body-parser"); 
-const Processor = require("./processor");
-const log4js= require("./logConfig");
-const logger = log4js.getLogger();
-const errlogger = log4js.getLogger("err");
-const othlogger = log4js.getLogger("oth");
+const bodyParser = require("body-parser") 
+const Processor = require("./processor")
+const util = require("../utils")
+
+const log4js= require("./logConfig")
+const logger = log4js.getLogger()
+const errlogger = log4js.getLogger("err")
+const othlogger = log4js.getLogger("oth")
+
+const Buffer = util.Buffer;
 
 const SUCCESS = 0;
 const PARAM_ERR = 1;
@@ -79,7 +83,7 @@ app.post("/getAccountInfo", function(req, res) {
         });
         return;
     }
-    processor.stateManager.getAccount(req.body.address, function(err, account) {
+    processor.blockChain.stateManager.getAccount(req.body.address, function(err, account) {
         if(!!err)
         {
             res.send({
@@ -92,7 +96,7 @@ app.post("/getAccountInfo", function(req, res) {
         res.send({
             code: SUCCESS,
             msg: "",
-            data: account.serialize() 
+            data: account.serialize().toString("hex")
         });
     })
 })

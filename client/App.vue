@@ -6,7 +6,7 @@
 				<span>from history:</span>
 				<ul id="fromHistory">
 					<li v-for="from in froms">
-						<p @dblclick="chooseFrom(from)">{{from}}</p>
+						<p @dblclick="chooseFrom(from)">{{from}}</p><button @click="getAccountInfo(from)">get account info</button>
 					</li>
 				</ul>
 			</dvi>
@@ -186,6 +186,31 @@ export default {
 
       axios.get("getTransactionState", {
       	hash: self.transactionHash
+      }, response => {
+				if (response.status >= 200 && response.status < 300)
+				{
+					if(response.data.code === 0)
+					{
+						alert(response.data.data);
+					}
+					else
+					{
+						alert(response.data.msg);
+					}
+				}
+				else
+				{
+					alert(response);
+				}
+			});
+    },
+
+    getAccountInfo: function(address)
+    {
+    	const self = this;
+
+      axios.get("getAccountInfo", {
+      	address: address
       }, response => {
 				if (response.status >= 200 && response.status < 300)
 				{

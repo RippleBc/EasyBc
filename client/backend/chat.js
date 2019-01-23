@@ -1,6 +1,7 @@
 const {post} = require("../../http/request")
 const util = require("../../utils")
 const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../constant")
+const Account = require("../../account");
 
 const log4js= require("../logConfig")
 const logger = log4js.getLogger()
@@ -44,5 +45,25 @@ module.exports.getTransactionState = function(transactionHash,  cb)
 		}
 		
 		cb(null, response.data);
+	});
+}
+
+/**
+ * @param {Buffer} address
+ */
+module.exports.getAccountInfo = function(address, cb)
+{
+	post(logger, "http://localhost:8080/getAccountInfo", {address: util.baToHexString(address)}, function(err, response) {
+		if(!!err)
+		{
+			return cb(err);
+		}
+
+		if(response.code !== SUCCESS)
+		{
+			return cb(response.msg);
+		}
+		
+		cb(null, new Account(response.data).toJSON(true));
 	});
 }

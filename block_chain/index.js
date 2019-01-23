@@ -245,7 +245,7 @@ class BlockChain extends AsyncEventEmitter
    getTrasaction(trasactionHash, cb)
    {
       const TRANSACTION_FOUND = 1;
-
+      
       trasactionHash = ebUtil.toBuffer(trasactionHash);
       let transaction;
 

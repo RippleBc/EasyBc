@@ -2,12 +2,15 @@ const express = require("express")
 const path = require("path")
 const db = require("./backend/db")
 const {SUCCESS, PARAM_ERR, OTH_ERR} = require("./constant")
-const {getTransactionState} = require("./backend/chat")
+const {getTransactionState, getAccountInfo} = require("./backend/chat")
+const util = require("../utils")
 
 const log4js= require("./logConfig")
 const logger = log4js.getLogger()
 const errlogger = log4js.getLogger("err")
 const othlogger = log4js.getLogger("oth")
+
+const Buffer = util.Buffer;
 
 const app = express();
 log4js.useLogger(app, logger);
@@ -109,9 +112,7 @@ app.get("/getTransactionState", function(req, res) {
     return;
   }
 
-  const hash = Buffer.from(req.query.hash, "hex");
-
-  getTransactionState(hash, function(err, transactionState) {
+  getTransactionState(Buffer.from(req.query.hash, "hex"), function(err, transactionState) {
     if(!!err)
     {
       res.send({
@@ -147,4 +148,31 @@ app.get("/getTransactionState", function(req, res) {
       data: returnData
     });
   })
+});
+
+app.get("/getAccountInfo", function(req, res) {
+  if(!req.query.address) {
+    res.send({
+        code: PARAM_ERR,
+        msg: "param error, need address"
+    });
+    return;
+  }
+
+  getAccountInfo(Buffer.from(req.query.address, "hex"), function(err, account) {
+    if(!!err)
+    {
+      res.send({
+        code: OTH_ERR,
+        msg: err
+      });
+      return;
+    }
+    
+    res.send({
+      code: SUCCESS,
+      msg: "",
+      data: JSON.stringify(account)
+    });
+  });
 });

@@ -69,9 +69,7 @@ class Processor extends AsyncEventEmitter
 	processTransaction(transaction, cb)
 	{
 		const self = this;
-		console.log("asdffffffffffffffff")
 		self.stoplight.await(function() {
-			console.log("********************")
 			try
 			{
 				// check transaction
@@ -126,7 +124,6 @@ function initBlockChainState(processor)
 		// genesis block
 		if(bnNumber.eqn(0))
 		{
-			console.log("456")
 			processor.stoplight.go();
 			return;
 		}
@@ -284,6 +281,8 @@ function processBlock(processor)
 			{
 				throw new Error("server processBlock err, " + err);
 			}
+
+			logger.info("*************** pack block success!!! ***************")
 		});
 }
 
