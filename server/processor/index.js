@@ -69,8 +69,9 @@ class Processor extends AsyncEventEmitter
 	processTransaction(transaction, cb)
 	{
 		const self = this;
-
+		console.log("asdffffffffffffffff")
 		self.stoplight.await(function() {
+			console.log("********************")
 			try
 			{
 				// check transaction
@@ -125,6 +126,7 @@ function initBlockChainState(processor)
 		// genesis block
 		if(bnNumber.eqn(0))
 		{
+			console.log("456")
 			processor.stoplight.go();
 			return;
 		}
@@ -146,11 +148,13 @@ function initBlockChainState(processor)
 
 				// init block
 				processor.blockChain = new BlockChain({stateTrie: trie});
+				cb();
 			}], function(err) {
 				if(!!err)
 				{
 					throw new Error("class Processor initBlockChainState, getLastestBlockState err " + err);
 				}
+
 				processor.stoplight.go();
 			});
 	}

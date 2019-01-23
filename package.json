@@ -4,6 +4,7 @@
   "description": "a tiny block chain client",
   "main": "index.js",
   "dependencies": {
+    "async": "^2.6.1",
     "async-eventemitter": "^0.2.4",
     "axios": "^0.18.0",
     "bn.js": "^4.11.8",
@@ -15,15 +16,13 @@
     "leveldown": "^4.0.1",
     "levelup": "^4.0.0",
     "log4js": "^3.0.6",
-    "lru-cache": "^5.1.1",
     "merkle-patricia-tree": "^3.0.0",
     "request": "^2.88.0",
     "rlp": "^2.2.1",
     "safe-buffer": "^5.1.2",
     "secp256k1": "^3.6.1",
     "semaphore": "^1.1.0",
-    "strip-hex-prefix": "^1.0.0",
-    "sync": "^0.2.5"
+    "strip-hex-prefix": "^1.0.0"
   },
   "devDependencies": {
     "mocha": "^5.2.0"

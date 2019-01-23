@@ -179,7 +179,6 @@ class BlockChain extends AsyncEventEmitter
         });
       },
       function(number, cb) {
-        console.log("******************** maxBlockNumberKey: " + block.header.number.toString("hex"))
         block.header.number = ebUtil.toBuffer(number.iaddn(1));
         db.put(maxBlockNumberKey, block.header.number, cb);
       },
@@ -248,6 +247,7 @@ class BlockChain extends AsyncEventEmitter
       const TRANSACTION_FOUND = 1;
 
       trasactionHash = ebUtil.toBuffer(trasactionHash);
+      let transaction;
 
       const self = this;
 
@@ -271,17 +271,18 @@ class BlockChain extends AsyncEventEmitter
         async.whilst(function() {
           return bnIndex.gtn(0);
         }, function(done) {
-          getTransaction(bnIndex, function(err, transaction) {
+          getTransaction(bnIndex, function(err, _transaction) {
             bnIndex.isubn(1);
 
             if(!!err)
             {
-              return done(err, transaction);
+              transaction = _transaction;
+              return done(err);
             }
 
             done();
           });
-        }, function(err, transaction) {
+        }, function(err) {
           if(!!err && err === TRANSACTION_FOUND)
           {
             return cb(null, transaction);

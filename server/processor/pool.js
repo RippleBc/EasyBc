@@ -1,4 +1,5 @@
 const semaphore = require("semaphore")
+const util = require("../../utils")
 
 /**
  * Creates a new pool object
@@ -112,13 +113,15 @@ class Pool
 	}
 
 	/*
-	 *
+	 * @param {*} transactionHash
 	 */
-	ifExist(transactionHashHexString)
+	ifExist(transactionHash)
 	{
+		transactionHash = util.toBuffer(transactionHash);
+
 		for(let i = 0; i < this.data.length; i++)
 		{
-			if(this.data[i].hash(true).toString("hex") === transactionHashHexString)
+			if(this.data[i].hash(true).toString("hex") === transactionHash.toString("hex"))
 			{
 				return this.data[i];
 			}
