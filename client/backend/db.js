@@ -196,18 +196,14 @@ exports.getToHistory = function(cb)
 }
 
 /**
- * @param {Object} transaction
- * @param {*} transaction.from from address
- * @param {*} transaction.to to address
- * @param {*} transaction.value value
+ * @param {String} url
+ * @param {*} from from address
+ * @param {*} to to address
+ * @param {*} value value
  * @return {Function} cb 
  */
-exports.sendTransaction = function(transaction, cb)
+exports.sendTransaction = function(url, from, to, bnValue transaction, cb)
 {
-	let from = Buffer.from(transaction.from, "hex");
-	let to = Buffer.from(transaction.to, "hex");
-	let bnValue = new BN(Buffer.from(transaction.value, "hex"));
-
 	let db = getDb();
 
 	let privateKey;
@@ -272,7 +268,7 @@ exports.sendTransaction = function(transaction, cb)
 			cb();
 		},
 		function(cb) {
-			sendTransactionToWorkNodes(tx, cb);
+			sendTransactionToWorkNodes(url, tx, cb);
 		}], function(err) {
 			if(!!err)
 			{

@@ -53,6 +53,14 @@ app.get("/getToHistory", function(req, res) {
 });
 
 app.get("/sendTransaction", function(req, res) {
+  if(!req.query.url) {
+    res.send({
+        code: PARAM_ERR,
+        msg: "param error, need url"
+    });
+    return;
+  }
+
 	if(!req.query.from) {
     res.send({
         code: PARAM_ERR,
@@ -77,7 +85,11 @@ app.get("/sendTransaction", function(req, res) {
     return;
   }
 
-  db.sendTransaction(req.query, function(err, transactionHashHexString) {
+  let from = Buffer.from(req.query.from, "hex");
+  let to = Buffer.from(req.query.to, "hex");
+  let bnValue = new BN(Buffer.from(req.query.value, "hex"));
+
+  db.sendTransaction(req.query.url, from, to, vnValue, function(err, transactionHashHexString) {
     if(!!err)
     {
       res.send({
@@ -104,6 +116,14 @@ app.get("/getTransactionState", function(req, res) {
 
   let returnData;
 
+  if(!req.query.url) {
+    res.send({
+        code: PARAM_ERR,
+        msg: "param error, need url"
+    });
+    return;
+  }
+
   if(!req.query.hash) {
     res.send({
         code: PARAM_ERR,
@@ -112,7 +132,7 @@ app.get("/getTransactionState", function(req, res) {
     return;
   }
 
-  getTransactionState(Buffer.from(req.query.hash, "hex"), function(err, transactionState) {
+  getTransactionState(req.query.url, Buffer.from(req.query.hash, "hex"), function(err, transactionState) {
     if(!!err)
     {
       res.send({
@@ -151,6 +171,14 @@ app.get("/getTransactionState", function(req, res) {
 });
 
 app.get("/getAccountInfo", function(req, res) {
+  if(!req.query.url) {
+    res.send({
+        code: PARAM_ERR,
+        msg: "param error, need url"
+    });
+    return;
+  }
+  
   if(!req.query.address) {
     res.send({
         code: PARAM_ERR,
@@ -159,7 +187,7 @@ app.get("/getAccountInfo", function(req, res) {
     return;
   }
 
-  getAccountInfo(Buffer.from(req.query.address, "hex"), function(err, account) {
+  getAccountInfo(req.query.url, Buffer.from(req.query.address, "hex"), function(err, account) {
     if(!!err)
     {
       res.send({

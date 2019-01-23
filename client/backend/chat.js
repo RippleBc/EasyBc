@@ -11,9 +11,9 @@ const othlogger = log4js.getLogger("oth")
 /**
  * @param {Transaction} tx
  */
-module.exports.sendTransactionToWorkNodes = function(tx, cb)
+module.exports.sendTransactionToWorkNodes = function(url, tx, cb)
 {
-	post(logger, "http://localhost:8080/sendTransaction", {tx: util.baToHexString(tx.serialize())}, function(err, response) {
+	post(logger, url + "/sendTransaction", {tx: util.baToHexString(tx.serialize())}, function(err, response) {
 		if(!!err)
 		{
 			return cb(err);
@@ -31,9 +31,9 @@ module.exports.sendTransactionToWorkNodes = function(tx, cb)
 /**
  * @param {Buffer} transactionHash
  */
-module.exports.getTransactionState = function(transactionHash,  cb)
+module.exports.getTransactionState = function(url, transactionHash,  cb)
 {
-	post(logger, "http://localhost:8080/getTransactionState", {hash: util.baToHexString(transactionHash)}, function(err, response) {
+	post(logger, url + "/getTransactionState", {hash: util.baToHexString(transactionHash)}, function(err, response) {
 		if(!!err)
 		{
 			return cb(err);
@@ -51,9 +51,9 @@ module.exports.getTransactionState = function(transactionHash,  cb)
 /**
  * @param {Buffer} address
  */
-module.exports.getAccountInfo = function(address, cb)
+module.exports.getAccountInfo = function(url, address, cb)
 {
-	post(logger, "http://localhost:8080/getAccountInfo", {address: util.baToHexString(address)}, function(err, response) {
+	post(logger, url + "/getAccountInfo", {address: util.baToHexString(address)}, function(err, response) {
 		if(!!err)
 		{
 			return cb(err);

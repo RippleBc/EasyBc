@@ -1,12 +1,25 @@
 <template>
 	<div>
 		<h1 style="text-align:center;">Welcome to Easy Block Chain Coin System</h1>
+		<div style="margin:20px;">
+			<span>currnet node url: </span><p>{{url}}</p>
+		</div>
+		<div style="display:flex;justify-content;center;height:200px;margin:20px">
+			<dvi style="height:100%;width:100%;overflow:auto">
+				<span>node url list:</span>
+				<ul id="urls">
+					<li v-for="url in urls">
+						<p style="cursor:pointer;" @dblclick="chooseUrl(url)">{{url}}</p>
+					</li>
+				</ul>
+			</dvi>
+		</div>
 		<div style="display:flex;justify-content;center;height:300px;margin:20px">
 			<dvi style="height:100%;width:50%;overflow:auto">
 				<span>from history:</span>
 				<ul id="fromHistory">
 					<li v-for="from in froms">
-						<p @dblclick="chooseFrom(from)">{{from}}</p><button @click="getAccountInfo(from)">get account info</button>
+						<p style="cursor:pointer;" @dblclick="chooseFrom(from)">{{from}}</p><button @click="getAccountInfo(from)">get account info</button>
 					</li>
 				</ul>
 			</dvi>
@@ -14,7 +27,7 @@
 				<span>to history:</span>
 				<ul id="toHistory">
 					<li v-for="to in tos">
-						<p @dblclick="chooseTo(to)">{{to}}</p>
+						<p style="cursor:pointer;" @dblclick="chooseTo(to)">{{to}}</p>
 					</li>
 				</ul>
 			</div>
@@ -62,7 +75,9 @@ export default {
     	from: "",
     	to: "",
     	value: 0,
-    	transactionHash: ""
+    	transactionHash: "",
+    	url: "http://localhost:8080",
+    	urls: ["http://localhost:8080","http://localhost:8080","http://localhost:8080","http://localhost:8080","http://localhost:8080","http://localhost:8080","http://localhost:8080"]
     }
   },
 
@@ -157,6 +172,7 @@ export default {
     	const self = this;
 
       axios.get("sendTransaction", {
+      	url: self.url,
       	from: self.from,
       	to: self.to,
       	value: self.value
@@ -185,6 +201,7 @@ export default {
     	const self = this;
 
       axios.get("getTransactionState", {
+      	url: self.url,
       	hash: self.transactionHash
       }, response => {
 				if (response.status >= 200 && response.status < 300)
@@ -210,6 +227,7 @@ export default {
     	const self = this;
 
       axios.get("getAccountInfo", {
+      	url: self.url,
       	address: address
       }, response => {
 				if (response.status >= 200 && response.status < 300)
@@ -228,6 +246,11 @@ export default {
 					alert(response);
 				}
 			});
+    },
+
+    chooseUrl: function(url)
+    {
+    	this.url = url;
     }
   }
 }
