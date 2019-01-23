@@ -196,30 +196,6 @@ exports.getToHistory = function(cb)
 }
 
 /**
- * @param {Buffer} address
- */
-exports.getAccountInfo = function(address, cb)
-{
-	address = util.toBuffer(address);
-
-	let db = getDb();
-
-	// get account info
-	db.get(address, function(err, raw) {
-		if(!!err)
-		{
-			if(err.notFound)
-			{
-	      return cb(null, new Account());
-	    }
-	    return cb(err);
-		}
-
-    cb(null, rlp.decode(raw));
-	});
-}
-
-/**
  * @param {Object} transaction
  * @param {*} transaction.from from address
  * @param {*} transaction.to to address
@@ -281,11 +257,8 @@ exports.sendTransaction = function(transaction, cb)
 			privateKey = keyPair[0];
 			let accountAddress = keyPair[2];
 
-			exports.getAccountInfo(accountAddress, cb);
-		},
-		function(account, cb) {
 			tx = new Transaction();
-			tx.nonce = new BN(account.nonce).addn(1);
+			tx.nonce = Date.now();
 			tx.value = bnValue;
 			tx.data = "";
 			tx.to = to;
