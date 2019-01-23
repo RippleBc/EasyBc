@@ -10,6 +10,8 @@ const async = require("async")
 const Pool = require("./pool")
 const Trie = require("merkle-patricia-tree/secure.js")
 const initDb = require("../../db")
+const {ERR_RUN_BLOCK_TX_PROCESS, ERR_RUN_BLOCK_TXS_SIZE, ERR_RUN_BLOCK_TXS_TRIE_STATE} = require("../../const")
+
 const log4js= require("../logConfig");
 const logger = log4js.getLogger();
 const errLogger = log4js.getLogger("err");
@@ -17,8 +19,8 @@ const othLogger = log4js.getLogger("oth");
 
 const BLOCK_TRANSACTIONS_SIZE_LIMIT = 2;
 
-const ERR_TRANSACTION_SIZE_NOT_REACH = 1;
-const ERR_SOME_TRANSACTIONS_INVALID = 2;
+const ERR_SERVER_TRANSACTION_SIZE_NOT_REACH = 1;
+const ERR_SERVER_RUN_BLOCK_ERR = 2;
 
 /**
  * Creates a new processor object
@@ -183,7 +185,7 @@ function processBlock(processor)
 		function(cb) {
 			if(processor.consistentTransactionsPool.length < BLOCK_TRANSACTIONS_SIZE_LIMIT)
 			{
-				return cb(ERR_TRANSACTION_SIZE_NOT_REACH);
+				return cb(ERR_SERVER_TRANSACTION_SIZE_NOT_REACH);
 			}
 
 			waitingProcessTransactionSize = processor.consistentTransactionsPool.length < BLOCK_TRANSACTIONS_SIZE_LIMIT ? processor.consistentTransactionsPool.length : BLOCK_TRANSACTIONS_SIZE_LIMIT;
@@ -219,7 +221,10 @@ function processBlock(processor)
 
 			block = new Block(rawBLock);
 
-			// generate transactionsTrie
+			//
+			block.checkpoint();
+
+			// record transactions and generate transactionsTrie
 			block.genTxTrie(cb);
 		},
 		function(cb) {
@@ -228,56 +233,49 @@ function processBlock(processor)
 
 			// run block and init stateRoot
 			// skipNonce: true
-			processor.blockChain.runBlock({block: block, generate: true, skipNonce: true}, function(err, errCode, failedTransactions) {
-				if(!!err)
+			processor.blockChain.runBlock({block: block, generate: true}, function(err, errCode, failedTransactions) {
+				if(!!err && errCode === ERR_RUN_BLOCK_TX_PROCESS)
 				{
-					if(errCode === processor.blockChain.TX_PROCESS_ERR)
+					// log
+					errLogger.error(err);
+					errLogger.error("failed transactions: ")
+					for(let i = 0; i < failedTransactions.length; i++)
 					{
-						errLogger.error(err);
-						errLogger.error("failed transactions: ")
-						for(let i = 0; i < failedTransactions.length; i++)
-						{
-							errLogger.error("hash: " + failedTransactions[i].hash(true).toString("hex") + ", transaction: " + JSON.stringify(failedTransactions[i].toJSON(true)));
-						}
-
-						// process failed transaction
-						processor.consistentTransactionsPool.delBatch(failedTransactions, function(err) {
-							if(!!err)
-							{
-								return cb(err)
-							}
-							cb(ERR_SOME_TRANSACTIONS_INVALID);
-						});
-						return;
+						errLogger.error("hash: " + failedTransactions[i].hash(true).toString("hex") + ", transaction: " + JSON.stringify(failedTransactions[i].toJSON(true)));
 					}
 
-					if(errCode === processor.blockChain.POPULATE_CACHE_ERR || 
-						errCode === processor.blockChain.TX_SIZE_ERR ||
-						errCode === processor.blockChain.TRIE_STATE_ERR)
-					{
-						return cb(ERR_SOME_TRANSACTIONS_INVALID);
-					}
+					// process failed transaction
+					processor.consistentTransactionsPool.delBatch(failedTransactions, function() {
+						cb(ERR_SERVER_RUN_BLOCK_ERR);
+					});
+					return;
 				}
-				cb(err);
+				cb(ERR_SERVER_RUN_BLOCK_ERR);
 			});
+		},
+		function(cb) {
+			block.commit(cb);
 		},
 		function(cb) {
 			processor.consistentTransactionsPool.splice(0, waitingProcessTransactionSize, cb);
 		}], function(err) {
-
+			// release semaphore
 			processor.consistentTransactionsPoolSem.leave();
 
+			if(err === ERR_SERVER_TRANSACTION_SIZE_NOT_REACH)
+			{
+				return;
+			}
+
+			if(err === ERR_SERVER_RUN_BLOCK_ERR)
+			{
+				return;
+			}
+
+			// log
 			if(!!err)
 			{
-				if(err === ERR_TRANSACTION_SIZE_NOT_REACH)
-				{
-					return;
-				}
-				if(err === ERR_SOME_TRANSACTIONS_INVALID)
-				{
-					return;
-				}
-				throw Error("class Processor processBlock, " + err)
+				throw new Error("server processBlock err, " + err);
 			}
 		});
 }

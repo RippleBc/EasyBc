@@ -6,7 +6,7 @@
 				<span>from history:</span>
 				<ul id="fromHistory">
 					<li v-for="from in froms">
-						<p @click="chooseFrom(from)">{{from}}</p>
+						<p @dblclick="chooseFrom(from)">{{from}}</p>
 					</li>
 				</ul>
 			</dvi>
@@ -14,7 +14,7 @@
 				<span>to history:</span>
 				<ul id="toHistory">
 					<li v-for="to in tos">
-						<p @click="chooseTo(to)">{{to}}</p>
+						<p @dblclick="chooseTo(to)">{{to}}</p>
 					</li>
 				</ul>
 			</div>

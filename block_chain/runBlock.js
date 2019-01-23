@@ -2,6 +2,7 @@ const util = require("../utils")
 const Trie = require("merkle-patricia-tree/secure")
 const async = require("async")
 const initDb = require("../db")
+const {ERR_RUN_BLOCK_TX_PROCESS, ERR_RUN_BLOCK_TXS_SIZE, ERR_RUN_BLOCK_TXS_TRIE_STATE} = require("../const")
 
 const rlp = util.rlp;
 const BN = util.BN;
@@ -55,7 +56,7 @@ module.exports = function(opts, cb) {
     self.populateCache(accounts, function(err) {
       if(!!err)
       {
-        return cb(err, self.POPULATE_CACHE_ERR);
+        throw new Error("runBlock populateCache err, " + err);
       }
       cb();
     });
@@ -65,9 +66,10 @@ module.exports = function(opts, cb) {
   {
     var validReceiptCount = 0
 
+    // check size
     if(block.transactions.length > util.bufferToInt(block.header.transactionSizeLimit))
     {
-      return cb("runBlock, transaction size is bigger than the the limit of block", self.TX_SIZE_ERR);
+      return cb("runBlock, transaction size is bigger than the the limit of block, block size: " + block.transactions.length, ERR_RUN_BLOCK_TXS_SIZE);
     }
 
     async.eachSeries(block.transactions, function(tx, cb) {
@@ -87,16 +89,17 @@ module.exports = function(opts, cb) {
     }, cb);
   }
 
-  function parseBlockResults(err, errCode)
+  function parseBlockResults(err)
   {
     if(!!err)
     {
-      return cb(err, errCode);
+      return cb(err);
     }
 
+    // check runTx
     if(failedTransactions.length > 0)
     {
-      return cb("runBlock, some transactions is invalid, " + failedTransactionsError.toString(), self.TX_PROCESS_ERR, failedTransactions);
+      return cb("runBlock, some transactions is invalid, " + failedTransactionsError.toString(), ERR_RUN_BLOCK_TX_PROCESS, failedTransactions);
     }
 
     if(ifGenerateStateRoot)
@@ -110,11 +113,11 @@ module.exports = function(opts, cb) {
         self.stateManager.cache.flush(function(err) {
           if(!!err)
           {
-            return cb("runBlock, flush err, " + err, self.CACHE_FLUSH_ERR);
+            throw new Error("runBlock, flush err, " + err);
           }
           if(validateStateRoot && self.stateManager.trie.root.toString("hex") !== block.header.stateRoot.toString("hex"))
           {
-            return cb("runBlock, invalid block stateRoot", self.TRIE_STATE_ERR);
+            return cb("runBlock, invalid block stateRoot", ERR_RUN_BLOCK_TXS_TRIE_STATE);
           }
           cb();
         })
@@ -123,7 +126,7 @@ module.exports = function(opts, cb) {
         self.stateManager.commit(function(err) {
           if(!!err)
           {
-            return cb("runBlock, commit err, " + err, self.TRIE_COMMIT_ERR)
+            throw new Error("runBlock, commit err, " + err);
           }
           cb();
         });
@@ -131,15 +134,15 @@ module.exports = function(opts, cb) {
       function(cb) {
         self.stateManager.cache.clear();
         cb();
-      }], function(err, errCode) {
+      }], function(err) {
         if(!!err)
         {
           self.stateManager.revert(function(err) {
             if(!!err)
             {
-              return cb("runBlock, revert err, " + err, self.TRIE_REVERT_ERR);
+              throw new Error("runBlock, revert err, " + err);
             }
-            return cb(err, errCode);
+            cb();
           });
           return;
         }

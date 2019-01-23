@@ -11,6 +11,10 @@ const SUCCESS = 0;
 const PARAM_ERR = 1;
 const OTH_ERR = 1;
 
+const TRANSACTION_STATE_UNCONSISTENT = 1
+const TRANSACTION_STATE_CONSISTENT = 2
+const TRANSACTION_STATE_PACKED = 3
+
 const processor = new Processor();
 
 process.on("uncaughtException", function (err) {
@@ -79,8 +83,16 @@ app.post("/getAccountInfo", function(req, res) {
         });
         return;
     }
-    res.send({
-        code: SUCCESS,
-        msg: ""
-    })
+    processor.getAccountIn
 })
+
+
+app.post("/getTransactionInfo", function(req, res) {
+    if(!req.body.hash) {
+        res.send({
+            code: PARAM_ERR,
+            msg: "param error, need data"
+        });
+        return;
+    }
+});

@@ -5,6 +5,7 @@ const BN = util.BN
 const rlp = util.rlp
 const async = require("async")
 const BlockHeader = require("./header")
+const initDb = require("../db")
 
 /**
  * Creates a new block object
@@ -24,7 +25,9 @@ class Block {
     data = data || [[], []];
 
     this.transactions = [];
-    this.txTrie = new Trie();
+
+    let db = initDb();
+    this.txTrie = new Trie(db);
 
     let rawTransactions = [];
 
@@ -206,5 +209,24 @@ class Block {
       return "";
     }
   }
+
+  checkpoint()
+  {
+    this.txTrie.checkpoint();
+  }
+
+  commit(cb)
+  {
+    this.txTrie.commit(function(err) {
+      if(!!err)
+      {
+        return cb(err);
+      }
+
+      cb();
+    });
+  }
+
+  
 }
 module.exports = Block;

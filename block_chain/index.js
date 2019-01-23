@@ -28,15 +28,7 @@ class BlockChain extends AsyncEventEmitter
     this.stateManager = new StateManager({
       trie: opts.stateTrie,
       blockChain: self
-    })
-
-    this.TX_PROCESS_ERR = 0;
-    this.POPULATE_CACHE_ERR = 1;
-    this.TX_SIZE_ERR = 2;
-    this.TRIE_STATE_ERR = 3;
-    this.TRIE_COMMIT_ERR = 4;
-    this.TRIE_REVERT_ERR = 5;
-    this.CACHE_FLUSH_ERR = 6;
+    });
 
     this.runBlockchain = require("./runBlockChain.js");
     this.runBlock = require("./runBlock.js");
