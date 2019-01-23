@@ -26,8 +26,7 @@ class Block {
 
     this.transactions = [];
 
-    let db = initDb();
-    this.txTrie = new Trie(db);
+    this.txTrie = new Trie();
 
     let rawTransactions = [];
 
@@ -209,24 +208,5 @@ class Block {
       return "";
     }
   }
-
-  checkpoint()
-  {
-    this.txTrie.checkpoint();
-  }
-
-  commit(cb)
-  {
-    this.txTrie.commit(function(err) {
-      if(!!err)
-      {
-        return cb(err);
-      }
-
-      cb();
-    });
-  }
-
-  
 }
 module.exports = Block;

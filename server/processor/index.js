@@ -221,10 +221,7 @@ function processBlock(processor)
 
 			block = new Block(rawBLock);
 
-			//
-			block.checkpoint();
-
-			// record transactions and generate transactionsTrie
+			// generate transactionsTrie
 			block.genTxTrie(cb);
 		},
 		function(cb) {
@@ -252,9 +249,6 @@ function processBlock(processor)
 				}
 				cb(ERR_SERVER_RUN_BLOCK_ERR);
 			});
-		},
-		function(cb) {
-			block.commit(cb);
 		},
 		function(cb) {
 			processor.consistentTransactionsPool.splice(0, waitingProcessTransactionSize, cb);
