@@ -110,6 +110,20 @@ class Pool
 			cb();
 		});
 	}
+
+	/*
+	 *
+	 */
+	ifExist(transactionHashHexString)
+	{
+		for(let i = 0; i < this.data.length; i++)
+		{
+			if(this.data[i].hash(true).toString("hex") === transactionHashHexString)
+			{
+				return this.data[i];
+			}
+		}
+	}
 }
 
 module.exports = Pool;

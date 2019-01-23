@@ -11,14 +11,10 @@ const SUCCESS = 0;
 const PARAM_ERR = 1;
 const OTH_ERR = 1;
 
-const TRANSACTION_STATE_UNCONSISTENT = 1
-const TRANSACTION_STATE_CONSISTENT = 2
-const TRANSACTION_STATE_PACKED = 3
-
 const processor = new Processor();
 
 process.on("uncaughtException", function (err) {
-    errlogger.err(err.stack);
+    errlogger.error(err.stack);
 
     //
     processor.reset();
@@ -76,18 +72,40 @@ app.post("/sendTransaction", function(req, res) {
 })
 
 app.post("/getAccountInfo", function(req, res) {
-	if(!req.body.data) {
+	if(!req.body.address) {
         res.send({
             code: PARAM_ERR,
-            msg: "param error, need data"
+            msg: "param error, need address"
         });
         return;
     }
-    processor.getAccountIn
+    processor.stateManager.getAccount(req.body.address, function(err, account) {
+        if(!!err)
+        {
+            res.send({
+                code: OTH_ERR,
+                msg: err
+            });
+            return;
+        }
+
+        res.send({
+            code: SUCCESS,
+            msg: "",
+            data: account.serialize() 
+        });
+    })
 })
 
 
-app.post("/getTransactionInfo", function(req, res) {
+app.post("/getTransactionState", function(req, res) {
+    const TRANSACTION_STATE_UNCONSISTENT = 1;
+    const TRANSACTION_STATE_CONSISTENT = 2;
+    const TRANSACTION_STATE_PACKED = 3;
+    const TRANSACTION_STATE_NOT_EXISTS = 4;
+
+    let return_data;
+
     if(!req.body.hash) {
         res.send({
             code: PARAM_ERR,
@@ -95,4 +113,52 @@ app.post("/getTransactionInfo", function(req, res) {
         });
         return;
     }
+
+    if(processor.transactionsPool.ifExist(req.body.hash))
+    {
+        res.send({
+            code: SUCCESS,
+            msg: "",
+            data: TRANSACTION_STATE_UNCONSISTENT
+        });
+        return;
+    }
+
+
+    if(processor.consistentTransactionsPool.ifExist(req.body.hash))
+    {
+        res.send({
+            code: SUCCESS,
+            msg: "",
+            data: TRANSACTION_STATE_CONSISTENT
+        });
+        return;
+    }
+
+
+    processor.blockChain.getTrasaction(req.body.hash, function(err, transaction) {
+        if(!!err)
+        {
+            res.send({
+                code: OTH_ERR,
+                msg: err
+            });
+            return;
+        }
+        if(!transaction)
+        {
+            res.send({
+                code: SUCCESS,
+                msg: "",
+                data: TRANSACTION_STATE_NOT_EXISTS
+            });
+            return;
+        }
+
+        res.send({
+            code: SUCCESS,
+            msg: "",
+            data: TRANSACTION_STATE_PACKED
+        });
+   });
 });

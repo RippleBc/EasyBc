@@ -197,7 +197,7 @@ function processBlock(processor)
 		},
 		function(lastestBlockNumber, cb) {
 			// init block number
-			rawHeader.number = lastestBlockNumber;
+			rawHeader.number = lastestBlockNumber.addn(1);
 
 			// get lastest block hash
 			processor.blockChain.getBlockHashByNumber(lastestBlockNumber, cb);
@@ -230,25 +230,34 @@ function processBlock(processor)
 
 			// run block and init stateRoot
 			// skipNonce: true
-			processor.blockChain.runBlock({block: block, generate: true}, function(err, errCode, failedTransactions) {
-				if(!!err && errCode === ERR_RUN_BLOCK_TX_PROCESS)
+			processor.blockChain.runBlock({block: block, generate: true, skipNonce: true}, function(err, errCode, failedTransactions) {
+				if(!!err)
 				{
-					// log
-					errLogger.error(err);
-					errLogger.error("failed transactions: ")
-					for(let i = 0; i < failedTransactions.length; i++)
+					if(errCode === ERR_RUN_BLOCK_TX_PROCESS)
 					{
-						errLogger.error("hash: " + failedTransactions[i].hash(true).toString("hex") + ", transaction: " + JSON.stringify(failedTransactions[i].toJSON(true)));
-					}
+						// log
+						errLogger.error(err);
+						errLogger.error("failed transactions: ")
+						for(let i = 0; i < failedTransactions.length; i++)
+						{
+							errLogger.error("hash: " + failedTransactions[i].hash(true).toString("hex") + ", transaction: " + JSON.stringify(failedTransactions[i].toJSON(true)));
+						}
 
-					// process failed transaction
-					processor.consistentTransactionsPool.delBatch(failedTransactions, function() {
-						cb(ERR_SERVER_RUN_BLOCK_ERR);
-					});
-					return;
+						// process failed transaction
+						processor.consistentTransactionsPool.delBatch(failedTransactions, function() {
+							cb(ERR_SERVER_RUN_BLOCK_ERR);
+						});
+						return;
+					}
+					
+					return cb(ERR_SERVER_RUN_BLOCK_ERR);
 				}
-				cb(ERR_SERVER_RUN_BLOCK_ERR);
+				
+				cb();
 			});
+		},
+		function(cb) {
+			processor.blockChain.putBlock(block, cb);
 		},
 		function(cb) {
 			processor.consistentTransactionsPool.splice(0, waitingProcessTransactionSize, cb);

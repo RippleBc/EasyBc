@@ -208,5 +208,21 @@ class Block {
       return "";
     }
   }
+
+  /**
+   * @param {Buffer} transactionHash
+   * @return {Transaction} 
+   */
+  getTransaction(transactionHash)
+  {
+    for(let i = 0; i < this.transactions.length; i++)
+    {
+      if(this.transactions[i].hash(true).toString("hex") === transactionHash.toString("hex"))
+      {
+        return this.transactions[i];
+      }
+    }
+    return null;
+  }
 }
 module.exports = Block;

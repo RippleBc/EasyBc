@@ -61,7 +61,6 @@ class BlockChain extends AsyncEventEmitter
         }
         return cb("BlockChain getBlockByHash, " + err);
       }
-      
       cb(null, new Block(raw));
     });
   }
@@ -180,6 +179,7 @@ class BlockChain extends AsyncEventEmitter
         });
       },
       function(number, cb) {
+        console.log("******************** maxBlockNumberKey: " + block.header.number.toString("hex"))
         block.header.number = ebUtil.toBuffer(number.iaddn(1));
         db.put(maxBlockNumberKey, block.header.number, cb);
       },
@@ -238,6 +238,80 @@ class BlockChain extends AsyncEventEmitter
       cb(null, new BN(number));
     });
   }
+
+  /**
+   * get transaction
+   * @param {*} trasactionHash
+   */
+   getTrasaction(trasactionHash, cb)
+   {
+      const TRANSACTION_FOUND = 1;
+
+      trasactionHash = ebUtil.toBuffer(trasactionHash);
+
+      const self = this;
+
+      self.getLastestBlockNumber(function(err, bnNumber) {
+        if(!!err)
+        {
+          return cb(err);
+        }
+
+        getTransactionTraverse(bnNumber, cb)
+      });
+
+      /**
+       * @param {Buffer} bnLastestBlockNumber
+       * @return {Function} cb 
+       */
+      function getTransactionTraverse(bnLastestBlockNumber, cb)
+      {
+        let bnIndex = bnLastestBlockNumber;
+
+        async.whilst(function() {
+          return bnIndex.gtn(0);
+        }, function(done) {
+          getTransaction(bnIndex, function(err, transaction) {
+            bnIndex.isubn(1);
+
+            if(!!err)
+            {
+              return done(err, transaction);
+            }
+
+            done();
+          });
+        }, function(err, transaction) {
+          if(!!err && err === TRANSACTION_FOUND)
+          {
+            return cb(null, transaction);
+          }
+
+          cb(err);
+        });
+      }
+
+      /**
+       * @param {*} blockNumber
+       */
+      function getTransaction(blockNumber, cb)
+      {
+        async.waterfall([
+          function(cb) {
+            self.getBlockByNumber(blockNumber, cb);
+          },
+          
+          function(block, cb) {
+            let transaction = block.getTransaction(trasactionHash);
+            if(transaction)
+            {
+              return cb(TRANSACTION_FOUND, transaction);
+            }
+            cb();
+          }], cb);
+      }
+   }
+
 }
 
 module.exports = BlockChain;

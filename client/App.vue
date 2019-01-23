@@ -31,10 +31,19 @@
 				<span style="width:50px;">value: </span><input style="width:100%;margin:20px;" v-model="value"/>
 			</div>
 		</div>
-		
-		<div style="display:flex;justify-content:flex-end;;margin:20px">
+
+		<div style="display:flex;justify-content:flex-end;margin:20px;">
 			<button @click="generateKeyPiar">generate key piar</button>
 		  <button @click="sendTransaction">send transaction</button>
+		</div>
+
+		<div style="display:flex;flex-direction:column;margin:20px;">
+			<div style="display:flex">
+				<span style="width:200px;">transaction hash: </span><input style="width:100%;" v-model="transactionHash"/>
+			</div>
+			<div style="display:flex;justify-content:flex-end;margin-top:20px;">
+				<button @click="getTransactionState">get transaction state</button>
+			</div>
 		</div>
 	</div>
 </template>
@@ -52,7 +61,8 @@ export default {
     	tos: [],
     	from: "",
     	to: "",
-    	value: 0
+    	value: 0,
+    	transactionHash: ""
     }
   },
 
@@ -155,8 +165,8 @@ export default {
 				{
 					if(response.data.code === 0)
 					{
+						alert("transaction hash: " + response.data.data);
 						self.getToHistory();
-						alert("success");
 					}
 					else
 					{
@@ -169,6 +179,31 @@ export default {
 				}
 			});
     },
+
+    getTransactionState: function()
+    {
+    	const self = this;
+
+      axios.get("getTransactionState", {
+      	hash: self.transactionHash
+      }, response => {
+				if (response.status >= 200 && response.status < 300)
+				{
+					if(response.data.code === 0)
+					{
+						alert(response.data.data);
+					}
+					else
+					{
+						alert(response.data.msg);
+					}
+				}
+				else
+				{
+					alert(response);
+				}
+			});
+    }
   }
 }
 </script>
