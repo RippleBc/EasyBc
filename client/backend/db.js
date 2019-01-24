@@ -7,7 +7,6 @@ const async = require("async")
 const Account = require("../../account")
 const Transaction = require("../../transaction")
 const {post} = require("../../http/request")
-const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../constant")
 const {sendTransactionToWorkNodes} = require("./chat")
 const log4js= require("../logConfig")
 const logger = log4js.getLogger()
@@ -202,7 +201,7 @@ exports.getToHistory = function(cb)
  * @param {*} value value
  * @return {Function} cb 
  */
-exports.sendTransaction = function(url, from, to, bnValue transaction, cb)
+exports.sendTransaction = function(url, from, to, bnValue, cb)
 {
 	let db = getDb();
 

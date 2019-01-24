@@ -1,7 +1,7 @@
 const express = require("express")
 const path = require("path")
 const db = require("./backend/db")
-const {SUCCESS, PARAM_ERR, OTH_ERR} = require("./constant")
+const {SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_UNCONSISTENT, TRANSACTION_STATE_CONSISTENT, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS} = require("../const")
 const {getTransactionState, getAccountInfo} = require("./backend/chat")
 const util = require("../utils")
 
@@ -11,6 +11,7 @@ const errlogger = log4js.getLogger("err")
 const othlogger = log4js.getLogger("oth")
 
 const Buffer = util.Buffer;
+const BN = util.BN;
 
 const app = express();
 log4js.useLogger(app, logger);
@@ -89,7 +90,7 @@ app.get("/sendTransaction", function(req, res) {
   let to = Buffer.from(req.query.to, "hex");
   let bnValue = new BN(Buffer.from(req.query.value, "hex"));
 
-  db.sendTransaction(req.query.url, from, to, vnValue, function(err, transactionHashHexString) {
+  db.sendTransaction(req.query.url, from, to, bnValue, function(err, transactionHashHexString) {
     if(!!err)
     {
       res.send({
@@ -108,12 +109,6 @@ app.get("/sendTransaction", function(req, res) {
 });
 
 app.get("/getTransactionState", function(req, res) {
-
-  const TRANSACTION_STATE_UNCONSISTENT = 1;
-  const TRANSACTION_STATE_CONSISTENT = 2;
-  const TRANSACTION_STATE_PACKED = 3;
-  const TRANSACTION_STATE_NOT_EXISTS = 4;
-
   let returnData;
 
   if(!req.query.url) {
@@ -197,6 +192,11 @@ app.get("/getAccountInfo", function(req, res) {
       return;
     }
     
+    //
+    account.nonce = util.bufferToInt(account.nonce);
+    account.balance = util.bufferToInt(account.balance);
+
+    //
     res.send({
       code: SUCCESS,
       msg: "",

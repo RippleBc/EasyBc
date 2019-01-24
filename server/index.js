@@ -3,6 +3,7 @@ const express = require("express");
 const bodyParser = require("body-parser") 
 const Processor = require("./processor")
 const util = require("../utils")
+const {SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_UNCONSISTENT, TRANSACTION_STATE_CONSISTENT, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS} = require("../const")
 
 const log4js= require("./logConfig")
 const logger = log4js.getLogger()
@@ -10,10 +11,6 @@ const errlogger = log4js.getLogger("err")
 const othlogger = log4js.getLogger("oth")
 
 const Buffer = util.Buffer;
-
-const SUCCESS = 0;
-const PARAM_ERR = 1;
-const OTH_ERR = 1;
 
 const processor = new Processor();
 
@@ -103,11 +100,6 @@ app.post("/getAccountInfo", function(req, res) {
 
 
 app.post("/getTransactionState", function(req, res) {
-    const TRANSACTION_STATE_UNCONSISTENT = 1;
-    const TRANSACTION_STATE_CONSISTENT = 2;
-    const TRANSACTION_STATE_PACKED = 3;
-    const TRANSACTION_STATE_NOT_EXISTS = 4;
-
     let return_data;
 
     if(!req.body.hash) {

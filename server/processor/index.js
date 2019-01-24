@@ -9,7 +9,6 @@ const semaphore = require("semaphore")
 const async = require("async")
 const Pool = require("./pool")
 const Trie = require("merkle-patricia-tree/secure.js")
-const initDb = require("../../db")
 const {ERR_RUN_BLOCK_TX_PROCESS, ERR_RUN_BLOCK_TXS_SIZE, ERR_RUN_BLOCK_TXS_TRIE_STATE} = require("../../const")
 
 const log4js= require("../logConfig");
@@ -235,9 +234,7 @@ function processBlock(processor)
 				if(!!err)
 				{
 					if(errCode === ERR_RUN_BLOCK_TX_PROCESS)
-					{
-						// log
-						errLogger.error(err);
+					{						
 						errLogger.error("failed transactions: ")
 						for(let i = 0; i < failedTransactions.length; i++)
 						{

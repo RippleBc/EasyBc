@@ -1,6 +1,6 @@
 const {post} = require("../../http/request")
 const util = require("../../utils")
-const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../constant")
+const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../../const")
 const Account = require("../../account");
 
 const log4js= require("../logConfig")
