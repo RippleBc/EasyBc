@@ -205,14 +205,12 @@ class Transaction
   {
     const errors = [];
 
-    let bnZero = new BN(0);
-
-    if(new BN(this.nonce).eq(bnZero))
+    if(new BN(this.nonce).eqn(0))
     {
       errors.push("class Transaction validate, property nonce can not be zero");
     }
 
-    if(new BN(this.value).eq(bnZero))
+    if(new BN(this.value).eqn(0))
     {
       errors.push("class Transaction validate, property value can not be zero");
     }

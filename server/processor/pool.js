@@ -127,6 +127,14 @@ class Pool
 			}
 		}
 	}
+
+	/**
+	 * @param {Number} index
+	 */
+	get(index)
+	{
+		return this.data[i];
+	}
 }
 
 module.exports = Pool;
