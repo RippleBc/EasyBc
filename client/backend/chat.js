@@ -64,6 +64,6 @@ module.exports.getAccountInfo = function(url, address, cb)
 			return cb(response.msg);
 		}
 		
-		cb(null, new Account(response.data).toJSON(true));
+		cb(null, new Account(response.data));
 	});
 }

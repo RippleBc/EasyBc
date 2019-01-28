@@ -3,6 +3,11 @@ const async = require("async")
 const util = require("../utils")
 const Block = require("../block")
 
+const log4js= require("../server/logConfig");
+const logger = log4js.getLogger();
+const errLogger = log4js.getLogger("err");
+const othLogger = log4js.getLogger("oth");
+
 const BN = util.BN;
 
 /**
@@ -29,6 +34,8 @@ module.exports = function(opts, cb)
   function subTxValue(cb)
   {
     let fromAccount = self.stateManager.cache.get(tx.from);
+
+    logger.info("subTxValue address: " + tx.from.toString("hex") + ", nonce: " + util.bufferToInt(fromAccount.nonce) + ", balance: " + util.bufferToInt(fromAccount.balance))
 
     // check balance
     if(!opts.skipBalance && new BN(fromAccount.balance).lt(tx.getUpfrontCost()))
@@ -57,6 +64,8 @@ module.exports = function(opts, cb)
   function addTxValue(cb)
   {
     let toAccount = self.stateManager.cache.get(tx.to);
+
+    logger.info("addTxValue address: " + tx.to.toString("hex") + ", nonce: " + util.bufferToInt(toAccount.nonce) + ", balance: " + util.bufferToInt(toAccount.balance))
 
     // add coin
     var newBalance = new BN(toAccount.balance).add(new BN(tx.value));

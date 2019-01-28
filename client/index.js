@@ -191,16 +191,19 @@ app.get("/getAccountInfo", function(req, res) {
       });
       return;
     }
-    
+
     //
-    account.nonce = util.bufferToInt(account.nonce);
-    account.balance = util.bufferToInt(account.balance);
+    let nonce = util.bufferToInt(account.nonce);
+    let balance = util.bufferToInt(account.balance);
 
     //
     res.send({
       code: SUCCESS,
       msg: "",
-      data: JSON.stringify(account)
+      data: JSON.stringify({
+        "nonce": nonce,
+        "balance": balance
+      })
     });
   });
 });
