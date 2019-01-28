@@ -31,25 +31,22 @@ const ERR_SERVER_RUN_BLOCK_ERR = 2;
  */
 class Processor extends AsyncEventEmitter
 {
-	constructor()
+	constructor(express)
 	{
 		super();
 
 		const self = this;
 
+
 		this.transactionsPoolSem = semaphore(1);
-		this.consistentTransactionsPoolSem = semaphore(1);
+
+		this.express = express;
 		this.stoplight = new FlowStoplight();
 		this.blockChain = new BlockChain();
 
-		this.consensus = new Consensus(self);
-		this.transactionsPool = new Pool(100);
-		this.consistentTransactionsPool = new Pool(100);
+		this.consensus = new Consensus(self, express);
 
-		this.on("consistentTransaction", function(err, next) {
-				processBlock(self);
-				next();		
-		});
+		this.transactionsPool = new Pool(100);
 
 		initBlockChainState(self);
 	}

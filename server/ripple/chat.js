@@ -9,115 +9,105 @@ const errlogger = log4js.getLogger("err")
 const othlogger = log4js.getLogger("oth")
 
 
-module.exports.batchSendCandidate = function(ripple, url, candidate)
+/**
+ * @param {Processor} processor
+ * @param {Candidate} block
+ */
+module.exports.batchAmalgamateCandidate = function(processor, candidate)
 {
 	let funcs = [];
 	nodeList.foreach(function(node) {
-		module.exports.sendCandidate(node.url, candidate, function(err, response) {
+		module.exports.amalgamateCandidate(node.url, util.baToHexString(candidate.serialize()), function(err, response) {
 			if(!!err)
 			{
-
+				processor.emit("amalgamateCandidateErr");
+				return;
 			}
 
-			if(response.code === SUCCESS)
+			if(response.code !== SUCCESS)
 			{
-
+				processor.emit("amalgamateCandidateErr");
+				return;
 			}
+
+			processor.emit("amalgamateCandidateSuccess");
 		});
 	});
 }
 
-module.exports.batchSendTransaction = function(ripple, url, transaction)
+/**
+ * @param {Processor} processor
+ * @param {Candidate} candidate
+ */
+module.exports.batchConsensusCandidate = function(processor, candidate)
 {
 	let funcs = [];
 	nodeList.foreach(function(node) {
-		module.exports.sendTransaction(node.url, transaction, function(err, response) {
+		module.exports.consensusCandidate(node.url, candidate, function(err, response) {
 			if(!!err)
 			{
+				processor.emit("consensusCandidateErr");
+				return;
+			}
 
-			}
-			if( response.code === SUCCESS)
+			if(response.code !== SUCCESS)
 			{
-				ripple.emit("tranasctionConsensus", response.data);
+				processor.emit("consensusCandidateErr");
+				return;
 			}
+
+			processor.emit("consensusCandidateSuccess");
 		});
 	});
 }
 
-module.exports.batchSendBlock = function(ripple, url, block, cb)
+/**
+ * @param {Processor} processor
+ * @param {RippleBlock} block
+ */
+module.exports.batchConsensusBlock = function(processor, block)
 {
 	let funcs = [];
 	nodeList.foreach(function(node) {
-		module.exports.sendBlock(node.url, block, function(err, response) {
+		module.exports.consensusBlock(node.url, block, function(err, response) {
 			if(!!err)
 			{
+				processor.emit("consensusBlockErr");
+				return;
+			}
 
-			}
-			if( response.code === SUCCESS)
+			if(response.code !== SUCCESS)
 			{
-				ripple.emit("blockConsensus", response.data);
+				processor.emit("consensusBlockErr");
+				return;
 			}
+
+			processor.emit("consensusBlockSuccess");
 		});
 	});
 }
 
 
 /**
- * @param {Candidate} tx
+ * @param {Candidate} candidate
  */
-module.exports.sendCandidate = function(url, candidate, cb)
+module.exports.amalgamateCandidate = function(url, candidate, cb)
 {
-	post(logger, url + "/sendRippleCandidate", {candidate: util.baToHexString(candidate.serialize())}, function(err, response) {
-		if(!!err)
-		{
-			return cb(err);
-		}
-
-		if(response.code !== SUCCESS)
-		{
-			return cb(response.msg);
-		}
-		
-		cb(null);
-	});
+	post(logger, url + "/amalgamateCandidate", {candidate: util.baToHexString(candidate.serialize())}, cb);
 }
 
 /**
- * @param {RippleTransaction} transactionHash
+ * @param {Candidate} candidate
  */
-module.exports.sendTransaction = function(url, transaction,  cb)
+module.exports.consensusCandidate = function(url, candidate,  cb)
 {
-	post(logger, url + "/sendRippleTransaction", {transaction: util.baToHexString(transaction.serialize())}, function(err, response) {
-		if(!!err)
-		{
-			return cb(err);
-		}
-
-		if(response.code !== SUCCESS)
-		{
-			return cb(response.msg);
-		}
-		
-		cb(null, response.data);
-	});
+	post(logger, url + "/consensusCandidate", {candidate: util.baToHexString(candidate.serialize())}, cb);
 }
 
 /**
  * @param {RippleBlock} block
  */
-module.exports.sendBlock = function(url, block, cb)
+module.exports.consensusBlock = function(url, block, cb)
 {
-	post(logger, url + "/sendRippleBlock", {block: util.baToHexString(block..serialize())}, function(err, response) {
-		if(!!err)
-		{
-			return cb(err);
-		}
-
-		if(response.code !== SUCCESS)
-		{
-			return cb(response.msg);
-		}
-		
-		cb(null, new Account(response.data).toJSON(true));
-	});
+	post(logger, url + "/consensusBlock", {block: util.baToHexString(block.serialize())}, cb);
 }

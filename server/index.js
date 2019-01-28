@@ -12,31 +12,17 @@ const othlogger = log4js.getLogger("oth")
 
 const Buffer = util.Buffer;
 
-const processor = new Processor();
-
-process.on("uncaughtException", function (err) {
-    errlogger.error(err.stack);
-
-    //
-    processor.reset();
-});
-
+// express
 const app = express();
-
 app.use(bodyParser.urlencoded({
   extended: true
 }));
 app.use(bodyParser.json({limit: "1mb"}));
-
-log4js.useLogger(app, logger);
-
 const server = app.listen(8080, function() {
     let host = server.address().address;
     let port = server.address().port;
     console.log("server listening at http://%s:%s", host, port);
 });
-
-//设置跨域访问
 app.all('*', function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
@@ -45,6 +31,18 @@ app.all('*', function(req, res, next) {
     res.header("Content-Type", "application/json;charset=utf-8");
     next();
 });
+
+// consensus
+const processor = new Processor(app);
+process.on("uncaughtException", function (err) {
+    errlogger.error(err.stack);
+
+    //
+    processor.reset();
+});
+
+// logger
+log4js.useLogger(app, logger);
 
 app.post("/sendTransaction", function(req, res) {
     if(!req.body.tx) {

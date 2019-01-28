@@ -1,9 +1,10 @@
 const Candidate = require("./candidate")
 const nodes = require("../nodes")
 const util = require("../../utils")
-const {sendCandidate} = require("./chat")
+const {batchSendCandidate} = require("./chat")
+const async = require("async")
 
-const {RIPPLE_STATE_AMALGAMATE, RIPPLE_STATE_CANDIDATE_AGREEMENT, RIPPLE_STATE_BLOCK_AGREEMENT, ROUND_DEFER} = require("../constant")
+const {RIPPLE_STATE_AMALGAMATE, RIPPLE_STATE_CANDIDATE_AGREEMENT, ROUND_DEFER, TRANSACTION_NUM_EACH_ROUND} = require("../constant")
 
 class Amalgamate
 {
@@ -12,69 +13,126 @@ class Amalgamate
 		const self = this;
 
 		this.ripple = ripple;
-		this.ripple.expressApp.post("/sendCandidate", function(req, res) {
+
+		this.ripple.express.post("/amalgamateCandidate", function(req, res) {
 	    if(!req.body.candidate) {
-	        res.send({
-	            code: PARAM_ERR,
-	            msg: "param error, need candidate"
-	        });
-	        return;
+        res.send({
+            code: PARAM_ERR,
+            msg: "param error, need candidate"
+        });
+        return;
 	    }
 
-	    processCandidate(ripple, req.body.candidate);
+	    amalgamateCandidate(self.ripple, req.body.candidate);
 	  });
 
-		// amalgamate begin
+		// entrance one
 	  this.ripple.on("blockAgreementOver", () => {
-	  	self.ripple.state = RIPPLE_STATE_AMALGAMATE;
+	  	self.run();
 	  });
 	}
 
+	// entrance two
 	run()
 	{
-		sendCandidate()
+		const self = this;
+
+		sendCandidate(this.ripple);
 
 		this.ripple.initTimeout(() => {
-			// amalgamate end
-			ripple.emit("amalgamateOver");
+			self.candidatesPoolSem.take(() => {
+				// check round stage
+				if(self.ripple.state !== RIPPLE_STATE_AMALGAMATE)
+				{
+					self.candidatesPoolSem.leave();
+					return;
+				}
+
+				// transfer to transaction agreement stage
+				self.ripple.state = RIPPLE_STATE_CANDIDATE_AGREEMENT;
+				self.ripple.emit("amalgamateOver");
+
+				self.candidatesPoolSem.leave();
+			});
 		});
 	}
 }
 
-
-function processCandidate(ripple, candidate, cb)
+function sendCandidate(ripple)
 {
-	candidate = new Candidate(candidate);
+	let candidateTransactions;
 
-	// check candidate
-	if(!candidate.validate())
-	{
-		return false;
-	}
+	async.waterfall([
+		function(cb) {
+			ripple.candidatesPoolSem.take((() => {
+				cb();
+			});
+		},
+		function(cb) {
+			ripple.processor.transactionsPoolSem.take(() => {
+				cb();
+			});
+		},
+		function(cb) {
+			ripple.processor.transactionsPool.splice(0, TRANSACTION_NUM_EACH_ROUND, cb);
+		},
+		function(transactions, cb) {
+			ripple.candidatesPool.batchPush(transactions, cb);
+		},
+		function(cb){
+			// 
+			ripple.candidatesPool.poolDataToCandidateTransactions();
+			//
+			batchSendCandidate(ripple, ripple.candidatesPool);
+		}], function() {
+			ripple.processor.transactionsPoolSem.leave();
+			ripple.candidatesPoolSem.leave();
+		});
+}
 
-	// merge
-	candidate.candidateTransactionsToPoolData();
-	//
-	ripple.candidatesPoolSem.take(() => {
+function amalgamateCandidate(ripple, candidate)
+{
+	const EXIT_CODE = 1;
 
-		if(ripple.state === RIPPLE_STATE_AMALGAMATE)
+	async.waterfall([
+		function(cb)
 		{
-			//
-			ripple.candidatesPool.batchPush(candidate.data);
-
-			//
-			nodes.recordActiveNode(candidate.from);
-
-			if(nodes.checkIfAllNodeHasMet())
+			ripple.candidatesPoolSem.take(() => {
+				cb()
+			});
+		},
+		function(cb)
+		{
+			// check round stage
+			if(ripple.state !== RIPPLE_STATE_AMALGAMATE)
 			{
-				// amalgamate end
+				return cb(EXIT_CODE);
+			}
+
+			// check candidate
+			candidate = new Candidate(candidate);
+			if(!candidate.validate())
+			{
+				return cb(EXIT_CODE);
+			}
+
+			// merge
+			candidate.candidateTransactionsToPoolData();
+
+			//
+			ripple.candidatesPool.batchPush(candidate.data, cb);
+		}], function() {
+			let activeNodes = ripple.recordActiveNode(candidate.from);
+
+			if(nodes.checkIfAllNodeHasMet(activeNodes))
+			{
+
 				clearTimeout(ripple.timeout);
+
+				// transfer to transaction agreement stage
+				ripple.state = RIPPLE_STATE_CANDIDATE_AGREEMENT;
 				ripple.emit("amalgamateOver");
 			}
-		}
-		
-		// 
-		ripple.candidatesPoolSem.leave();
-		cb();
-	});
+			ripple.candidatesPoolSem.leave();
+		});
 }

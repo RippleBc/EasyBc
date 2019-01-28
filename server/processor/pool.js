@@ -36,10 +36,10 @@ class Pool
 
 		self.sem.take(function() {
 		
-			self.data.splice(begin, number);
+			let data = self.data.splice(begin, number);
 
 			self.sem.leave();
-			cb();
+			cb(null, data);
 		});
 	}
 

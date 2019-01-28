@@ -1,4 +1,5 @@
 const async = require("async")
+const Ripple = require("../ripple")
 
 /**
  * Creates a new consensus object
@@ -9,43 +10,10 @@ const async = require("async")
  */
 class Consensus
 {
-	constructor(processor)
+	constructor(processor, express)
 	{
-		this.processor = processor;
-		this.processor.on("transaction", function(err, next) {
-			processTransactions(processor, next);
-		});
+		this.ripple = new Ripple(processor, express)
 	}
-}
-
-/**
- * Process unconsistent transactions
- */
-function processTransactions(processor, next)
-{
-	async.waterfall([
-		function(cb) {
-			processor.transactionsPoolSem.take(function(semaphoreLeaveFunc) {
-				cb();
-			});
-		},
-		function(cb) {
-			processor.consistentTransactionsPoolSem.take(function(semaphoreLeaveFunc) {
-				cb();
-			});
-		},
-		function(cb) {
-			processor.consistentTransactionsPool.batchPush(processor.transactionsPool.data, cb);
-		},
-		function(cb) {
-			processor.transactionsPool.splice(0, processor.transactionsPool.length, cb);
-		}], function() { 
-			processor.consistentTransactionsPoolSem.leave();
-			processor.transactionsPoolSem.leave();
-
-			processor.emit("consistentTransaction");
-			next();
-		});
 }
 
 module.exports = Consensus;
