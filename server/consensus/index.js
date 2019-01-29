@@ -12,7 +12,12 @@ class Consensus
 {
 	constructor(processor, express)
 	{
-		this.ripple = new Ripple(processor, express)
+		this.consensusInstance = new Ripple(processor, express);
+	}
+
+	run()
+	{
+		this.consensusInstance.run();
 	}
 }
 

@@ -1,7 +1,7 @@
 const {post} = require("../../http/request")
 const util = require("../../utils")
 const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../../const")
-const {nodeList} = require("../nodes")
+const {nodeList, privateKey} = require("../nodes")
 
 const log4js= require("../logConfig")
 const logger = log4js.getLogger()
@@ -10,105 +10,105 @@ const othlogger = log4js.getLogger("oth")
 
 
 /**
- * @param {Processor} processor
- * @param {Candidate} block
+ * @param {Ripple} ripple
  */
-module.exports.batchAmalgamateCandidate = function(processor, candidate)
+module.exports.batchAmalgamateCandidate = function(ripple)
 {
-	let funcs = [];
+	ripple.candidate.sign(util.toBuffer(privateKey));
+
 	nodeList.foreach(function(node) {
-		module.exports.amalgamateCandidate(node.url, util.baToHexString(candidate.serialize()), function(err, response) {
+		module.exports.amalgamateCandidate(node.url, util.baToHexString(ripple.candidate.serialize()), function(err, response) {
 			if(!!err)
 			{
-				processor.emit("amalgamateCandidateErr");
+				ripple.emit("amalgamateCandidateErr");
 				return;
 			}
 
 			if(response.code !== SUCCESS)
 			{
-				processor.emit("amalgamateCandidateErr");
+				ripple.emit("amalgamateCandidateErr");
 				return;
 			}
 
-			processor.emit("amalgamateCandidateSuccess");
+			ripple.emit("amalgamateCandidateSuccess");
 		});
 	});
 }
 
 /**
- * @param {Processor} processor
- * @param {Candidate} candidate
+ * @param {Ripple} ripple
  */
-module.exports.batchConsensusCandidate = function(processor, candidate)
+module.exports.batchConsensusCandidate = function(ripple)
 {
-	let funcs = [];
+	ripple.candidate.sign(util.toBuffer(privateKey));
+
 	nodeList.foreach(function(node) {
-		module.exports.consensusCandidate(node.url, candidate, function(err, response) {
+		module.exports.consensusCandidate(node.url, util.baToHexString(ripple.candidate.serialize()), function(err, response) {
 			if(!!err)
 			{
-				processor.emit("consensusCandidateErr");
+				ripple.emit("consensusCandidateErr");
 				return;
 			}
 
 			if(response.code !== SUCCESS)
 			{
-				processor.emit("consensusCandidateErr");
+				ripple.emit("consensusCandidateErr");
 				return;
 			}
 
-			processor.emit("consensusCandidateSuccess");
+			ripple.emit("consensusCandidateSuccess");
 		});
 	});
 }
 
 /**
- * @param {Processor} processor
- * @param {Number} time
+ * @param {Ripple} ripple
  */
-module.exports.batchConsensusTime = function(processor, time)
+module.exports.batchConsensusTime = function(ripple)
 {
-	let funcs = [];
+	ripple.time.sign(util.toBuffer(privateKey));
+
 	nodeList.foreach(function(node) {
-		module.exports.consensusTime(node.url, time, function(err, response) {
+		module.exports.consensusTime(node.url, util.baToHexString(ripple.time), function(err, response) {
 			if(!!err)
 			{
-				processor.emit("consensusTimeErr");
+				ripple.emit("consensusTimeErr");
 				return;
 			}
 
 			if(response.code !== SUCCESS)
 			{
-				processor.emit("consensusTimeErr");
+				ripple.emit("consensusTimeErr");
 				return;
 			}
 
-			processor.emit("consensusTimeSuccess");
+			ripple.emit("consensusTimeSuccess");
 		});
 	});
 }
 
 /**
- * @param {Processor} processor
- * @param {RippleBlock} block
+ * @param {Ripple} ripple
  */
-module.exports.batchConsensusBlock = function(processor, block)
+module.exports.batchConsensusBlock = function(ripple)
 {
-	let funcs = [];
+	ripple.block.sign(util.toBuffer(privateKey));
+	
 	nodeList.foreach(function(node) {
-		module.exports.consensusBlock(node.url, block, function(err, response) {
+		module.exports.consensusBlock(node.url, util.baToHexString(ripple.block), function(err, response) {
 			if(!!err)
 			{
-				processor.emit("consensusBlockErr");
+				ripple.emit("consensusBlockErr");
 				return;
 			}
 
 			if(response.code !== SUCCESS)
 			{
-				processor.emit("consensusBlockErr");
+				ripple.emit("consensusBlockErr");
 				return;
 			}
 
-			processor.emit("consensusBlockSuccess");
+			ripple.emit("consensusBlockSuccess");
 		});
 	});
 }

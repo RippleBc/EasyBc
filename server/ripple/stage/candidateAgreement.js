@@ -1,10 +1,11 @@
 const Candidate = require("./candidate")
 const nodes = require("../nodes")
 const util = require("../../utils")
-const {batchConsensusCandidate} = require("./chat")
+const {batchConsensusCandidate} = require("../chat")
 const async = require("async")
-const {privateKey} = require("../nodes")
-const {RIPPLE_STATE_CANDIDATE_AGREEMENT, RIPPLE_STATE_TIME_AGREEMENT, ROUND_DEFER, ROUND_NUM} = require("../constant")
+const {RIPPLE_STATE_CANDIDATE_AGREEMENT, RIPPLE_STATE_TIME_AGREEMENT, ROUND_NUM} = require("../constant")
+
+const privateKey = nodes.privateKey;
 
 const ROUND1_THRESHHOLD = 0.5
 const ROUND2_THRESHHOLD = 0.6
@@ -17,7 +18,7 @@ class CandidateAgreement
 		const self = this;
 
 		this.ripple = ripple;
-		this.index = 1;
+		this.round = 1;
 		this.ripple.express.post("/consensusCandidate", function(req, res) {
 			if(!req.body.candidate) {
         res.send({
@@ -34,17 +35,16 @@ class CandidateAgreement
 		// entrance one
 	  this.ripple.on("amalgamateOver", () => {
 	  	// clear invalid transactions
-	  	if(self.index === 2 || self.index === 3 || self.index === 4)
+	  	if(self.round === 2 || self.round === 3 || self.round === 4)
 	  	{
 	  		self.ripple.candidate.clearInvalidTransaction(self.threshhold);
 	  		return;
 	  	}
 
-	
-			// check if ite round is over
-	  	if(self.index > ROUND_NUM)
+			// check if stage is over
+	  	if(self.round > ROUND_NUM)
 	  	{
-	  		self.index = 1;
+	  		self.round = 1;
 	  		// transfer to block agreement stage
 				self.ripple.state = RIPPLE_STATE_TIME_AGREEMENT;
 	  		self.ripple.emit("candidateAgreementOver");
@@ -52,21 +52,23 @@ class CandidateAgreement
 	  	}
 
 	  	// compute
-	  	if(self.index === 1)
+	  	if(self.round === 1)
 	  	{
 	  		self.threshhold = ROUND1_THRESHHOLD;
 	  	}
 
-	  	if(self.index === 2)
+	  	if(self.round === 2)
 	  	{
 	  		self.threshhold = ROUND2_THRESHHOLD;
 	  	}
 
-	  	if(self.index === 3)
+	  	if(self.round === 3)
 	  	{
 	  		self.threshhold = ROUND3_THRESHHOLD;
 	  	}
-	  	self.index += 1;
+
+	  	//
+	  	self.round += 1;
 
 	  	//
 	  	self.run();
@@ -85,13 +87,16 @@ class CandidateAgreement
 			// check round stage
 			if(self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT)
 			{
-				self.candidateSem.leave();
 				return;
 			}
 
-			self.ripple.emit("amalgamateOver");
+			self.ripple.timeout = null;
 
-			self.candidateSem.leave();
+			// check and transfer to next round
+			if(nodes.checkIfAllNodeHasMet(self.ripple.activeNodes))
+			{
+				self.ripple.emit("amalgamateOver");
+			}
 		});
 	}
 }
@@ -113,6 +118,8 @@ function processCandidate(ripple, candidate)
 		return;
 	}
 
+	ripple.recordActiveNode(candidate.from);
+
 	// check candidate
 	candidate = new Candidate(candidate);
 	if(!candidate.validate())
@@ -120,18 +127,19 @@ function processCandidate(ripple, candidate)
 		return;
 	}
 
-	// merge
+	// record
 	candidate.candidateTransactionsToPoolData();
-
-	//
 	ripple.candidate.batchPush(candidate.data);
 
-	let activeNodes = ripple.recordActiveNode(candidate.from);
-
-	if(nodes.checkIfAllNodeHasMet(activeNodes))
+	// check if mandatory time window is end
+	if(ripple.timeout)
 	{
-		clearTimeout(ripple.timeout);
+		return;
+	}
 
+	// check and transfer to next round
+	if(nodes.checkIfAllNodeHasMet(self.ripple.activeNodes))
+	{
 		ripple.emit("amalgamateOver");
 	}
 }

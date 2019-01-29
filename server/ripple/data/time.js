@@ -1,5 +1,5 @@
-const semaphore = require("semaphore")
-const util = require("../../utils")
+const util = require("../../../utils")
+const Base = require("./base")
 
 /**
  * Creates a new Time object
@@ -8,7 +8,7 @@ const util = require("../../utils")
  * @constructor
  * @prop 
  */
-class Time
+class Time extends Base
 {
 	constructor()
 	{
@@ -49,22 +49,9 @@ class Time
 
     // attached serialize
     util.defineProperties(this, fields, data);
-
-		Object.defineProperty(self, "length", {
-			enumerable: true,
-      configurable: true,
-			get: function() {
-				return self.data.length;
-			}
-		});
 	}
 
-	push(time)
-	{
-		this.data.push(time);
-	}
-
-	getMidTime()
+	getTime()
 	{
 		for(let i = 0; i < this.length - 1; i++)
 		{
@@ -82,97 +69,50 @@ class Time
 		return this.data[math.ceil(this.length / 2)];
 	}
 
-	reset()
-	{
-		this.data = [];
-	}
-
-	/**
-   * Computes a sha3-256 hash of the serialized txs
-   * @param {Boolean} [includeSignature=true] whether or not to inculde the signature
-   * @return {Buffer}
+  /**
+   * @param {Array/Number} values
    */
-  hash(includeSignature)
+  batchPush(values)
   {
-    if(includeSignature === undefined)
+    for(let i = 0; i < values.length; i++)
     {
-      includeSignature = true;
+      this.push(values[i]);
     }
-
-    let items;
-    if(includeSignature)
-    {
-      items = this.raw;
-    }
-    else
-    {
-      items = this.raw.slice(0, 1);
-    }
-
-    // create hash
-    return util.keccak(util.rlp.encode(items));
+  }
+  /**
+   * @param {Number} value
+   */
+  push(value)
+  {
+    this.data.push(value);  
   }
 
   /**
-   * Returns the sender's address
-   * @return {Buffer}
+   * @param {Object|Buffer} value
    */
-  getSenderAddress()
+  del(value)
   {
-    if(this._from)
-    {
-      return this._from;
-    }
-    const pubkey = this.getSenderPublicKey();
-    this._from = util.publicToAddress(pubkey);
-    return this._from;
+    throw new Error("class Time, func del no exist");
+  }
+  /**
+   * @param {Array/Object|Buffer} values
+   */
+  batchDel(values)
+  {
+    throw new Error("class Time, func batchDel no exist");
   }
 
-  /**
-   * Returns the public key of the sender
-   * @return {Buffer}
+  /*
+   * @param {*} valueHash
    */
-  getSenderPublicKey()
+  ifExist()
   {
-    if(!this._senderPubKey || !this._senderPubKey.length)
-    {
-      const msgHash = this.hash(false);
-      let v = util.bufferToInt(this.v);
-      this._senderPubKey = util.ecrecover(msgHash, v, this.r, this.s);
-    }
-    return this._senderPubKey;
-  }
-
-  /**
-   * Determines if the signature is valid
-   * @return {Boolean}
-   */
-  verifySignature()
-  {
-    // compute publickey
-    this.getSenderPublicKey();
-
-    const msgHash = this.hash(false);
-
-    return util.ecverify(msgHash, this.r, this.s, this._senderPubKey);
-  }
-
-  /**
-   * sign a candidate with a given private key
-   * @param {Buffer} privateKey
-   */
-  sign(privateKey)
-  {
-    const msgHash = this.hash(false);
-    const sig = util.ecsign(msgHash, privateKey);
-
-    // copy sig's properties v, s, r to this
-    Object.assign(this, sig);
+    throw new Error("class Time, func ifExist no exist");
   }
 
   /**
    * Validates the signature
-   * Checks candidate's property and signature
+   * Checks time's property and signature
    * @param {Boolean} [stringError=false] whether to return a string with a description of why the validation failed or return a Boolean
    * @return {Boolean|String}
    */

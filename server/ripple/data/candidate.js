@@ -1,9 +1,7 @@
-const nodes = require("../nodes.json")
-const Pool = require("../processor/pool")
-const Transaction = require("../../transaction")
-const {getNodeNum} = require("../nodes")
-
-const rlp = util.rlp;
+const Base = require("./base")
+const util = require("../../../utils")
+const Transaction = require("../../../transaction")
+const {getNodeNum} = require("../../nodes")
 
 class Candidate extends Pool
 {
@@ -49,105 +47,7 @@ class Candidate extends Pool
 
     // attached serialize
     util.defineProperties(this, fields, data);
-
-    /**
-     * @property {Buffer} from (read only) sender address of this candidate, mathematically derived from other parameters.
-     * @memberof Transaction
-     */
-    Object.defineProperty(this, "from", {
-      enumerable: true,
-      configurable: true,
-      get: this.getSenderAddress.bind(this)
-    });
 	}
-
-  reset()
-  {
-    this.data = [];
-  }
-
-	/**
-   * Computes a sha3-256 hash of the serialized txs
-   * @param {Boolean} [includeSignature=true] whether or not to inculde the signature
-   * @return {Buffer}
-   */
-  hash(includeSignature)
-  {
-    if(includeSignature === undefined)
-    {
-      includeSignature = true;
-    }
-
-    let items;
-    if(includeSignature)
-    {
-      items = this.raw;
-    }
-    else
-    {
-      items = this.raw.slice(0, 1);
-    }
-
-    // create hash
-    return util.keccak(util.rlp.encode(items));
-  }
-
-  /**
-   * Returns the sender's address
-   * @return {Buffer}
-   */
-  getSenderAddress()
-  {
-    if(this._from)
-    {
-      return this._from;
-    }
-    const pubkey = this.getSenderPublicKey();
-    this._from = util.publicToAddress(pubkey);
-    return this._from;
-  }
-
-  /**
-   * Returns the public key of the sender
-   * @return {Buffer}
-   */
-  getSenderPublicKey()
-  {
-    if(!this._senderPubKey || !this._senderPubKey.length)
-    {
-      const msgHash = this.hash(false);
-      let v = util.bufferToInt(this.v);
-      this._senderPubKey = util.ecrecover(msgHash, v, this.r, this.s);
-    }
-    return this._senderPubKey;
-  }
-
-  /**
-   * Determines if the signature is valid
-   * @return {Boolean}
-   */
-  verifySignature()
-  {
-    // compute publickey
-    this.getSenderPublicKey();
-
-    const msgHash = this.hash(false);
-
-    return util.ecverify(msgHash, this.r, this.s, this._senderPubKey);
-  }
-
-  /**
-   * sign a candidate with a given private key
-   * @param {Buffer} privateKey
-   */
-  sign(privateKey)
-  {
-    const msgHash = this.hash(false);
-    const sig = util.ecsign(msgHash, privateKey);
-
-    // copy sig's properties v, s, r to this
-    Object.assign(this, sig);
-  }
 
   /**
    * Validates the signature
@@ -159,7 +59,7 @@ class Candidate extends Pool
   {
     const errors = [];
 
-    // verify candidate
+    // verify
     if(!this.verifySignature())
     {
       errors.push("class Candidate validate, Invalid Candidate Signature");
@@ -171,7 +71,7 @@ class Candidate extends Pool
     	errors.push("class Candidate validate, Invalid Candidate address");
     }
 
-  	// verify transactions of candidate
+  	// verify transactions
   	let rawTransactions = rlp.decode(this.transactions);
   	for(let i = 0; i < rawTransactions.length; i++)
   	{
@@ -192,9 +92,6 @@ class Candidate extends Pool
     }
   }
 
-  /**
-   *
-   */
   poolDataToCandidateTransactions()
   {
   	let transactions = [];
@@ -206,9 +103,6 @@ class Candidate extends Pool
   	this.transactions = rlp.encode(transactions);
   }
 
-  /**
-   *
-   */
   candidateTransactionsToPoolData()
   {
   	let transactions = rlp.decode(this.transactions);

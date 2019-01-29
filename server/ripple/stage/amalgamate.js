@@ -1,10 +1,10 @@
-const Candidate = require("./candidate")
-const nodes = require("../nodes")
-const util = require("../../utils")
-const {batchSendCandidate} = require("./chat")
+const Candidate = require("../data/candidate")
+const nodes = require("../../nodes")
+const util = require("../../../utils")
+const {batchSendCandidate} = require("../chat")
 const async = require("async")
 
-const {RIPPLE_STATE_AMALGAMATE, RIPPLE_STATE_CANDIDATE_AGREEMENT, ROUND_DEFER, TRANSACTION_NUM_EACH_ROUND} = require("../constant")
+const {RIPPLE_STATE_AMALGAMATE, RIPPLE_STATE_CANDIDATE_AGREEMENT, TRANSACTION_NUM_EACH_ROUND} = require("../../constant")
 
 class Amalgamate
 {
@@ -25,19 +25,11 @@ class Amalgamate
 
 	    amalgamateCandidate(self.ripple, req.body.candidate);
 	  });
-
-		// entrance one
-	  this.ripple.on("blockAgreementOver", () => {
-	  	self.run();
-	  });
 	}
 
-	// entrance two
 	run()
 	{
 		const self = this;
-
-		this.candidate.reset();
 
 		sendCandidate(this.ripple);
 
@@ -45,15 +37,18 @@ class Amalgamate
 			// check round stage
 			if(self.ripple.state !== RIPPLE_STATE_AMALGAMATE)
 			{
-				self.candidateSem.leave();
 				return;
 			}
 
-			// transfer to transaction agreement stage
-			self.ripple.state = RIPPLE_STATE_CANDIDATE_AGREEMENT;
-			self.ripple.emit("amalgamateOver");
+			self.ripple.timeout = null;
 
-			self.candidateSem.leave();
+			// check and transfer to next round
+			if(nodes.checkIfAllNodeHasMet(self.ripple.activeNodes))
+			{
+				// transfer to transaction agreement stage
+				self.ripple.state = RIPPLE_STATE_CANDIDATE_AGREEMENT;
+				self.ripple.emit("amalgamateOver");
+			}
 		});
 	}
 }
@@ -66,7 +61,7 @@ function sendCandidate(ripple)
 	ripple.candidate.batchPush(transactions);
 	ripple.candidate.poolDataToCandidateTransactions();
 	//
-	batchSendCandidate(ripple, ripple.candidate);
+	batchSendCandidate(ripple);
 }
 
 function amalgamateCandidate(ripple, candidate)
@@ -77,6 +72,8 @@ function amalgamateCandidate(ripple, candidate)
 		return;
 	}
 
+	ripple.recordActiveNode(candidate.from);
+
 	// check candidate
 	candidate = new Candidate(candidate);
 	if(!candidate.validate())
@@ -86,15 +83,17 @@ function amalgamateCandidate(ripple, candidate)
 
 	// merge
 	candidate.candidateTransactionsToPoolData();
-	ripple.candidate.batchPush(candidate.data);
+	ripple.candidate.batchPush(candidate.data, true);
 
-	let activeNodes = ripple.recordActiveNode(candidate.from);
-
-	if(nodes.checkIfAllNodeHasMet(activeNodes))
+	// check if mandatory time window is end
+	if(ripple.timeout)
 	{
-		clearTimeout(ripple.timeout);
+		return;
+	}
 
-		// transfer to transaction agreement stage
+	// check and transfer to next round
+	if(nodes.checkIfAllNodeHasMet(self.ripple.activeNodes))
+	{
 		ripple.state = RIPPLE_STATE_CANDIDATE_AGREEMENT;
 		ripple.emit("amalgamateOver");
 	}

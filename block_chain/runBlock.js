@@ -36,8 +36,7 @@ module.exports = function(opts, cb) {
 
   if(opts.root)
   {
-    let db = initDb();
-    self.stateManager.trie = new Trie(db, opts.root);
+    self.stateManager.trie = new Trie(opts.root);
   }
 
   async.series([
