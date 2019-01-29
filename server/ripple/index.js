@@ -6,9 +6,11 @@ const {RIPPLE_STATE_AMALGAMATE, RIPPLE_STATE_CANDIDATE_AGREEMENT, RIPPLE_STATE_B
 const Candidate = require("./candidate")
 const Time = require("./time")
 const Amalgamate = require("./amalgamate")
+const Block = require("./block")
 const CandidateAgreement = require("./candidateAgreement")
 const TimeAgreement = require("./timeAgreement")
 const BlockAgreement = require("./blockAgreement")
+
 class Ripple extends AsyncEventEmitter
 {
 	constructor(processor, express)
@@ -33,7 +35,7 @@ class Ripple extends AsyncEventEmitter
 		this.candidateSem = semaphore(1);
 		this.candidate = new Candidate();
 		this.times = new Time();
-
+		this.block = new Block();
 	}
 
 	/**

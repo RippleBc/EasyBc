@@ -37,6 +37,8 @@ class Amalgamate
 	{
 		const self = this;
 
+		this.candidate.reset();
+
 		sendCandidate(this.ripple);
 
 		this.ripple.initTimeout(() => {
