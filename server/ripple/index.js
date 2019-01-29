@@ -3,7 +3,12 @@ const async = require("async")
 const semaphore = require("semaphore")
 const AsyncEventEmitter = require("async-eventemitter")
 const {RIPPLE_STATE_AMALGAMATE, RIPPLE_STATE_CANDIDATE_AGREEMENT, RIPPLE_STATE_BLOCK_AGREEMENT, ROUND_DEFER} = require("../constant")
-
+const Candidate = require("./candidate")
+const Time = require("./time")
+const Amalgamate = require("./amalgamate")
+const CandidateAgreement = require("./candidateAgreement")
+const TimeAgreement = require("./timeAgreement")
+const BlockAgreement = require("./blockAgreement")
 class Ripple extends AsyncEventEmitter
 {
 	constructor(processor, express)
@@ -20,14 +25,14 @@ class Ripple extends AsyncEventEmitter
 		// timeout each stage of one round
 		this.timeout = null;
 
-		this.candidatesPoolSem = semaphore(1);
-
 		this.amalgamate = new Amalgamate(this);
 		this.candidateAgreement = new CandidateAgreement(this);
+		this.timeAgreement = new TimeAgreement(this);
 		this.blockAgreement = new BlockAgreement(this);
 
-		this.transactionsPool = new Pool(100);
-		this.candidatesPool = new Pool(100);
+		this.candidateSem = semaphore(1);
+		this.candidate = new Candidate();
+		this.times = new Time();
 
 	}
 

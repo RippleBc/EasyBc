@@ -63,6 +63,32 @@ module.exports.batchConsensusCandidate = function(processor, candidate)
 
 /**
  * @param {Processor} processor
+ * @param {Number} time
+ */
+module.exports.batchConsensusTime = function(processor, time)
+{
+	let funcs = [];
+	nodeList.foreach(function(node) {
+		module.exports.consensusTime(node.url, time, function(err, response) {
+			if(!!err)
+			{
+				processor.emit("consensusTimeErr");
+				return;
+			}
+
+			if(response.code !== SUCCESS)
+			{
+				processor.emit("consensusTimeErr");
+				return;
+			}
+
+			processor.emit("consensusTimeSuccess");
+		});
+	});
+}
+
+/**
+ * @param {Processor} processor
  * @param {RippleBlock} block
  */
 module.exports.batchConsensusBlock = function(processor, block)
@@ -102,6 +128,14 @@ module.exports.amalgamateCandidate = function(url, candidate, cb)
 module.exports.consensusCandidate = function(url, candidate,  cb)
 {
 	post(logger, url + "/consensusCandidate", {candidate: util.baToHexString(candidate.serialize())}, cb);
+}
+
+/**
+ * @param {Number} time
+ */
+module.exports.consensusTime = function(url, time, cb)
+{
+	post(logger, url + "/consensusTime", {time: time}, cb);
 }
 
 /**

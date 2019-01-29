@@ -1,23 +1,23 @@
-const nodes = require("../nodes.json")
-const Pool = require("../processor/pool")
-const Transaction = require("../../transaction")
-const {getNodeNum} = require("../nodes")
+const semaphore = require("semaphore")
+const util = require("../../utils")
 
-const rlp = util.rlp;
-
-class Candidate extends Pool
+/**
+ * Creates a new Time object
+ *
+ * @class
+ * @constructor
+ * @prop 
+ */
+class Time
 {
-	constructor(data)
+	constructor()
 	{
-		super();
-
 		const self = this;
-
-		data = data || {}
+		self.data = [];
 
 		// Define Properties
     const fields = [{
-      name: "transactions",
+      name: "time",
       allowZero: true,
       default: util.Buffer.alloc(0)
     }, {
@@ -40,7 +40,7 @@ class Candidate extends Pool
       default: util.Buffer.alloc(0)
     }];
 
-    /**
+		/**
      * Returns the rlp encoding of the candidate
      * @method serialize
      * @memberof Transaction
@@ -50,21 +50,42 @@ class Candidate extends Pool
     // attached serialize
     util.defineProperties(this, fields, data);
 
-    /**
-     * @property {Buffer} from (read only) sender address of this candidate, mathematically derived from other parameters.
-     * @memberof Transaction
-     */
-    Object.defineProperty(this, "from", {
-      enumerable: true,
+		Object.defineProperty(self, "length", {
+			enumerable: true,
       configurable: true,
-      get: this.getSenderAddress.bind(this)
-    });
+			get: function() {
+				return self.data.length;
+			}
+		});
 	}
 
-  reset()
-  {
-    this.data = [];
-  }
+	push(time)
+	{
+		this.data.push(time);
+	}
+
+	getMidTime()
+	{
+		for(let i = 0; i < this.length - 1; i++)
+		{
+			for(let j = 0; j < this.length - 1 - i; j++)
+			{
+				if(this.data[j] < this.data[j + 1])
+				{
+					let temp = this.data[j];
+					this.data[j] = this.data[j + 1];
+					this.data[j + 1] = temp;
+				}
+			}
+		}
+
+		return this.data[math.ceil(this.length / 2)];
+	}
+
+	reset()
+	{
+		this.data = [];
+	}
 
 	/**
    * Computes a sha3-256 hash of the serialized txs
@@ -159,28 +180,17 @@ class Candidate extends Pool
   {
     const errors = [];
 
-    // verify candidate
+    // verify
     if(!this.verifySignature())
     {
-      errors.push("class Candidate validate, Invalid Candidate Signature");
+      errors.push("class Time validate, Invalid Time Signature");
     }
 
     // check address
     if(!nodes.checkNodeAddress(this.from))
     {
-    	errors.push("class Candidate validate, Invalid Candidate address");
+    	errors.push("class Time validate, Invalid Time address");
     }
-
-  	// verify transactions of candidate
-  	let rawTransactions = rlp.decode(this.transactions);
-  	for(let i = 0; i < rawTransactions.length; i++)
-  	{
-  		let transaction = new Transaction(rawTransactions[i]);
-  		if(!transaction.verifySignature())
-  		{
-  			errors.push(`class Candidate validate, Invalid Transaction Signature ${JSON.stringify(transaction.toJSON(true))}`);
-  		}
-  	}
 
     if(stringError === undefined || stringError === false)
     {
@@ -191,64 +201,6 @@ class Candidate extends Pool
       return errors.join(" ");
     }
   }
-
-  /**
-   *
-   */
-  poolDataToCandidateTransactions()
-  {
-  	let transactions = [];
-  	for(let i = 0; i < this.length; i++)
-  	{
-  		transactions.push(this.get(i).serialize())
-  	}
-
-  	this.transactions = rlp.encode(transactions);
-  }
-
-  /**
-   *
-   */
-  candidateTransactionsToPoolData()
-  {
-  	let transactions = rlp.decode(this.transactions);
-  	for(let i = 0; i < this.length; i++)
-  	{
-  		this.push(new Transaction(transactions[i]))
-  	}
-  }
-
-  /**
-   * @param {Number} threshhold
-   */
-  clearInvalidTransaction(threshhold)
-  {
-    let transactions = {};
-    for(let i = 0; i < this.length; i++)
-    {
-      let transaction = this.data[i];
-      if(!transactions[transaction.from])
-      {
-        transactions[transaction.from] = 1;
-      }
-      else
-      {
-        transactions[transaction.from] += 1;
-      }
-    }
-
-    //
-    let invalidTransactions = [];
-    nodeNum = getNodeNum();
-    for(key in transactions)
-    {
-      if(transactions[key] / nodeNum < threshhold)
-      {
-        invalidTransactions.push(key);
-      }
-    }
-
-    //
-    this.batchDel(invalidTransactions);
-  }
 }
+
+module.exports = Time;

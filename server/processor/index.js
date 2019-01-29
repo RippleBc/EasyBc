@@ -1,7 +1,6 @@
 const Transaction = require("../../transaction")
 const Block = require("../../block")
 const BlockChain = require("../../block_chain")
-const Consensus = require("../consensus")
 const util = require("util")
 const AsyncEventEmitter = require("async-eventemitter")
 const FlowStoplight = require("flow-stoplight")
@@ -29,22 +28,17 @@ const ERR_SERVER_RUN_BLOCK_ERR = 2;
  * @constructor
  * @prop 
  */
-class Processor extends AsyncEventEmitter
+class Processor
 {
 	constructor(express)
 	{
-		super();
-
 		const self = this;
-
-
-		this.transactionsPoolSem = semaphore(1);
 
 		this.express = express;
 		this.stoplight = new FlowStoplight();
 		this.blockChain = new BlockChain();
 
-		this.consensus = new Consensus(self, express);
+		// this.consensus = new Consensus(self, express);
 
 		this.transactionsPool = new Pool(100);
 
@@ -85,22 +79,11 @@ class Processor extends AsyncEventEmitter
 
 			logger.info("receive transaction, hash: " + transaction.hash(true).toString("hex") + ", transaction: " + JSON.stringify(transaction.toJSON(true)));
 
-			self.transactionsPoolSem.take(function(semaphoreLeaveFunc) {
+			// push to transaction pool
+			self.transactionsPool.push(transaction)
 
-				// push to transaction pool
-				self.transactionsPool.push(transaction, function(err) {
-
-					self.transactionsPoolSem.leave();
-
-					if(!!err)
-					{
-						return cb(err);
-					}
-
-					self.emit("transaction");
-					cb();
-				});
-			});
+			processBlock(self);
+			cb();
 		});
 	}
 }
@@ -175,21 +158,13 @@ function processBlock(processor)
 
 	async.waterfall([
 		function(cb) {
-			// lock
-			processor.consistentTransactionsPoolSem.take(function(semaphoreLeaveFunc){
-				cb();
-			});
-		},
-		function(cb) {
-			if(processor.consistentTransactionsPool.length < BLOCK_TRANSACTIONS_SIZE_LIMIT)
+			if(processor.transactionsPool.length < BLOCK_TRANSACTIONS_SIZE_LIMIT)
 			{
 				return cb(ERR_SERVER_TRANSACTION_SIZE_NOT_REACH);
 			}
 
-			waitingProcessTransactionSize = processor.consistentTransactionsPool.length < BLOCK_TRANSACTIONS_SIZE_LIMIT ? processor.consistentTransactionsPool.length : BLOCK_TRANSACTIONS_SIZE_LIMIT;
-			cb();
-		},
-		function(cb) {
+			waitingProcessTransactionSize = processor.transactionsPool.length < BLOCK_TRANSACTIONS_SIZE_LIMIT ? processor.transactionsPool.length : BLOCK_TRANSACTIONS_SIZE_LIMIT;
+
 			// get lastest block number
 			processor.blockChain.getLastestBlockNumber(cb);
 		},
@@ -209,7 +184,7 @@ function processBlock(processor)
 			
 			// init block
 			let rawBLock = {header: rawHeader, transactions: []};
-			rawBLock.transactions = processor.consistentTransactionsPool.slice(0, waitingProcessTransactionSize);
+			rawBLock.transactions = processor.transactionsPool.slice(0, waitingProcessTransactionSize);
 
 			logger.info("processing transaction: ")
 			for(let i = 0; i < rawBLock.transactions.length; i++)
@@ -240,7 +215,7 @@ function processBlock(processor)
 						}
 
 						// process failed transaction
-						processor.consistentTransactionsPool.delBatch(failedTransactions, function() {
+						processor.transactionsPool.batchDel(failedTransactions, function() {
 							cb(ERR_SERVER_RUN_BLOCK_ERR);
 						});
 						return;
@@ -256,10 +231,8 @@ function processBlock(processor)
 			processor.blockChain.putBlock(block, cb);
 		},
 		function(cb) {
-			processor.consistentTransactionsPool.splice(0, waitingProcessTransactionSize, cb);
+			processor.transactionsPool.splice(0, waitingProcessTransactionSize, cb);
 		}], function(err) {
-			// release semaphore
-			processor.consistentTransactionsPoolSem.leave();
 
 			if(err === ERR_SERVER_TRANSACTION_SIZE_NOT_REACH)
 			{
@@ -280,7 +253,5 @@ function processBlock(processor)
 			logger.info("*************** pack block success!!! ***************")
 		});
 }
-
-util.inherits(BlockChain, AsyncEventEmitter);
 
 module.exports = Processor;

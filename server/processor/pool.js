@@ -14,11 +14,10 @@ class Pool
 	{
 		const self = this;
 
-		self.sem = semaphore(1);
 		self.data = [];
 		Object.defineProperty(self, "length", {
 			enumerable: true,
-      configurable: true,
+			configurable: true,
 			get: function() {
 				return self.data.length;
 			}
@@ -30,86 +29,56 @@ class Pool
 		return this.data.slice(begin, end);
 	}
 
-	splice(begin, number, cb)
-	{
-		const self = this;
-
-		self.sem.take(function() {
-		
-			let data = self.data.splice(begin, number);
-
-			self.sem.leave();
-			cb(null, data);
-		});
+	splice(begin, number)
+	{	
+		return this.data.splice(begin, number);
 	}
 
-	batchPush(transactions, cb)
+	batchPush(transactions)
 	{
-		const self = this;
+		for(let i = 0; i < transactions.length; i++)
+		{
+			this.data.push(transactions[i]);
+		}
+	}
 
-		self.sem.take(function() {
-			//
-			for(let i = 0; i < transactions.length; i++)
+	push(transaction)
+	{
+		this.data.push(transaction);	
+	}
+
+	del(transaction)
+	{
+		for(let i = 0; i < this.data.length; i++)
+		{
+			if(transaction.hash().toString("hex") === this.data[i].hash().toString("hex"))
 			{
-				self.data.push(transactions[i]);
+				this.data[i].splice(i, 1);
 			}
-
-			self.sem.leave();
-			cb();
-		});
+		}
 	}
 
-	push(transaction, cb)
+	/**
+	 * @param [Array|Buffer] transactions
+	 */
+	batchDel(transactions)
 	{
-		const self = this;
-
-		self.sem.take(function() {
-			// 
-			self.data.push(transaction);
-
-			self.sem.leave();
-			cb();
-		});
-	}
-
-	del(transaction, cb)
-	{
-		const self = this;
-
-		self.sem.take(function() {
-			for(let i = 0; i < self.data.length; i++)
+		for(let i = 0; i < transactions.length; i++)
+		{
+			for(let j = 0; j < this.data.length; j++)
 			{
-				if(transaction.hash().toString("hex") === self.data[i].hash().toString("hex"))
+				let hash = transactions[i];
+				if(typeof transactions[i] === "Object")
 				{
-					self.data[i].splice(i, 1);
+					hash = transactions[i].hash(true).toString("hex");
+				}
+
+				if(hash === this.data[j].hash(true).toString("hex"))
+				{
+					this.data.splice(j, 1);
 				}
 			}
-
-			self.sem.leave();
-			cb();
-		});
-	}
-
-	delBatch(transactions, cb)
-	{
-		const self = this;
-
-		self.sem.take(function() {
-			
-			for(let i = 0; i < transactions.length; i++)
-			{
-				for(let j = 0; j < self.data.length; j++)
-				{
-					if(transactions[i].hash(true).toString("hex") === self.data[j].hash(true).toString("hex"))
-					{
-						self.data.splice(j, 1);
-					}
-				}
-			}
-
-			self.sem.leave();
-			cb();
-		});
+		}
 	}
 
 	/*

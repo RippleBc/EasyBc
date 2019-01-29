@@ -3,7 +3,7 @@ const express = require("express");
 const bodyParser = require("body-parser") 
 const Processor = require("./processor")
 const util = require("../utils")
-const {SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_UNCONSISTENT, TRANSACTION_STATE_CONSISTENT, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS} = require("../const")
+const {SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_UNPACKED, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS} = require("../const")
 
 const log4js= require("./logConfig")
 const logger = log4js.getLogger()
@@ -113,22 +113,10 @@ app.post("/getTransactionState", function(req, res) {
         res.send({
             code: SUCCESS,
             msg: "",
-            data: TRANSACTION_STATE_UNCONSISTENT
+            data: TRANSACTION_STATE_UNPACKED
         });
         return;
     }
-
-
-    if(processor.consistentTransactionsPool.ifExist(req.body.hash))
-    {
-        res.send({
-            code: SUCCESS,
-            msg: "",
-            data: TRANSACTION_STATE_CONSISTENT
-        });
-        return;
-    }
-
 
     processor.blockChain.getTrasaction(req.body.hash, function(err, transaction) {
         if(!!err)

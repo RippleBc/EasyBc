@@ -40,99 +40,60 @@ class Amalgamate
 		sendCandidate(this.ripple);
 
 		this.ripple.initTimeout(() => {
-			self.candidatesPoolSem.take(() => {
-				// check round stage
-				if(self.ripple.state !== RIPPLE_STATE_AMALGAMATE)
-				{
-					self.candidatesPoolSem.leave();
-					return;
-				}
+			// check round stage
+			if(self.ripple.state !== RIPPLE_STATE_AMALGAMATE)
+			{
+				self.candidateSem.leave();
+				return;
+			}
 
-				// transfer to transaction agreement stage
-				self.ripple.state = RIPPLE_STATE_CANDIDATE_AGREEMENT;
-				self.ripple.emit("amalgamateOver");
+			// transfer to transaction agreement stage
+			self.ripple.state = RIPPLE_STATE_CANDIDATE_AGREEMENT;
+			self.ripple.emit("amalgamateOver");
 
-				self.candidatesPoolSem.leave();
-			});
+			self.candidateSem.leave();
 		});
 	}
 }
 
 function sendCandidate(ripple)
 {
-	let candidateTransactions;
-
-	async.waterfall([
-		function(cb) {
-			ripple.candidatesPoolSem.take((() => {
-				cb();
-			});
-		},
-		function(cb) {
-			ripple.processor.transactionsPoolSem.take(() => {
-				cb();
-			});
-		},
-		function(cb) {
-			ripple.processor.transactionsPool.splice(0, TRANSACTION_NUM_EACH_ROUND, cb);
-		},
-		function(transactions, cb) {
-			ripple.candidatesPool.batchPush(transactions, cb);
-		},
-		function(cb){
-			// 
-			ripple.candidatesPool.poolDataToCandidateTransactions();
-			//
-			batchSendCandidate(ripple, ripple.candidatesPool);
-		}], function() {
-			ripple.processor.transactionsPoolSem.leave();
-			ripple.candidatesPoolSem.leave();
-		});
+	// get cached transactions
+	let transactions = ripple.processor.transactionsPool.splice(0, TRANSACTION_NUM_EACH_ROUND);
+	//
+	ripple.candidate.batchPush(transactions);
+	ripple.candidate.poolDataToCandidateTransactions();
+	//
+	batchSendCandidate(ripple, ripple.candidate);
 }
 
 function amalgamateCandidate(ripple, candidate)
 {
-	const EXIT_CODE = 1;
+	// check state
+	if(ripple.state !== RIPPLE_STATE_AMALGAMATE)
+	{
+		return;
+	}
 
-	async.waterfall([
-		function(cb)
-		{
-			ripple.candidatesPoolSem.take(() => {
-				cb()
-			});
-		},
-		function(cb)
-		{
-			// check round stage
-			if(ripple.state !== RIPPLE_STATE_AMALGAMATE)
-			{
-				return cb(EXIT_CODE);
-			}
+	// check candidate
+	candidate = new Candidate(candidate);
+	if(!candidate.validate())
+	{
+		return;
+	}
 
-			// check candidate
-			candidate = new Candidate(candidate);
-			if(!candidate.validate())
-			{
-				return cb(EXIT_CODE);
-			}
+	// merge
+	candidate.candidateTransactionsToPoolData();
+	ripple.candidate.batchPush(candidate.data);
 
-			// merge
-			candidate.candidateTransactionsToPoolData();
+	let activeNodes = ripple.recordActiveNode(candidate.from);
 
-			//
-			ripple.candidatesPool.batchPush(candidate.data, cb);
-		}], function() {
-			let activeNodes = ripple.recordActiveNode(candidate.from);
+	if(nodes.checkIfAllNodeHasMet(activeNodes))
+	{
+		clearTimeout(ripple.timeout);
 
-			if(nodes.checkIfAllNodeHasMet(activeNodes))
-			{
-
-				clearTimeout(ripple.timeout);
-
-				// transfer to transaction agreement stage
-				ripple.state = RIPPLE_STATE_CANDIDATE_AGREEMENT;
-				ripple.emit("amalgamateOver");
-			}
-			ripple.candidatesPoolSem.leave();
-		});
+		// transfer to transaction agreement stage
+		ripple.state = RIPPLE_STATE_CANDIDATE_AGREEMENT;
+		ripple.emit("amalgamateOver");
+	}
 }
