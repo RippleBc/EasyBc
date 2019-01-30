@@ -47,16 +47,22 @@ class BlockAgreement
 				return;
 			}
 
-			this.timeout = null;
+			self.timeout = null;
 
 			// check and transfer to next round
 			if(nodes.checkIfAllNodeHasMet(self.ripple.activeNodes))
 			{
-				// get consistent block
-				ripple.processor.consistentBlock = ripple.rippleBlock.getConsistentBlocks();
 				//
 				ripple.state = RIPPLE_STATE_EMPTY;
-				riplle.processor.processBlock();
+
+				let consistentBlock = ripple.rippleBlock.getConsistentBlocks();
+				if(consistentBlock === null)
+				{
+					self.ripple.run(false);
+				}
+				riplle.processor.processBlock(consistentBlock, () => {
+					self.ripple.run(true);
+				});
 			}
 		});
 	}
@@ -127,11 +133,17 @@ function processBlock(ripple, rippleBlock)
 	// check and transfer to next round
 	if(nodes.checkIfAllNodeHasMet(self.ripple.activeNodes))
 	{
-		// get consistent block
-		ripple.processor.consistentBlock = ripple.rippleBlock.getConsistentBlocks();
 		//
 		ripple.state = RIPPLE_STATE_EMPTY;
-		riplle.processor.processBlock();
+		
+		let consistentBlock = ripple.rippleBlock.getConsistentBlocks();
+		if(consistentBlock === null)
+		{
+			self.ripple.run(false);
+		}
+		riplle.processor.processBlock(consistentBlock, () => {
+			self.ripple.run(true);
+		});
 	}
 }
 

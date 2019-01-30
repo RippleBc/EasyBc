@@ -1,7 +1,7 @@
 const util = require("../utils")
 const async = require("async")
 
-const nodeList = [
+module.exports.nodeList = [
 	{
 		"url": "http://localhost:8080",
 		"address": "0x"
@@ -29,7 +29,7 @@ module.exports.privateKey = "0x";
 
 module.exports.getNodeNum = function()
 {
-	return nodeList.length;
+	return module.exports.nodeList.length;
 }
 
 /**

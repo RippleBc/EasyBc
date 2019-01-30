@@ -95,23 +95,14 @@ class Processor
 	}
 
 	/**
-	 * 
+	 * @param {Block} consistentBlock
 	 */
-	processBlock()
+	processBlock(consistentBlock, cb)
 	{
 		const ERR_SERVER_RUN_BLOCK_TRANSACTIONS_ERR = 1;
 		const ERR_SERVER_RUN_BLOCK_BLOCKS_UPDATING = 2;
 
 		const self = this;
-
-		let consistentBlock = self.consensus.consensusInstance.getConsistentBlock();
-
-		// agreement is not reach
-		if(consistentBlock === null)
-		{
-			self.consensus.run(false);
-			return;
-		}
 
 		async.waterfall([
 			function(cb) {
@@ -180,8 +171,7 @@ class Processor
 				// blocks is updating
 				if(err === ERR_SERVER_RUN_BLOCK_BLOCKS_UPDATING)
 				{
-					self.consensus.run(true);
-					return;
+					return cb();
 				}
 
 				if(!!err)
@@ -189,7 +179,7 @@ class Processor
 					throw new Error("server processBlock err, " + err);
 				}
 
-				self.consensus.run(true);
+				cb();
 			});
 	}
 }

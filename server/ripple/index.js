@@ -37,8 +37,6 @@ class Ripple extends AsyncEventEmitter
 		this.candidate = new Candidate();
 		this.time = new Time();
 		this.rippleBlock = new RippleBlock();
-
-		this.consistentBlock = null;
 	}
 
 	run(ifBlockAgreement)
@@ -53,7 +51,6 @@ class Ripple extends AsyncEventEmitter
 
 		this.time.reset();
 		this.rippleBlock.reset();
-		this.consistentBlock = null;
 
 		// round begin
 		this.amalgamate.run();
@@ -85,13 +82,5 @@ class Ripple extends AsyncEventEmitter
 	initTimeout(func)
 	{
 		this.timeout = setTimeout(func, ROUND_DEFER);
-	}
-
-	/**
-	 *
-	 */
-	getConsistentBlock()
-	{
-		return this.consistentBlock;
 	}
 }
