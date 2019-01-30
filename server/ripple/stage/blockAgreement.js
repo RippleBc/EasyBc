@@ -1,5 +1,6 @@
 const nodes = require("../nodes")
-const Block = require("../data/block")
+const RippleBlock = require("../data/rippleBlock")
+const Block = require("../../../block")
 const util = require("../../utils")
 const {batchConsensusBlock} = require("../chat")
 const {RIPPLE_STATE_BLOCK_AGREEMENT} = require("../constant")
@@ -15,16 +16,16 @@ class BlockAgreement
 		this.stoplight = new FlowStoplight();
 
 		this.ripple.express.post("/consensusBlock", function(req, res) {
-			if(!req.body.block) {
+			if(!req.body.rippleBlock) {
         res.send({
             code: PARAM_ERR,
-            msg: "param error, need block"
+            msg: "param error, need rippleBlock"
         });
         return;
 	    }
 
 	    // vote
-	    processBlock(self.ripple, req.body.block);
+	    processBlock(self.ripple, req.body.rippleBlock);
 		});
 
 		this.ripple.on("timeAgreementOver", ()=> {
@@ -51,6 +52,9 @@ class BlockAgreement
 			// check and transfer to next round
 			if(nodes.checkIfAllNodeHasMet(self.ripple.activeNodes))
 			{
+				// get consistent block
+				ripple.processor.consistentBlock = ripple.rippleBlock.getConsistentBlocks();
+				//
 				ripple.state = RIPPLE_STATE_EMPTY;
 				riplle.processor.processBlock();
 			}
@@ -67,21 +71,34 @@ function sendBlock(ripple)
 		transactions: ripple.candidate.data
 	});
 
-	block.genTxTrie(function(err) {
-		if(!!err) 
+	async.waterfall([
+		function(cb) {
+			block.genTxTrie(cb);
+		},
+		function(cb) {
+			// init txsTrie
+			block.header.transactionsTrie = block.txTrie.root;
+
+			// get lastest block number
+			self.blockChain.getLastestBlockNumber(cb);
+		},
+		function(bnLastestBlockNumber, cb)
 		{
-			throw new Error("class BlockAgreement sendBlock, " + err);
-		}
+			// init block number
+			block.header.number = bnLastestBlockNumber.addn(1);
 
-		block.header.transactionsTrie = block.txTrie.root;
+			ripple.rippleBlock.block = block.serialize();
 
-		ripple.block.block = block.hash();
-
-		batchConsensusBlock(ripple);
-	});
+			batchConsensusBlock(ripple);
+		}], err => {
+			if(!!err) 
+			{
+				throw new Error("class BlockAgreement sendBlock, " + err);
+			}
+		});
 }
 
-function processBlock(ripple, block)
+function processBlock(ripple, rippleBlock)
 {
 	// check state
 	if(ripple.state !== RIPPLE_STATE_BLOCK_AGREEMENT)
@@ -89,17 +106,17 @@ function processBlock(ripple, block)
 		return;
 	}
 
-	ripple.recordActiveNode(block.from);
-
-	// check block
-	block = new Block(block);
-	if(!block.validate())
+	// check rippleBlock
+	rippleBlock = new RippleBlock(rippleBlock);
+	if(!rippleBlock.validate())
 	{
 		return;
 	}
 
+	ripple.recordActiveNode(rippleBlock.from);
+
 	// record
-	ripple.block.push(util.baToHexString(block.block));
+	ripple.rippleBlock.push(new Block(rippleBlock.block));
 
 	// check if mandatory time window is end
 	if(ripple.timeout)
@@ -110,6 +127,9 @@ function processBlock(ripple, block)
 	// check and transfer to next round
 	if(nodes.checkIfAllNodeHasMet(self.ripple.activeNodes))
 	{
+		// get consistent block
+		ripple.processor.consistentBlock = ripple.rippleBlock.getConsistentBlocks();
+		//
 		ripple.state = RIPPLE_STATE_EMPTY;
 		riplle.processor.processBlock();
 	}

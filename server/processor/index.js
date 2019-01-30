@@ -99,62 +99,51 @@ class Processor
 	 */
 	processBlock()
 	{
-		const ERR_SERVER_RUN_BLOCK_ERR = 1;
+		const ERR_SERVER_RUN_BLOCK_TRANSACTIONS_ERR = 1;
+		const ERR_SERVER_RUN_BLOCK_BLOCKS_UPDATING = 2;
 
 		const self = this;
 
-		let rawHeader = {
-			parentHash: Buffer.alloc(32),
-			stateRoot: Buffer.alloc(32),
-			transactionsTrie: Buffer.alloc(32),
-			number: 0,
-			timestamp: Date.now(),
-			extraData: Buffer.alloc(0)
-		};
+		let consistentBlock = self.consensus.consensusInstance.getConsistentBlock();
 
-		let block;
+		// agreement is not reach
+		if(consistentBlock === null)
+		{
+			self.consensus.run(false);
+			return;
+		}
 
 		async.waterfall([
 			function(cb) {
-				// get lastest block number
-				self.blockChain.getLastestBlockNumber(cb);
-			},
-			function(lastestBlockNumber, cb) {
-				// init block number
-				rawHeader.number = lastestBlockNumber.addn(1);
+				let bnParentBlockNumber = new BN(consistentBlock.header.number).subn(1);
 
 				// get lastest block hash
-				self.blockChain.getBlockHashByNumber(lastestBlockNumber, cb);
+				self.blockChain.getBlockHashByNumber(bnParentBlockNumber, cb);
 			},
 			function(parentHash, cb) {
 				// init parantHash
 				if(parentHash)
 				{
-					rawHeader.parentHash = parentHash;
+					consistentBlock.header.parentHash = parentHash;
 				}
-				
-				// init block
-				let rawBLock = {header: rawHeader, transactions: []};
-				rawBLock.transactions = candidate.slice(0, candidate.length);
+				else
+				{
+					// blocks is updating
+					if(new BN(consistentBlock.header.number).neqn(1))
+					{
+						return cb(ERR_SERVER_RUN_BLOCK_BLOCKS_UPDATING);
+					}
+				}
 
 				logger.info("processing transaction: ")
-				for(let i = 0; i < rawBLock.transactions.length; i++)
+				for(let i = 0; i < consistentBlock.transactions.length; i++)
 				{
-					logger.info("hash: " + rawBLock.transactions[i].hash(true).toString("hex") + ", transaction: " + JSON.stringify(rawBLock.transactions[i].toJSON(true)));
+					logger.info("hash: " + consistentBlock.transactions[i].hash(true).toString("hex") + ", transaction: " + JSON.stringify(consistentBlock.transactions[i].toJSON(true)));
 				}
-
-				block = new Block(rawBLock);
-
-				// generate transactionsTrie
-				block.genTxTrie(cb);
-			},
-			function(cb) {
-				// init transactionsTrie
-				block.header.transactionsTrie = block.txTrie.root;
 
 				// run block and init stateRoot
 				// skipNonce: true
-				self.blockChain.runBlock({block: block, generate: true, skipNonce: true}, function(err, errCode, failedTransactions) {
+				self.blockChain.runBlock({block: consistentBlock, generate: true, skipNonce: true}, function(err, errCode, failedTransactions) {
 					if(!!err)
 					{
 						if(errCode === ERR_RUN_BLOCK_TX_PROCESS)
@@ -167,12 +156,12 @@ class Processor
 
 							// process failed transaction
 							self.candidate.batchDel(failedTransactions, function() {
-								cb(ERR_SERVER_RUN_BLOCK_ERR);
+								cb(ERR_SERVER_RUN_BLOCK_TRANSACTIONS_ERR);
 							});
 							return;
 						}
 						
-						return cb(ERR_SERVER_RUN_BLOCK_ERR);
+						return cb(ERR_SERVER_RUN_BLOCK_TRANSACTIONS_ERR);
 					}
 					
 					cb();
@@ -181,9 +170,17 @@ class Processor
 			function(cb) {
 				self.blockChain.putBlock(block, cb);
 			}], function(err) {
-				if(err === ERR_SERVER_RUN_BLOCK_ERR)
+				// some transactions err
+				if(err === ERR_SERVER_RUN_BLOCK_TRANSACTIONS_ERR)
 				{
 					self.processBlock();
+					return;
+				}
+
+				// blocks is updating
+				if(err === ERR_SERVER_RUN_BLOCK_BLOCKS_UPDATING)
+				{
+					self.consensus.run(true);
 					return;
 				}
 
@@ -192,7 +189,7 @@ class Processor
 					throw new Error("server processBlock err, " + err);
 				}
 
-				self.consensus.run();
+				self.consensus.run(true);
 			});
 	}
 }

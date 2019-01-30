@@ -68,15 +68,15 @@ function processTime(ripple, time)
 		return;
 	}
 
-	//
-	ripple.recordActiveNode(candidate.from);
-
 	// check time
 	time = new Time(time);
 	if(!time.validate())
 	{
 		return;
 	}
+	
+	//
+	ripple.recordActiveNode(time.from);
 
 	// record
 	ripple.time.push(util.bufferToInt(time.time));

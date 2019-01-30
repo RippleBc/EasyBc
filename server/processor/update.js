@@ -1,95 +1,130 @@
 const {batchGetBlockByNum, batchGetLastestBlock} = require("../chat")
 const async = require("async")
 const Block = require("../../block")
+const {getNodeNum} = require("./nodes")
+const util = require("../../utils")
+
+const Buffer = util.Buffer;
+const BN = util.BN;
 
 class Update
 {
 	constructor(processor)
 	{
+		const self = this;
+
 		this.processor = processor;
 
-		// record the live node in the update stage
-		this.responseNodeNum = 0;
-		this.lastestBlocks = [];
 		this.blocks = [];
-		this.localLastestBlock;
-		
-		this.processor.on("getLastestBlockSuccess", rawBlock => {
-			this.lastestBlocks.push(new Block(rawBlock));
-			responseNodeNum++;
+		this.localLastestBlock = null;
 
-			updateBlocks(processor)
+		this.processor.on("getBlockByNumSuccess", rawBlock => {
+			self.blocks.push(Buffer.from(rawBlock, "hex"));
+			updateBlocks();
 		});
 
-		this.processor.on("getLastestBlockErr", () => {
-			responseNodeNum++;
-
-			updateBlocks(processor)
+		this.processor.on("getBlockByNumErr", () => {
+			updateBlocks();
 		});
 	}
 
 	run()
 	{
-		responseNodeNum = 0;
-		this.lastestBlocks = [];
+		const self = this;
+
 		this.blocks = [];
+		this.localLastestBlock = null;
 
-		batchGetBlockByNum(this.processor);
+		this.initBlockChainState(() => {
+			batchGetBlockByNum(self.processor);
+		});
 	}
-}
 
-/**
- * 
- */
-function initBlockChainState(processor)
-{
-	// get lastest block number
-	processor.blockChain.getLastestBlockNumber(function(err, bnNumber) {
-		if(!!err)
-		{
-			throw new Error("class Processor initBlockChainState, getLastestBlockNumber err " + err);
-		}
-
-		// genesis block
-		if(bnNumber.eqn(0))
-		{
-			processor.stoplight.go();
-			return;
-		}
-
-		getLastestBlockState(bnNumber);
-	});
-
-	function getLastestBlockState(bnNumber)
+	/**
+	 * 
+	 */
+	initBlockChainState(cb)
 	{
-		async.waterfall([
-			function(cb) {
-				// get latest block
-				processor.blockChain.getBlockByNumber(bnNumber, cb);
-			},
-			function(block, cb) {
+		const self = this;
+
+		// get lastest block number
+		self.processor.blockChain.getLastestBlockNumber(function(err, bnNumber) {
+			if(!!err)
+			{
+				throw new Error("class Processor initBlockChainState, getLastestBlockNumber err " + err);
+			}
+
+			// genesis block
+			if(bnNumber.eqn(0))
+			{
+				return cb();
+			}
+
+			getLastestBlockState(bnNumber, cb);
+		});
+
+		function getLastestBlockState(bnNumber, cb)
+		{
+			self.processor.blockChain.getBlockByNumber(bnNumber, (err, block) => {
+				if(!!err)
+				{
+					throw new Error("class Processor initBlockChainState, getLastestBlockState err " + err);
+				}
+				//
+				self.localLastestBlock = block;
+
 				// init new state root
 				let db = initDb();
 				let trie = new Trie(db, block.header.stateRoot);
 
 				// init block
-				processor.blockChain = new BlockChain({stateTrie: trie});
+				self.processor.blockChain = new BlockChain({stateTrie: trie});
+
 				cb();
-			}], function(err) {
-				if(!!err)
-				{
-					throw new Error("class Processor initBlockChainState, getLastestBlockState err " + err);
-				}
-
-				processor.stoplight.go();
 			});
+		}
 	}
-}
 
-/**
- *
- */
-function updateBlocks = function(processor)
-{
-	
+	/**
+	 *
+	 */
+	updateBlocks()
+	{
+		if(this.lastestRawBlocks.length < getNodeNum())
+		{
+			return;
+		}
+
+		let blocks;
+		for(let i = 0; i < this.lastestRawBlocks.length; i++)
+		{
+			if(!blocks[this.lastestRawBlocks[i]])
+			{
+				blocks[this.lastestRawBlocks[i]] = 0;
+			}
+			
+			blocks[this.lastestRawBlocks[i]] += 1;
+		}
+
+		// choose the max block
+		let tmp = 0;
+		let rawBlock;
+		for(let key in blocks)
+		{
+			if(blocks[key] > tmp)
+			{
+				tmp = blocks[key];
+				rawBlock = key;
+			}
+		}
+
+		//update block
+		let bnIndex = new BN(this.localLastestBlock.header.number);
+		let bnLastestBlockNumber = new BN((new Block(rawBlock)).header.number)
+		whilst(() => {
+			return bnLastestBlockNumber.lt(bnIndex);
+		})
+	}
+
+	getBlocksAndRun()
 }

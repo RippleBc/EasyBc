@@ -107,7 +107,7 @@ function sendCandidate(ripple)
 	//
 	ripple.candidate.sign(util.toBuffer(privateKey));
 	//
-	batchConsensusCandidate(ripple, ripple.candidate);
+	batchConsensusCandidate(ripple);
 }
 
 function processCandidate(ripple, candidate)
@@ -118,14 +118,15 @@ function processCandidate(ripple, candidate)
 		return;
 	}
 
-	ripple.recordActiveNode(candidate.from);
-
 	// check candidate
 	candidate = new Candidate(candidate);
 	if(!candidate.validate())
 	{
 		return;
 	}
+	
+	ripple.recordActiveNode(candidate.from);
+
 
 	// record
 	candidate.candidateTransactionsToPoolData();

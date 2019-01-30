@@ -72,14 +72,14 @@ function amalgamateCandidate(ripple, candidate)
 		return;
 	}
 
-	ripple.recordActiveNode(candidate.from);
-
 	// check candidate
 	candidate = new Candidate(candidate);
 	if(!candidate.validate())
 	{
 		return;
 	}
+	
+	ripple.recordActiveNode(candidate.from);
 
 	// merge
 	candidate.candidateTransactionsToPoolData();

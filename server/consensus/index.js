@@ -15,9 +15,9 @@ class Consensus
 		this.consensusInstance = new Ripple(processor, express);
 	}
 
-	run()
+	run(ifBlockAgreement)
 	{
-		this.consensusInstance.run();
+		this.consensusInstance.run(ifBlockAgreement);
 	}
 }
 

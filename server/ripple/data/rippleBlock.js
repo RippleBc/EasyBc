@@ -1,9 +1,11 @@
 const Base = require("./base")
 const util = require("../../../utils")
+const {AGREEMENT_THRESHHOLD} = require("../../constant")
+const {getNodeNum} = require("../../nodes")
 
 const rlp = util.rlp;
 
-class Block extends Base
+class RippleBlock extends Base
 {
 	constructor(data)
 	{
@@ -60,13 +62,13 @@ class Block extends Base
     // verify
     if(!this.verifySignature())
     {
-      errors.push("class Block validate, Invalid Block Signature");
+      errors.push("class RippleBlock validate, Invalid RippleBlock Signature");
     }
 
     // check address
     if(!nodes.checkNodeAddress(this.from))
     {
-    	errors.push("class Block validate, Invalid Block address");
+    	errors.push("class RippleBlock validate, Invalid RippleBlock address");
     }
 
     if(stringError === undefined || stringError === false)
@@ -78,6 +80,45 @@ class Block extends Base
       return errors.join(" ");
     }
   }
+
+  /**
+   * @return {RippleBlock} block
+   */
+  getConsistentBlocks()
+  {
+    let blocks;
+    for(let i = 0; i < this.length; i++)
+    {
+      if(!blocks[this.data[i].hash()])
+      {
+        blocks[this.data[i].hash()] = {
+          block: this.data[i],
+          num: 0
+        };
+      }
+
+      blocks[this.data[i].hash()].num ++;
+    }
+
+    // get max block
+    let tmp = 0;
+    let block;
+    for(key in blocks)
+    {
+      if(blocks[key].num > tmp)
+      {
+        tmp = blocks[key].num;
+        block = blocks[key].block;
+      }
+    }
+
+    // check threshhold
+    if(tmp / getNodeNum() >= AGREEMENT_THRESHHOLD)
+    {
+      return block;
+    }
+    return null;
+  }
 }
 
-module.exports = Block;
+module.exports = RippleBlock;

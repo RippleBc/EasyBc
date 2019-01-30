@@ -2,10 +2,10 @@ const Pool = require("../processor/pool")
 const async = require("async")
 const semaphore = require("semaphore")
 const AsyncEventEmitter = require("async-eventemitter")
-const {RIPPLE_STATE_AMALGAMATE, ROUND_DEFER} = require("../constant")
+const {RIPPLE_STATE_AMALGAMATE, ROUND_DEFER, BLOCK_AGREEMENT_MAX_ROUND} = require("../constant")
 const Candidate = require("./candidate")
 const Time = require("./time")
-const Block = require("./block")
+const RippleBlock = require("./rippleBlock")
 const Amalgamate = require("./amalgamate")
 const CandidateAgreement = require("./candidateAgreement")
 const TimeAgreement = require("./timeAgreement")
@@ -26,6 +26,8 @@ class Ripple extends AsyncEventEmitter
 		this.activeNodes = [];
 		// timeout each stage of one round
 		this.timeout = null;
+		//
+		this.blockAgreementRound = 0;
 
 		this.amalgamate = new Amalgamate(this);
 		this.candidateAgreement = new CandidateAgreement(this);
@@ -34,19 +36,29 @@ class Ripple extends AsyncEventEmitter
 
 		this.candidate = new Candidate();
 		this.time = new Time();
-		this.block = new Block();
+		this.rippleBlock = new RippleBlock();
+
+		this.consistentBlock = null;
 	}
 
-	run()
+	run(ifBlockAgreement)
 	{
-		// init
-		this.state = RIPPLE_STATE_AMALGAMATE;
-		this.candidate.reset();
+		this.blockAgreementRound ++;
+
+		if(ifBlockAgreement || this.blockAgreementRound > BLOCK_AGREEMENT_MAX_ROUND)
+		{
+			this.blockAgreementRound = 1;
+			this.candidate.reset();
+		}
+
 		this.time.reset();
-		this.block.reset();
+		this.rippleBlock.reset();
+		this.consistentBlock = null;
 
 		// round begin
 		this.amalgamate.run();
+
+		this.state = RIPPLE_STATE_AMALGAMATE;
 	}
 
 	/**
@@ -73,5 +85,13 @@ class Ripple extends AsyncEventEmitter
 	initTimeout(func)
 	{
 		this.timeout = setTimeout(func, ROUND_DEFER);
+	}
+
+	/**
+	 *
+	 */
+	getConsistentBlock()
+	{
+		return this.consistentBlock;
 	}
 }

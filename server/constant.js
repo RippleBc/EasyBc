@@ -10,3 +10,7 @@ module.exports.ROUND_NUM = 3;
 module.exports.TRANSACTION_NUM_EACH_ROUND = 100;
 
 module.exports.TRANSACTION_CACHE_MAX_NUM = 500;
+
+module.exports.AGREEMENT_THRESHHOLD = 0.8;
+
+module.exports.block_Agreement_MAX_Round = 3;
