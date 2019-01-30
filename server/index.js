@@ -32,13 +32,18 @@ app.all('*', function(req, res, next) {
     next();
 });
 
+
 // consensus
 const processor = new Processor(app);
+processor.run();
 process.on("uncaughtException", function (err) {
     errlogger.error(err.stack);
 
     //
     processor.reset();
+
+    //
+    processor.run();
 });
 
 // logger

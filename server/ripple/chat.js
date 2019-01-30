@@ -113,6 +113,53 @@ module.exports.batchConsensusBlock = function(ripple)
 	});
 }
 
+/**
+ * @param {Ripple} ripple
+ */
+module.exports.batchGetLastestBlock = function(processor)
+{	
+	nodeList.foreach(function(node) {
+		module.exports.getLatestBlock(node.url, function(err, response) {
+			if(!!err)
+			{
+				processor.emit("getLastestBlockErr");
+				return;
+			}
+
+			if(response.code !== SUCCESS)
+			{
+				processor.emit("getLastestBlockErr");
+				return;
+			}
+
+			processor.emit("getLastestBlockSuccess", response.data);
+		});
+	});
+}
+
+/**
+ * @param {Buffer} number
+ */
+module.exports.batchGetBlockByNum = function(processor, number)
+{	
+	nodeList.foreach(function(node) {
+		module.exports.getBlockByNum(node.url, number, function(err, response) {
+			if(!!err)
+			{
+				processor.emit("getBlockByNumErr");
+				return;
+			}
+
+			if(response.code !== SUCCESS)
+			{
+				processor.emit("getBlockByNumErr");
+				return;
+			}
+
+			processor.emit("getBlockByNumSuccess", response.data);
+		});
+	});
+}
 
 /**
  * @param {Candidate} candidate
@@ -144,4 +191,20 @@ module.exports.consensusTime = function(url, time, cb)
 module.exports.consensusBlock = function(url, block, cb)
 {
 	post(logger, url + "/consensusBlock", {block: util.baToHexString(block.serialize())}, cb);
+}
+
+/**
+ *
+ */
+module.exports.getLatestBlock = function(url, cb)
+{
+	post(logger, url + "/getLatestBlock", {}, cb);
+}
+
+/**
+ * @param {Buffer} number the number of the block
+ */
+module.exports.getBlockByNum = function(url, number, cb)
+{
+	post(logger, url + "/getLatestByNum", {number: util.baToHexString(number)}, cb);
 }
