@@ -27,8 +27,7 @@ class Update extends AsyncEventEmitter
 
 		this.processor = processor;
 
-		this.beginTime;
-
+		// record reponse node num
 		this.activeNodes = 0;
 		this.updatingBlocks = [];
 		this.localLastestBlockNumber = null;
@@ -51,8 +50,6 @@ class Update extends AsyncEventEmitter
 		this.localLastestBlockNumber = null;
 
 		this.initBlockChainState(() => {
-			self.beginTime = Date.now();
-
 			let bnNumber = new BN(self.localLastestBlockNumber).addn(1);
 			self.batchGetBlockByNumber(util.toBuffer(bnNumber));
 		});
