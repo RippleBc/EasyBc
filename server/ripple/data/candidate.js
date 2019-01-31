@@ -1,17 +1,17 @@
 const Base = require("./base")
 const util = require("../../../utils")
 const Transaction = require("../../../transaction")
-const {getNodeNum} = require("../../nodes")
+const nodes = require("../../nodes")
 
-class Candidate extends Pool
+const rlp = util.rlp;
+
+class Candidate extends Base
 {
 	constructor(data)
 	{
 		super();
 
-		const self = this;
-
-		data = data || {}
+		data = data || {};
 
 		// Define Properties
     const fields = [{
@@ -133,7 +133,7 @@ class Candidate extends Pool
 
     //
     let invalidTransactions = [];
-    nodeNum = getNodeNum();
+    nodeNum = nodes.getNodeNum();
     for(key in transactions)
     {
       if(transactions[key] / nodeNum < threshhold)
@@ -146,3 +146,5 @@ class Candidate extends Pool
     this.batchDel(invalidTransactions);
   }
 }
+
+module.exports = Candidate;

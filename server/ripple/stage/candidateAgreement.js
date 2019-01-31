@@ -1,11 +1,9 @@
-const Candidate = require("./candidate")
-const nodes = require("../nodes")
-const util = require("../../utils")
+const Candidate = require("../data/candidate")
+const nodes = require("../../nodes")
+const util = require("../../../utils")
 const {batchConsensusCandidate} = require("../chat")
 const async = require("async")
-const {RIPPLE_STATE_CANDIDATE_AGREEMENT, RIPPLE_STATE_TIME_AGREEMENT, ROUND_NUM} = require("../constant")
-
-const privateKey = nodes.privateKey;
+const {RIPPLE_STATE_CANDIDATE_AGREEMENT, RIPPLE_STATE_TIME_AGREEMENT, ROUND_NUM} = require("../../constant")
 
 const ROUND1_THRESHHOLD = 0.5
 const ROUND2_THRESHHOLD = 0.6
@@ -105,8 +103,6 @@ function sendCandidate(ripple)
 {
 	ripple.candidate.poolDataToCandidateTransactions();
 	//
-	ripple.candidate.sign(util.toBuffer(privateKey));
-	//
 	batchConsensusCandidate(ripple);
 }
 
@@ -144,3 +140,5 @@ function processCandidate(ripple, candidate)
 		ripple.emit("amalgamateOver");
 	}
 }
+
+module.exports = CandidateAgreement;

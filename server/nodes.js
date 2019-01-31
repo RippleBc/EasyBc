@@ -4,27 +4,15 @@ const async = require("async")
 module.exports.nodeList = [
 	{
 		"url": "http://localhost:8080",
-		"address": "0x"
+		"address": "0xca9be7fb7862aa5def7d322766a2cc01eceadeed" // "0xfffcfc72975ef9963e5cf1649a5819f6869dee32cf8a92c66b88d97f809c8f55"
 	},
 	{
 		"url": "http://localhost:8081",
-		"address": "0x"
-	},
-	{
-		"url": "http://localhost:8082",
-		"address": "0x"
-	},
-	{
-		"url": "http://localhost:8083",
-		"address": "0x"
-	},
-	{
-		"url": "http://localhost:8084",
-		"address": "0x"
+		"address": "0xc1394e7a9b7f022e57e50490ab9b6af6cb0282dc" // "0x0138d51bbfc8ebf5d326d4b902b4596941d7e4f63ae6dd012c6ad657223b7aea"
 	}
 ];
 
-module.exports.privateKey = "0x";
+module.exports.privateKey = "0xfffcfc72975ef9963e5cf1649a5819f6869dee32cf8a92c66b88d97f809c8f55";
 
 
 module.exports.getNodeNum = function()
@@ -56,9 +44,11 @@ module.exports.checkNodeAddress = function(address)
  */
 module.exports.checkIfAllNodeHasMet = function(addressArray)
 {
-	for(let i = 0; i < module.exports.nodeList.length; i++)
+	let i, j;
+
+	for(i = 0; i < module.exports.nodeList.length; i++)
 	{
-		for(let j = 0; j < addressArray.length; j++)
+		for(j = 0; j < addressArray.length; j++)
 		{
 			if(module.exports.nodeList[i] === addressArray[j])
 			{

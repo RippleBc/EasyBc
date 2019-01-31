@@ -19,7 +19,7 @@
 				<span>from history:</span>
 				<ul id="fromHistory">
 					<li v-for="from in froms">
-						<p style="cursor:pointer;" @dblclick="chooseFrom(from)">{{from}}</p><button @click="getAccountInfo(from)">get account info</button>
+						<p style="cursor:pointer;" @dblclick="chooseFrom(from)">{{from}}</p><button @click="getAccountInfo(from)">get account info</button><button @click="getPrivateKey(from)">get private key</button>
 					</li>
 				</ul>
 			</dvi>
@@ -227,6 +227,32 @@ export default {
     	const self = this;
 
       axios.get("getAccountInfo", {
+      	url: self.url,
+      	address: address
+      }, response => {
+				if (response.status >= 200 && response.status < 300)
+				{
+					if(response.data.code === 0)
+					{
+						alert(response.data.data);
+					}
+					else
+					{
+						alert(response.data.msg);
+					}
+				}
+				else
+				{
+					alert(response);
+				}
+			});
+    },
+
+    getPrivateKey: function(address)
+    {
+    	const self = this;
+
+      axios.get("getPrivateKey", {
       	url: self.url,
       	address: address
       }, response => {

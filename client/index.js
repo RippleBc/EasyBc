@@ -33,6 +33,16 @@ app.get("/generateKeyPiar", function(req, res) {
   });
 });
 
+app.get("/getPrivateKey", function(req, res) {
+  db.getPrivateKey(req.query.address, function(err, value) {
+    res.send({
+        code: !!err ? OTH_ERR : SUCCESS,
+        msg: err,
+        data: value
+    });
+  });
+})
+
 app.get("/getFromHistory", function(req, res) {
   db.getFromHistory(function(err, value) {
   	res.send({

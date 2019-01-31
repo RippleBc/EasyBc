@@ -10,10 +10,11 @@ const Base = require("./base")
  */
 class Time extends Base
 {
-	constructor()
+	constructor(data)
 	{
-		const self = this;
-		self.data = [];
+    super();
+
+		data = data || {};
 
 		// Define Properties
     const fields = [{

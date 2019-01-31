@@ -2,7 +2,6 @@ const util = require("../utils")
 const Trie = require("merkle-patricia-tree/secure")
 const async = require("async")
 const initDb = require("../db")
-const {ERR_RUN_BLOCK_TX_PROCESS, ERR_RUN_BLOCK_TXS_SIZE, ERR_RUN_BLOCK_TXS_TRIE_STATE} = require("../const")
 
 const rlp = util.rlp;
 const BN = util.BN;
@@ -19,12 +18,6 @@ const Buffer = util.Buffer;
  * @param cb {Function} the callback which is given arguments errString, errCode and failedTransactions
  */
 module.exports = function(opts, cb) {
-  // errCode
-  // 0 indicate transaction process err
-  // 1 indicate populateCache err
-  // 2 indicate processTransactions err
-  // 3 indicate validateStateRoot err
-  // 4 indicate trie.commit err
   const self = this;
 
   const block = opts.block;
@@ -32,7 +25,6 @@ module.exports = function(opts, cb) {
   const validateStateRoot = !ifGenerateStateRoot;
 
   let failedTransactions = [];
-  let failedTransactionsError = [];
 
   if(opts.root)
   {
@@ -55,7 +47,7 @@ module.exports = function(opts, cb) {
     self.populateCache(accounts, function(err) {
       if(!!err)
       {
-        throw new Error("runBlock populateCache err, " + err);
+        throw new Error(`runBlock populateCache ${err}`);
       }
       cb();
     });
@@ -64,12 +56,6 @@ module.exports = function(opts, cb) {
   function processTransactions(cb)
   {
     var validReceiptCount = 0
-
-    // check size
-    if(block.transactions.length > util.bufferToInt(block.header.transactionSizeLimit))
-    {
-      return cb("runBlock, transaction size is bigger than the the limit of block, block size: " + block.transactions.length, ERR_RUN_BLOCK_TXS_SIZE);
-    }
 
     async.eachSeries(block.transactions, function(tx, cb) {
       self.runTx({
@@ -80,7 +66,7 @@ module.exports = function(opts, cb) {
       }, function(err) {
         if(!!err)
         {
-          failedTransactionsError.push(err);
+          // record failed transaction
           failedTransactions.push(tx);
         }
         cb()
@@ -88,23 +74,18 @@ module.exports = function(opts, cb) {
     }, cb);
   }
 
-  function parseBlockResults(err)
+  function parseBlockResults()
   {
-    if(!!err)
-    {
-      return cb(err);
-    }
-
-    // check runTx
     if(failedTransactions.length > 0)
     {
-      return cb("runBlock, some transactions is invalid, " + failedTransactionsError.toString(), ERR_RUN_BLOCK_TX_PROCESS, failedTransactions);
+      return cb("runBlock, some transactions is invalid", failedTransactions);
     }
 
     if(ifGenerateStateRoot)
     {
       block.header.stateRoot = self.stateManager.trie.root;
     }
+
     self.stateManager.checkpoint();
 
     async.waterfall([
@@ -112,12 +93,15 @@ module.exports = function(opts, cb) {
         self.stateManager.cache.flush(function(err) {
           if(!!err)
           {
-            throw new Error("runBlock, flush err, " + err);
+            throw new Error(`runBlock, flush ${err}`);
           }
+
+          // check state trie
           if(validateStateRoot && self.stateManager.trie.root.toString("hex") !== block.header.stateRoot.toString("hex"))
           {
-            return cb("runBlock, invalid block stateRoot", ERR_RUN_BLOCK_TXS_TRIE_STATE);
+            throw new Error("runBlock, state trie err");
           }
+
           cb();
         })
       },
@@ -125,27 +109,14 @@ module.exports = function(opts, cb) {
         self.stateManager.commit(function(err) {
           if(!!err)
           {
-            throw new Error("runBlock, commit err, " + err);
+            throw new Error(`runBlock, commit ${err}`);
           }
+
+          self.stateManager.cache.clear();
+
           cb();
         });
-      },
-      function(cb) {
-        self.stateManager.cache.clear();
-        cb();
-      }], function(err) {
-        if(!!err)
-        {
-          self.stateManager.revert(function(err) {
-            if(!!err)
-            {
-              throw new Error("runBlock, revert err, " + err);
-            }
-            cb();
-          });
-          return;
-        }
-
+      }], function() {
         cb();
       });
   }

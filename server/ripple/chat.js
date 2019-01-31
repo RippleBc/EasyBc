@@ -16,7 +16,7 @@ module.exports.batchAmalgamateCandidate = function(ripple)
 {
 	ripple.candidate.sign(util.toBuffer(privateKey));
 
-	nodeList.foreach(function(node) {
+	nodeList.forEach(function(node) {
 		module.exports.amalgamateCandidate(node.url, util.baToHexString(ripple.candidate.serialize()), function(err, response) {
 			if(!!err)
 			{
@@ -69,7 +69,7 @@ module.exports.batchConsensusTime = function(ripple)
 	ripple.time.sign(util.toBuffer(privateKey));
 
 	nodeList.foreach(function(node) {
-		module.exports.consensusTime(node.url, util.baToHexString(ripple.time), function(err, response) {
+		module.exports.consensusTime(node.url, util.baToHexString(ripple.time.serialize()), function(err, response) {
 			if(!!err)
 			{
 				ripple.emit("consensusTimeErr");
@@ -95,7 +95,7 @@ module.exports.batchConsensusBlock = function(ripple)
 	ripple.block.sign(util.toBuffer(privateKey));
 	
 	nodeList.foreach(function(node) {
-		module.exports.consensusBlock(node.url, util.baToHexString(ripple.block), function(err, response) {
+		module.exports.consensusBlock(node.url, util.baToHexString(ripple.block.serialize()), function(err, response) {
 			if(!!err)
 			{
 				ripple.emit("consensusBlockErr");
@@ -114,23 +114,23 @@ module.exports.batchConsensusBlock = function(ripple)
 }
 
 /**
- * @param {Candidate} candidate
+ * @param {String} candidate
  */
 module.exports.amalgamateCandidate = function(url, candidate, cb)
 {
-	post(logger, url + "/amalgamateCandidate", {candidate: util.baToHexString(candidate.serialize())}, cb);
+	post(logger, url + "/amalgamateCandidate", {candidate: candidate}, cb);
 }
 
 /**
- * @param {Candidate} candidate
+ * @param {String} candidate
  */
 module.exports.consensusCandidate = function(url, candidate,  cb)
 {
-	post(logger, url + "/consensusCandidate", {candidate: util.baToHexString(candidate.serialize())}, cb);
+	post(logger, url + "/consensusCandidate", {candidate: candidate}, cb);
 }
 
 /**
- * @param {Number} time
+ * @param {String} time
  */
 module.exports.consensusTime = function(url, time, cb)
 {
@@ -138,9 +138,9 @@ module.exports.consensusTime = function(url, time, cb)
 }
 
 /**
- * @param {RippleBlock} block
+ * @param {String} rippleBlock
  */
-module.exports.consensusBlock = function(url, block, cb)
+module.exports.consensusBlock = function(url, rippleBlock, cb)
 {
-	post(logger, url + "/consensusBlock", {rippleBlock: util.baToHexString(block.serialize())}, cb);
+	post(logger, url + "/consensusBlock", {rippleBlock: rippleBlock}, cb);
 }

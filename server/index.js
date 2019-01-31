@@ -39,11 +39,9 @@ processor.run();
 process.on("uncaughtException", function (err) {
     errlogger.error(err.stack);
 
-    //
-    processor.reset();
-
-    //
-    processor.run();
+    // //
+    // processor.run();
+    process.exit(1);
 });
 
 // logger
@@ -71,9 +69,8 @@ app.post("/sendTransaction", function(req, res) {
             code: SUCCESS,
             msg: ""
         });
-    })
-    
-})
+    });
+});
 
 app.post("/getAccountInfo", function(req, res) {
 	if(!req.body.address) {
@@ -98,13 +95,11 @@ app.post("/getAccountInfo", function(req, res) {
             msg: "",
             data: account.serialize().toString("hex")
         });
-    })
-})
+    });
+});
 
 
 app.post("/getTransactionState", function(req, res) {
-    let return_data;
-
     if(!req.body.hash) {
         res.send({
             code: PARAM_ERR,
@@ -148,4 +143,40 @@ app.post("/getTransactionState", function(req, res) {
             data: TRANSACTION_STATE_PACKED
         });
    });
+});
+
+app.post("/getBlockByNumber", function(req, res) {
+    if(!req.body.number) {
+        res.send({
+            code: PARAM_ERR,
+            msg: "param error, need number"
+        });
+        return;
+    }
+
+    processor.blockChain.getBlockByNumber(req.body.number, (err, block) => {
+        if(!!err)
+        {
+            res.send({
+                code: OTH_ERR,
+                msg: "getBlockByNumber error, inner err " + err
+            });
+            return;
+        }
+
+        if(block === null)
+        {
+            res.send({
+                code: OTH_ERR,
+                msg: "getBlockByNumber error, on corresponding block"
+            });
+            return;
+        }
+
+        res.send({
+            code: SUCCESS,
+            msg: "",
+            data: util.baToHexString(block.serialize())
+        });
+    })
 });

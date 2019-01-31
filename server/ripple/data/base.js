@@ -103,3 +103,5 @@ class Base extends Pool
     Object.assign(this, sig);
   }
 }
+
+module.exports = Base;

@@ -11,7 +11,7 @@ class RippleBlock extends Base
 	{
 		super();
 
-		data = data || {}
+		data = data || {};
 
 		// Define Properties
     const fields = [{

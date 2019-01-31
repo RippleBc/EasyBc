@@ -1,9 +1,9 @@
-const nodes = require("../nodes")
+const nodes = require("../../nodes")
 const RippleBlock = require("../data/rippleBlock")
 const Block = require("../../../block")
-const util = require("../../utils")
+const util = require("../../../utils")
 const {batchConsensusBlock} = require("../chat")
-const {RIPPLE_STATE_BLOCK_AGREEMENT} = require("../constant")
+const {RIPPLE_STATE_BLOCK_AGREEMENT} = require("../../constant")
 const FlowStoplight = require("flow-stoplight")
 
 const ERR_SERVER_RUN_BLOCK_ERR = 1;
@@ -60,7 +60,7 @@ class BlockAgreement
 				{
 					self.ripple.run(false);
 				}
-				riplle.processor.processBlock(consistentBlock, () => {
+				riplle.processor.processBlock({generate: true}, consistentBlock, () => {
 					self.ripple.run(true);
 				});
 			}
@@ -141,10 +141,10 @@ function processBlock(ripple, rippleBlock)
 		{
 			self.ripple.run(false);
 		}
-		riplle.processor.processBlock(consistentBlock, () => {
+		riplle.processor.processBlock({generate: true}, consistentBlock, () => {
 			self.ripple.run(true);
 		});
 	}
 }
 
-
+module.exports = BlockAgreement;

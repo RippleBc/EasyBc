@@ -13,7 +13,7 @@ class Pool
 	{
 		const self = this;
 
-		self.data = [];
+		this.data = [];
 		Object.defineProperty(self, "length", {
 			enumerable: true,
 			configurable: true,

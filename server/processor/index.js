@@ -5,10 +5,10 @@ const util = require("util")
 const FlowStoplight = require("flow-stoplight")
 const async = require("async")
 const Pool = require("../ripple/data/pool")
-const Trie = require("merkle-patricia-tree/secure.js")
-const initDb = require("../../db")
 const {ERR_RUN_BLOCK_TX_PROCESS} = require("../../const")
 const {TRANSACTION_CACHE_MAX_NUM} = require("../constant")
+const Update = require("./update")
+const Consensus = require("../consensus")
 
 const log4js= require("../logConfig");
 const logger = log4js.getLogger();
@@ -29,49 +29,58 @@ class Processor
 		const self = this;
 
 		this.express = express;
+
 		this.stoplight = new FlowStoplight();
+
+		// use for manipulate block chain
 		this.blockChain = new BlockChain();
 
+		// used for transaction consensus
 		this.consensus = new Consensus(self, express);
 
-		this.transactionsPool = new Pool(100);
+		// used for block sync
+		this.update = new Update(self);
 
-		initBlockChainState(self);
+		// transactions cache
+		this.transactionsPool = new Pool();
 	}
 
 	run()
 	{
 		const self = this;
 
+		// sync blocks
+		this.update.run();
+
+		// wait for the stateTrie init is ok
 		this.stoplight.await(function() {
+			// begin transaction consensus
 			self.consensus.run();
 		});
 	}
 
-	/**
-	 * reset stateManager
-	 */
-	reset()
-	{
-		initBlockChainState(this);
-	}
-
 
 	/**
-	 * @param {Buffer|String|Array|Object}
+	 * @param {String}
 	 */
 	processTransaction(transaction, cb)
 	{
+		if(typeof transation !== "string")
+		{
+			throw new Error(`class Processor processTransaction, argument transaction's type should be string, now is ${typeof transaction}`);
+		}
+
 		const self = this;
+
+		// wait for the stateTrie init is ok
 		self.stoplight.await(function() {
 			if(self.transactionsPool.length > TRANSACTION_CACHE_MAX_NUM)
 			{
-				return cb("transactionCache is full");
+				return cb("transactions cache is full");
 			}
 
 			try
 			{
-				// check transaction
 				transaction = new Transaction(transaction);
 
 				let errString = transaction.validate(true);
@@ -85,9 +94,8 @@ class Processor
 				return cb(e);
 			}
 
-			logger.info("receive transaction, hash: " + transaction.hash(true).toString("hex") + ", transaction: " + JSON.stringify(transaction.toJSON(true)));
+			logger.info(`receive transaction, hash: ${transaction.hash(true).toString("hex")}, transaction: ${JSON.stringify(transaction.toJSON(true))}`);
 
-			// push to transaction pool
 			self.transactionsPool.push(transaction);
 
 			cb();
@@ -95,20 +103,27 @@ class Processor
 	}
 
 	/**
+	 * @param {Boolean} opts.generate
 	 * @param {Block} consistentBlock
 	 */
-	processBlock(consistentBlock, cb)
+	processBlock(opts, consistentBlock, cb)
 	{
-		const ERR_SERVER_RUN_BLOCK_TRANSACTIONS_ERR = 1;
-		const ERR_SERVER_RUN_BLOCK_BLOCKS_UPDATING = 2;
+		if(consistentBlock instanceof Block !== false)
+		{
+			throw new Error("class Processor processBlock, argument consistentBlock's type should be Block");
+		}
 
 		const self = this;
+
+		const ifGenerateStateRoot = !!opts.generate
+
+		const ERR_SERVER_RUN_BLOCK_BLOCKS_UPDATING = 1;
 
 		async.waterfall([
 			function(cb) {
 				let bnParentBlockNumber = new BN(consistentBlock.header.number).subn(1);
 
-				// get lastest block hash
+				// get block hash
 				self.blockChain.getBlockHashByNumber(bnParentBlockNumber, cb);
 			},
 			function(parentHash, cb) {
@@ -119,7 +134,7 @@ class Processor
 				}
 				else
 				{
-					// blocks is updating
+					// check if consistentBlock is a genesis block
 					if(new BN(consistentBlock.header.number).neqn(1))
 					{
 						return cb(ERR_SERVER_RUN_BLOCK_BLOCKS_UPDATING);
@@ -132,37 +147,30 @@ class Processor
 					logger.info("hash: " + consistentBlock.transactions[i].hash(true).toString("hex") + ", transaction: " + JSON.stringify(consistentBlock.transactions[i].toJSON(true)));
 				}
 
-				// run block and init stateRoot
-				// skipNonce: true
-				self.blockChain.runBlock({block: consistentBlock, generate: true, skipNonce: true}, function(err, errCode, failedTransactions) {
+				self.blockChain.runBlock({block: consistentBlock, generate: ifGenerateStateRoot, skipNonce: true}, function(err, failedTransactions) {
 					if(!!err)
-					{
-						if(errCode === ERR_RUN_BLOCK_TX_PROCESS)
-						{						
-							errLogger.error("failed transactions: ")
-							for(let i = 0; i < failedTransactions.length; i++)
-							{
-								errLogger.error("hash: " + failedTransactions[i].hash(true).toString("hex") + ", transaction: " + JSON.stringify(failedTransactions[i].toJSON(true)));
-							}
-
-							// process failed transaction
-							self.candidate.batchDel(failedTransactions, function() {
-								cb(ERR_SERVER_RUN_BLOCK_TRANSACTIONS_ERR);
-							});
-							return;
+					{	
+						errLogger.error("failed transactions: ")
+						for(let i = 0; i < failedTransactions.length; i++)
+						{
+							errLogger.error("hash: " + failedTransactions[i].hash(true).toString("hex") + ", transaction: " + JSON.stringify(failedTransactions[i].toJSON(true)));
 						}
+
+						// delete valid transactions
+						consistentBlock.delInvalidTransactions(failedTransactions);
 						
-						return cb(ERR_SERVER_RUN_BLOCK_TRANSACTIONS_ERR);
+						return cb(err);
 					}
 					
 					cb();
 				});
 			},
 			function(cb) {
-				self.blockChain.putBlock(block, cb);
+				self.blockChain.updateBlock(block, cb);
 			}], function(err) {
-				// some transactions err
-				if(err === ERR_SERVER_RUN_BLOCK_TRANSACTIONS_ERR)
+
+				// some transaction is invalid, del them and run again
+				if(err === ERR_RUN_BLOCK_TX_PROCESS)
 				{
 					self.processBlock();
 					return;
@@ -176,7 +184,7 @@ class Processor
 
 				if(!!err)
 				{
-					throw new Error("server processBlock err, " + err);
+					throw new Error(`class Processor processBlock ${err}`);
 				}
 
 				cb();

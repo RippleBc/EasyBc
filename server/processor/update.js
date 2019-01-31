@@ -1,10 +1,13 @@
-const {batchGetBlockByNum} = require("../chat")
 const async = require("async")
 const Block = require("../../block")
-const {getNodeNum, nodeList} = require("./nodes")
+const {getNodeNum, nodeList} = require("../nodes")
 const util = require("../../utils")
 const {post} = require("../../http/request")
 const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../../const")
+const AsyncEventEmitter = require("async-eventemitter")
+const initDb = require("../../db")
+const Trie = require("merkle-patricia-tree/secure.js")
+const BlockChain = require("../../block_chain")
 
 const log4js= require("../logConfig")
 const logger = log4js.getLogger()
@@ -14,23 +17,28 @@ const othlogger = log4js.getLogger("oth")
 const Buffer = util.Buffer;
 const BN = util.BN;
 
-class Update
+class Update extends AsyncEventEmitter
 {
 	constructor(processor)
 	{
+		super();
+
 		const self = this;
 
 		this.processor = processor;
 
+		this.beginTime;
+
+		this.activeNodes = 0;
 		this.updatingBlocks = [];
 		this.localLastestBlockNumber = null;
 
-		this.processor.on("getBlockByNumSuccess", rawBlock => {
+		this.on("getBlockByNumberSuccess", rawBlock => {
 			self.updatingBlocks.push(rawBlock);
 			updateBlocks();
 		});
 
-		this.processor.on("getBlockByNumErr", () => {
+		this.on("getBlockByNumberErr", () => {
 			updateBlocks();
 		});
 	}
@@ -43,8 +51,10 @@ class Update
 		this.localLastestBlockNumber = null;
 
 		this.initBlockChainState(() => {
+			self.beginTime = Date.now();
+
 			let bnNumber = new BN(self.localLastestBlockNumber).addn(1);
-			batchGetBlockByNum(self.processor, util.toBuffer(bnNumber));
+			self.batchGetBlockByNumber(util.toBuffer(bnNumber));
 		});
 	}
 
@@ -65,6 +75,7 @@ class Update
 			// genesis block
 			if(bnNumber.eqn(0))
 			{
+				self.processor.stoplight.go();
 				return cb();
 			}
 
@@ -78,6 +89,11 @@ class Update
 				{
 					throw new Error("class Processor initBlockChainState, getLastestBlockState err " + err);
 				}
+
+				if(block === null)
+				{
+					throw new Error("class Processor initBlockChainState, getLastestBlockState no corresponding block");
+				}
 				//
 				self.localLastestBlockNumber = block.header.number;
 
@@ -88,6 +104,8 @@ class Update
 				// init block
 				self.processor.blockChain = new BlockChain({stateTrie: trie});
 
+				// init over
+				self.processor.stoplight.go();
 				cb();
 			});
 		}
@@ -98,11 +116,17 @@ class Update
 	 */
 	updateBlocks()
 	{
-		if(this.updatingBlocks.length < getNodeNum())
+		const self = this;
+
+		this.activeNodes++;
+
+		// wait for all nodes
+		if(this.activeNodes < getNodeNum())
 		{
 			return;
 		}
 
+		// get the majority block
 		let blocks;
 		for(let i = 0; i < this.updatingBlocks.length; i++)
 		{
@@ -128,44 +152,46 @@ class Update
 		
 		// process block
 		let block = new Block(rawBlock);
-		this.processor.processBlock(block, () => {
+		this.processor.processBlock({generate: false}, block, () => {
 			self.localLastestBlockNumber = block.header.number;
 			//
 			let bnNumber = new BN(self.localLastestBlockNumber).addn(1);
-			batchGetBlockByNum(self.processor, util.toBuffer(bnNumber));
+			batchGetBlockByNumber(util.toBuffer(bnNumber));
 		});
 	}
-}
 
-/**
- * @param {Buffer} number
- */
-batchGetBlockByNum(processor, number)
-{	
-	nodeList.foreach(function(node) {
-		module.exports.getBlockByNum(node.url, number, function(err, response) {
-			if(!!err)
-			{
-				processor.emit("getBlockByNumErr");
-				return;
-			}
+	/**
+	 * @param {Buffer} number
+	 */
+	batchGetBlockByNumber(number)
+	{
+		const self = this;
 
-			if(response.code !== SUCCESS)
-			{
-				processor.emit("getBlockByNumErr");
-				return;
-			}
+		nodeList.forEach(function(node) {
+			self.getBlockByNumber(node.url, number, function(err, response) {
+				if(!!err)
+				{
+					self.emit("getBlockByNumberErr");
+					return;
+				}
 
-			processor.emit("getBlockByNumSuccess", response.data);
+				if(response.code !== SUCCESS)
+				{
+					self.emit("getBlockByNumberErr");
+					return;
+				}
+
+				self.emit("getBlockByNumberSuccess", response.data);
+			});
 		});
-	});
-}
+	}
 
-/**
- * @param {Buffer} number the number of the block
- */
-getBlockByNum(url, number, cb)
-{
-	post(logger, url + "/getLatestByNum", {number: util.baToHexString(number)}, cb);
+	/**
+	 * @param {Buffer} number the number of the block
+	 */
+	getBlockByNumber(url, number, cb)
+	{
+		post(logger, url + "/getBlockByNumber", {number: util.baToHexString(number)}, cb);
+	}
 }
-
+module.exports = Update;

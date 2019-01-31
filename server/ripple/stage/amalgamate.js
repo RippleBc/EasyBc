@@ -1,7 +1,7 @@
 const Candidate = require("../data/candidate")
 const nodes = require("../../nodes")
 const util = require("../../../utils")
-const {batchSendCandidate} = require("../chat")
+const {batchAmalgamateCandidate} = require("../chat")
 const async = require("async")
 
 const {RIPPLE_STATE_AMALGAMATE, RIPPLE_STATE_CANDIDATE_AGREEMENT, TRANSACTION_NUM_EACH_ROUND} = require("../../constant")
@@ -61,7 +61,7 @@ function sendCandidate(ripple)
 	ripple.candidate.batchPush(transactions);
 	ripple.candidate.poolDataToCandidateTransactions();
 	//
-	batchSendCandidate(ripple);
+	batchAmalgamateCandidate(ripple);
 }
 
 function amalgamateCandidate(ripple, candidate)
@@ -98,3 +98,5 @@ function amalgamateCandidate(ripple, candidate)
 		ripple.emit("amalgamateOver");
 	}
 }
+
+module.exports = Amalgamate;

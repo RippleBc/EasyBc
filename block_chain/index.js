@@ -79,7 +79,7 @@ class BlockChain extends AsyncEventEmitter
       function(hash, cb) {
         if(hash === null)
         {
-          return cb(`BlockChain getBlockByNumber, block, number: ${ebUtil.toBuffer(number).toString("hex")} not exist`);
+          return cb(null, null);
         }
         self.getBlockByHash(hash, cb);
       }], cb);
@@ -135,10 +135,10 @@ class BlockChain extends AsyncEventEmitter
 
     async.waterfall([
       function(cb) {
-        db.put(number, blockHash, cb);
+        db.put(blockHash, block.serialize(), cb);
       },
       function(cb) {
-        db.put(blockHash, block.serialize(), cb);
+        db.put(number, blockHash, cb);
       }], function(err) {
         if(!!err)
         {
@@ -303,6 +303,10 @@ class BlockChain extends AsyncEventEmitter
           },
           
           function(block, cb) {
+            if(block === null)
+            {
+              return cb();
+            }
             let transaction = block.getTransaction(trasactionHash);
             if(transaction)
             {
