@@ -191,4 +191,5 @@ class Update extends AsyncEventEmitter
 		post(logger, url + "/getBlockByNumber", {number: util.baToHexString(number)}, cb);
 	}
 }
+
 module.exports = Update;
