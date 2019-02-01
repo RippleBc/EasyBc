@@ -4,6 +4,7 @@ const util = require("../../../utils")
 const {batchConsensusCandidate} = require("../chat")
 const async = require("async")
 const {RIPPLE_STATE_CANDIDATE_AGREEMENT, RIPPLE_STATE_TIME_AGREEMENT, ROUND_NUM} = require("../../constant")
+const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../../../const")
 
 const ROUND1_THRESHHOLD = 0.5
 const ROUND2_THRESHHOLD = 0.6

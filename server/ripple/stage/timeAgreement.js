@@ -3,6 +3,7 @@ const Time = require("../data/time")
 const util = require("../../../utils")
 const {batchConsensusTime} = require("../chat")
 const {RIPPLE_STATE_CANDIDATE_AGREEMENT, RIPPLE_STATE_BLOCK_AGREEMENT} = require("../../constant")
+const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../../../const")
 
 class TimeAgreement
 {

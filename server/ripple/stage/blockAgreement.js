@@ -5,6 +5,7 @@ const util = require("../../../utils")
 const {batchConsensusBlock} = require("../chat")
 const {RIPPLE_STATE_BLOCK_AGREEMENT} = require("../../constant")
 const FlowStoplight = require("flow-stoplight")
+const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../../../const")
 
 const ERR_SERVER_RUN_BLOCK_ERR = 1;
 

@@ -3,6 +3,7 @@ const nodes = require("../../nodes")
 const util = require("../../../utils")
 const {batchAmalgamateCandidate} = require("../chat")
 const async = require("async")
+const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../../../const")
 
 const {RIPPLE_STATE_AMALGAMATE, RIPPLE_STATE_CANDIDATE_AGREEMENT, TRANSACTION_NUM_EACH_ROUND} = require("../../constant")
 
