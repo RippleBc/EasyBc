@@ -29,7 +29,9 @@ class Update extends AsyncEventEmitter
 
 		// record reponse node num
 		this.activeNodes = 0;
+		// record reponse block
 		this.updatingBlocks = [];
+		// record lastest block number
 		this.localLastestBlockNumber = null;
 
 		this.on("getBlockByNumberSuccess", rawBlock => {
@@ -84,7 +86,7 @@ class Update extends AsyncEventEmitter
 			self.processor.blockChain.getBlockByNumber(bnNumber, (err, block) => {
 				if(!!err)
 				{
-					throw new Error("class Processor initBlockChainState, getLastestBlockState err " + err);
+					throw new Error(`class Processor initBlockChainState, getLastestBlockState ${err}`);
 				}
 
 				if(block === null)
@@ -94,14 +96,12 @@ class Update extends AsyncEventEmitter
 				//
 				self.localLastestBlockNumber = block.header.number;
 
-				// init new state root
+				// init block chain
 				let db = initDb();
 				let trie = new Trie(db, block.header.stateRoot);
-
-				// init block
 				self.processor.blockChain = new BlockChain({stateTrie: trie});
 
-				// init over
+				//
 				self.processor.stoplight.go();
 				cb();
 			});
@@ -123,38 +123,57 @@ class Update extends AsyncEventEmitter
 			return;
 		}
 
+		// check if there is new block
+		if(this.updatingBlocks.length === 0)
+		{
+			return;
+		}
+
 		// get the majority block
-		let blocks;
+		let rawNumblocks;
 		for(let i = 0; i < this.updatingBlocks.length; i++)
 		{
-			if(!blocks[this.updatingBlocks[i]])
+			if(!rawNumblocks[this.updatingBlocks[i]])
 			{
-				blocks[this.updatingBlocks[i]] = 0;
+				rawNumblocks[this.updatingBlocks[i]] = 0;
 			}
 			
-			blocks[this.updatingBlocks[i]] += 1;
+			rawNumblocks[this.updatingBlocks[i]]++;
 		}
 
 		// choose the max block
 		let tmp = 0;
 		let rawBlock;
-		for(let key in blocks)
+		for(let raw in rawNumblocks)
 		{
-			if(blocks[key] > tmp)
+			if(rawNumblocks[raw] > tmp)
 			{
-				tmp = blocks[key];
-				rawBlock = key;
+				tmp = rawNumblocks[raw];
+				rawBlock = raw;
 			}
 		}
 		
-		// process block
+		//
 		let block = new Block(rawBlock);
-		this.processor.processBlock({generate: false}, block, () => {
-			self.localLastestBlockNumber = block.header.number;
-			//
-			let bnNumber = new BN(self.localLastestBlockNumber).addn(1);
-			batchGetBlockByNumber(util.toBuffer(bnNumber));
-		});
+		async.waterfall([
+			function(cb) {
+				block.validate(self.processor.blockChain, cb);
+			},
+			function(cb) {
+				// process block
+				this.processor.processBlock({generate: false}, block, () => {
+					// update lastest block number
+					self.localLastestBlockNumber = block.header.number;
+					//
+					let bnNumber = new BN(self.localLastestBlockNumber).addn(1);
+					batchGetBlockByNumber(util.toBuffer(bnNumber));
+				});
+			}], err => {
+				if(!!err)
+				{
+					throw new Error(`class Update updateBlocks ${err}`);
+				}
+			})
 	}
 
 	/**
