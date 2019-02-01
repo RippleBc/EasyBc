@@ -3,6 +3,13 @@ const Pool = require("./pool")
 
 const rlp = util.rlp;
 
+/**
+ * Creates a new Base object
+ *
+ * @class
+ * @constructor
+ * @prop 
+ */
 class Base extends Pool
 {
 	constructor()
@@ -73,6 +80,7 @@ class Base extends Pool
       let v = util.bufferToInt(this.v);
       this._senderPubKey = util.ecrecover(msgHash, v, this.r, this.s);
     }
+    
     return this._senderPubKey;
   }
 

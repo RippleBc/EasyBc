@@ -65,7 +65,7 @@ class RippleBlock extends Base
       errors.push("class RippleBlock validate, Invalid RippleBlock Signature");
     }
 
-    // check address
+    // check node address
     if(!nodes.checkNodeAddress(this.from))
     {
     	errors.push("class RippleBlock validate, Invalid RippleBlock address");
@@ -89,31 +89,32 @@ class RippleBlock extends Base
     let blocks;
     for(let i = 0; i < this.length; i++)
     {
-      if(!blocks[this.data[i].hash()])
+      let block = this.data[i];
+      if(!blocks[block.hash()])
       {
-        blocks[this.data[i].hash()] = {
-          block: this.data[i],
+        blocks[block.hash()] = {
+          bl: block,
           num: 0
         };
       }
 
-      blocks[this.data[i].hash()].num ++;
+      blocks[block.hash()].num++;
     }
 
-    // get max block
+    // get majority block
     let tmp = 0;
     let block;
-    for(key in blocks)
+    for(hash in blocks)
     {
-      if(blocks[key].num > tmp)
+      if(blocks[hash].num > tmp)
       {
-        tmp = blocks[key].num;
-        block = blocks[key].block;
+        tmp = blocks[hash].num;
+        block = blocks[hash].bl;
       }
     }
 
     // check threshhold
-    if(tmp / getNodeNum() >= AGREEMENT_THRESHHOLD)
+    if((tmp + 1) / getNodeNum() >= AGREEMENT_THRESHHOLD)
     {
       return block;
     }

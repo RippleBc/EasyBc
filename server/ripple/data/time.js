@@ -52,6 +52,9 @@ class Time extends Base
     util.defineProperties(this, fields, data);
 	}
 
+  /**
+   * get middle time
+   */
 	getTime()
 	{
 		for(let i = 0; i < this.length - 1; i++)
@@ -60,9 +63,9 @@ class Time extends Base
 			{
 				if(this.data[j] < this.data[j + 1])
 				{
-					let temp = this.data[j];
+					let tmp = this.data[j];
 					this.data[j] = this.data[j + 1];
-					this.data[j + 1] = temp;
+					this.data[j + 1] = tmp;
 				}
 			}
 		}
@@ -89,22 +92,22 @@ class Time extends Base
   }
 
   /**
-   * @param {Object|Buffer} value
-   */
-  del(value)
-  {
-    throw new Error("class Time, func del no exist");
-  }
-  /**
    * @param {Array/Object|Buffer} values
    */
   batchDel(values)
   {
     throw new Error("class Time, func batchDel no exist");
   }
+  /**
+   * @param {Object|Buffer} value
+   */
+  del(value)
+  {
+    throw new Error("class Time, func del no exist");
+  }
 
   /*
-   * @param {*} valueHash
+   *
    */
   ifExist()
   {

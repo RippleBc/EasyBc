@@ -14,11 +14,6 @@ class Consensus
 	{
 		this.consensusInstance = new Ripple(processor, express);
 	}
-
-	run(ifBlockAgreement)
-	{
-		this.consensusInstance.run(ifBlockAgreement);
-	}
 }
 
 module.exports = Consensus;

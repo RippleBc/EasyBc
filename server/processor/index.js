@@ -49,8 +49,8 @@ class Processor
 	{
 		const self = this;
 
-		// sync blocks
-		this.update.run();
+		// update block chain
+		self.update.run();
 
 		// wait for the stateTrie init is ok
 		this.stoplight.await(function() {
@@ -137,6 +137,9 @@ class Processor
 					// check if consistentBlock is a genesis block
 					if(new BN(consistentBlock.header.number).neqn(1))
 					{
+						// blockChain is behind the latest version, begin update 
+						self.update.run();
+						//
 						return cb(ERR_SERVER_RUN_BLOCK_BLOCKS_UPDATING);
 					}
 				}

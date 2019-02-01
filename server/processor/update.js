@@ -33,6 +33,8 @@ class Update extends AsyncEventEmitter
 		this.updatingBlocks = [];
 		// record lastest block number
 		this.localLastestBlockNumber = null;
+		// recording block update is proceeding
+		this.isUpdating = false;
 
 		this.on("getBlockByNumberSuccess", rawBlock => {
 			self.updatingBlocks.push(rawBlock);
@@ -63,6 +65,12 @@ class Update extends AsyncEventEmitter
 	initBlockChainState(cb)
 	{
 		const self = this;
+
+		// check if is updating
+		if(this.isUpdating)
+		{
+			return cb();
+		}
 
 		// get lastest block number
 		self.processor.blockChain.getLastestBlockNumber(function(err, bnNumber) {
@@ -115,8 +123,13 @@ class Update extends AsyncEventEmitter
 	{
 		const self = this;
 
-		this.activeNodes++;
+		// check if is updating
+		if(this.isUpdating)
+		{
+			return cb();
+		}
 
+		this.activeNodes++;
 		// wait for all nodes
 		if(this.activeNodes < getNodeNum())
 		{
@@ -126,6 +139,7 @@ class Update extends AsyncEventEmitter
 		// check if there is new block
 		if(this.updatingBlocks.length === 0)
 		{
+			this.isUpdating = false;
 			return;
 		}
 

@@ -1,7 +1,7 @@
 const util = require("../../../utils")
 
 /**
- * Creates a new pool object
+ * Creates a new Pool object
  *
  * @class
  * @constructor
@@ -28,6 +28,9 @@ class Pool
     this.data = [];
   }
 
+  /**
+   * batch get data
+   */
 	slice(begin, end)
 	{
 		return this.data.slice(begin, end);
@@ -42,9 +45,14 @@ class Pool
 	 */
 	batchPush(values, ifFilterSame = false)
 	{
+		if(typeof values !== "array")
+		{
+			throw new Error(`class Pool batchPush, argument values should be Array, now is ${typeof values}`)
+		}
+
 		for(let i = 0; i < values.length; i++)
 		{
-			this.push(values[i], ifFilterSame)
+			this.push(values[i], ifFilterSame);
 		}
 	}
 	/**
@@ -52,6 +60,11 @@ class Pool
 	 */
 	push(value, ifFilterSame = false)
 	{
+		if(typeof value !== "object")
+		{
+			throw new Error(`class Pool push, argument value should be Object, now is ${typeof value}`)
+		}
+
 		if(ifFilterSame)
 		{
 			for(let i = 0; i < this.length; i++)
@@ -67,10 +80,30 @@ class Pool
 	}
 
 	/**
-	 * @param {Object|Buffer} value
+	 * @param {Array/Object} values
+	 */
+	batchDel(values)
+	{
+		if(typeof values !== "array")
+		{
+			throw new Error(`class Pool batchDel, argument values should be Array, now is ${typeof values}`)
+		}
+
+		for(let i = 0; i < values.length; i++)
+		{
+			this.del(values[i])
+		}
+	}
+	/**
+	 * @param {Object} value
 	 */
 	del(value)
 	{
+		if(typeof value !== "object")
+		{
+			throw new Error(`class Pool del, argument value should be Object, now is ${typeof value}`)
+		}
+
 		for(let i = 0; i < this.data.length; i++)
 		{
 			let hash = value;
@@ -85,39 +118,20 @@ class Pool
 			}
 		}
 	}
-	/**
-	 * @param {Array/Object|Buffer} values
-	 */
-	batchDel(values)
-	{
-		for(let i = 0; i < values.length; i++)
-		{
-			for(let j = 0; j < this.data.length; j++)
-			{
-				let hash = values[i];
-				if(typeof values[i] === "object")
-				{
-					hash = values[i].hash(true).toString("hex");
-				}
-
-				if(hash === this.data[j].hash(true).toString("hex"))
-				{
-					this.data.splice(j, 1);
-				}
-			}
-		}
-	}
 
 	/*
-	 * @param {*} valueHash
+	 * @param {String} valueHash
 	 */
 	ifExist(valueHash)
 	{
-		valueHash = util.toBuffer(valueHash);
+		if(typeof valueHash !== "string")
+		{
+			throw new Error(`class Pool ifExist, argument valueHash should be String, now is ${typeof valueHash}`)
+		}
 
 		for(let i = 0; i < this.data.length; i++)
 		{
-			if(this.data[i].hash(true).toString("hex") === valueHash.toString("hex"))
+			if(this.data[i].hash(true).toString("hex") === valueHash)
 			{
 				return this.data[i];
 			}
@@ -129,6 +143,11 @@ class Pool
 	 */
 	get(index)
 	{
+		if(typeof index !== "number")
+		{
+			throw new Error(`class Pool get, argument index should be Number, now is ${typeof index}`);
+		}
+
 		return this.data[i];
 	}
 }

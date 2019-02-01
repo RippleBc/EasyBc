@@ -68,7 +68,7 @@ class Candidate extends Base
     // check address
     if(!nodes.checkNodeAddress(this.from))
     {
-    	errors.push("class Candidate validate, Invalid Candidate address");
+    	errors.push("class Candidate validate, Invalid node address");
     }
 
   	// verify transactions
@@ -108,7 +108,7 @@ class Candidate extends Base
   	let transactions = rlp.decode(this.transactions);
   	for(let i = 0; i < this.length; i++)
   	{
-  		this.push(new Transaction(transactions[i]))
+  		this.push(new Transaction(transactions[i]));
   	}
   }
 
@@ -121,28 +121,28 @@ class Candidate extends Base
     for(let i = 0; i < this.length; i++)
     {
       let transaction = this.data[i];
-      if(!transactions[transaction.from])
+      if(!transactions[transaction.hash(true)])
       {
-        transactions[transaction.from] = 1;
+        transactions[transaction.hash(true)] = {
+          tx: transaction,
+          num: 0
+        };
       }
-      else
-      {
-        transactions[transaction.from] += 1;
-      }
+     
+      transactions[transaction.hash(true)].num++;
     }
 
-    //
+    // filter invalid transactions
     let invalidTransactions = [];
     nodeNum = nodes.getNodeNum();
-    for(key in transactions)
+    for(hash in transactions)
     {
-      if(transactions[key] / nodeNum < threshhold)
+      if((transactions[hash].num + 1) / nodeNum < threshhold)
       {
-        invalidTransactions.push(key);
+        invalidTransactions.push(transactions[hash].tx);
       }
     }
 
-    //
     this.batchDel(invalidTransactions);
   }
 }
