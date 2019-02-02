@@ -53,7 +53,7 @@ module.exports.checkIfAllNodeHasMet = function(addressArray)
 		{
 			if(module.exports.nodeList[i] === addressArray[j])
 			{
-				continue;
+				break;
 			}
 		}
 
