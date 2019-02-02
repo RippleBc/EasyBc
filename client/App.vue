@@ -77,7 +77,7 @@ export default {
     	value: 0,
     	transactionHash: "",
     	url: "http://localhost:8080",
-    	urls: ["http://localhost:8080","http://localhost:8080","http://localhost:8080","http://localhost:8080","http://localhost:8080","http://localhost:8080","http://localhost:8080"]
+    	urls: ["http://localhost:8080","http://localhost:8081"]
     }
   },
 

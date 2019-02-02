@@ -1,4 +1,4 @@
-const nodes = require("../../nodes")
+const {checkIfAllNodeHasMet} = require("../../nodes")
 const RippleBlock = require("../data/rippleBlock")
 const Block = require("../../../block")
 const util = require("../../../utils")
@@ -71,7 +71,7 @@ class BlockAgreement
 			self.timeout = null;
 
 			// check and transfer to next round
-			if(nodes.checkIfAllNodeHasMet(self.ripple.activeNodes))
+			if(checkIfAllNodeHasMet(self.ripple.activeNodes))
 			{
 				//
 				ripple.state = RIPPLE_STATE_EMPTY;
@@ -159,7 +159,7 @@ function consensusBlock(ripple, rippleBlock)
 	ripple.rippleBlock.push(new Block(rippleBlock.block));
 
 	// check and transfer to next round
-	if(nodes.checkIfAllNodeHasMet(self.ripple.activeNodes))
+	if(checkIfAllNodeHasMet(self.ripple.activeNodes))
 	{
 		//
 		ripple.state = RIPPLE_STATE_EMPTY;
