@@ -15,6 +15,10 @@ const ROUND1_THRESHHOLD = 0.5
 const ROUND2_THRESHHOLD = 0.6
 const ROUND3_THRESHHOLD = 0.8
 
+const CANDIDATE_AGREEMENT_STATE_ROUND1 = "candidate_agreement_state_round1"
+const CANDIDATE_AGREEMENT_STATE_ROUND2 = "candidate_agreement_state_round2"
+const CANDIDATE_AGREEMENT_STATE_ROUND3 = "candidate_agreement_state_round3"
+
 class CandidateAgreement
 {
 	constructor(ripple)
@@ -33,12 +37,31 @@ class CandidateAgreement
 	    }
 
 	    // check stage
-			if(self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT)
+	    if(self.round === 1 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND1)
 			{
 				res.send({
             code: STAGE_INVALID,
             msg: `param error, current stage is ${self.ripple.state}`
         });
+        
+				return;
+			}
+			if(self.round === 2 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND2)
+			{
+				res.send({
+            code: STAGE_INVALID,
+            msg: `param error, current stage is ${self.ripple.state}`
+        });
+
+				return;
+			}
+			if(self.round === 3 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND3)
+			{
+				res.send({
+            code: STAGE_INVALID,
+            msg: `param error, current stage is ${self.ripple.state}`
+        });
+
 				return;
 			}
 
@@ -75,16 +98,22 @@ class CandidateAgreement
 	  	// compute
 	  	if(self.round === 1)
 	  	{
+	  		self.ripple.state = CANDIDATE_AGREEMENT_STATE_ROUND1;
+
 	  		self.threshhold = ROUND1_THRESHHOLD;
 	  	}
 
 	  	if(self.round === 2)
 	  	{
+	  		self.ripple.state = CANDIDATE_AGREEMENT_STATE_ROUND2;
+
 	  		self.threshhold = ROUND2_THRESHHOLD;
 	  	}
 
 	  	if(self.round === 3)
 	  	{
+	  		self.ripple.state = CANDIDATE_AGREEMENT_STATE_ROUND3;
+
 	  		self.threshhold = ROUND3_THRESHHOLD;
 	  	}
 
@@ -97,7 +126,15 @@ class CandidateAgreement
 
 	  this.ripple.on("consensusCandidateInnerErr", data => {
 			// check stage
-			if(self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT)
+			if(self.round === 1 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND1)
+			{
+				return;
+			}
+			if(self.round === 2 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND2)
+			{
+				return;
+			}
+			if(self.round === 3 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND3)
 			{
 				return;
 			}
@@ -110,7 +147,15 @@ class CandidateAgreement
 
 	  this.ripple.on("consensusCandidateErr", data => {
 	  	// check stage
-			if(self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT)
+	  	if(self.round === 1 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND1)
+			{
+				return;
+			}
+			if(self.round === 2 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND2)
+			{
+				return;
+			}
+			if(self.round === 3 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND3)
 			{
 				return;
 			}
