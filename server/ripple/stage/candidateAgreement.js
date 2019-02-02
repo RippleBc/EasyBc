@@ -78,7 +78,7 @@ class CandidateAgreement
 			}
 
 			postConsensusCandidate(self.ripple, data.url, self.ripple.candidate);
-		}
+		});
 
 	  this.ripple.on("consensusCandidateErr", data => {
 	  	// check stage
@@ -88,7 +88,7 @@ class CandidateAgreement
 			}
 
 	  	postConsensusCandidate(self.ripple, data.url, self.ripple.candidate);
-	  }
+	  });
 	}
 
 	/**

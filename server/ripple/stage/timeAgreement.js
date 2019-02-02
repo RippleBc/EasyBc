@@ -37,7 +37,7 @@ class TimeAgreement
 			}
 
 			postConsensusTime(self.ripple, data.url, self.ripple.time);
-		}
+		});
 
 	  this.ripple.on("consensusTimeErr", data => {
 	  	// check stage
@@ -47,7 +47,7 @@ class TimeAgreement
 			}
 
 	  	postConsensusTime(self.ripple, data.url, self.ripple.time);
-	  }
+	  });
 	}
 
  	run()

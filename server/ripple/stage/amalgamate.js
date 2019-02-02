@@ -35,7 +35,7 @@ class Amalgamate
 			}
 
 	  	postAmalgamateCandidate(self.ripple, data.url, self.ripple.candidate);
-		}
+		});
 
 	  this.ripple.on("amalgamateCandidateErr", data => {
 	  	// check stage
@@ -45,7 +45,7 @@ class Amalgamate
 			}
 
 	  	postAmalgamateCandidate(self.ripple, data.url, self.ripple.candidate);
-	  }
+	  });
 	}
 
 	run()

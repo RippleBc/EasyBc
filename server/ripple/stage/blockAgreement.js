@@ -38,7 +38,7 @@ class BlockAgreement
 			}
 
 			postConsensusBlock(self.ripple, data.url, self.ripple.block);
-		}
+		});
 
 	  this.ripple.on("consensusBlockErr", data => {
 	  	// check stage
@@ -48,7 +48,7 @@ class BlockAgreement
 			}
 
 	  	postConsensusBlock(self.ripple, data.url, self.ripple.block);
-	  }
+	  });
 	}
 
 	run()
