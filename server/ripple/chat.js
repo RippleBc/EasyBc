@@ -28,7 +28,7 @@ module.exports.postBatchConsensusCandidate = function(ripple)
 {
 	ripple.candidate.sign(util.toBuffer(privateKey));
 
-	nodeList.foreach(function(node) {
+	nodeList.forEach(function(node) {
 		module.exports.postConsensusCandidate(ripple, node.url, util.baToHexString(ripple.candidate.serialize()));
 	});
 }
@@ -40,7 +40,7 @@ module.exports.postBatchConsensusTime = function(ripple)
 {
 	ripple.time.sign(util.toBuffer(privateKey));
 
-	nodeList.foreach(function(node) {
+	nodeList.forEach(function(node) {
 		module.exports.postConsensusTime(ripple, node.url, util.baToHexString(ripple.time.serialize()));
 	});
 }
@@ -52,16 +52,21 @@ module.exports.postBatchConsensusBlock = function(ripple)
 {
 	ripple.block.sign(util.toBuffer(privateKey));
 	
-	nodeList.foreach(function(node) {
+	nodeList.forEach(function(node) {
 		module.exports.postConsensusBlock(ripple, node.url, util.baToHexString(ripple.block.serialize()));
 	});
 }
 
 /**
- * @param {String} candidate
+ * @param {String|Object} candidate
  */
 module.exports.postAmalgamateCandidate = function(ripple, url, candidate)
 {
+	if(typeof candidate === "object")
+	{
+		candidate = util.baToHexString(candidate.serialize());
+	}
+
 	post(logger, url + "/amalgamateCandidate", {candidate: candidate}, function(err, response) {
 		if(!!err)
 		{
@@ -80,10 +85,15 @@ module.exports.postAmalgamateCandidate = function(ripple, url, candidate)
 }
 
 /**
- * @param {String} candidate
+ * @param {String|Object} candidate
  */
 module.exports.postConsensusCandidate = function(ripple, url, candidate)
 {
+	if(typeof candidate === "object")
+	{
+		candidate = util.baToHexString(candidate.serialize());
+	}
+
 	post(logger, url + "/consensusCandidate", {candidate: candidate}, function(err, response) {
 		if(!!err)
 		{
@@ -102,10 +112,15 @@ module.exports.postConsensusCandidate = function(ripple, url, candidate)
 }
 
 /**
- * @param {String} time
+ * @param {String|Object} time
  */
 module.exports.postConsensusTime = function(ripple, url, time)
 {
+	if(typeof time === "object")
+	{
+		time = util.baToHexString(time.serialize());
+	}
+
 	post(logger, url + "/consensusTime", {time: time}, function(err, response) {
 		if(!!err)
 		{
@@ -124,10 +139,15 @@ module.exports.postConsensusTime = function(ripple, url, time)
 }
 
 /**
- * @param {String} rippleBlock
+ * @param {String|Object} rippleBlock
  */
 module.exports.postConsensusBlock = function(ripple, url, rippleBlock)
 {
+	if(typeof rippleBlock === "object")
+	{
+		rippleBlock = util.baToHexString(rippleBlock.serialize());
+	}
+
 	post(logger, url + "/consensusBlock", {rippleBlock: rippleBlock}, function(err, response) {
 		if(!!err)
 		{

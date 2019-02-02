@@ -135,6 +135,7 @@ class CandidateAgreement
 		sendCandidate(this.ripple);
 
 		this.ripple.initTimeout(() => {
+			logger.warn("Class CandidateAgreement, enter initTimeout");
 			// check round stage
 			if(self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT)
 			{
@@ -143,9 +144,13 @@ class CandidateAgreement
 
 			self.ripple.timeout = null;
 
+			logger.warn(`Class CandidateAgreement initTimeout, checkIfAllNodeHasMet, activeNodes ${self.ripple.activeNodes}`);
+
 			// check and transfer to next round
 			if(nodes.checkIfAllNodeHasMet(self.ripple.activeNodes))
 			{
+				logger.warn("Class CandidateAgreement initTimeout, candidate consensus is over, go to next stage");
+
 				self.ripple.emit("amalgamateOver");
 			}
 		});
@@ -153,15 +158,18 @@ class CandidateAgreement
 }
 
 function sendCandidate(ripple)
-{
+{	
 	// encode tranasctions
 	ripple.candidate.poolDataToCandidateTransactions();
 	//
+	logger.warn("Class CandidateAgreement, postBatchConsensusCandidate");
 	postBatchConsensusCandidate(ripple);
 }
 
 function processCandidate(ripple, candidate)
 {
+	logger.warn("Class CandidateAgreement processCandidate");
+
 	candidate = new Candidate(candidate);
 
 	// check candidate
@@ -185,9 +193,13 @@ function processCandidate(ripple, candidate)
 		return;
 	}
 	
+	logger.warn("Class CandidateAgreement processCandidate, enter checkIfAllNodeHasMet");
+
 	// check and transfer to next round
 	if(nodes.checkIfAllNodeHasMet(ripple.activeNodes))
 	{
+		logger.warn("Class CandidateAgreement processCandidate, candidate consensus is over, go to next stage");
+
 		ripple.emit("amalgamateOver");
 	}
 }

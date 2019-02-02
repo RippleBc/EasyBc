@@ -93,10 +93,9 @@ class Amalgamate
 			logger.warn("class Amalgamate, enter timeout");
 
 			// check and transfer to next round
-			logger.warn(`class Amalgamate, enter timeout, activeNodes ${self.ripple.activeNodes}`);
 			if(checkIfAllNodeHasMet(self.ripple.activeNodes))
 			{
-				logger.warn("class Amalgamate, all nodes have responsed, go to next stage");
+				logger.warn("class Amalgamate, amalgamate is over, go to next stage");
 
 				// transfer to transaction agreement stage
 				self.ripple.state = RIPPLE_STATE_CANDIDATE_AGREEMENT;
@@ -164,7 +163,7 @@ function amalgamateCandidate(ripple, candidate)
 	// check and transfer to next round
 	if(checkIfAllNodeHasMet(ripple.activeNodes))
 	{
-		logger.warn("class Amalgamate, all nodes have responsed, go to next stage");
+		logger.warn("class Amalgamate, amalgamate is over, go to next stage");
 
 		ripple.state = RIPPLE_STATE_CANDIDATE_AGREEMENT;
 		ripple.emit("amalgamateOver");
