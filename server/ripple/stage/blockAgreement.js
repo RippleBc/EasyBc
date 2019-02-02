@@ -6,6 +6,11 @@ const {postConsensusBlock, postBatchConsensusBlock} = require("../chat")
 const {RIPPLE_STATE_BLOCK_AGREEMENT, RIPPLE_STATE_EMPTY, SEND_DATA_DEFER} = require("../../constant")
 const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../../../const")
 
+const log4js= require("../../logConfig");
+const logger = log4js.getLogger();
+const errLogger = log4js.getLogger("err");
+const othLogger = log4js.getLogger("oth");
+
 const ERR_SERVER_RUN_BLOCK_ERR = 1;
 
 class BlockAgreement

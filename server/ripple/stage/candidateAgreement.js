@@ -6,6 +6,11 @@ const async = require("async")
 const {RIPPLE_STATE_CANDIDATE_AGREEMENT, RIPPLE_STATE_TIME_AGREEMENT, ROUND_NUM, SEND_DATA_DEFER} = require("../../constant")
 const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../../../const")
 
+const log4js= require("../../logConfig");
+const logger = log4js.getLogger();
+const errLogger = log4js.getLogger("err");
+const othLogger = log4js.getLogger("oth");
+
 const ROUND1_THRESHHOLD = 0.5
 const ROUND2_THRESHHOLD = 0.6
 const ROUND3_THRESHHOLD = 0.8

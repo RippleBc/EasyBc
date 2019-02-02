@@ -5,6 +5,11 @@ const {postConsensusTime, postBatchConsensusTime} = require("../chat")
 const {RIPPLE_STATE_TIME_AGREEMENT, RIPPLE_STATE_BLOCK_AGREEMENT, SEND_DATA_DEFER} = require("../../constant")
 const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../../../const")
 
+const log4js= require("../../logConfig");
+const logger = log4js.getLogger();
+const errLogger = log4js.getLogger("err");
+const othLogger = log4js.getLogger("oth");
+
 class TimeAgreement
 {
 	constructor(ripple)

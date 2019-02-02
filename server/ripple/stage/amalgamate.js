@@ -4,8 +4,12 @@ const util = require("../../../utils")
 const {postAmalgamateCandidate, postBatchAmalgamateCandidate} = require("../chat")
 const async = require("async")
 const {SUCCESS, PARAM_ERR, OTH_ERR, STAGE_INVALID} = require("../../../const")
-
 const {RIPPLE_STATE_AMALGAMATE, RIPPLE_STATE_CANDIDATE_AGREEMENT, TRANSACTION_NUM_EACH_ROUND, SEND_DATA_DEFER} = require("../../constant")
+
+const log4js= require("../../logConfig");
+const logger = log4js.getLogger();
+const errLogger = log4js.getLogger("err");
+const othLogger = log4js.getLogger("oth");
 
 class Amalgamate
 {
