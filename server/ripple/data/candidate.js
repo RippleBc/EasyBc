@@ -83,6 +83,8 @@ class Candidate extends Base
 
   validateTransactions(stringError)
   {
+    const errors = [];
+    
     // verify transactions
     let rawTransactions = rlp.decode(this.transactions);
     for(let i = 0; i < rawTransactions.length; i++)
