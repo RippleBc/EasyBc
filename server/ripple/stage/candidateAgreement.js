@@ -26,7 +26,7 @@ class CandidateAgreement
 		const self = this;
 
 		this.ripple = ripple;
-		this.round = 1;
+		this.round = 0;
 		this.ripple.express.post("/consensusCandidate", function(req, res) {
 			if(!req.body.candidate) {
         res.send({
@@ -76,6 +76,9 @@ class CandidateAgreement
 	  this.ripple.on("amalgamateOver", () => {
 	  	logger.warn(`class CandidateAgreement, candidate consensus begin, round ${self.round}`);
 
+	  	// transfer to next round
+	  	self.round += 1;
+	  	
 	  	// clear invalid transactions
 	  	if(self.round === 2 || self.round === 3 || self.round === 4)
 	  	{
@@ -88,7 +91,7 @@ class CandidateAgreement
 	  	{
 	  		logger.warn("class CandidateAgreement, candidate consensus is over, go to next stage");
 
-	  		self.round = 1;
+	  		self.round = 0;
 	  		// transfer to block agreement stage
 				self.ripple.state = RIPPLE_STATE_TIME_AGREEMENT;
 	  		self.ripple.emit("candidateAgreementOver");
@@ -116,9 +119,6 @@ class CandidateAgreement
 
 	  		self.threshhold = ROUND3_THRESHHOLD;
 	  	}
-
-	  	// transfer to next round
-	  	self.round += 1;
 
 	  	// begin consensus
 	  	self.run();
@@ -182,6 +182,10 @@ class CandidateAgreement
 		this.ripple.initTimeout(() => {
 			logger.warn("Class CandidateAgreement, enter initTimeout");
 			// check stage
+
+			console.log("**************************: " + self.round);
+			console.log("##########################: " + self.ripple.state);
+
 			if(self.round === 1 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND1)
 			{
 				return;
