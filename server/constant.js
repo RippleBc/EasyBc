@@ -4,7 +4,7 @@ module.exports.RIPPLE_STATE_TIME_AGREEMENT = 3;
 module.exports.RIPPLE_STATE_BLOCK_AGREEMENT = 4;
 module.exports.RIPPLE_STATE_EMPTY = 5;
 
-module.exports.ROUND_DEFER = 2000;
+module.exports.ROUND_DEFER = 3000;
 module.exports.ROUND_NUM = 3;
 
 module.exports.TRANSACTION_NUM_EACH_ROUND = 100;

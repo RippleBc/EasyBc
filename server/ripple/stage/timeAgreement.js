@@ -1,7 +1,7 @@
 const nodes = require("../../nodes")
 const Time = require("../data/time")
 const util = require("../../../utils")
-const {batchConsensusTime} = require("../chat")
+const {postConsensusTime, postBatchConsensusTime} = require("../chat")
 const {RIPPLE_STATE_TIME_AGREEMENT, RIPPLE_STATE_BLOCK_AGREEMENT} = require("../../constant")
 const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../../../const")
 
@@ -28,6 +28,26 @@ class TimeAgreement
 		this.ripple.on("candidateAgreementOver", () => {
 			self.run();
 		});
+
+		this.ripple.on("consensusTimeInnerErr", data => {
+			// check stage
+			if(self.ripple.state !== RIPPLE_STATE_TIME_AGREEMENT)
+			{
+				return;
+			}
+
+			postConsensusTime(self.ripple, data.url, self.ripple.time);
+		}
+
+	  this.ripple.on("consensusTimeErr", data => {
+	  	// check stage
+			if(self.ripple.state !== RIPPLE_STATE_TIME_AGREEMENT)
+			{
+				return;
+			}
+
+	  	postConsensusTime(self.ripple, data.url, self.ripple.time);
+	  }
 	}
 
  	run()
@@ -62,7 +82,7 @@ function sendTime(ripple)
 {
 	ripple.time.time = Date.time();
 	//
-	batchConsensusTime(ripple);
+	postBatchConsensusTime(ripple);
 }
 
 function consensusTime(ripple, time)

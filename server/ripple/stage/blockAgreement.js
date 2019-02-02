@@ -2,7 +2,7 @@ const nodes = require("../../nodes")
 const RippleBlock = require("../data/rippleBlock")
 const Block = require("../../../block")
 const util = require("../../../utils")
-const {batchConsensusBlock} = require("../chat")
+const {postConsensusBlock, postBatchConsensusBlock} = require("../chat")
 const {RIPPLE_STATE_BLOCK_AGREEMENT, RIPPLE_STATE_EMPTY} = require("../../constant")
 const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../../../const")
 
@@ -29,6 +29,26 @@ class BlockAgreement
 		this.ripple.on("timeAgreementOver", ()=> {
 			run();
 		})
+
+		this.ripple.on("consensusBlockInnerErr", data => {
+			// check stage
+			if(self.ripple.state !== RIPPLE_STATE_BLOCK_AGREEMENT)
+			{
+				return;
+			}
+
+			postConsensusBlock(self.ripple, data.url, self.ripple.block);
+		}
+
+	  this.ripple.on("consensusBlockErr", data => {
+	  	// check stage
+			if(self.ripple.state !== RIPPLE_STATE_BLOCK_AGREEMENT)
+			{
+				return;
+			}
+
+	  	postConsensusBlock(self.ripple, data.url, self.ripple.block);
+	  }
 	}
 
 	run()
@@ -103,7 +123,7 @@ function sendBlock(ripple)
 			// record block
 			ripple.rippleBlock.push(block);
 
-			batchConsensusBlock(ripple);
+			postBatchConsensusBlock(ripple);
 		}], err => {
 			if(!!err) 
 			{

@@ -1,7 +1,7 @@
 const Candidate = require("../data/candidate")
 const nodes = require("../../nodes")
 const util = require("../../../utils")
-const {batchConsensusCandidate} = require("../chat")
+const {postConsensusCandidate, postBatchConsensusCandidate} = require("../chat")
 const async = require("async")
 const {RIPPLE_STATE_CANDIDATE_AGREEMENT, RIPPLE_STATE_TIME_AGREEMENT, ROUND_NUM} = require("../../constant")
 const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../../../const")
@@ -27,11 +27,9 @@ class CandidateAgreement
         return;
 	    }
 
-	    // vote
 	    processCandidate(self.ripple, req.body.candidate);
 		});
 
-		// entrance one
 	  this.ripple.on("amalgamateOver", () => {
 	  	// clear invalid transactions
 	  	if(self.round === 2 || self.round === 3 || self.round === 4)
@@ -71,6 +69,26 @@ class CandidateAgreement
 	  	// begin consensus
 	  	self.run();
 	  });
+
+	  this.ripple.on("consensusCandidateInnerErr", data => {
+			// check stage
+			if(self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT)
+			{
+				return;
+			}
+
+			postConsensusCandidate(self.ripple, data.url, self.ripple.candidate);
+		}
+
+	  this.ripple.on("consensusCandidateErr", data => {
+	  	// check stage
+			if(self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT)
+			{
+				return;
+			}
+
+	  	postConsensusCandidate(self.ripple, data.url, self.ripple.candidate);
+	  }
 	}
 
 	/**
@@ -108,7 +126,7 @@ function sendCandidate(ripple)
 	// encode tranasctions
 	ripple.candidate.poolDataToCandidateTransactions();
 	//
-	batchConsensusCandidate(ripple);
+	postBatchConsensusCandidate(ripple);
 }
 
 function processCandidate(ripple, candidate)

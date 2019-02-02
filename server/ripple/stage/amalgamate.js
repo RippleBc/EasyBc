@@ -1,9 +1,9 @@
 const Candidate = require("../data/candidate")
 const {checkIfAllNodeHasMet} = require("../../nodes")
 const util = require("../../../utils")
-const {batchAmalgamateCandidate} = require("../chat")
+const {postAmalgamateCandidate, postBatchAmalgamateCandidate} = require("../chat")
 const async = require("async")
-const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../../../const")
+const {SUCCESS, PARAM_ERR, OTH_ERR, STAGE_INVALID} = require("../../../const")
 
 const {RIPPLE_STATE_AMALGAMATE, RIPPLE_STATE_CANDIDATE_AGREEMENT, TRANSACTION_NUM_EACH_ROUND} = require("../../constant")
 
@@ -26,6 +26,26 @@ class Amalgamate
 
 	    amalgamateCandidate(self.ripple, req.body.candidate);
 	  });
+
+		this.ripple.on("amalgamateCandidateInnerErr", data => {
+			// check stage
+			if(self.ripple.state !== RIPPLE_STATE_AMALGAMATE)
+			{
+				return;
+			}
+
+	  	postAmalgamateCandidate(self.ripple, data.url, self.ripple.candidate);
+		}
+
+	  this.ripple.on("amalgamateCandidateErr", data => {
+	  	// check stage
+			if(self.ripple.state !== RIPPLE_STATE_AMALGAMATE)
+			{
+				return;
+			}
+
+	  	postAmalgamateCandidate(self.ripple, data.url, self.ripple.candidate);
+	  }
 	}
 
 	run()
@@ -70,12 +90,12 @@ function sendCandidate(ripple)
 	
 	ripple.candidate.poolDataToCandidateTransactions();
 	//
-	batchAmalgamateCandidate(ripple);
+	postBatchAmalgamateCandidate(ripple);
 }
 
 function amalgamateCandidate(ripple, candidate)
 {
-	// check state
+	// check stage
 	if(ripple.state !== RIPPLE_STATE_AMALGAMATE)
 	{
 		return;

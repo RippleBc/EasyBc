@@ -130,6 +130,7 @@ class Update extends AsyncEventEmitter
 		}
 
 		this.activeNodes++;
+		
 		// wait for all nodes
 		if(this.activeNodes < getNodeNum())
 		{
