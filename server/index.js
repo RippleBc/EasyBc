@@ -32,6 +32,8 @@ app.all('*', function(req, res, next) {
     next();
 });
 
+// logger
+log4js.useLogger(app, logger);
 
 // consensus
 const processor = new Processor(app);
@@ -39,13 +41,11 @@ processor.run();
 process.on("uncaughtException", function (err) {
     errlogger.error(err.stack);
 
-    // //
+    // const processor = new Processor(app);
     // processor.run();
+
     process.exit(1);
 });
-
-// logger
-log4js.useLogger(app, logger);
 
 app.post("/sendTransaction", function(req, res) {
     if(!req.body.tx) {

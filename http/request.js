@@ -5,7 +5,6 @@ module.exports.post = function(logger, url, data, cb)
   logger.info("new request, url: " + url + ", body: " + JSON.stringify(data));
   request({
     url: url,
-    timeout: 500,
     method: "POST",
     json: true,
     headers: { "content-type": "application/json"},
