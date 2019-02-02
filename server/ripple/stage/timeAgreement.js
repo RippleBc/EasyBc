@@ -108,30 +108,26 @@ function sendTime(ripple)
 
 function consensusTime(ripple, time)
 {
-	// check round stage
-	if(ripple.state !== RIPPLE_STATE_TIME_AGREEMENT)
-	{
-		return;
-	}
-
-	// check if mandatory time window is end
-	if(ripple.timeout)
-	{
-		return;
-	}
-
 	ripple.recordActiveNode(time.from);
 
 	// check time
 	time = new Time(time);
-	if(!time.validate())
+	let errors = time.validate(true);
+	if(!!errors === false)
 	{
+		logger.info(`class TimeAgreement, time validate is failed, ${errors}`);
 		return;
 	}
 
 	// record
 	ripple.time.push(util.bufferToInt(time.time));
 
+	// check if mandatory time window is end
+	if(ripple.timeout)
+	{
+		return;
+	}
+	
 	// check and transfer to next stage
 	if(nodes.checkIfAllNodeHasMet(self.ripple.activeNodes))
 	{

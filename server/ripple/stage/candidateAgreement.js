@@ -152,24 +152,14 @@ function sendCandidate(ripple)
 
 function processCandidate(ripple, candidate)
 {
-	// check round stage
-	if(ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT)
-	{
-		return;
-	}
-
-	// check if mandatory time window is end
-	if(ripple.timeout)
-	{
-		return;
-	}
-
 	ripple.recordActiveNode(candidate.from);
 
 	// check candidate
 	candidate = new Candidate(candidate);
-	if(!candidate.validate())
+	let errors = candidate.validate(true);
+	if(!!errors === false)
 	{
+		logger.info(`class CandidateAgreement, candidate validate is failed, ${errors}`);
 		return;
 	}
 
@@ -177,6 +167,12 @@ function processCandidate(ripple, candidate)
 	candidate.candidateTransactionsToPoolData();
 	ripple.candidate.batchPush(candidate.data);
 
+	// check if mandatory time window is end
+	if(ripple.timeout)
+	{
+		return;
+	}
+	
 	// check and transfer to next round
 	if(nodes.checkIfAllNodeHasMet(self.ripple.activeNodes))
 	{

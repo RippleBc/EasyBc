@@ -113,31 +113,26 @@ function sendCandidate(ripple)
 
 function amalgamateCandidate(ripple, candidate)
 {
-	// check stage
-	if(ripple.state !== RIPPLE_STATE_AMALGAMATE)
-	{
-		return;
-	}
-
-	// check if mandatory time window is end
-	if(ripple.timeout)
-	{
-		return;
-	}
-
-	//
 	ripple.recordActiveNode(candidate.from);
 
 	// check candidate
 	candidate = new Candidate(candidate);
-	if(!candidate.validate())
+	let errors = candidate.validate(true);
+	if(!!errors === false)
 	{
+		logger.info(`class Amalgamate, candidate validate is failed, ${errors}`);
 		return;
 	}
 
 	// merge transactions, filter same transaction
 	candidate.candidateTransactionsToPoolData();
 	ripple.candidate.batchPush(candidate.data, true);
+
+	// check if mandatory time window is end
+	if(ripple.timeout)
+	{
+		return;
+	}
 
 	// check and transfer to next round
 	if(checkIfAllNodeHasMet(self.ripple.activeNodes))

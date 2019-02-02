@@ -155,30 +155,26 @@ function sendBlock(ripple)
 
 function consensusBlock(ripple, rippleBlock)
 {
-	// check state
-	if(ripple.state !== RIPPLE_STATE_BLOCK_AGREEMENT)
-	{
-		return;
-	}
-
-	// check if mandatory time window is end
-	if(ripple.timeout)
-	{
-		return;
-	}
-
 	ripple.recordActiveNode(rippleBlock.from);
 
 	// check rippleBlock
 	rippleBlock = new RippleBlock(rippleBlock);
-	if(!rippleBlock.validate())
+	let errors = rippleBlock.validate(true)
+	if(!!errors == false)
 	{
+		logger.info(`class BlockAgreement, rippleBlock validate is failed, ${errors}`);
 		return;
 	}
 
 	// record
 	ripple.rippleBlock.push(new Block(rippleBlock.block));
 
+	// check if mandatory time window is end
+	if(ripple.timeout)
+	{
+		return;
+	}
+	
 	// check and transfer to next round
 	if(checkIfAllNodeHasMet(self.ripple.activeNodes))
 	{

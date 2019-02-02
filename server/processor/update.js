@@ -53,6 +53,7 @@ class Update extends AsyncEventEmitter
 		// check if is updating
 		if(this.isUpdating)
 		{
+			logger.info("updating is proceeding, do not call again");
 			return;
 		}
 

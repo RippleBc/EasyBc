@@ -113,6 +113,13 @@ class Processor
 			throw new Error("class Processor processBlock, argument consistentBlock's type should be Block");
 		}
 
+		if(consistentBlock.transactions.length === 0)
+		{
+			// do not process block without transactions
+			logger.info(`Class Processor, block ${JSON.stringify(consistentBlock.toJSON(true))}`)
+			return cb();
+		}
+
 		const self = this;
 
 		const ifGenerateStateRoot = !!opts.generate
@@ -137,6 +144,8 @@ class Processor
 					// check if consistentBlock is a genesis block
 					if(new BN(consistentBlock.header.number).neqn(1))
 					{
+						logger.info("block chain's updating is not finish, begin to finish");
+
 						// blockChain is behind the latest version, begin update 
 						self.update.run();
 						//
