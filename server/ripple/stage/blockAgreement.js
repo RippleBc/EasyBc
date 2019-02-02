@@ -4,7 +4,7 @@ const Block = require("../../../block")
 const util = require("../../../utils")
 const {postConsensusBlock, postBatchConsensusBlock} = require("../chat")
 const {RIPPLE_STATE_BLOCK_AGREEMENT, RIPPLE_STATE_EMPTY, SEND_DATA_DEFER} = require("../../constant")
-const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../../../const")
+const {SUCCESS, PARAM_ERR, OTH_ERR, STAGE_INVALID} = require("../../../const")
 
 const log4js= require("../../logConfig");
 const logger = log4js.getLogger();
