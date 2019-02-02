@@ -152,10 +152,11 @@ function sendCandidate(ripple)
 
 function processCandidate(ripple, candidate)
 {
+	candidate = new Candidate(candidate);
+
 	ripple.recordActiveNode(candidate.from);
 
 	// check candidate
-	candidate = new Candidate(candidate);
 	let errors = candidate.validate(true);
 	if(!!errors === false)
 	{

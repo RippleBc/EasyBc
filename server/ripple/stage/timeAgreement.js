@@ -108,10 +108,11 @@ function sendTime(ripple)
 
 function consensusTime(ripple, time)
 {
+	time = new Time(time);
+
 	ripple.recordActiveNode(time.from);
 
 	// check time
-	time = new Time(time);
 	let errors = time.validate(true);
 	if(!!errors === false)
 	{

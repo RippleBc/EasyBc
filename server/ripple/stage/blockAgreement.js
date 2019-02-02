@@ -155,10 +155,11 @@ function sendBlock(ripple)
 
 function consensusBlock(ripple, rippleBlock)
 {
+	rippleBlock = new RippleBlock(rippleBlock);
+
 	ripple.recordActiveNode(rippleBlock.from);
 
 	// check rippleBlock
-	rippleBlock = new RippleBlock(rippleBlock);
 	let errors = rippleBlock.validate(true)
 	if(!!errors == false)
 	{
