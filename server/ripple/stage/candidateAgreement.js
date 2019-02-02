@@ -250,9 +250,9 @@ function processCandidate(ripple, candidate)
 	
 	logger.warn("Class CandidateAgreement processCandidate, enter checkIfAllNodeHasMet");
 
-	console.log("**************************: " + this.round);
-	console.log("##########################: " + this.ripple.state);
-	console.log("&&&&&&&&&&&&&&&&&&&&&&&&&&: " + this.ripple.activeNodes.length);
+	console.log("**************************: " + ripple.round);
+	console.log("##########################: " + ripple.state);
+	console.log("&&&&&&&&&&&&&&&&&&&&&&&&&&: " + ripple.activeNodes.length);
 	// check and transfer to next round
 	if(nodes.checkIfAllNodeHasMet(ripple.activeNodes))
 	{
