@@ -116,8 +116,6 @@ function amalgamateCandidate(ripple, candidate)
 	
 	candidate = new Candidate(candidate);
 
-	
-
 	// check candidate
 	let errors1 = candidate.validateSignatrue(true);
 	if(!!errors1 === true)
@@ -149,7 +147,7 @@ function amalgamateCandidate(ripple, candidate)
 	}
 
 	// check and transfer to next round
-	if(checkIfAllNodeHasMet(self.ripple.activeNodes))
+	if(checkIfAllNodeHasMet(this.ripple.activeNodes))
 	{
 		ripple.state = RIPPLE_STATE_CANDIDATE_AGREEMENT;
 		ripple.emit("amalgamateOver");
