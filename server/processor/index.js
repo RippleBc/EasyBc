@@ -55,7 +55,7 @@ class Processor
 		// wait for the stateTrie init is ok
 		this.stoplight.await(function() {
 			// begin transaction consensus
-			self.consensus.run();
+			self.consensus.consensusInstance.run();
 		});
 	}
 

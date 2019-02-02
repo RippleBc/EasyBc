@@ -45,7 +45,7 @@ class Pool
 	 */
 	batchPush(values, ifFilterSame = false)
 	{
-		if(typeof values !== "array")
+		if(values instanceof Array === false)
 		{
 			throw new Error(`class Pool batchPush, argument values should be Array, now is ${typeof values}`)
 		}
@@ -84,7 +84,7 @@ class Pool
 	 */
 	batchDel(values)
 	{
-		if(typeof values !== "array")
+		if(values instanceof Array === false)
 		{
 			throw new Error(`class Pool batchDel, argument values should be Array, now is ${typeof values}`)
 		}

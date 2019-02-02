@@ -17,7 +17,7 @@ module.exports.postBatchAmalgamateCandidate = function(ripple)
 	ripple.candidate.sign(util.toBuffer(privateKey));
 
 	nodeList.forEach(function(node) {
-		module.exports.postAmalgamateCandidate(ripple, node.url, util.baToHexString(ripple.candidate.serialize());
+		module.exports.postAmalgamateCandidate(ripple, node.url, util.baToHexString(ripple.candidate.serialize()));
 	});
 }
 
@@ -62,16 +62,16 @@ module.exports.postBatchConsensusBlock = function(ripple)
  */
 module.exports.postAmalgamateCandidate = function(ripple, url, candidate)
 {
-	post(logger, url + "/amalgamateCandidate", {candidate: candidate}, , function(err, response) {
+	post(logger, url + "/amalgamateCandidate", {candidate: candidate}, function(err, response) {
 		if(!!err)
 		{
-			ripple.emit("amalgamateCandidateInnerErr", {url: node.url, code: code.response.code});
+			ripple.emit("amalgamateCandidateInnerErr", {url: url});
 			return;
 		}
 
 		if(response.code !== SUCCESS)
 		{
-			ripple.emit("amalgamateCandidateErr", {url: node.url, code: code.response.code});
+			ripple.emit("amalgamateCandidateErr", {url: url, code: response.code});
 			return;
 		}
 
@@ -84,16 +84,16 @@ module.exports.postAmalgamateCandidate = function(ripple, url, candidate)
  */
 module.exports.postConsensusCandidate = function(ripple, url, candidate)
 {
-	post(logger, url + "/consensusCandidate", {candidate: candidate}, , function(err, response) {
+	post(logger, url + "/consensusCandidate", {candidate: candidate}, function(err, response) {
 		if(!!err)
 		{
-			ripple.emit("consensusCandidateInnerErr", {url: node.url, code: code.response.code});
+			ripple.emit("consensusCandidateInnerErr", {url: url});
 			return;
 		}
 
 		if(response.code !== SUCCESS)
 		{
-			ripple.emit("consensusCandidateErr", {url: node.url, code: code.response.code});
+			ripple.emit("consensusCandidateErr", {url: url, code: response.code});
 			return;
 		}
 
@@ -106,16 +106,16 @@ module.exports.postConsensusCandidate = function(ripple, url, candidate)
  */
 module.exports.postConsensusTime = function(ripple, url, time)
 {
-	post(logger, url + "/consensusTime", {time: time}, , function(err, response) {
+	post(logger, url + "/consensusTime", {time: time}, function(err, response) {
 		if(!!err)
 		{
-			ripple.emit("consensusTimeInnerErr", {url: node.url, code: code.response.code});
+			ripple.emit("consensusTimeInnerErr", {url: url});
 			return;
 		}
 
 		if(response.code !== SUCCESS)
 		{
-			ripple.emit("consensusTimeErr", {url: node.url, code: code.response.code});
+			ripple.emit("consensusTimeErr", {url: url, code: response.code});
 			return;
 		}
 
@@ -131,13 +131,13 @@ module.exports.postConsensusBlock = function(ripple, url, rippleBlock)
 	post(logger, url + "/consensusBlock", {rippleBlock: rippleBlock}, function(err, response) {
 		if(!!err)
 		{
-			ripple.emit("consensusBlockInnerErr", {url: node.url, code: code.response.code});
+			ripple.emit("consensusBlockInnerErr", {url: url});
 			return;
 		}
 
 		if(response.code !== SUCCESS)
 		{
-			ripple.emit("consensusBlockErr", {url: node.url, code: code.response.code});
+			ripple.emit("consensusBlockErr", {url: url, code: response.code});
 			return;
 		}
 
