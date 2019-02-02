@@ -157,18 +157,20 @@ function consensusBlock(ripple, rippleBlock)
 {
 	rippleBlock = new RippleBlock(rippleBlock);
 
-	ripple.recordActiveNode(rippleBlock.from);
-
 	// check rippleBlock
-	let errors = rippleBlock.validate(true)
-	if(!!errors == false)
+	let errors = rippleBlock.validateSignatrue(true)
+	if(!!errors == true)
 	{
-		logger.info(`class BlockAgreement, rippleBlock validate is failed, ${errors}`);
-		return;
+		logger.info(`class BlockAgreement, rippleBlock ripple.recordActiveNode(time.from); is failed, ${errors}`);
 	}
-
-	// record
-	ripple.rippleBlock.push(new Block(rippleBlock.block));
+	else
+	{
+		ripple.recordActiveNode(rippleBlock.from);
+		
+		// record
+		ripple.rippleBlock.push(new Block(rippleBlock.block));
+	}
+	
 
 	// check if mandatory time window is end
 	if(ripple.timeout)

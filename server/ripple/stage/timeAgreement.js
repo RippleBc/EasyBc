@@ -110,18 +110,20 @@ function consensusTime(ripple, time)
 {
 	time = new Time(time);
 
-	ripple.recordActiveNode(time.from);
-
 	// check time
-	let errors = time.validate(true);
-	if(!!errors === false)
+	let errors = time.validateSignatrue(true);
+	if(!!errors === true)
 	{
-		logger.info(`class TimeAgreement, time validate is failed, ${errors}`);
-		return;
+		logger.info(`class TimeAgreement, time ripple.recordActiveNode(time.from); is failed, ${errors}`);
 	}
-
-	// record
-	ripple.time.push(util.bufferToInt(time.time));
+	else
+	{
+		ripple.recordActiveNode(time.from);
+		
+		// record
+		ripple.time.push(util.bufferToInt(time.time));
+	}
+	
 
 	// check if mandatory time window is end
 	if(ripple.timeout)

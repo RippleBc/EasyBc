@@ -120,20 +120,20 @@ class Time extends Base
    * @param {Boolean} [stringError=false] whether to return a string with a description of why the validation failed or return a Boolean
    * @return {Boolean|String}
    */
-  validate(stringError)
+  validateSignatrue(stringError)
   {
     const errors = [];
 
     // verify
     if(!this.verifySignature())
     {
-      errors.push("class Time validate, Invalid Time Signature");
+      errors.push("class Time validateSignatrue, Invalid Time Signature");
     }
 
     // check address
     if(!nodes.checkNodeAddress(this.from))
     {
-    	errors.push("class Time validate, Invalid Time address");
+    	errors.push("class Time validateSignatrue, Invalid Time address");
     }
 
     if(stringError === undefined || stringError === false)

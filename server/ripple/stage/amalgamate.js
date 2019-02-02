@@ -116,19 +116,31 @@ function amalgamateCandidate(ripple, candidate)
 	
 	candidate = new Candidate(candidate);
 
-	ripple.recordActiveNode(candidate.from);
+	
 
 	// check candidate
-	let errors = candidate.validate(true);
-	if(!!errors === false)
+	let errors1 = candidate.validateSignatrue(true);
+	if(!!errors1 === true)
 	{
-		logger.info(`class Amalgamate, candidate validate is failed, ${errors}`);
-		return;
+		logger.info(`class Amalgamate, candidate validateSignatrue is failed, ${errors1}`);
 	}
-
-	// merge transactions, filter same transaction
-	candidate.candidateTransactionsToPoolData();
-	ripple.candidate.batchPush(candidate.data, true);
+	else
+	{
+		ripple.recordActiveNode(candidate.from);
+	}
+	
+	let errors2 = candidate.validateTransactions(true)
+	if(!!errors2 === true)
+	{
+		logger.info(`class Amalgamate, candidate transactions is failed, ${errors2}`);
+	}
+	
+	if(!!errors1 === false && !!errors2 === false)
+	{
+		// merge transactions, filter same transaction
+		candidate.candidateTransactionsToPoolData();
+		ripple.candidate.batchPush(candidate.data, true);
+	}
 
 	// check if mandatory time window is end
 	if(ripple.timeout)

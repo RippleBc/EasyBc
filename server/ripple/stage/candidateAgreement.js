@@ -154,19 +154,20 @@ function processCandidate(ripple, candidate)
 {
 	candidate = new Candidate(candidate);
 
-	ripple.recordActiveNode(candidate.from);
-
 	// check candidate
-	let errors = candidate.validate(true);
-	if(!!errors === false)
+	let errors = candidate.validateSignatrue(true);
+	if(!!errors === true)
 	{
-		logger.info(`class CandidateAgreement, candidate validate is failed, ${errors}`);
-		return;
+		logger.info(`class CandidateAgreement, candidate ripple.recordActiveNode(time.from); is failed, ${errors}`);
 	}
-
-	// record transactions
-	candidate.candidateTransactionsToPoolData();
-	ripple.candidate.batchPush(candidate.data);
+	else
+	{
+		ripple.recordActiveNode(candidate.from);
+		
+		// record transactions
+		candidate.candidateTransactionsToPoolData();
+		ripple.candidate.batchPush(candidate.data);
+	}
 
 	// check if mandatory time window is end
 	if(ripple.timeout)

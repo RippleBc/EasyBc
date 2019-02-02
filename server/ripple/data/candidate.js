@@ -55,32 +55,44 @@ class Candidate extends Base
    * @param {Boolean} [stringError=false] whether to return a string with a description of why the validation failed or return a Boolean
    * @return {Boolean|String}
    */
-  validate(stringError)
+  validateSignatrue(stringError)
   {
     const errors = [];
 
     // verify
     if(!this.verifySignature())
     {
-      errors.push("class Candidate validate, Invalid Candidate Signature");
+      errors.push("class Candidate validateSignatrue, Invalid Candidate Signature");
     }
 
     // check address
     if(!nodes.checkNodeAddress(this.from))
     {
-    	errors.push("class Candidate validate, Invalid node address");
+    	errors.push("class Candidate validateSignatrue, Invalid node address");
     }
 
-  	// verify transactions
-  	let rawTransactions = rlp.decode(this.transactions);
-  	for(let i = 0; i < rawTransactions.length; i++)
-  	{
-  		let transaction = new Transaction(rawTransactions[i]);
-  		if(!transaction.verifySignature())
-  		{
-  			errors.push(`class Candidate validate, Invalid Transaction Signature ${JSON.stringify(transaction.toJSON(true))}`);
-  		}
-  	}
+    if(stringError === undefined || stringError === false)
+    {
+      return errors.length === 0;
+    }
+    else
+    {
+      return errors.join(" ");
+    }
+  }
+
+  validateTransactions(stringError)
+  {
+    // verify transactions
+    let rawTransactions = rlp.decode(this.transactions);
+    for(let i = 0; i < rawTransactions.length; i++)
+    {
+      let transaction = new Transaction(rawTransactions[i]);
+      if(!transaction.verifySignature())
+      {
+        errors.push(`class Candidate validate, Invalid Transaction Signature ${JSON.stringify(transaction.toJSON(true))}`);
+      }
+    }
 
     if(stringError === undefined || stringError === false)
     {

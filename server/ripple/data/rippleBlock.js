@@ -55,20 +55,20 @@ class RippleBlock extends Base
    * @param {Boolean} [stringError=false] whether to return a string with a description of why the validation failed or return a Boolean
    * @return {Boolean|String}
    */
-  validate(stringError)
+  validateSignatrue(stringError)
   {
     const errors = [];
 
     // verify
     if(!this.verifySignature())
     {
-      errors.push("class RippleBlock validate, Invalid RippleBlock Signature");
+      errors.push("class RippleBlock validateSignatrue, Invalid RippleBlock Signature");
     }
 
     // check node address
     if(!nodes.checkNodeAddress(this.from))
     {
-    	errors.push("class RippleBlock validate, Invalid RippleBlock address");
+    	errors.push("class RippleBlock validateSignatrue, Invalid RippleBlock address");
     }
 
     if(stringError === undefined || stringError === false)
