@@ -27,6 +27,16 @@ class TimeAgreement
         return;
 	    }
 
+	    // check stage
+			if(self.ripple.state !== RIPPLE_STATE_TIME_AGREEMENT)
+			{
+				res.send({
+            code: STAGE_INVALID,
+            msg: `param error, current stage is ${self.ripple.state}`
+        });
+				return;
+			}
+
 	    consensusTime(self.ripple, req.body.time);
 		});
 
@@ -41,7 +51,7 @@ class TimeAgreement
 				return;
 			}
 
-			setTimout(() => {
+			setTimeout(() => {
 				postConsensusTime(self.ripple, data.url, self.ripple.time);
 			}, SEND_DATA_DEFER);
 			
@@ -54,7 +64,7 @@ class TimeAgreement
 				return;
 			}
 
-			setTimout(() => {
+			setTimeout(() => {
 				postConsensusTime(self.ripple, data.url, self.ripple.time);
 			}, SEND_DATA_DEFER);
 	  	

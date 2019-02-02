@@ -28,6 +28,16 @@ class BlockAgreement
         return;
 	    }
 
+	    // check stage
+			if(self.ripple.state !== RIPPLE_STATE_BLOCK_AGREEMENT)
+			{
+				res.send({
+            code: STAGE_INVALID,
+            msg: `param error, current stage is ${self.ripple.state}`
+        });
+				return;
+			}
+
 	    consensusBlock(self.ripple, req.body.rippleBlock);
 		});
 
@@ -42,7 +52,7 @@ class BlockAgreement
 				return;
 			}
 
-			setTimout(() => {
+			setTimeout(() => {
 				postConsensusBlock(self.ripple, data.url, self.ripple.block);
 			}, SEND_DATA_DEFER);
 			
@@ -55,7 +65,7 @@ class BlockAgreement
 				return;
 			}
 
-			setTimout(() => {
+			setTimeout(() => {
 				postConsensusBlock(self.ripple, data.url, self.ripple.block);
 			}, SEND_DATA_DEFER);
 	  	

@@ -32,6 +32,16 @@ class CandidateAgreement
         return;
 	    }
 
+	    // check stage
+			if(self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT)
+			{
+				res.send({
+            code: STAGE_INVALID,
+            msg: `param error, current stage is ${self.ripple.state}`
+        });
+				return;
+			}
+
 	    processCandidate(self.ripple, req.body.candidate);
 		});
 
@@ -82,7 +92,7 @@ class CandidateAgreement
 				return;
 			}
 
-			setTimout(() => {
+			setTimeout(() => {
 				postConsensusCandidate(self.ripple, data.url, self.ripple.candidate);
 			}, SEND_DATA_DEFER);
 			
@@ -95,7 +105,7 @@ class CandidateAgreement
 				return;
 			}
 
-			setTimout(() => {
+			setTimeout(() => {
 				postConsensusCandidate(self.ripple, data.url, self.ripple.candidate);
 			}, SEND_DATA_DEFER);
 	  	

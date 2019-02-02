@@ -28,6 +28,16 @@ class Amalgamate
         return;
 	    }
 
+	    // check stage
+			if(self.ripple.state !== RIPPLE_STATE_AMALGAMATE)
+			{
+				res.send({
+            code: STAGE_INVALID,
+            msg: `param error, current stage is ${self.ripple.state}`
+        });
+				return;
+			}
+
 	    amalgamateCandidate(self.ripple, req.body.candidate);
 	  });
 
