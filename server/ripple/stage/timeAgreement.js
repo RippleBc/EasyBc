@@ -119,7 +119,7 @@ function consensusTime(ripple, time)
 	let errors = time.validateSignatrue(true);
 	if(!!errors === true)
 	{
-		logger.info(`class TimeAgreement, time ripple.recordActiveNode(time.from); is failed, ${errors}`);
+		logger.error(`class TimeAgreement, time ripple.recordActiveNode(time.from); is failed, ${errors}`);
 	}
 	else
 	{

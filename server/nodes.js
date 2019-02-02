@@ -40,7 +40,7 @@ module.exports.checkNodeAddress = function(address)
 }
 
 /**
- * @param {Array} addressArray
+ * @param {Array\Buffer} addressArray
  * @return {Boolean} 
  */
 module.exports.checkIfAllNodeHasMet = function(addressArray)
@@ -51,7 +51,7 @@ module.exports.checkIfAllNodeHasMet = function(addressArray)
 	{
 		for(j = 0; j < addressArray.length; j++)
 		{
-			if(module.exports.nodeList[i] === addressArray[j])
+			if(module.exports.nodeList[i].address === util.baToHexString(addressArray[j]))
 			{
 				break;
 			}

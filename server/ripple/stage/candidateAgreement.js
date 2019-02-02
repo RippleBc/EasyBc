@@ -46,20 +46,25 @@ class CandidateAgreement
           code: SUCCESS,
           msg: ""
       });
-      
+
 	    processCandidate(self.ripple, req.body.candidate);
 		});
 
 	  this.ripple.on("amalgamateOver", () => {
+	  	logger.warn(`class CandidateAgreement, candidate consensus begin, round ${self.round}`);
+
 	  	// clear invalid transactions
 	  	if(self.round === 2 || self.round === 3 || self.round === 4)
 	  	{
+	  		logger.warn(`class CandidateAgreement, clear invalid transactions, round ${self.round - 1}`);
 	  		self.ripple.candidate.clearInvalidTransaction(self.threshhold);
 	  	}
 
 			// check if stage is over
 	  	if(self.round > ROUND_NUM)
 	  	{
+	  		logger.warn("class CandidateAgreement, candidate consensus is over, go to next stage");
+
 	  		self.round = 1;
 	  		// transfer to block agreement stage
 				self.ripple.state = RIPPLE_STATE_TIME_AGREEMENT;
@@ -163,7 +168,7 @@ function processCandidate(ripple, candidate)
 	let errors = candidate.validateSignatrue(true);
 	if(!!errors === true)
 	{
-		logger.info(`class CandidateAgreement, candidate ripple.recordActiveNode(time.from); is failed, ${errors}`);
+		logger.error(`class CandidateAgreement, candidate ripple.recordActiveNode(time.from); is failed, ${errors}`);
 	}
 	else
 	{

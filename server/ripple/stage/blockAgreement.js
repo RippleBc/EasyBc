@@ -166,7 +166,7 @@ function consensusBlock(ripple, rippleBlock)
 	let errors = rippleBlock.validateSignatrue(true)
 	if(!!errors == true)
 	{
-		logger.info(`class BlockAgreement, rippleBlock ripple.recordActiveNode(time.from); is failed, ${errors}`);
+		logger.error(`class BlockAgreement, rippleBlock ripple.recordActiveNode(time.from); is failed, ${errors}`);
 	}
 	else
 	{

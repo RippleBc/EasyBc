@@ -42,7 +42,7 @@ class Amalgamate
           code: SUCCESS,
           msg: ""
       });
-      
+
 	    amalgamateCandidate(self.ripple, req.body.candidate);
 	  });
 
@@ -84,14 +84,20 @@ class Amalgamate
 			// check round stage
 			if(self.ripple.state !== RIPPLE_STATE_AMALGAMATE)
 			{
+				logger.error("class Amalgamate, initTimeout, stage is invalid");
 				return;
 			}
 
 			self.ripple.timeout = null;
 
+			logger.warn("class Amalgamate, enter timeout");
+
 			// check and transfer to next round
+			logger.warn(`class Amalgamate, enter timeout, activeNodes ${self.ripple.activeNodes}`);
 			if(checkIfAllNodeHasMet(self.ripple.activeNodes))
 			{
+				logger.warn("class Amalgamate, all nodes have responsed, go to next stage");
+
 				// transfer to transaction agreement stage
 				self.ripple.state = RIPPLE_STATE_CANDIDATE_AGREEMENT;
 				self.ripple.emit("amalgamateOver");
@@ -125,7 +131,7 @@ function amalgamateCandidate(ripple, candidate)
 	let errors1 = candidate.validateSignatrue(true);
 	if(!!errors1 === true)
 	{
-		logger.info(`class Amalgamate, candidate validateSignatrue is failed, ${errors1}`);
+		logger.error(`class Amalgamate, candidate validateSignatrue is failed, ${errors1}`);
 	}
 	else
 	{
@@ -135,7 +141,7 @@ function amalgamateCandidate(ripple, candidate)
 	let errors2 = candidate.validateTransactions(true)
 	if(!!errors2 === true)
 	{
-		logger.info(`class Amalgamate, candidate transactions is failed, ${errors2}`);
+		logger.error(`class Amalgamate, candidate transactions is failed, ${errors2}`);
 	}
 	
 	if(!!errors1 === false && !!errors2 === false)
@@ -148,12 +154,18 @@ function amalgamateCandidate(ripple, candidate)
 	// check if mandatory time window is end
 	if(ripple.timeout)
 	{
+		logger.warn("class Amalgamate, timeout is not end, please wait");
+
 		return;
 	}
+
+	logger.warn("class Amalgamate, enter amalgamateCandidate checkIfAllNodeHasMet");
 
 	// check and transfer to next round
 	if(checkIfAllNodeHasMet(ripple.activeNodes))
 	{
+		logger.warn("class Amalgamate, all nodes have responsed, go to next stage");
+
 		ripple.state = RIPPLE_STATE_CANDIDATE_AGREEMENT;
 		ripple.emit("amalgamateOver");
 	}
