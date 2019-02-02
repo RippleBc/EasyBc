@@ -149,7 +149,7 @@ class CandidateAgreement
 			// check and transfer to next round
 			if(nodes.checkIfAllNodeHasMet(self.ripple.activeNodes))
 			{
-				logger.warn("Class CandidateAgreement initTimeout, candidate consensus is over, go to next stage");
+				logger.warn("Class CandidateAgreement initTimeout, candidate consensus is over, go to next round");
 
 				self.ripple.emit("amalgamateOver");
 			}
@@ -198,7 +198,7 @@ function processCandidate(ripple, candidate)
 	// check and transfer to next round
 	if(nodes.checkIfAllNodeHasMet(ripple.activeNodes))
 	{
-		logger.warn("Class CandidateAgreement processCandidate, candidate consensus is over, go to next stage");
+		logger.warn("Class CandidateAgreement processCandidate, candidate consensus is over, go to next round");
 
 		ripple.emit("amalgamateOver");
 	}

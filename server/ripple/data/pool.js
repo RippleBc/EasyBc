@@ -91,7 +91,7 @@ class Pool
 
 		for(let i = 0; i < values.length; i++)
 		{
-			this.del(values[i])
+			this.del(values[i]);
 		}
 	}
 	/**
@@ -104,7 +104,7 @@ class Pool
 			throw new Error(`class Pool del, argument value should be Object, now is ${typeof value}`)
 		}
 
-		for(let i = 0; i < this.data.length; i++)
+		for(let i = 0; i < this.length; i++)
 		{
 			let hash = value;
 			if(typeof value === "object")
