@@ -9,6 +9,7 @@ const Amalgamate = require("./stage/amalgamate")
 const CandidateAgreement = require("./stage/candidateAgreement")
 const TimeAgreement = require("./stage/timeAgreement")
 const BlockAgreement = require("./stage/blockAgreement")
+const util = require("../../utils")
 
 class Ripple extends AsyncEventEmitter
 {

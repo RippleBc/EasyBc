@@ -16,7 +16,7 @@ module.exports.privateKey = "0xfffcfc72975ef9963e5cf1649a5819f6869dee32cf8a92c66
 
 module.exports.getNodeNum = function()
 {
-	return module.exports.nodeList.length;
+	return module.exports.nodeList.length + 1;
 }
 
 /**
