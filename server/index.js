@@ -4,6 +4,7 @@ const bodyParser = require("body-parser")
 const Processor = require("./processor")
 const util = require("../utils")
 const {SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_UNPACKED, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS} = require("../const")
+const {host, port} = require("./nodes")
 
 const log4js= require("./logConfig")
 const logger = log4js.getLogger()
@@ -18,9 +19,8 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 app.use(bodyParser.json({limit: "1mb"}));
-const server = app.listen(8080, function() {
+const server = app.listen(port, function() {
     let host = server.address().address;
-    let port = server.address().port;
     console.log("server listening at http://%s:%s", host, port);
 });
 app.all('*', function(req, res, next) {

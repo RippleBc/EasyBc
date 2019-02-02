@@ -12,6 +12,8 @@ module.exports.nodeList = [
 	}
 ];
 
+module.exports.localHost = "";
+module.exports.port = 8080;
 module.exports.privateKey = "0xfffcfc72975ef9963e5cf1649a5819f6869dee32cf8a92c66b88d97f809c8f55";
 
 module.exports.getNodeNum = function()
