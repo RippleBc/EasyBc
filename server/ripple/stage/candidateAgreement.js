@@ -43,7 +43,7 @@ class CandidateAgreement
             code: STAGE_INVALID,
             msg: `param error, current stage is ${self.ripple.state}`
         });
-        
+
 				return;
 			}
 			if(self.round === 2 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND2)
@@ -181,8 +181,16 @@ class CandidateAgreement
 
 		this.ripple.initTimeout(() => {
 			logger.warn("Class CandidateAgreement, enter initTimeout");
-			// check round stage
-			if(self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT)
+			// check stage
+			if(self.round === 1 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND1)
+			{
+				return;
+			}
+			if(self.round === 2 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND2)
+			{
+				return;
+			}
+			if(self.round === 3 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND3)
 			{
 				return;
 			}
