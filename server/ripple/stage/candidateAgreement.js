@@ -42,6 +42,11 @@ class CandidateAgreement
 				return;
 			}
 
+			res.send({
+          code: SUCCESS,
+          msg: ""
+      });
+      
 	    processCandidate(self.ripple, req.body.candidate);
 		});
 

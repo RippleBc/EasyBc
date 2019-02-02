@@ -37,6 +37,11 @@ class TimeAgreement
 				return;
 			}
 
+			res.send({
+          code: SUCCESS,
+          msg: ""
+      });
+
 	    consensusTime(self.ripple, req.body.time);
 		});
 

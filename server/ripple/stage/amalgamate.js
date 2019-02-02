@@ -38,6 +38,11 @@ class Amalgamate
 				return;
 			}
 
+			res.send({
+          code: SUCCESS,
+          msg: ""
+      });
+      
 	    amalgamateCandidate(self.ripple, req.body.candidate);
 	  });
 

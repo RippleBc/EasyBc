@@ -38,6 +38,11 @@ class BlockAgreement
 				return;
 			}
 
+			res.send({
+          code: SUCCESS,
+          msg: ""
+      });
+      
 	    consensusBlock(self.ripple, req.body.rippleBlock);
 		});
 
