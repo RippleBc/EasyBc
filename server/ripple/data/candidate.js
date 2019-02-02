@@ -137,7 +137,7 @@ class Candidate extends Base
     nodeNum = nodes.getNodeNum();
     for(hash in transactions)
     {
-      if((transactions[hash].num + 1) / nodeNum < threshhold)
+      if(transactions[hash].num / nodeNum < threshhold)
       {
         invalidTransactions.push(transactions[hash].tx);
       }

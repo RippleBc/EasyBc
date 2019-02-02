@@ -3,8 +3,7 @@ const RippleBlock = require("../data/rippleBlock")
 const Block = require("../../../block")
 const util = require("../../../utils")
 const {batchConsensusBlock} = require("../chat")
-const {RIPPLE_STATE_BLOCK_AGREEMENT} = require("../../constant")
-const FlowStoplight = require("flow-stoplight")
+const {RIPPLE_STATE_BLOCK_AGREEMENT, RIPPLE_STATE_EMPTY} = require("../../constant")
 const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../../../const")
 
 const ERR_SERVER_RUN_BLOCK_ERR = 1;
@@ -14,7 +13,6 @@ class BlockAgreement
 	constructor(ripple)
 	{
 		this.ripple = ripple;
-		this.stoplight = new FlowStoplight();
 
 		this.ripple.express.post("/consensusBlock", function(req, res) {
 			if(!req.body.rippleBlock) {
@@ -25,8 +23,7 @@ class BlockAgreement
         return;
 	    }
 
-	    // vote
-	    processBlock(self.ripple, req.body.rippleBlock);
+	    consensusBlock(self.ripple, req.body.rippleBlock);
 		});
 
 		this.ripple.on("timeAgreementOver", ()=> {
@@ -37,6 +34,9 @@ class BlockAgreement
 	run()
 	{
 		const self = this;
+
+		// reset active nodes
+		self.ripple.activeNodes = [];
 
 		// vote
 		sendBlock(this.ripple);
@@ -56,11 +56,15 @@ class BlockAgreement
 				//
 				ripple.state = RIPPLE_STATE_EMPTY;
 
+				// block consensus failed, do not clear candidate, begin new consensus
 				let consistentBlock = ripple.rippleBlock.getConsistentBlocks();
 				if(consistentBlock === null)
 				{
 					self.ripple.run(false);
+					return;
 				}
+
+				// block consensus success, run block
 				riplle.processor.processBlock({generate: true}, consistentBlock, () => {
 					self.ripple.run(true);
 				});
@@ -86,7 +90,6 @@ function sendBlock(ripple)
 			// init txsTrie
 			block.header.transactionsTrie = block.txTrie.root;
 
-			// get lastest block number
 			self.blockChain.getLastestBlockNumber(cb);
 		},
 		function(bnLastestBlockNumber, cb)
@@ -94,7 +97,11 @@ function sendBlock(ripple)
 			// init block number
 			block.header.number = bnLastestBlockNumber.addn(1);
 
+			// init block
 			ripple.rippleBlock.block = block.serialize();
+
+			// record block
+			ripple.rippleBlock.push(block);
 
 			batchConsensusBlock(ripple);
 		}], err => {
@@ -105,13 +112,21 @@ function sendBlock(ripple)
 		});
 }
 
-function processBlock(ripple, rippleBlock)
+function consensusBlock(ripple, rippleBlock)
 {
 	// check state
 	if(ripple.state !== RIPPLE_STATE_BLOCK_AGREEMENT)
 	{
 		return;
 	}
+
+	// check if mandatory time window is end
+	if(ripple.timeout)
+	{
+		return;
+	}
+
+	ripple.recordActiveNode(rippleBlock.from);
 
 	// check rippleBlock
 	rippleBlock = new RippleBlock(rippleBlock);
@@ -120,28 +135,24 @@ function processBlock(ripple, rippleBlock)
 		return;
 	}
 
-	ripple.recordActiveNode(rippleBlock.from);
-
 	// record
 	ripple.rippleBlock.push(new Block(rippleBlock.block));
-
-	// check if mandatory time window is end
-	if(ripple.timeout)
-	{
-		return;
-	}
 
 	// check and transfer to next round
 	if(nodes.checkIfAllNodeHasMet(self.ripple.activeNodes))
 	{
 		//
 		ripple.state = RIPPLE_STATE_EMPTY;
-		
+
+		// block consensus failed, do not clear candidate, begin new consensus
 		let consistentBlock = ripple.rippleBlock.getConsistentBlocks();
 		if(consistentBlock === null)
 		{
 			self.ripple.run(false);
+			return;
 		}
+
+		// block consensus success, run block
 		riplle.processor.processBlock({generate: true}, consistentBlock, () => {
 			self.ripple.run(true);
 		});

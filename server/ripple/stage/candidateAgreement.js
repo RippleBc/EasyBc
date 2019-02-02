@@ -37,7 +37,6 @@ class CandidateAgreement
 	  	if(self.round === 2 || self.round === 3 || self.round === 4)
 	  	{
 	  		self.ripple.candidate.clearInvalidTransaction(self.threshhold);
-	  		return;
 	  	}
 
 			// check if stage is over
@@ -66,20 +65,24 @@ class CandidateAgreement
 	  		self.threshhold = ROUND3_THRESHHOLD;
 	  	}
 
-	  	//
+	  	// transfer to next round
 	  	self.round += 1;
 
-	  	//
+	  	// begin consensus
 	  	self.run();
 	  });
 	}
 
-	// entrance two
+	/**
+	 * transactions consensus, note!!! this is a private func, please no not call it
+	 */
 	run()
 	{
 		const self = this;
 
-		// vote
+		// reset active nodes
+		self.ripple.activeNodes = [];
+
 		sendCandidate(this.ripple);
 
 		this.ripple.initTimeout(() => {
@@ -102,6 +105,7 @@ class CandidateAgreement
 
 function sendCandidate(ripple)
 {
+	// encode tranasctions
 	ripple.candidate.poolDataToCandidateTransactions();
 	//
 	batchConsensusCandidate(ripple);
@@ -115,25 +119,24 @@ function processCandidate(ripple, candidate)
 		return;
 	}
 
+	// check if mandatory time window is end
+	if(ripple.timeout)
+	{
+		return;
+	}
+
+	ripple.recordActiveNode(candidate.from);
+
 	// check candidate
 	candidate = new Candidate(candidate);
 	if(!candidate.validate())
 	{
 		return;
 	}
-	
-	ripple.recordActiveNode(candidate.from);
 
-
-	// record
+	// record transactions
 	candidate.candidateTransactionsToPoolData();
 	ripple.candidate.batchPush(candidate.data);
-
-	// check if mandatory time window is end
-	if(ripple.timeout)
-	{
-		return;
-	}
 
 	// check and transfer to next round
 	if(nodes.checkIfAllNodeHasMet(self.ripple.activeNodes))

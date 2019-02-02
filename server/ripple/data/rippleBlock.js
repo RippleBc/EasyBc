@@ -114,7 +114,7 @@ class RippleBlock extends Base
     }
 
     // check threshhold
-    if((tmp + 1) / getNodeNum() >= AGREEMENT_THRESHHOLD)
+    if(tmp / getNodeNum() >= AGREEMENT_THRESHHOLD)
     {
       return block;
     }

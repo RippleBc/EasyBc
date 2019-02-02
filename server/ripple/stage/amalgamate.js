@@ -1,5 +1,5 @@
 const Candidate = require("../data/candidate")
-const nodes = require("../../nodes")
+const {checkIfAllNodeHasMet} = require("../../nodes")
 const util = require("../../../utils")
 const {batchAmalgamateCandidate} = require("../chat")
 const async = require("async")
@@ -32,6 +32,9 @@ class Amalgamate
 	{
 		const self = this;
 
+		// reset active nodes
+		this.ripple.activeNodes = [];
+
 		sendCandidate(this.ripple);
 
 		this.ripple.initTimeout(() => {
@@ -44,7 +47,7 @@ class Amalgamate
 			self.ripple.timeout = null;
 
 			// check and transfer to next round
-			if(nodes.checkIfAllNodeHasMet(self.ripple.activeNodes))
+			if(checkIfAllNodeHasMet(self.ripple.activeNodes))
 			{
 				// transfer to transaction agreement stage
 				self.ripple.state = RIPPLE_STATE_CANDIDATE_AGREEMENT;
@@ -56,10 +59,15 @@ class Amalgamate
 
 function sendCandidate(ripple)
 {
-	// get cached transactions
-	let transactions = ripple.processor.transactionsPool.splice(0, TRANSACTION_NUM_EACH_ROUND);
-	//
-	ripple.candidate.batchPush(transactions);
+	// check if begin a new candidate
+	if(ripple.candidate.length === 0)
+	{
+		// get cached transactions
+		let transactions = ripple.processor.transactionsPool.splice(0, TRANSACTION_NUM_EACH_ROUND);
+		// encode tranasctions
+		ripple.candidate.batchPush(transactions);
+	}
+	
 	ripple.candidate.poolDataToCandidateTransactions();
 	//
 	batchAmalgamateCandidate(ripple);
@@ -73,27 +81,28 @@ function amalgamateCandidate(ripple, candidate)
 		return;
 	}
 
-	// check candidate
-	candidate = new Candidate(candidate);
-	if(!candidate.validate())
-	{
-		return;
-	}
-	
-	ripple.recordActiveNode(candidate.from);
-
-	// merge
-	candidate.candidateTransactionsToPoolData();
-	ripple.candidate.batchPush(candidate.data, true);
-
 	// check if mandatory time window is end
 	if(ripple.timeout)
 	{
 		return;
 	}
 
+	//
+	ripple.recordActiveNode(candidate.from);
+
+	// check candidate
+	candidate = new Candidate(candidate);
+	if(!candidate.validate())
+	{
+		return;
+	}
+
+	// merge transactions, filter same transaction
+	candidate.candidateTransactionsToPoolData();
+	ripple.candidate.batchPush(candidate.data, true);
+
 	// check and transfer to next round
-	if(nodes.checkIfAllNodeHasMet(self.ripple.activeNodes))
+	if(checkIfAllNodeHasMet(self.ripple.activeNodes))
 	{
 		ripple.state = RIPPLE_STATE_CANDIDATE_AGREEMENT;
 		ripple.emit("amalgamateOver");

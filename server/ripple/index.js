@@ -42,6 +42,7 @@ class Ripple extends AsyncEventEmitter
 	{
 		this.blockAgreementRound ++;
 
+		// run block success or run block continuous failed times is exceed the bound
 		if(ifBlockAgreement || this.blockAgreementRound > BLOCK_AGREEMENT_MAX_ROUND)
 		{
 			this.blockAgreementRound = 1;

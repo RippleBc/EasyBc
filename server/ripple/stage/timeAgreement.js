@@ -2,13 +2,15 @@ const nodes = require("../../nodes")
 const Time = require("../data/time")
 const util = require("../../../utils")
 const {batchConsensusTime} = require("../chat")
-const {RIPPLE_STATE_CANDIDATE_AGREEMENT, RIPPLE_STATE_BLOCK_AGREEMENT} = require("../../constant")
+const {RIPPLE_STATE_TIME_AGREEMENT, RIPPLE_STATE_BLOCK_AGREEMENT} = require("../../constant")
 const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../../../const")
 
 class TimeAgreement
 {
 	constructor(ripple)
 	{
+		const self = this;
+
 		this.ripple = ripple;
 
 		this.ripple.express.post("/consensusTime", function(req, res) {
@@ -20,11 +22,11 @@ class TimeAgreement
         return;
 	    }
 
-	    processTime(self.ripple, req.body.time);
+	    consensusTime(self.ripple, req.body.time);
 		});
 
 		this.ripple.on("candidateAgreementOver", () => {
-			run();
+			self.run();
 		});
 	}
 
@@ -32,12 +34,14 @@ class TimeAgreement
  	{
  		const self = this;
 
-		// vote
+ 		// reset active nodes
+ 		self.ripple.activeNodes = [];
+
 		sendTime(this.ripple);
 
 		this.ripple.initTimeout(() => {
 			// check round stage
-			if(self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT)
+			if(self.ripple.state !== RIPPLE_STATE_TIME_AGREEMENT)
 			{
 				return;
 			}
@@ -61,7 +65,7 @@ function sendTime(ripple)
 	batchConsensusTime(ripple);
 }
 
-function processTime(ripple, time)
+function consensusTime(ripple, time)
 {
 	// check round stage
 	if(ripple.state !== RIPPLE_STATE_TIME_AGREEMENT)
@@ -69,24 +73,23 @@ function processTime(ripple, time)
 		return;
 	}
 
+	// check if mandatory time window is end
+	if(ripple.timeout)
+	{
+		return;
+	}
+
+	ripple.recordActiveNode(time.from);
+
 	// check time
 	time = new Time(time);
 	if(!time.validate())
 	{
 		return;
 	}
-	
-	//
-	ripple.recordActiveNode(time.from);
 
 	// record
 	ripple.time.push(util.bufferToInt(time.time));
-
-	// check if mandatory time window is end
-	if(ripple.timeout)
-	{
-		return;
-	}
 
 	// check and transfer to next stage
 	if(nodes.checkIfAllNodeHasMet(self.ripple.activeNodes))

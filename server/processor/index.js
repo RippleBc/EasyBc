@@ -171,7 +171,6 @@ class Processor
 			function(cb) {
 				self.blockChain.updateBlock(block, cb);
 			}], function(err) {
-
 				// some transaction is invalid, del them and run again
 				if(err === ERR_RUN_BLOCK_TX_PROCESS)
 				{
