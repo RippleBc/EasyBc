@@ -119,7 +119,7 @@ function consensusTime(ripple, time)
 	else
 	{
 		ripple.recordActiveNode(time.from);
-		
+
 		// record
 		ripple.time.push(util.bufferToInt(time.time));
 	}
@@ -132,7 +132,7 @@ function consensusTime(ripple, time)
 	}
 	
 	// check and transfer to next stage
-	if(nodes.checkIfAllNodeHasMet(self.ripple.activeNodes))
+	if(nodes.checkIfAllNodeHasMet(ripple.activeNodes))
 	{
 		ripple.state = RIPPLE_STATE_BLOCK_AGREEMENT;
 		ripple.emit("timeAgreementOver");

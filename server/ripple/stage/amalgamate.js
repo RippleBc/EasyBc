@@ -147,7 +147,7 @@ function amalgamateCandidate(ripple, candidate)
 	}
 
 	// check and transfer to next round
-	if(checkIfAllNodeHasMet(this.ripple.activeNodes))
+	if(checkIfAllNodeHasMet(ripple.activeNodes))
 	{
 		ripple.state = RIPPLE_STATE_CANDIDATE_AGREEMENT;
 		ripple.emit("amalgamateOver");

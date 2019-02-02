@@ -163,7 +163,7 @@ function processCandidate(ripple, candidate)
 	else
 	{
 		ripple.recordActiveNode(candidate.from);
-		
+
 		// record transactions
 		candidate.candidateTransactionsToPoolData();
 		ripple.candidate.batchPush(candidate.data);
@@ -176,7 +176,7 @@ function processCandidate(ripple, candidate)
 	}
 	
 	// check and transfer to next round
-	if(nodes.checkIfAllNodeHasMet(self.ripple.activeNodes))
+	if(nodes.checkIfAllNodeHasMet(ripple.activeNodes))
 	{
 		ripple.emit("amalgamateOver");
 	}

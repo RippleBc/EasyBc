@@ -166,7 +166,7 @@ function consensusBlock(ripple, rippleBlock)
 	else
 	{
 		ripple.recordActiveNode(rippleBlock.from);
-		
+
 		// record
 		ripple.rippleBlock.push(new Block(rippleBlock.block));
 	}
@@ -179,7 +179,7 @@ function consensusBlock(ripple, rippleBlock)
 	}
 	
 	// check and transfer to next round
-	if(checkIfAllNodeHasMet(self.ripple.activeNodes))
+	if(checkIfAllNodeHasMet(ripple.activeNodes))
 	{
 		//
 		ripple.state = RIPPLE_STATE_EMPTY;
@@ -188,13 +188,13 @@ function consensusBlock(ripple, rippleBlock)
 		let consistentBlock = ripple.rippleBlock.getConsistentBlocks();
 		if(consistentBlock === null)
 		{
-			self.ripple.run(false);
+			ripple.run(false);
 			return;
 		}
 
 		// block consensus success, run block
 		riplle.processor.processBlock({generate: true}, consistentBlock, () => {
-			self.ripple.run(true);
+			ripple.run(true);
 		});
 	}
 }
