@@ -3,7 +3,7 @@ const RippleBlock = require("../data/rippleBlock")
 const Block = require("../../../block")
 const util = require("../../../utils")
 const {postConsensusBlock, postBatchConsensusBlock} = require("../chat")
-const {RIPPLE_STATE_BLOCK_AGREEMENT, RIPPLE_STATE_EMPTY} = require("../../constant")
+const {RIPPLE_STATE_BLOCK_AGREEMENT, RIPPLE_STATE_EMPTY, SEND_DATA_DEFER} = require("../../constant")
 const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../../../const")
 
 const ERR_SERVER_RUN_BLOCK_ERR = 1;
@@ -37,7 +37,10 @@ class BlockAgreement
 				return;
 			}
 
-			postConsensusBlock(self.ripple, data.url, self.ripple.block);
+			setTimout(() => {
+				postConsensusBlock(self.ripple, data.url, self.ripple.block);
+			}, SEND_DATA_DEFER);
+			
 		});
 
 	  this.ripple.on("consensusBlockErr", data => {
@@ -47,7 +50,10 @@ class BlockAgreement
 				return;
 			}
 
-	  	postConsensusBlock(self.ripple, data.url, self.ripple.block);
+			setTimout(() => {
+				postConsensusBlock(self.ripple, data.url, self.ripple.block);
+			}, SEND_DATA_DEFER);
+	  	
 	  });
 	}
 

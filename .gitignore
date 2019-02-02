@@ -6,4 +6,3 @@ client/logs
 server/logs
 client/node_modules/
 server/node_modules/
-server/nodes.js

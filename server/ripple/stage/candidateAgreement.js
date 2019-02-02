@@ -3,7 +3,7 @@ const nodes = require("../../nodes")
 const util = require("../../../utils")
 const {postConsensusCandidate, postBatchConsensusCandidate} = require("../chat")
 const async = require("async")
-const {RIPPLE_STATE_CANDIDATE_AGREEMENT, RIPPLE_STATE_TIME_AGREEMENT, ROUND_NUM} = require("../../constant")
+const {RIPPLE_STATE_CANDIDATE_AGREEMENT, RIPPLE_STATE_TIME_AGREEMENT, ROUND_NUM, SEND_DATA_DEFER} = require("../../constant")
 const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../../../const")
 
 const ROUND1_THRESHHOLD = 0.5
@@ -77,7 +77,10 @@ class CandidateAgreement
 				return;
 			}
 
-			postConsensusCandidate(self.ripple, data.url, self.ripple.candidate);
+			setTimout(() => {
+				postConsensusCandidate(self.ripple, data.url, self.ripple.candidate);
+			}, SEND_DATA_DEFER);
+			
 		});
 
 	  this.ripple.on("consensusCandidateErr", data => {
@@ -87,7 +90,10 @@ class CandidateAgreement
 				return;
 			}
 
-	  	postConsensusCandidate(self.ripple, data.url, self.ripple.candidate);
+			setTimout(() => {
+				postConsensusCandidate(self.ripple, data.url, self.ripple.candidate);
+			}, SEND_DATA_DEFER);
+	  	
 	  });
 	}
 

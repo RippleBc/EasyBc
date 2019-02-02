@@ -5,7 +5,7 @@ const {postAmalgamateCandidate, postBatchAmalgamateCandidate} = require("../chat
 const async = require("async")
 const {SUCCESS, PARAM_ERR, OTH_ERR, STAGE_INVALID} = require("../../../const")
 
-const {RIPPLE_STATE_AMALGAMATE, RIPPLE_STATE_CANDIDATE_AGREEMENT, TRANSACTION_NUM_EACH_ROUND} = require("../../constant")
+const {RIPPLE_STATE_AMALGAMATE, RIPPLE_STATE_CANDIDATE_AGREEMENT, TRANSACTION_NUM_EACH_ROUND, SEND_DATA_DEFER} = require("../../constant")
 
 class Amalgamate
 {
@@ -33,8 +33,10 @@ class Amalgamate
 			{
 				return;
 			}
-
-	  	postAmalgamateCandidate(self.ripple, data.url, self.ripple.candidate);
+			setTimeout(() => {
+				postAmalgamateCandidate(self.ripple, data.url, self.ripple.candidate);
+			}, SEND_DATA_DEFER);
+	  	
 		});
 
 	  this.ripple.on("amalgamateCandidateErr", data => {
@@ -43,8 +45,10 @@ class Amalgamate
 			{
 				return;
 			}
-
-	  	postAmalgamateCandidate(self.ripple, data.url, self.ripple.candidate);
+			setTimeout(() => {
+				postAmalgamateCandidate(self.ripple, data.url, self.ripple.candidate);
+			}, SEND_DATA_DEFER);
+	  	
 	  });
 	}
 
