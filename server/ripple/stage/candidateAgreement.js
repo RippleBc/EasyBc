@@ -183,7 +183,7 @@ class CandidateAgreement
 			logger.warn("Class CandidateAgreement, enter initTimeout");
 
 			self.ripple.timeout = null;
-			
+
 			// check stage
 			if(self.round === 1 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND1)
 			{
@@ -250,9 +250,9 @@ function processCandidate(ripple, candidate)
 	
 	logger.warn("Class CandidateAgreement processCandidate, enter checkIfAllNodeHasMet");
 
-	console.log("**************************: " + self.round);
-	console.log("##########################: " + self.ripple.state);
-	console.log("&&&&&&&&&&&&&&&&&&&&&&&&&&: " + self.ripple.activeNodes.length);
+	console.log("**************************: " + this.round);
+	console.log("##########################: " + this.ripple.state);
+	console.log("&&&&&&&&&&&&&&&&&&&&&&&&&&: " + this.ripple.activeNodes.length);
 	// check and transfer to next round
 	if(nodes.checkIfAllNodeHasMet(ripple.activeNodes))
 	{
