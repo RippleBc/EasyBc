@@ -122,6 +122,8 @@ class BlockAgreement extends Stage
 				self.ripple.rippleBlock.push(block);
 
 				postBatchConsensusBlock(self.ripple);
+
+				cb();
 			}], err => {
 				if(!!err) 
 				{
