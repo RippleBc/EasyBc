@@ -71,7 +71,7 @@ class Time extends Base
 			}
 		}
 
-		return this.data[math.ceil(this.length / 2)];
+		return this.data[Math.ceil(this.length / 2)];
 	}
 
   /**

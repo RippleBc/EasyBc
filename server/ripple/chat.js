@@ -50,10 +50,10 @@ module.exports.postBatchConsensusTime = function(ripple)
  */
 module.exports.postBatchConsensusBlock = function(ripple)
 {
-	ripple.block.sign(util.toBuffer(privateKey));
+	ripple.rippleBlock.sign(util.toBuffer(privateKey));
 	
 	nodeList.forEach(function(node) {
-		module.exports.postConsensusBlock(ripple, node, util.baToHexString(ripple.block.serialize()));
+		module.exports.postConsensusBlock(ripple, node, util.baToHexString(ripple.rippleBlock.serialize()));
 	});
 }
 

@@ -39,15 +39,23 @@ class Ripple extends AsyncEventEmitter
 	{
 		this.blockAgreementRound ++;
 
+		// reset stage
+		this.amalgamate.reset();
+		this.candidateAgreement.reset();
+		this.timeAgreement.reset();
+		this.blockAgreement.reset();
+
+		// clear data
+		this.time.reset();
+		this.rippleBlock.reset();
+
 		// run block success or run block continuous failed times is exceed the bound
 		if(ifBlockAgreement || this.blockAgreementRound > BLOCK_AGREEMENT_MAX_ROUND)
 		{
 			this.blockAgreementRound = 1;
+			// clear data
 			this.candidate.reset();
 		}
-
-		this.time.reset();
-		this.rippleBlock.reset();
 
 		// round begin
 		this.amalgamate.run();

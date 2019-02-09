@@ -5,6 +5,7 @@ const {postConsensusBlock, postBatchConsensusBlock} = require("../chat")
 const {RIPPLE_STATE_BLOCK_AGREEMENT, RIPPLE_STATE_EMPTY, SEND_DATA_DEFER} = require("../../constant")
 const {SUCCESS, PARAM_ERR, OTH_ERR, STAGE_INVALID} = require("../../../const")
 const Stage = require("./stage")
+const async = require("async")
 
 const log4js= require("../../logConfig");
 const logger = log4js.getLogger();
@@ -56,13 +57,13 @@ class BlockAgreement extends Stage
 
 		this.ripple.on("consensusBlockInnerErr", data => {
 			setTimeout(() => {
-				postConsensusBlock(self.ripple, data.node, self.ripple.block);
+				postConsensusBlock(self.ripple, data.node, self.ripple.rippleBlock);
 			}, SEND_DATA_DEFER);
 		});
 
 		this.ripple.on("consensusBlockErr", data => {
 			setTimeout(() => {
-				postConsensusBlock(self.ripple, data.node, self.ripple.block);
+				postConsensusBlock(self.ripple, data.node, self.ripple.rippleBlock);
 			}, SEND_DATA_DEFER);
 		});
 
@@ -90,7 +91,6 @@ class BlockAgreement extends Stage
 
 	send()
 	{
-		console.error("aaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 		const self = this;
 
 		let block = new Block({
@@ -99,7 +99,6 @@ class BlockAgreement extends Stage
 			}, 
 			transactions: this.ripple.candidate.data
 		});
-
 		async.waterfall([
 			function(cb) {
 				block.genTxTrie(cb);
@@ -108,16 +107,15 @@ class BlockAgreement extends Stage
 				// init txsTrie
 				block.header.transactionsTrie = block.txTrie.root;
 
-				self.blockChain.getLastestBlockNumber(cb);
+				self.ripple.processor.blockChain.getLastestBlockNumber(cb);
 			},
 			function(bnLastestBlockNumber, cb)
-			{
+			{	
 				// init block number
 				block.header.number = bnLastestBlockNumber.addn(1);
 
 				// init block
 				self.ripple.rippleBlock.block = block.serialize();
-
 				// record block
 				self.ripple.rippleBlock.push(block);
 
@@ -130,8 +128,6 @@ class BlockAgreement extends Stage
 					throw new Error("class BlockAgreement sendBlock, " + err);
 				}
 			});
-
-		console.error("bbbbbbbbbbbbbbbbbbbbbbbbbbbb")
 	}
 
 	receive(rippleBlock)

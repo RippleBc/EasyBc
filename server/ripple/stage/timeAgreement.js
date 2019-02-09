@@ -86,7 +86,12 @@ class TimeAgreement extends Stage
 
  	send()
 	{
-		this.ripple.time.time = Date.now();
+		let nowTime = Date.now()
+
+		// init time
+		this.ripple.time.time = nowTime;
+		// record time
+		this.ripple.time.push(nowTime);
 		//
 		postBatchConsensusTime(this.ripple);
 	}
