@@ -29,102 +29,102 @@ class CandidateAgreement
 		this.round = 0;
 		this.ripple.express.post("/consensusCandidate", function(req, res) {
 			if(!req.body.candidate) {
-        res.send({
-            code: PARAM_ERR,
-            msg: "param error, need candidate"
-        });
-        return;
-	    }
+		        res.send({
+		            code: PARAM_ERR,
+		            msg: "param error, need candidate"
+		        });
+		        return;
+		    }
 
-	    // check stage
-	    if(self.round === 1 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND1)
+		    // check stage
+		    if(self.round === 1 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND1)
 			{
 				res.send({
-            code: STAGE_INVALID,
-            msg: `param error, current stage is ${self.ripple.state}`
-        });
+	            	code: STAGE_INVALID,
+	            	msg: `param error, current stage is ${self.ripple.state}`
+	        	});
 
 				return;
 			}
 			if(self.round === 2 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND2)
 			{
 				res.send({
-            code: STAGE_INVALID,
-            msg: `param error, current stage is ${self.ripple.state}`
-        });
+	            	code: STAGE_INVALID,
+	            	msg: `param error, current stage is ${self.ripple.state}`
+	        	});
 
 				return;
 			}
 			if(self.round === 3 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND3)
 			{
 				res.send({
-            code: STAGE_INVALID,
-            msg: `param error, current stage is ${self.ripple.state}`
-        });
+	            	code: STAGE_INVALID,
+	            	msg: `param error, current stage is ${self.ripple.state}`
+	       		});
 
 				return;
 			}
 
 			res.send({
-          code: SUCCESS,
-          msg: ""
-      });
+				code: SUCCESS,
+				msg: ""
+	      	});
 
-	    processCandidate(self.ripple, req.body.candidate);
+		    processCandidate(self.ripple, req.body.candidate);
 		});
 
-	  this.ripple.on("amalgamateOver", () => {
-	  	logger.warn(`class CandidateAgreement, candidate consensus begin, round ${self.round}`);
+		this.ripple.on("amalgamateOver", () => {
+			logger.warn(`class CandidateAgreement, candidate consensus begin, round ${self.round}`);
 
-	  	//
-	  	self.round += 1;
+			//
+			self.round += 1;
 
-	  	// clear invalid transactions
-	  	if(self.round === 2 || self.round === 3 || self.round === 4)
-	  	{
-	  		logger.warn(`class CandidateAgreement, clear invalid transactions, round ${self.round - 1}`);
-	  		self.ripple.candidate.clearInvalidTransaction(self.threshhold);
-	  	}
+			// clear invalid transactions
+			if(self.round === 2 || self.round === 3 || self.round === 4)
+			{
+				logger.warn(`class CandidateAgreement, clear invalid transactions, round ${self.round - 1}`);
+				self.ripple.candidate.clearInvalidTransaction(self.threshhold);
+			}
 
 			// check if stage is over
-	  	if(self.round > ROUND_NUM)
-	  	{
-	  		logger.warn("class CandidateAgreement, candidate consensus is over, go to next stage");
+			if(self.round > ROUND_NUM)
+			{
+				logger.warn("class CandidateAgreement, candidate consensus is over, go to next stage");
 
-	  		self.round = 0;
-	  		// transfer to block agreement stage
+				self.round = 0;
+				// transfer to block agreement stage
 				self.ripple.state = RIPPLE_STATE_TIME_AGREEMENT;
-	  		self.ripple.emit("candidateAgreementOver");
-	  		return;
-	  	}
+				self.ripple.emit("candidateAgreementOver");
+				return;
+			}
 
-	  	// compute
-	  	if(self.round === 1)
-	  	{
-	  		self.ripple.state = CANDIDATE_AGREEMENT_STATE_ROUND1;
+			// compute
+			if(self.round === 1)
+			{
+				self.ripple.state = CANDIDATE_AGREEMENT_STATE_ROUND1;
 
-	  		self.threshhold = ROUND1_THRESHHOLD;
-	  	}
+				self.threshhold = ROUND1_THRESHHOLD;
+			}
 
-	  	if(self.round === 2)
-	  	{
-	  		self.ripple.state = CANDIDATE_AGREEMENT_STATE_ROUND2;
+			if(self.round === 2)
+			{
+				self.ripple.state = CANDIDATE_AGREEMENT_STATE_ROUND2;
 
-	  		self.threshhold = ROUND2_THRESHHOLD;
-	  	}
+				self.threshhold = ROUND2_THRESHHOLD;
+			}
 
-	  	if(self.round === 3)
-	  	{
-	  		self.ripple.state = CANDIDATE_AGREEMENT_STATE_ROUND3;
+			if(self.round === 3)
+			{
+				self.ripple.state = CANDIDATE_AGREEMENT_STATE_ROUND3;
 
-	  		self.threshhold = ROUND3_THRESHHOLD;
-	  	}
+				self.threshhold = ROUND3_THRESHHOLD;
+			}
 
-	  	// begin consensus
-	  	self.run();
-	  });
+			// begin consensus
+			self.run();
+	  	});
 
-	  this.ripple.on("consensusCandidateInnerErr", data => {
+	  	this.ripple.on("consensusCandidateInnerErr", data => {
 			// check stage
 			if(self.round === 1 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND1)
 			{
@@ -145,9 +145,9 @@ class CandidateAgreement
 			
 		});
 
-	  this.ripple.on("consensusCandidateErr", data => {
-	  	// check stage
-	  	if(self.round === 1 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND1)
+	  	this.ripple.on("consensusCandidateErr", data => {
+		  	// check stage
+		  	if(self.round === 1 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND1)
 			{
 				return;
 			}
@@ -163,8 +163,7 @@ class CandidateAgreement
 			setTimeout(() => {
 				postConsensusCandidate(self.ripple, data.url, self.ripple.candidate);
 			}, SEND_DATA_DEFER);
-	  	
-	  });
+		});
 	}
 
 	/**
