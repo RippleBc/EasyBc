@@ -22,7 +22,7 @@ class CandidateAgreement extends Stage
 		
 		const self = this;
 
-		this.round = 0;
+		this.round = 1;
 
 		this.ripple.express.post("/consensusCandidate", function(req, res) {
 			if(!req.body.candidate) {
@@ -61,11 +61,12 @@ class CandidateAgreement extends Stage
 		});
 
 		this.ripple.on("amalgamateOver", () => {
-			logger.warn(`class CandidateAgreement, candidate consensus over, round ${self.round}`);
+			this.round = 1;
 
-			//
-			self.round += 1;
+			this.ripple.emit("candidateAgreementRound");
+	  	});
 
+		this.ripple.on("candidateAgreementRound", () => {
 			logger.warn(`class CandidateAgreement, candidate consensus begin, round ${self.round}`);
 
 			// clear invalid transactions
@@ -79,9 +80,6 @@ class CandidateAgreement extends Stage
 			if(self.round > ROUND_NUM)
 			{
 				logger.warn("class CandidateAgreement, candidate consensus is over, go to next stage");
-
-				//
-				self.round = 0;
 
 				self.ripple.state = RIPPLE_STATE_EMPTY;
 
@@ -114,7 +112,7 @@ class CandidateAgreement extends Stage
 
 			// begin consensus
 			self.run();
-	  	});
+		});
 
 	  	this.ripple.on("consensusCandidateInnerErr", data => {
 			setTimeout(() => {
@@ -199,7 +197,9 @@ class CandidateAgreement extends Stage
 
 			this.ripple.state = RIPPLE_STATE_EMPTY;
 
-			this.ripple.emit("amalgamateOver");
+			this.round++;
+
+			this.ripple.emit("candidateAgreementRound");
 		}
 	}
 }
