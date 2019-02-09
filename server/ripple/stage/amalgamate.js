@@ -20,31 +20,31 @@ class Amalgamate
 		this.ripple = ripple;
 
 		this.ripple.express.post("/amalgamateCandidate", function(req, res) {
-	    if(!req.body.candidate) {
-        res.send({
-            code: PARAM_ERR,
-            msg: "param error, need candidate"
-        });
-        return;
-	    }
+			if(!req.body.candidate) {
+				res.send({
+					code: PARAM_ERR,
+					msg: "param error, need candidate"
+				});
+				return;
+			}
 
-	    // check stage
+	    	// check stage
 			if(self.ripple.state !== RIPPLE_STATE_AMALGAMATE)
 			{
 				res.send({
-            code: STAGE_INVALID,
-            msg: `param error, current stage is ${self.ripple.state}`
-        });
+					code: STAGE_INVALID,
+					msg: `param error, current stage is ${self.ripple.state}`
+				});
 				return;
 			}
 
 			res.send({
-          code: SUCCESS,
-          msg: ""
-      });
+				code: SUCCESS,
+				msg: ""
+			});
 
-	    amalgamateCandidate(self.ripple, req.body.candidate);
-	  });
+			amalgamateCandidate(self.ripple, req.body.candidate);
+		});
 
 		this.ripple.on("amalgamateCandidateInnerErr", data => {
 			// check stage
@@ -58,8 +58,8 @@ class Amalgamate
 	  	
 		});
 
-	  this.ripple.on("amalgamateCandidateErr", data => {
-	  	// check stage
+		this.ripple.on("amalgamateCandidateErr", data => {
+	  		// check stage
 			if(self.ripple.state !== RIPPLE_STATE_AMALGAMATE)
 			{
 				return;
@@ -67,8 +67,8 @@ class Amalgamate
 			setTimeout(() => {
 				postAmalgamateCandidate(self.ripple, data.url, self.ripple.candidate);
 			}, SEND_DATA_DEFER);
-	  	
-	  });
+			
+		});
 	}
 
 	run()
@@ -89,8 +89,6 @@ class Amalgamate
 			}
 
 			self.ripple.timeout = null;
-
-			logger.warn("class Amalgamate, enter timeout");
 
 			// check and transfer to next round
 			if(checkIfAllNodeHasMet(self.ripple.activeNodes))
@@ -153,12 +151,8 @@ function amalgamateCandidate(ripple, candidate)
 	// check if mandatory time window is end
 	if(ripple.timeout)
 	{
-		logger.warn("class Amalgamate, timeout is not end, please wait");
-
 		return;
 	}
-
-	logger.warn("class Amalgamate, enter amalgamateCandidate checkIfAllNodeHasMet");
 
 	// check and transfer to next round
 	if(checkIfAllNodeHasMet(ripple.activeNodes))
