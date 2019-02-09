@@ -3,6 +3,9 @@ module.exports.RIPPLE_STATE_CANDIDATE_AGREEMENT = 2;
 module.exports.RIPPLE_STATE_TIME_AGREEMENT = 3;
 module.exports.RIPPLE_STATE_BLOCK_AGREEMENT = 4;
 module.exports.RIPPLE_STATE_EMPTY = 5;
+module.exports.CANDIDATE_AGREEMENT_STATE_ROUND1 = 6;
+module.exports.CANDIDATE_AGREEMENT_STATE_ROUND2 = 7;
+module.exports.CANDIDATE_AGREEMENT_STATE_ROUND3 = 8;
 
 module.exports.ROUND_DEFER = 3000;
 module.exports.ROUND_NUM = 3;

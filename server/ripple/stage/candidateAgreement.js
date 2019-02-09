@@ -3,7 +3,7 @@ const nodes = require("../../nodes")
 const util = require("../../../utils")
 const {postConsensusCandidate, postBatchConsensusCandidate} = require("../chat")
 const async = require("async")
-const {RIPPLE_STATE_CANDIDATE_AGREEMENT, RIPPLE_STATE_TIME_AGREEMENT, ROUND_NUM, SEND_DATA_DEFER} = require("../../constant")
+const {RIPPLE_STATE_CANDIDATE_AGREEMENT, RIPPLE_STATE_TIME_AGREEMENT, ROUND_NUM, SEND_DATA_DEFER, CANDIDATE_AGREEMENT_STATE_ROUND1, CANDIDATE_AGREEMENT_STATE_ROUND2, CANDIDATE_AGREEMENT_STATE_ROUND3} = require("../../constant")
 const {SUCCESS, PARAM_ERR, OTH_ERR, STAGE_INVALID} = require("../../../const")
 
 const log4js= require("../../logConfig");
@@ -14,10 +14,6 @@ const othLogger = log4js.getLogger("oth");
 const ROUND1_THRESHHOLD = 0.5
 const ROUND2_THRESHHOLD = 0.6
 const ROUND3_THRESHHOLD = 0.8
-
-const CANDIDATE_AGREEMENT_STATE_ROUND1 = "candidate_agreement_state_round1"
-const CANDIDATE_AGREEMENT_STATE_ROUND2 = "candidate_agreement_state_round2"
-const CANDIDATE_AGREEMENT_STATE_ROUND3 = "candidate_agreement_state_round3"
 
 class CandidateAgreement
 {
@@ -36,31 +32,21 @@ class CandidateAgreement
 		        return;
 		    }
 
+		    if(!req.body.state) {
+		        res.send({
+		            code: PARAM_ERR,
+		            msg: "param error, need state"
+		        });
+		        return;
+		    }
+
 		    // check stage
-		    if(self.round === 1 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND1)
+		    if(self.ripple.state !== req.body.state)
 			{
 				res.send({
 	            	code: STAGE_INVALID,
 	            	msg: `param error, current stage is ${self.ripple.state}`
 	        	});
-
-				return;
-			}
-			if(self.round === 2 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND2)
-			{
-				res.send({
-	            	code: STAGE_INVALID,
-	            	msg: `param error, current stage is ${self.ripple.state}`
-	        	});
-
-				return;
-			}
-			if(self.round === 3 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND3)
-			{
-				res.send({
-	            	code: STAGE_INVALID,
-	            	msg: `param error, current stage is ${self.ripple.state}`
-	       		});
 
 				return;
 			}
@@ -126,15 +112,7 @@ class CandidateAgreement
 
 	  	this.ripple.on("consensusCandidateInnerErr", data => {
 			// check stage
-			if(self.round === 1 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND1)
-			{
-				return;
-			}
-			if(self.round === 2 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND2)
-			{
-				return;
-			}
-			if(self.round === 3 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND3)
+			if(self.ripple.state !== data.state)
 			{
 				return;
 			}
@@ -147,15 +125,7 @@ class CandidateAgreement
 
 	  	this.ripple.on("consensusCandidateErr", data => {
 		  	// check stage
-		  	if(self.round === 1 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND1)
-			{
-				return;
-			}
-			if(self.round === 2 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND2)
-			{
-				return;
-			}
-			if(self.round === 3 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND3)
+		  	if(self.ripple.state !== data.state)
 			{
 				return;
 			}
@@ -182,15 +152,7 @@ class CandidateAgreement
 			self.ripple.timeout = null;
 
 			// check stage
-			if(self.round === 1 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND1)
-			{
-				return;
-			}
-			if(self.round === 2 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND2)
-			{
-				return;
-			}
-			if(self.round === 3 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND3)
+			if(self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND1 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND2 && self.ripple.state !== CANDIDATE_AGREEMENT_STATE_ROUND3)
 			{
 				return;
 			}

@@ -94,16 +94,16 @@ module.exports.postConsensusCandidate = function(ripple, url, candidate)
 		candidate = util.baToHexString(candidate.serialize());
 	}
 
-	post(logger, url + "/consensusCandidate", {candidate: candidate}, function(err, response) {
+	post(logger, url + "/consensusCandidate", {candidate: candidate, state: ripple.state}, function(err, response) {
 		if(!!err)
 		{
-			ripple.emit("consensusCandidateInnerErr", {url: url});
+			ripple.emit("consensusCandidateInnerErr", {url: url, state: ripple.state});
 			return;
 		}
 
 		if(response.code !== SUCCESS)
 		{
-			ripple.emit("consensusCandidateErr", {url: url, code: response.code});
+			ripple.emit("consensusCandidateErr", {url: url, code: response.code, state: ripple.state});
 			return;
 		}
 
