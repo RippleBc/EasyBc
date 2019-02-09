@@ -40,17 +40,17 @@ class BlockAgreement extends Stage
 				});
 				return;
 			}	
-
+			
 			res.send({
 				code: SUCCESS,
 				msg: ""
 			});
-      
+      		
 			self.receive(req.body.rippleBlock);
 		});
 
 		this.ripple.on("timeAgreementOver", ()=> {
-			self.ripple.stage = RIPPLE_STATE_BLOCK_AGREEMENT;
+			self.ripple.state = RIPPLE_STATE_BLOCK_AGREEMENT;
 
 			self.run();
 		})
@@ -73,7 +73,7 @@ class BlockAgreement extends Stage
 			{
 				return;
 			}	
-			
+
 			setTimeout(() => {
 				postConsensusBlock(self.ripple, data.node, self.ripple.rippleBlock);
 			}, SEND_DATA_DEFER);
@@ -172,13 +172,14 @@ class BlockAgreement extends Stage
 
 	tryToEnterNextStage()
 	{
+		console.log("***************************")
 		// check and transfer to next round
 		if(this.checkIfCanEnterNextStage())
 		{
 			this.ripple.state = RIPPLE_STATE_EMPTY;
 
 			let consistentBlock = this.ripple.rippleBlock.getConsistentBlocks();
-
+			console.log("***************************************************8")
 			// block consensus failed, do not clear candidate, begin new consensus
 			if(consistentBlock === null)
 			{
