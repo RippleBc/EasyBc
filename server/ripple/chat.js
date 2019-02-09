@@ -122,7 +122,7 @@ module.exports.postConsensusTime = function(ripple, node, time)
 	{
 		time = util.baToHexString(time.serialize());
 	}
-	logger.error("#########################")
+
 	post(logger, node.url + "/consensusTime", {time: time}, function(err, response) {
 		if(!!err)
 		{

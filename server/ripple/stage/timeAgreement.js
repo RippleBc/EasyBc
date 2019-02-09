@@ -42,7 +42,7 @@ class TimeAgreement extends Stage
 				msg: ""
 			});
 
-			self.receive(self.ripple, req.body.time);
+			self.receive(req.body.time);
 		});
 
 		this.ripple.on("candidateAgreementOver", () => {
@@ -88,7 +88,6 @@ class TimeAgreement extends Stage
 	{
 		this.ripple.time.time = Date.now();
 		//
-		console.error("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
 		postBatchConsensusTime(this.ripple);
 	}
 
