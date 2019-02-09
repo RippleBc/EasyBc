@@ -30,7 +30,7 @@ class BlockAgreement extends Stage
 				});
 				return;
 			}
-
+			
 			// check stage
 			if(self.ripple.state !== RIPPLE_STATE_BLOCK_AGREEMENT)
 			{
@@ -40,7 +40,7 @@ class BlockAgreement extends Stage
 				});
 				return;
 			}	
-
+			console.log("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 			res.send({
 				code: SUCCESS,
 				msg: ""

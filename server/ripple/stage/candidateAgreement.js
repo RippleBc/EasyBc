@@ -42,12 +42,25 @@ class CandidateAgreement extends Stage
 		    }
 
 		    // check stage
+		    if(self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND1 &&
+		    	self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND2 &&
+		    	self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND3)
+		    {
+				res.send({
+					code: STAGE_INVALID,
+					msg: `stage invalid, current stage is ${self.ripple.state}`
+				});
+
+				return;
+		    }
+
+		    // check stage
 		    if(self.ripple.state !== req.body.state)
 			{
 				res.send({
-	            	code: STAGE_INVALID,
-	            	msg: `stage ${req.body.state} invalid, current stage is ${self.ripple.state}`
-	        	});
+					code: STAGE_INVALID,
+					msg: `stage ${req.body.state} invalid, current stage is ${self.ripple.state}`
+				});
 
 				return;
 			}
