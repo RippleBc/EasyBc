@@ -162,7 +162,6 @@ class BlockAgreement extends Stage
 		// check and transfer to next round
 		if(this.checkIfCanEnterNextStage())
 		{
-			//
 			this.ripple.state = RIPPLE_STATE_EMPTY;
 
 			let consistentBlock = this.ripple.rippleBlock.getConsistentBlocks();

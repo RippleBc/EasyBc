@@ -1,7 +1,7 @@
 const Candidate = require("../data/candidate")
 const util = require("../../../utils")
 const {postConsensusCandidate, postBatchConsensusCandidate} = require("../chat")
-const {ROUND_NUM, SEND_DATA_DEFER, RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND1, RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND2, RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND3} = require("../../constant")
+const {RIPPLE_STATE_EMPTY, ROUND_NUM, SEND_DATA_DEFER, RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND1, RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND2, RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND3} = require("../../constant")
 const {SUCCESS, PARAM_ERR, OTH_ERR, STAGE_INVALID} = require("../../../const")
 const Stage = require("./stage")
 
@@ -196,6 +196,8 @@ class CandidateAgreement extends Stage
 		if(this.checkIfCanEnterNextStage())
 		{
 			logger.warn("Class CandidateAgreement, candidate consensus is over, go to next round");
+
+			this.ripple.state = RIPPLE_STATE_EMPTY;
 
 			this.ripple.emit("amalgamateOver");
 		}

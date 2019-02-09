@@ -1,7 +1,7 @@
 const Time = require("../data/time")
 const util = require("../../../utils")
 const {postConsensusTime, postBatchConsensusTime} = require("../chat")
-const {RIPPLE_STATE_TIME_AGREEMENT, SEND_DATA_DEFER} = require("../../constant")
+const {RIPPLE_STATE_EMPTY, RIPPLE_STATE_TIME_AGREEMENT, SEND_DATA_DEFER} = require("../../constant")
 const {SUCCESS, PARAM_ERR, OTH_ERR, STAGE_INVALID} = require("../../../const")
 const Stage = require("./stage")
 
@@ -77,6 +77,8 @@ class TimeAgreement extends Stage
 
  	run()
  	{
+
+ 		logger.error("aaaaaaaaaaaaaaa")
  		const self = this;
 
 		this.send(this.ripple);
@@ -126,6 +128,8 @@ class TimeAgreement extends Stage
 		{
 			logger.warn("Class TimeAgreement, time consensus is over, go to next stage");
 
+			this.ripple.state = RIPPLE_STATE_EMPTY;
+			
 			this.ripple.emit("timeAgreementOver");
 		}
 	}
