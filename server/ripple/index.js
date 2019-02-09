@@ -1,7 +1,7 @@
 const async = require("async")
 const semaphore = require("semaphore")
 const AsyncEventEmitter = require("async-eventemitter")
-const {RIPPLE_STATE_AMALGAMATE, ROUND_DEFER, BLOCK_AGREEMENT_MAX_ROUND} = require("../constant")
+const {RIPPLE_STATE_AMALGAMATE, BLOCK_AGREEMENT_MAX_ROUND} = require("../constant")
 const Candidate = require("./data/candidate")
 const Time = require("./data/time")
 const RippleBlock = require("./data/rippleBlock")
@@ -22,10 +22,6 @@ class Ripple extends AsyncEventEmitter
 
 		// record ripple consensus stage
 		this.state = null;
-		// record the live node in the ripple consensus stage
-		this.activeNodes = [];
-		// timeout each stage of one round
-		this.timeout = null;
 		//
 		this.blockAgreementRound = 0;
 
@@ -57,32 +53,6 @@ class Ripple extends AsyncEventEmitter
 		this.amalgamate.run();
 
 		this.state = RIPPLE_STATE_AMALGAMATE;
-	}
-
-	/**
-	 * @param {Buffer} address
-	 */
-	recordActiveNode(address)
-	{
-		for(let i = 0; i < this.activeNodes.length; i++)
-		{
-			if(util.baToHexString(address) === this.activeNodes[i])
-			{
-				return;
-			}
-		}
-
-		this.activeNodes.push(address);
-
-		return this.activeNodes;
-	}
-
-	/**
-	 *
-	 */
-	initTimeout(func)
-	{
-		this.timeout = setTimeout(func, ROUND_DEFER);
 	}
 }
 

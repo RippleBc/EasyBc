@@ -1,22 +1,22 @@
-const nodes = require("../../nodes")
 const Time = require("../data/time")
 const util = require("../../../utils")
 const {postConsensusTime, postBatchConsensusTime} = require("../chat")
-const {RIPPLE_STATE_TIME_AGREEMENT, RIPPLE_STATE_BLOCK_AGREEMENT, SEND_DATA_DEFER} = require("../../constant")
+const {RIPPLE_STATE_TIME_AGREEMENT, SEND_DATA_DEFER} = require("../../constant")
 const {SUCCESS, PARAM_ERR, OTH_ERR, STAGE_INVALID} = require("../../../const")
+const Stage = require("./stage")
 
 const log4js= require("../../logConfig");
 const logger = log4js.getLogger();
 const errLogger = log4js.getLogger("err");
 const othLogger = log4js.getLogger("oth");
 
-class TimeAgreement
+class TimeAgreement extends Stage
 {
 	constructor(ripple)
 	{
+		super(ripple);
+		
 		const self = this;
-
-		this.ripple = ripple;
 
 		this.ripple.express.post("/consensusTime", function(req, res) {
 			if(!req.body.time) {
@@ -42,37 +42,36 @@ class TimeAgreement
 				msg: ""
 			});
 
-			consensusTime(self.ripple, req.body.time);
+			self.receive(self.ripple, req.body.time);
 		});
 
 		this.ripple.on("candidateAgreementOver", () => {
+			self.ripple.state = RIPPLE_STATE_TIME_AGREEMENT;
 			self.run();
 		});
 
 		this.ripple.on("consensusTimeInnerErr", data => {
-			// check stage
-			if(self.ripple.state !== RIPPLE_STATE_TIME_AGREEMENT)
-			{
-				return;
-			}
-
 			setTimeout(() => {
-				postConsensusTime(self.ripple, data.url, self.ripple.time);
+				postConsensusTime(self.ripple, data.node.url, self.ripple.time);
 			}, SEND_DATA_DEFER);
-			
 		});
 
 		this.ripple.on("consensusTimeErr", data => {
-	  		// check stage
-			if(self.ripple.state !== RIPPLE_STATE_TIME_AGREEMENT)
+			setTimeout(() => {
+				postConsensusTime(self.ripple, data.node.url, self.ripple.time);
+			}, SEND_DATA_DEFER);
+		});
+
+		this.ripple.on("consensusTimeSuccess", data => {
+			self.recordAccessedNode(data.node.address);
+
+			// check if mandatory time window is end
+			if(self.ripple.timeout)
 			{
 				return;
 			}
 
-			setTimeout(() => {
-				postConsensusTime(self.ripple, data.url, self.ripple.time);
-			}, SEND_DATA_DEFER);
-		
+			self.tryToEnterNextStage();
 		});
 	}
 
@@ -80,71 +79,59 @@ class TimeAgreement
  	{
  		const self = this;
 
- 		// reset active nodes
- 		self.ripple.activeNodes = [];
-
-		sendTime(this.ripple);
+		this.send(this.ripple);
 
 		this.ripple.initTimeout(() => {
-			// check round stage
-			if(self.ripple.state !== RIPPLE_STATE_TIME_AGREEMENT)
-			{
-				return;
-			}
-
 			self.ripple.timeout = null;
 
-			// check and transfer to next stage
-			if(nodes.checkIfAllNodeHasMet(self.ripple.activeNodes))
-			{
-				logger.warn("Class TimeAgreement initTimeout, time consensus is over, go to next stage");
-				
-				ripple.state = RIPPLE_STATE_BLOCK_AGREEMENT;
-				ripple.emit("timeAgreementOver");
-			}
+			self.tryToEnterNextStage();
 		});
  	}
-}
 
-function sendTime(ripple)
-{
-	ripple.time.time = Date.time();
-	//
-	postBatchConsensusTime(ripple);
-}
-
-function consensusTime(ripple, time)
-{
-	time = new Time(time);
-
-	// check time
-	let errors = time.validateSignatrue(true);
-	if(!!errors === true)
+ 	send()
 	{
-		logger.error(`class TimeAgreement, time ripple.recordActiveNode(time.from); is failed, ${errors}`);
+		this.ripple.time.time = Date.time();
+		//
+		postBatchConsensusTime(this.ripple);
 	}
-	else
-	{
-		ripple.recordActiveNode(time.from);
 
-		// record
-		ripple.time.push(util.bufferToInt(time.time));
+	receive(time)
+	{
+		time = new Time(time);
+
+		// check time
+		let errors = time.validateSignatrue(true);
+		if(!!errors === true)
+		{
+			logger.error(`class TimeAgreement, receive is failed, ${errors}`);
+		}
+		else
+		{
+			this.recordActiveNode(util.baToHexString(time.from));
+
+			// record
+			this.ripple.time.push(util.bufferToInt(time.time));
+		}
+		
+
+		// check if mandatory time window is end
+		if(this.ripple.timeout)
+		{
+			return;
+		}
+		
+		this.tryToEnterNextStage();
 	}
-	
 
-	// check if mandatory time window is end
-	if(ripple.timeout)
+	tryToEnterNextStage()
 	{
-		return;
-	}
-	
-	// check and transfer to next stage
-	if(nodes.checkIfAllNodeHasMet(ripple.activeNodes))
-	{
-		logger.warn("Class TimeAgreement consensusTime, time consensus is over, go to next stage");
+		// check and transfer to next stage
+		if(this.checkIfCanEnterNextStage())
+		{
+			logger.warn("Class TimeAgreement, time consensus is over, go to next stage");
 
-		ripple.state = RIPPLE_STATE_BLOCK_AGREEMENT;
-		ripple.emit("timeAgreementOver");
+			this.ripple.emit("timeAgreementOver");
+		}
 	}
 }
 

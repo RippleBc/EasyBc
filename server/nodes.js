@@ -17,9 +17,14 @@ module.exports.nodeList = [
 module.exports.localHost = "";
 module.exports.port = 8080;
 
-// account
+// hex string account
 module.exports.privateKey = "0xfffcfc72975ef9963e5cf1649a5819f6869dee32cf8a92c66b88d97f809c8f55";
 module.exports.address = "0xca9be7fb7862aa5def7d322766a2cc01eceadeed";
+
+// buffer account
+module.exports.bfPrivateKey = util.toBuffer(module.exports.privateKey);
+module.exports.bfAddress = util.toBuffer(module.exports.address);
+
 
 module.exports.getNodeNum = function()
 {

@@ -17,7 +17,7 @@ module.exports.postBatchAmalgamateCandidate = function(ripple)
 	ripple.candidate.sign(util.toBuffer(privateKey));
 
 	nodeList.forEach(function(node) {
-		module.exports.postAmalgamateCandidate(ripple, node.url, util.baToHexString(ripple.candidate.serialize()));
+		module.exports.postAmalgamateCandidate(ripple, node, util.baToHexString(ripple.candidate.serialize()));
 	});
 }
 
@@ -29,7 +29,7 @@ module.exports.postBatchConsensusCandidate = function(ripple)
 	ripple.candidate.sign(util.toBuffer(privateKey));
 
 	nodeList.forEach(function(node) {
-		module.exports.postConsensusCandidate(ripple, node.url, util.baToHexString(ripple.candidate.serialize()));
+		module.exports.postConsensusCandidate(ripple, node, util.baToHexString(ripple.candidate.serialize()));
 	});
 }
 
@@ -41,7 +41,7 @@ module.exports.postBatchConsensusTime = function(ripple)
 	ripple.time.sign(util.toBuffer(privateKey));
 
 	nodeList.forEach(function(node) {
-		module.exports.postConsensusTime(ripple, node.url, util.baToHexString(ripple.time.serialize()));
+		module.exports.postConsensusTime(ripple, node, util.baToHexString(ripple.time.serialize()));
 	});
 }
 
@@ -53,114 +53,116 @@ module.exports.postBatchConsensusBlock = function(ripple)
 	ripple.block.sign(util.toBuffer(privateKey));
 	
 	nodeList.forEach(function(node) {
-		module.exports.postConsensusBlock(ripple, node.url, util.baToHexString(ripple.block.serialize()));
+		module.exports.postConsensusBlock(ripple, node, util.baToHexString(ripple.block.serialize()));
 	});
 }
 
 /**
  * @param {String|Object} candidate
  */
-module.exports.postAmalgamateCandidate = function(ripple, url, candidate)
+module.exports.postAmalgamateCandidate = function(ripple, node, candidate)
 {
 	if(typeof candidate === "object")
 	{
 		candidate = util.baToHexString(candidate.serialize());
 	}
 
-	post(logger, url + "/amalgamateCandidate", {candidate: candidate}, function(err, response) {
+	post(logger, node.url + "/amalgamateCandidate", {candidate: candidate}, function(err, response) {
 		if(!!err)
 		{
-			ripple.emit("amalgamateCandidateInnerErr", {url: url});
+			ripple.emit("amalgamateCandidateInnerErr", {node: node});
 			return;
 		}
 
 		if(response.code !== SUCCESS)
 		{
-			ripple.emit("amalgamateCandidateErr", {url: url, code: response.code});
+			ripple.emit("amalgamateCandidateErr", {node: node});
 			return;
 		}
 
-		ripple.emit("amalgamateCandidateSuccess", {url: url, state: ripple.state});
+		ripple.emit("amalgamateCandidateSuccess", {node: node});
 	});
 }
 
 /**
  * @param {String|Object} candidate
  */
-module.exports.postConsensusCandidate = function(ripple, url, candidate)
+module.exports.postConsensusCandidate = function(ripple, node, candidate)
 {
 	if(typeof candidate === "object")
 	{
 		candidate = util.baToHexString(candidate.serialize());
 	}
 
-	post(logger, url + "/consensusCandidate", {candidate: candidate, state: ripple.state}, function(err, response) {
+	let state = ripple.state;
+
+	post(logger, node.url + "/consensusCandidate", {candidate: candidate, state: state}, function(err, response) {
 		if(!!err)
 		{
-			ripple.emit("consensusCandidateInnerErr", {url: url, state: ripple.state});
+			ripple.emit("consensusCandidateInnerErr", {node: node, state: state});
 			return;
 		}
 
 		if(response.code !== SUCCESS)
 		{
-			ripple.emit("consensusCandidateErr", {url: url, code: response.code, state: ripple.state});
+			ripple.emit("consensusCandidateErr", {node: node, state: state});
 			return;
 		}
 
-		ripple.emit("consensusCandidateSuccess", {url: url, state: ripple.state});
+		ripple.emit("consensusCandidateSuccess", {node: node, state: state});
 	});
 }
 
 /**
  * @param {String|Object} time
  */
-module.exports.postConsensusTime = function(ripple, url, time)
+module.exports.postConsensusTime = function(ripple, node, time)
 {
 	if(typeof time === "object")
 	{
 		time = util.baToHexString(time.serialize());
 	}
 
-	post(logger, url + "/consensusTime", {time: time}, function(err, response) {
+	post(logger, node.url + "/consensusTime", {time: time}, function(err, response) {
 		if(!!err)
 		{
-			ripple.emit("consensusTimeInnerErr", {url: url});
+			ripple.emit("consensusTimeInnerErr", {node: node});
 			return;
 		}
 
 		if(response.code !== SUCCESS)
 		{
-			ripple.emit("consensusTimeErr", {url: url, code: response.code});
+			ripple.emit("consensusTimeErr", {node: node});
 			return;
 		}
 
-		ripple.emit("consensusTimeSuccess", {url: url, state: ripple.state});
+		ripple.emit("consensusTimeSuccess", {node: node});
 	});
 }
 
 /**
  * @param {String|Object} rippleBlock
  */
-module.exports.postConsensusBlock = function(ripple, url, rippleBlock)
+module.exports.postConsensusBlock = function(ripple, node, rippleBlock)
 {
 	if(typeof rippleBlock === "object")
 	{
 		rippleBlock = util.baToHexString(rippleBlock.serialize());
 	}
 
-	post(logger, url + "/consensusBlock", {rippleBlock: rippleBlock}, function(err, response) {
+	post(logger, node.url + "/consensusBlock", {rippleBlock: rippleBlock}, function(err, response) {
 		if(!!err)
 		{
-			ripple.emit("consensusBlockInnerErr", {url: url});
+			ripple.emit("consensusBlockInnerErr", {node: node});
 			return;
 		}
 
 		if(response.code !== SUCCESS)
 		{
-			ripple.emit("consensusBlockErr", {url: url, code: response.code});
+			ripple.emit("consensusBlockErr", {node: node});
 			return;
 		}
 
-		ripple.emit("consensusBlockSuccess", {url: url, state: ripple.state});
+		ripple.emit("consensusBlockSuccess", {node: node});
 	});
 }
