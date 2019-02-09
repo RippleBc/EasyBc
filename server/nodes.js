@@ -61,7 +61,7 @@ module.exports.checkIfAllNodeHasMet = function(addressArray)
 	{
 		for(j = 0; j < addressArray.length; j++)
 		{
-			if(module.exports.nodeList[i].address === util.baToHexString(addressArray[j]))
+			if(module.exports.nodeList[i].address === addressArray[j])
 			{
 				break;
 			}
