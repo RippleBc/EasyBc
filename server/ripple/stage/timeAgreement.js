@@ -86,9 +86,9 @@ class TimeAgreement extends Stage
 
  	send()
 	{
-		console.error("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
-		this.ripple.time.time = Date.time();
+		this.ripple.time.time = Date.now();
 		//
+		console.error("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
 		postBatchConsensusTime(this.ripple);
 	}
 
