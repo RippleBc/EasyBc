@@ -33,7 +33,7 @@ class Amalgamate
 			{
 				res.send({
 					code: STAGE_INVALID,
-					msg: `param error, current stage is ${self.ripple.state}`
+					msg: `state ${RIPPLE_STATE_AMALGAMATE} invalid, current stage is ${self.ripple.state}`
 				});
 				return;
 			}

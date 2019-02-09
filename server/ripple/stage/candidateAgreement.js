@@ -45,7 +45,7 @@ class CandidateAgreement
 			{
 				res.send({
 	            	code: STAGE_INVALID,
-	            	msg: `param error, current stage is ${self.ripple.state}`
+	            	msg: `stage ${req.body.state} invalid, current stage is ${self.ripple.state}`
 	        	});
 
 				return;
