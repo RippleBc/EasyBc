@@ -77,17 +77,16 @@ class TimeAgreement extends Stage
 
  	run()
  	{
-
- 		logger.error("aaaaaaaaaaaaaaa")
  		const self = this;
 
-		this.send(this.ripple);
+		this.send();
 
 		this.initTimeout();
  	}
 
  	send()
 	{
+		console.error("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
 		this.ripple.time.time = Date.time();
 		//
 		postBatchConsensusTime(this.ripple);
@@ -129,7 +128,7 @@ class TimeAgreement extends Stage
 			logger.warn("Class TimeAgreement, time consensus is over, go to next stage");
 
 			this.ripple.state = RIPPLE_STATE_EMPTY;
-			
+
 			this.ripple.emit("timeAgreementOver");
 		}
 	}

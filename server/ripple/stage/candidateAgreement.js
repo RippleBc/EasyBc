@@ -83,6 +83,8 @@ class CandidateAgreement extends Stage
 				//
 				self.round = 0;
 
+				self.ripple.state = RIPPLE_STATE_EMPTY;
+
 				// transfer to block agreement stage
 				self.ripple.emit("candidateAgreementOver");
 				return;
@@ -162,8 +164,6 @@ class CandidateAgreement extends Stage
 
 	receive(candidate)
 	{
-		logger.warn("Class CandidateAgreement receive");
-
 		candidate = new Candidate(candidate);
 
 		// check candidate
