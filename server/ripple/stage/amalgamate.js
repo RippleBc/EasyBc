@@ -47,12 +47,24 @@ class Amalgamate extends Stage
 		});
 
 		this.ripple.on("amalgamateCandidateInnerErr", data => {
+			// check stage
+			if(self.ripple.state !== RIPPLE_STATE_AMALGAMATE)
+			{
+				return;
+			}
+
 			setTimeout(() => {
 				postAmalgamateCandidate(self.ripple, data.node, self.ripple.candidate);
 			}, SEND_DATA_DEFER);
 		});
 
 		this.ripple.on("amalgamateCandidateErr", data => {
+			// check stage
+			if(self.ripple.state !== RIPPLE_STATE_AMALGAMATE)
+			{
+				return;
+			}
+			
 			setTimeout(() => {
 				postAmalgamateCandidate(self.ripple, data.node, self.ripple.candidate);
 			}, SEND_DATA_DEFER);

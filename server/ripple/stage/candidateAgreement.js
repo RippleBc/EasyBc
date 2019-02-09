@@ -41,18 +41,18 @@ class CandidateAgreement extends Stage
 		        return;
 		    }
 
-		    // check stage
-		    if(self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND1 &&
-		    	self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND2 &&
-		    	self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND3)
-		    {
+			// check stage
+			if(self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND1 &&
+				self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND2 &&
+				self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND3)
+			{
 				res.send({
 					code: STAGE_INVALID,
 					msg: `stage invalid, current stage is ${self.ripple.state}`
 				});
 
 				return;
-		    }
+			}
 
 		    // check stage
 		    if(self.ripple.state !== req.body.state)
@@ -128,6 +128,14 @@ class CandidateAgreement extends Stage
 		});
 
 	  	this.ripple.on("consensusCandidateInnerErr", data => {
+	  		// check stage
+			if(self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND1 &&
+				self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND2 &&
+				self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND3)
+			{
+				return;
+			}
+
 			setTimeout(() => {
 				postConsensusCandidate(self.ripple, data.node, self.ripple.candidate);
 			}, SEND_DATA_DEFER);
@@ -135,6 +143,14 @@ class CandidateAgreement extends Stage
 		});
 
 	  	this.ripple.on("consensusCandidateErr", data => {
+	  		// check stage
+			if(self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND1 &&
+				self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND2 &&
+				self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND3)
+			{
+				return;
+			}
+			
 			setTimeout(() => {
 				postConsensusCandidate(self.ripple, data.node, self.ripple.candidate);
 			}, SEND_DATA_DEFER);

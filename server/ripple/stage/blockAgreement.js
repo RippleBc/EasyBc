@@ -30,7 +30,7 @@ class BlockAgreement extends Stage
 				});
 				return;
 			}
-			
+
 			// check stage
 			if(self.ripple.state !== RIPPLE_STATE_BLOCK_AGREEMENT)
 			{
@@ -40,7 +40,7 @@ class BlockAgreement extends Stage
 				});
 				return;
 			}	
-			console.log("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+
 			res.send({
 				code: SUCCESS,
 				msg: ""
@@ -56,12 +56,24 @@ class BlockAgreement extends Stage
 		})
 
 		this.ripple.on("consensusBlockInnerErr", data => {
+			// check stage
+			if(self.ripple.state !== RIPPLE_STATE_BLOCK_AGREEMENT)
+			{
+				return;
+			}	
+
 			setTimeout(() => {
 				postConsensusBlock(self.ripple, data.node, self.ripple.rippleBlock);
 			}, SEND_DATA_DEFER);
 		});
 
 		this.ripple.on("consensusBlockErr", data => {
+			// check stage
+			if(self.ripple.state !== RIPPLE_STATE_BLOCK_AGREEMENT)
+			{
+				return;
+			}	
+			
 			setTimeout(() => {
 				postConsensusBlock(self.ripple, data.node, self.ripple.rippleBlock);
 			}, SEND_DATA_DEFER);

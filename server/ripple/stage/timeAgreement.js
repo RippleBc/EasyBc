@@ -51,12 +51,24 @@ class TimeAgreement extends Stage
 		});
 
 		this.ripple.on("consensusTimeInnerErr", data => {
+			// check stage
+			if(self.ripple.state !== RIPPLE_STATE_TIME_AGREEMENT)
+			{
+				return;
+			}
+
 			setTimeout(() => {
 				postConsensusTime(self.ripple, data.node, self.ripple.time);
 			}, SEND_DATA_DEFER);
 		});
 
 		this.ripple.on("consensusTimeErr", data => {
+			// check stage
+			if(self.ripple.state !== RIPPLE_STATE_TIME_AGREEMENT)
+			{
+				return;
+			}
+			
 			setTimeout(() => {
 				postConsensusTime(self.ripple, data.node, self.ripple.time);
 			}, SEND_DATA_DEFER);
