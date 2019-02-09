@@ -56,13 +56,13 @@ class BlockAgreement extends Stage
 
 		this.ripple.on("consensusBlockInnerErr", data => {
 			setTimeout(() => {
-				postConsensusBlock(self.ripple, data.node.url, self.ripple.block);
+				postConsensusBlock(self.ripple, data.node, self.ripple.block);
 			}, SEND_DATA_DEFER);
 		});
 
 		this.ripple.on("consensusBlockErr", data => {
 			setTimeout(() => {
-				postConsensusBlock(self.ripple, data.node.url, self.ripple.block);
+				postConsensusBlock(self.ripple, data.node, self.ripple.block);
 			}, SEND_DATA_DEFER);
 		});
 
@@ -70,7 +70,7 @@ class BlockAgreement extends Stage
 			self.recordAccessedNode(data.node.address);
 
 			// check if mandatory time window is end
-			if(self.timeout)
+			if(!this.checkIfTimeoutEnd())
 			{
 				return;
 			}
@@ -85,11 +85,7 @@ class BlockAgreement extends Stage
 
 		this.send();
 
-		this.ripple.initTimeout(() => {
-			self.timeout = null;
-
-			self.tryToEnterNextStage();
-		});
+		this.initTimeout();
 	}
 
 	send()
@@ -153,7 +149,7 @@ class BlockAgreement extends Stage
 		
 
 		// check if mandatory time window is end
-		if(this.ripple.timeout)
+		if(!this.checkIfTimeoutEnd())
 		{
 			return;
 		}

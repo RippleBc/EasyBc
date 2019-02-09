@@ -24,13 +24,13 @@ class Pool
 	}
 
 	reset()
-  {
-    this.data = [];
-  }
+	{
+		this.data = [];
+	}
 
-  /**
-   * batch get data
-   */
+	/**
+	 * batch get data
+	 */
 	slice(begin, end)
 	{
 		return this.data.slice(begin, end);

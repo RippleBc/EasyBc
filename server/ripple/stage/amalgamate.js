@@ -48,13 +48,13 @@ class Amalgamate extends Stage
 
 		this.ripple.on("amalgamateCandidateInnerErr", data => {
 			setTimeout(() => {
-				postAmalgamateCandidate(self.ripple, data.node.url, self.ripple.candidate);
+				postAmalgamateCandidate(self.ripple, data.node, self.ripple.candidate);
 			}, SEND_DATA_DEFER);
 		});
 
 		this.ripple.on("amalgamateCandidateErr", data => {
 			setTimeout(() => {
-				postAmalgamateCandidate(self.ripple, data.node.url, self.ripple.candidate);
+				postAmalgamateCandidate(self.ripple, data.node, self.ripple.candidate);
 			}, SEND_DATA_DEFER);
 		});
 
@@ -62,7 +62,7 @@ class Amalgamate extends Stage
 			self.recordAccessedNode(data.node.address);
 
 			// check if mandatory time window is end
-			if(self.ripple.timeout)
+			if(!self.checkIfTimeoutEnd())
 			{
 				return;
 			}
@@ -77,11 +77,7 @@ class Amalgamate extends Stage
 
 		this.send();
 
-		this.ripple.initTimeout(() => {
-			self.ripple.timeout = null;
-
-			self.tryToEnterNextStage();
-		});
+		this.initTimeout();
 	}
 
 	send()
@@ -129,7 +125,7 @@ class Amalgamate extends Stage
 		}
 
 		// check if mandatory time window is end
-		if(this.ripple.timeout)
+		if(!this.checkIfTimeoutEnd())
 		{
 			return;
 		}
@@ -140,12 +136,12 @@ class Amalgamate extends Stage
 	tryToEnterNextStage()
 	{
 		// check and transfer to next stage
-		if(self.checkIfCanEnterNextStage())
+		if(this.checkIfCanEnterNextStage())
 		{
 			logger.warn("class Amalgamate, amalgamate is over, go to next stage");
 
 			// transfer to transaction agreement stage
-			self.ripple.emit("amalgamateOver");
+			this.ripple.emit("amalgamateOver");
 		}
 	}
 }

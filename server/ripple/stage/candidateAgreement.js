@@ -114,14 +114,14 @@ class CandidateAgreement extends Stage
 
 	  	this.ripple.on("consensusCandidateInnerErr", data => {
 			setTimeout(() => {
-				postConsensusCandidate(self.ripple, data.node.url, self.ripple.candidate);
+				postConsensusCandidate(self.ripple, data.node, self.ripple.candidate);
 			}, SEND_DATA_DEFER);
 			
 		});
 
 	  	this.ripple.on("consensusCandidateErr", data => {
 			setTimeout(() => {
-				postConsensusCandidate(self.ripple, data.node.url, self.ripple.candidate);
+				postConsensusCandidate(self.ripple, data.node, self.ripple.candidate);
 			}, SEND_DATA_DEFER);
 		});
 
@@ -129,7 +129,7 @@ class CandidateAgreement extends Stage
 			self.recordAccessedNode(data.node.address);
 
 			// check if mandatory time window is end
-			if(self.ripple.timeout)
+			if(!self.checkIfTimeoutEnd())
 			{
 				return;
 			}
@@ -147,11 +147,7 @@ class CandidateAgreement extends Stage
 
 		this.send();
 
-		this.ripple.initTimeout(() => {
-			self.ripple.timeout = null;
-
-			self.tryToEnterNextStage();
-		});
+		this.initTimeout();
 	}
 
 	send()
@@ -184,7 +180,7 @@ class CandidateAgreement extends Stage
 		}
 
 		// check if mandatory time window is end
-		if(this.ripple.timeout)
+		if(!this.checkIfTimeoutEnd())
 		{
 			return;
 		}

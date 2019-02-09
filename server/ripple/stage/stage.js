@@ -1,13 +1,14 @@
 const {checkIfAllNodeHasMet, nodeList, bfAddress} = require("../../nodes")
-const {ROUND_DEFER} = require("../constant")
+const {ROUND_DEFER} = require("../../constant")
 
 class Stage
 {
-	constructor()
+	constructor(ripple)
 	{
+		this.ripple = ripple;
 		// record the live node in the ripple consensus stage
 		this.activeNodes = [bfAddress];
-		//
+		// record the accessed node in the ripple consensus stage
 		this.accessedNodes = [bfAddress]
 		// timeout each stage of one round
 		this.timeout = null;
@@ -15,7 +16,7 @@ class Stage
 
 	checkIfCanEnterNextStage()
 	{
-		if(!checkIfAllNodeHasMet(this.ripple.activeNodes))
+		if(!checkIfAllNodeHasMet(this.activeNodes))
 		{
 			return false;
 		}
@@ -42,8 +43,6 @@ class Stage
 		}
 
 		this.activeNodes.push(address);
-
-		return this.activeNodes;
 	}
 
 	/**
@@ -60,16 +59,28 @@ class Stage
 		}
 
 		this.accessedNodes.push(address);
-
-		return this.accessedNodes;
 	}
 
 	/**
 	 * @param {Function} func
 	 */
-	initTimeout(func)
+	initTimeout()
 	{
-		this.timeout = setTimeout(func, ROUND_DEFER);
+		const self = this;
+
+		this.timeout = setTimeout(() => {
+			self.timeout = null;
+
+			self.tryToEnterNextStage();
+		}, ROUND_DEFER);
+	}
+
+	/**
+	 *
+	 */
+	checkIfTimeoutEnd()
+	{
+		return this.timeout === null;
 	}
 
 	/**
@@ -83,3 +94,5 @@ class Stage
 		this.accessedNodes = [bfAddress]
 	}
 }
+
+module.exports = Stage;
