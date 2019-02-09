@@ -1,7 +1,7 @@
 const Base = require("./base")
 const util = require("../../../utils")
 const {AGREEMENT_THRESHHOLD} = require("../../constant")
-const {getNodeNum} = require("../../nodes")
+const {getNodeNum, checkNodeAddress} = require("../../nodes")
 
 const rlp = util.rlp;
 
@@ -66,7 +66,7 @@ class RippleBlock extends Base
     }
 
     // check node address
-    if(!nodes.checkNodeAddress(this.from))
+    if(!checkNodeAddress(this.from))
     {
     	errors.push("class RippleBlock validateSignatrue, Invalid RippleBlock address");
     }

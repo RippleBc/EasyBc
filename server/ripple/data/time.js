@@ -1,5 +1,6 @@
 const util = require("../../../utils")
 const Base = require("./base")
+const {checkNodeAddress} = require("../../nodes")
 
 /**
  * Creates a new Time object
@@ -131,7 +132,7 @@ class Time extends Base
     }
 
     // check address
-    if(!nodes.checkNodeAddress(this.from))
+    if(!checkNodeAddress(this.from))
     {
     	errors.push("class Time validateSignatrue, Invalid Time address");
     }

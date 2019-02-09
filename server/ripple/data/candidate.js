@@ -1,7 +1,7 @@
 const Base = require("./base")
 const util = require("../../../utils")
 const Transaction = require("../../../transaction")
-const nodes = require("../../nodes")
+const {checkNodeAddress, getNodeNum} = require("../../nodes")
 
 const rlp = util.rlp;
 
@@ -66,7 +66,7 @@ class Candidate extends Base
     }
 
     // check address
-    if(!nodes.checkNodeAddress(this.from))
+    if(!checkNodeAddress(this.from))
     {
     	errors.push("class Candidate validateSignatrue, Invalid node address");
     }
@@ -148,7 +148,7 @@ class Candidate extends Base
 
     // filter invalid transactions
     let invalidTransactions = [];
-    let nodeNum = nodes.getNodeNum();
+    let nodeNum = getNodeNum();
     for(hash in transactions)
     {
       if(transactions[hash].num / nodeNum < threshhold)
