@@ -179,8 +179,6 @@ class CandidateAgreement
 		sendCandidate(this.ripple);
 
 		this.ripple.initTimeout(() => {
-			logger.warn("Class CandidateAgreement, enter initTimeout");
-
 			self.ripple.timeout = null;
 
 			// check stage
@@ -196,8 +194,6 @@ class CandidateAgreement
 			{
 				return;
 			}
-
-			logger.warn(`Class CandidateAgreement initTimeout, checkIfAllNodeHasMet, activeNodes ${self.ripple.activeNodes}`);
 
 			// check and transfer to next round
 			if(nodes.checkIfAllNodeHasMet(self.ripple.activeNodes))
@@ -215,7 +211,6 @@ function sendCandidate(ripple)
 	// encode tranasctions
 	ripple.candidate.poolDataToCandidateTransactions();
 	//
-	logger.warn("Class CandidateAgreement, postBatchConsensusCandidate");
 	postBatchConsensusCandidate(ripple);
 }
 
@@ -233,7 +228,6 @@ function processCandidate(ripple, candidate)
 	}
 	else
 	{
-		console.log("))))))))))))))))))))))))): " + candidate.from)
 		ripple.recordActiveNode(candidate.from);
 
 		// record transactions
@@ -246,12 +240,7 @@ function processCandidate(ripple, candidate)
 	{
 		return;
 	}
-	
-	logger.warn("Class CandidateAgreement processCandidate, enter checkIfAllNodeHasMet");
 
-	console.log("**************************: " + ripple.round);
-	console.log("##########################: " + ripple.state);
-	console.log("&&&&&&&&&&&&&&&&&&&&&&&&&&: " + ripple.activeNodes.length);
 	// check and transfer to next round
 	if(nodes.checkIfAllNodeHasMet(ripple.activeNodes))
 	{
