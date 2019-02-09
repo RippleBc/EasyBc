@@ -108,7 +108,7 @@ class Amalgamate extends Stage
 		}
 		else
 		{
-			this.ripple.recordActiveNode(util.baToHexString(candidate.from));
+			this.recordActiveNode(util.baToHexString(candidate.from));
 		}
 		
 		let errors2 = candidate.validateTransactions(true)
