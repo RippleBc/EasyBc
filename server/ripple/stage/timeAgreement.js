@@ -81,7 +81,7 @@ class TimeAgreement extends Stage
 
 		this.send(this.ripple);
 
-		this.ripple.initTimeout();
+		this.initTimeout();
  	}
 
  	send()

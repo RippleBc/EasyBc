@@ -61,10 +61,12 @@ class CandidateAgreement extends Stage
 		});
 
 		this.ripple.on("amalgamateOver", () => {
-			logger.warn(`class CandidateAgreement, candidate consensus begin, round ${self.round}`);
+			logger.warn(`class CandidateAgreement, candidate consensus over, round ${self.round}`);
 
 			//
 			self.round += 1;
+
+			logger.warn(`class CandidateAgreement, candidate consensus begin, round ${self.round}`);
 
 			// clear invalid transactions
 			if(self.round === 2 || self.round === 3 || self.round === 4)
