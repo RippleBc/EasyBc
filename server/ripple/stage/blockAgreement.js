@@ -51,7 +51,7 @@ class BlockAgreement extends Stage
 		this.ripple.on("timeAgreementOver", ()=> {
 			self.ripple.stage = RIPPLE_STATE_BLOCK_AGREEMENT;
 
-			run();
+			self.run();
 		})
 
 		this.ripple.on("consensusBlockInnerErr", data => {
@@ -90,6 +90,7 @@ class BlockAgreement extends Stage
 
 	send()
 	{
+		console.error("aaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 		const self = this;
 
 		let block = new Block({
@@ -127,6 +128,8 @@ class BlockAgreement extends Stage
 					throw new Error("class BlockAgreement sendBlock, " + err);
 				}
 			});
+
+		console.error("bbbbbbbbbbbbbbbbbbbbbbbbbbbb")
 	}
 
 	receive(rippleBlock)
