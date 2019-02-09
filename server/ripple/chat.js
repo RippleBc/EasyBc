@@ -80,7 +80,7 @@ module.exports.postAmalgamateCandidate = function(ripple, url, candidate)
 			return;
 		}
 
-		ripple.emit("amalgamateCandidateSuccess");
+		ripple.emit("amalgamateCandidateSuccess", {url: url, state: ripple.state});
 	});
 }
 
@@ -107,7 +107,7 @@ module.exports.postConsensusCandidate = function(ripple, url, candidate)
 			return;
 		}
 
-		ripple.emit("consensusCandidateSuccess");
+		ripple.emit("consensusCandidateSuccess", {url: url, state: ripple.state});
 	});
 }
 
@@ -134,7 +134,7 @@ module.exports.postConsensusTime = function(ripple, url, time)
 			return;
 		}
 
-		ripple.emit("consensusTimeSuccess");
+		ripple.emit("consensusTimeSuccess", {url: url, state: ripple.state});
 	});
 }
 
@@ -161,6 +161,6 @@ module.exports.postConsensusBlock = function(ripple, url, rippleBlock)
 			return;
 		}
 
-		ripple.emit("consensusBlockSuccess");
+		ripple.emit("consensusBlockSuccess", {url: url, state: ripple.state});
 	});
 }

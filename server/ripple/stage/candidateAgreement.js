@@ -134,6 +134,25 @@ class CandidateAgreement
 				postConsensusCandidate(self.ripple, data.url, self.ripple.candidate);
 			}, SEND_DATA_DEFER);
 		});
+
+		this.ripple.on("consensusCandidateSuccess", data => {
+			// do not check stage
+			self.ripple.recordActiveNode(nodes.address);
+
+			// check if mandatory time window is end
+			if(self.ripple.timeout)
+			{
+				return;
+			}
+
+			// check and transfer to next round
+			if(nodes.checkIfAllNodeHasMet(self.ripple.activeNodes))
+			{
+				logger.warn("Class CandidateAgreement consensusCandidateSuccess, candidate consensus is over, go to next round");
+
+				self.ripple.emit("amalgamateOver");
+			}
+		});
 	}
 
 	/**

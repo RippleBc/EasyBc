@@ -1,5 +1,5 @@
 const Candidate = require("../data/candidate")
-const {checkIfAllNodeHasMet} = require("../../nodes")
+const {checkIfAllNodeHasMet, address} = require("../../nodes")
 const util = require("../../../utils")
 const {postAmalgamateCandidate, postBatchAmalgamateCandidate} = require("../chat")
 const async = require("async")
@@ -69,6 +69,25 @@ class Amalgamate
 			}, SEND_DATA_DEFER);
 			
 		});
+
+		this.ripple.on("amalgamateCandidateSuccess", data => {
+			self.ripple.recordActiveNode(address);
+
+			// check if mandatory time window is end
+			if(self.ripple.timeout)
+			{
+				return;
+			}
+
+			// check and transfer to next round
+			if(checkIfAllNodeHasMet(self.ripple.activeNodes))
+			{
+				logger.warn("class Amalgamate amalgamateCandidateSuccess, amalgamate is over, go to next stage");
+
+				self.ripple.state = RIPPLE_STATE_CANDIDATE_AGREEMENT;
+				self.ripple.emit("amalgamateOver");
+			}
+		});
 	}
 
 	run()
@@ -93,7 +112,7 @@ class Amalgamate
 			// check and transfer to next round
 			if(checkIfAllNodeHasMet(self.ripple.activeNodes))
 			{
-				logger.warn("class Amalgamate, amalgamate is over, go to next stage");
+				logger.warn("class Amalgamate initTimeout, amalgamate is over, go to next stage");
 
 				// transfer to transaction agreement stage
 				self.ripple.state = RIPPLE_STATE_CANDIDATE_AGREEMENT;
@@ -157,7 +176,7 @@ function amalgamateCandidate(ripple, candidate)
 	// check and transfer to next round
 	if(checkIfAllNodeHasMet(ripple.activeNodes))
 	{
-		logger.warn("class Amalgamate, amalgamate is over, go to next stage");
+		logger.warn("class Amalgamate amalgamateCandidate, amalgamate is over, go to next stage");
 
 		ripple.state = RIPPLE_STATE_CANDIDATE_AGREEMENT;
 		ripple.emit("amalgamateOver");

@@ -20,29 +20,29 @@ class TimeAgreement
 
 		this.ripple.express.post("/consensusTime", function(req, res) {
 			if(!req.body.time) {
-        res.send({
-            code: PARAM_ERR,
-            msg: "param error, need time"
-        });
-        return;
-	    }
+				res.send({
+					code: PARAM_ERR,
+					msg: "param error, need time"
+				});
+				return;
+			}
 
-	    // check stage
+	    	// check stage
 			if(self.ripple.state !== RIPPLE_STATE_TIME_AGREEMENT)
 			{
 				res.send({
-            code: STAGE_INVALID,
-            msg: `param error, current stage is ${self.ripple.state}`
-        });
+					code: STAGE_INVALID,
+					msg: `param error, current stage is ${self.ripple.state}`
+        		});
 				return;
 			}
 
 			res.send({
-          code: SUCCESS,
-          msg: ""
-      });
+				code: SUCCESS,
+				msg: ""
+			});
 
-	    consensusTime(self.ripple, req.body.time);
+			consensusTime(self.ripple, req.body.time);
 		});
 
 		this.ripple.on("candidateAgreementOver", () => {
@@ -62,8 +62,8 @@ class TimeAgreement
 			
 		});
 
-	  this.ripple.on("consensusTimeErr", data => {
-	  	// check stage
+		this.ripple.on("consensusTimeErr", data => {
+	  		// check stage
 			if(self.ripple.state !== RIPPLE_STATE_TIME_AGREEMENT)
 			{
 				return;
@@ -72,8 +72,8 @@ class TimeAgreement
 			setTimeout(() => {
 				postConsensusTime(self.ripple, data.url, self.ripple.time);
 			}, SEND_DATA_DEFER);
-	  	
-	  });
+		
+		});
 	}
 
  	run()
@@ -97,6 +97,8 @@ class TimeAgreement
 			// check and transfer to next stage
 			if(nodes.checkIfAllNodeHasMet(self.ripple.activeNodes))
 			{
+				logger.warn("Class TimeAgreement initTimeout, time consensus is over, go to next stage");
+				
 				ripple.state = RIPPLE_STATE_BLOCK_AGREEMENT;
 				ripple.emit("timeAgreementOver");
 			}
@@ -139,6 +141,8 @@ function consensusTime(ripple, time)
 	// check and transfer to next stage
 	if(nodes.checkIfAllNodeHasMet(ripple.activeNodes))
 	{
+		logger.warn("Class TimeAgreement consensusTime, time consensus is over, go to next stage");
+
 		ripple.state = RIPPLE_STATE_BLOCK_AGREEMENT;
 		ripple.emit("timeAgreementOver");
 	}
