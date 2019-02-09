@@ -68,11 +68,11 @@ class Stage
 	{
 		const self = this;
 
-		this.timeout = setTimeout(() => {
-			self.timeout = null;
+		// this.timeout = setTimeout(() => {
+		// 	self.timeout = null;
 
-			self.tryToEnterNextStage();
-		}, ROUND_DEFER);
+		// 	self.tryToEnterNextStage();
+		// }, ROUND_DEFER);
 	}
 
 	/**
