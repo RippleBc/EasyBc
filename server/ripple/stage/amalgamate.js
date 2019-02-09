@@ -71,7 +71,7 @@ class Amalgamate
 		});
 
 		this.ripple.on("amalgamateCandidateSuccess", data => {
-			self.ripple.recordActiveNode(address);
+			self.ripple.recordActiveNode(util.toBuffer(address));
 
 			// check if mandatory time window is end
 			if(self.ripple.timeout)

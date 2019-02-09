@@ -137,7 +137,7 @@ class CandidateAgreement
 
 		this.ripple.on("consensusCandidateSuccess", data => {
 			// do not check stage
-			self.ripple.recordActiveNode(nodes.address);
+			self.ripple.recordActiveNode(util.toBuffer(nodes.address));
 
 			// check if mandatory time window is end
 			if(self.ripple.timeout)
