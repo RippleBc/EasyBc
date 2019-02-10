@@ -151,6 +151,11 @@ class Amalgamate extends Stage
 		if(this.checkIfCanEnterNextStage())
 		{
 			logger.warn("class Amalgamate, amalgamate is over, go to next stage");
+			for(let i = 0; i < this.ripple.candidate.length; i++)
+			{
+				let hash = util.baToHexString(this.ripple.candidate.get(i).hash(true));
+				logger.warn(`transaction index: ${i}, hash: ${hash}`)
+			}
 
 			this.ripple.state = RIPPLE_STATE_EMPTY;
 			
