@@ -108,15 +108,15 @@ class Processor
 	 */
 	processBlock(opts, consistentBlock, cb)
 	{
-		if(consistentBlock instanceof Block !== false)
+		if(consistentBlock instanceof Block === false)
 		{
 			throw new Error("class Processor processBlock, argument consistentBlock's type should be Block");
 		}
-
+		
 		if(consistentBlock.transactions.length === 0)
 		{
 			// do not process block without transactions
-			logger.info(`Class Processor, block ${JSON.stringify(consistentBlock.toJSON(true))}`)
+			logger.info(`Class Processor, block ${consistentBlock.hash()} has no transaction`);
 			return cb();
 		}
 

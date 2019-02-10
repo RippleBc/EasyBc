@@ -172,6 +172,8 @@ class BlockAgreement extends Stage
 
 	tryToEnterNextStage()
 	{
+		const self = this;
+		
 		// check and transfer to next round
 		if(this.checkIfCanEnterNextStage())
 		{
@@ -186,8 +188,8 @@ class BlockAgreement extends Stage
 			}
 
 			// block consensus success, run block
-			riplle.processor.processBlock({generate: true}, consistentBlock, () => {
-				this.ripple.run(true);
+			this.ripple.processor.processBlock({generate: true}, consistentBlock, () => {
+				self.ripple.run(true);
 			});
 		}
 	}
