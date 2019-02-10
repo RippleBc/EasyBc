@@ -186,6 +186,13 @@ class CandidateAgreement extends Stage
 		// encode tranasctions
 		this.ripple.candidate.poolDataToCandidateTransactions();
 		//
+		logger.warn("*********************candidate send transactions*********************")
+		for(let i = 0; i < this.ripple.candidate.length; i++)
+		{
+			let hash = util.baToHexString(this.ripple.candidate.get(i).hash(true));
+			logger.warn(`transaction index: ${i}, hash: ${hash}`);
+		}
+		//
 		postBatchConsensusCandidate(this.ripple);
 	}
 
@@ -205,6 +212,16 @@ class CandidateAgreement extends Stage
 
 			// record transactions
 			candidate.candidateTransactionsToPoolData();
+
+			//
+			logger.warn("*********************amalgamate receive transactions*********************")
+			for(let i = 0; i < candidate.length; i++)
+			{
+				let hash = util.baToHexString(candidate.get(i).hash(true));
+				logger.warn(`transaction index: ${i}, hash: ${hash}`);
+			}
+
+			//
 			this.ripple.candidate.batchPush(candidate.data);
 		}
 
