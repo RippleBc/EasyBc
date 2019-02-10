@@ -86,25 +86,26 @@ class RippleBlock extends Base
    */
   getConsistentBlocks()
   {
-    let blocks;
+    let blocks = {};
     for(let i = 0; i < this.length; i++)
     {
       let block = this.data[i];
-      if(!blocks[block.hash()])
+      let key = util.baToHexString(block.hash());
+      if(!blocks[key])
       {
-        blocks[block.hash()] = {
+        blocks[key] = {
           bl: block,
           num: 0
         };
       }
 
-      blocks[block.hash()].num++;
+      blocks[key].num++;
     }
 
     // get majority block
     let tmp = 0;
     let block;
-    for(hash in blocks)
+    for(let hash in blocks)
     {
       if(blocks[hash].num > tmp)
       {
@@ -113,8 +114,9 @@ class RippleBlock extends Base
       }
     }
 
+    let nodeNum = getNodeNum() + 1;
     // check threshhold
-    if(tmp / getNodeNum() >= AGREEMENT_THRESHHOLD)
+    if(tmp / nodeNum >= AGREEMENT_THRESHHOLD)
     {
       return block;
     }

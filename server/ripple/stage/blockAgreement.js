@@ -172,14 +172,12 @@ class BlockAgreement extends Stage
 
 	tryToEnterNextStage()
 	{
-		console.log("***************************")
 		// check and transfer to next round
 		if(this.checkIfCanEnterNextStage())
 		{
 			this.ripple.state = RIPPLE_STATE_EMPTY;
 
 			let consistentBlock = this.ripple.rippleBlock.getConsistentBlocks();
-			console.log("***************************************************8")
 			// block consensus failed, do not clear candidate, begin new consensus
 			if(consistentBlock === null)
 			{

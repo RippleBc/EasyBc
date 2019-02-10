@@ -7,9 +7,9 @@ class Stage
 	{
 		this.ripple = ripple;
 		// record the live node in the ripple consensus stage
-		this.activeNodes = [bfAddress];
+		this.activeNodes = [];
 		// record the accessed node in the ripple consensus stage
-		this.accessedNodes = [bfAddress]
+		this.accessedNodes = []
 		// timeout each stage of one round
 		this.timeout = null;
 	}
@@ -89,9 +89,9 @@ class Stage
 	reset()
 	{
 		// record the live node in the ripple consensus stage
-		this.activeNodes = [bfAddress];
-		//
-		this.accessedNodes = [bfAddress]
+		this.activeNodes = [];
+		// record the accessed node in the ripple consensus stage
+		this.accessedNodes = []
 	}
 }
 

@@ -148,7 +148,7 @@ class Candidate extends Base
 
     // filter invalid transactions
     let invalidTransactions = [];
-    let nodeNum = getNodeNum();
+    let nodeNum = getNodeNum() + 1;
     for(hash in transactions)
     {
       if(transactions[hash].num / nodeNum < threshhold)
