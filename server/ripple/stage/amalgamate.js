@@ -99,6 +99,14 @@ class Amalgamate extends Stage
 		{
 			// get cached transactions
 			let transactions = this.ripple.processor.transactionsPool.splice(0, TRANSACTION_NUM_EACH_ROUND);
+				
+			logger.warn("*********************send transactions*********************")
+			for(let i = 0; i < transactions.length; i++)
+			{
+				let hash = util.baToHexString(transactions[i].hash(true));
+				logger.warn(`transaction index: ${i}, hash: ${hash}`);
+			}
+
 			// encode tranasctions
 			this.ripple.candidate.batchPush(transactions);
 		}
@@ -133,6 +141,14 @@ class Amalgamate extends Stage
 		{
 			// merge transactions, filter same transaction
 			candidate.candidateTransactionsToPoolData();
+
+			logger.warn("*********************receive transactions*********************")
+			for(let i = 0; i < candidate.length; i++)
+			{
+				let hash = util.baToHexString(candidate.get(i).hash(true));
+				logger.warn(`transaction index: ${i}, hash: ${hash}`);
+			}
+
 			this.ripple.candidate.batchPush(candidate.data, true);
 		}
 
