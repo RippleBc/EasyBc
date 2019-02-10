@@ -82,6 +82,9 @@ class CandidateAgreement extends Stage
 		this.ripple.on("candidateAgreementRound", () => {
 			logger.warn(`class CandidateAgreement, candidate consensus begin, round ${self.round}`);
 
+			// clear state
+			self.reset();
+
 			// clear invalid transactions
 			if(self.round === 2 || self.round === 3 || self.round === 4)
 			{
@@ -214,7 +217,7 @@ class CandidateAgreement extends Stage
 			candidate.candidateTransactionsToPoolData();
 
 			//
-			logger.warn("*********************amalgamate receive transactions*********************")
+			logger.warn("*********************candidate receive transactions*********************")
 			for(let i = 0; i < candidate.length; i++)
 			{
 				let hash = util.baToHexString(candidate.get(i).hash(true));
