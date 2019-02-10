@@ -15,6 +15,8 @@ const logger = log4js.getLogger();
 const errLogger = log4js.getLogger("err");
 const othLogger = log4js.getLogger("oth");
 
+const BN = util.BN;
+
 /**
  * Creates a new processor object
  *
