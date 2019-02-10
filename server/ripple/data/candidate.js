@@ -136,12 +136,20 @@ class Candidate extends Base
    */
   clearInvalidTransaction(threshhold)
   {
+    // logger transaction
+    logger.warn(`***********candidate transactions***********`);
+    for(let i = 0; i < this.length; i++)
+    {
+      let transaction = this.data[i];
+      logger.warn(`transaction: ${util.baToHexString(transaction.hash(true))}`);
+    }
+
+    //
     let transactions = {};
     for(let i = 0; i < this.length; i++)
     {
       let transaction = this.data[i];
       let key = util.baToHexString(transaction.hash(true));
-      console.log("111111111111")
       if(!transactions[key])
       {
         transactions[key] = {
@@ -149,33 +157,33 @@ class Candidate extends Base
           num: 0
         };
       }
-      console.log("2222222222222")
       transactions[key].num++;
     }
-    console.log("33333333333")
+
     // filter invalid transactions
-    let invalidTransactions = [];
+    let validTransactions = [];
     let nodeNum = getNodeNum() + 1;
     for(let hash in transactions)
     {
-      if(transactions[hash].num / nodeNum < threshhold)
+      if(transactions[hash].num / nodeNum >= threshhold)
       {
-        invalidTransactions.push(transactions[hash].tx);
+        validTransactions.push(transactions[hash].tx);
       }
     }
-    console.log("4444444444444444")
-    this.batchDel(invalidTransactions);
-    console.log("5555555555555555")
+
+    // clear transactions
+    this.reset();
+
+    // record valid transactions
+    this.batchPush(validTransactions);
+
     // logger valid transaction
-    logger.warn(`valid transactions threshhold: ${threshhold}`);
-    console.log("7777777777777777")
+    logger.warn(`***********valid transactions threshhold: ${threshhold}***********`);
     for(let i = 0; i < this.length; i++)
     {
       let transaction = this.data[i];
-      logger.warning(`transaction: ${transaction.hash(true)}`);
+      logger.warn(`transaction: ${util.baToHexString(transaction.hash(true))}`);
     }
-
-    console.log("66666666666666")
   }
 }
 
