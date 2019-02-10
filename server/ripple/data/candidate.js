@@ -125,7 +125,7 @@ class Candidate extends Base
   candidateTransactionsToPoolData()
   {
   	let transactions = rlp.decode(this.transactions);
-  	for(let i = 0; i < this.length; i++)
+  	for(let i = 0; i < transactions.length; i++)
   	{
   		this.push(new Transaction(transactions[i]));
   	}
