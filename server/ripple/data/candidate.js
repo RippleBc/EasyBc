@@ -3,6 +3,11 @@ const util = require("../../../utils")
 const Transaction = require("../../../transaction")
 const {checkNodeAddress, getNodeNum} = require("../../nodes")
 
+const log4js= require("../../logConfig");
+const logger = log4js.getLogger();
+const errLogger = log4js.getLogger("err");
+const othLogger = log4js.getLogger("oth");
+
 const rlp = util.rlp;
 
 class Candidate extends Base
@@ -135,29 +140,42 @@ class Candidate extends Base
     for(let i = 0; i < this.length; i++)
     {
       let transaction = this.data[i];
-      if(!transactions[transaction.hash(true)])
+      let key = util.baToHexString(transaction.hash(true));
+      console.log("111111111111")
+      if(!transactions[key])
       {
-        transactions[transaction.hash(true)] = {
+        transactions[key] = {
           tx: transaction,
           num: 0
         };
       }
-     
-      transactions[transaction.hash(true)].num++;
+      console.log("2222222222222")
+      transactions[key].num++;
     }
-
+    console.log("33333333333")
     // filter invalid transactions
     let invalidTransactions = [];
     let nodeNum = getNodeNum() + 1;
-    for(hash in transactions)
+    for(let hash in transactions)
     {
       if(transactions[hash].num / nodeNum < threshhold)
       {
         invalidTransactions.push(transactions[hash].tx);
       }
     }
-
+    console.log("4444444444444444")
     this.batchDel(invalidTransactions);
+    console.log("5555555555555555")
+    // logger valid transaction
+    logger.warn(`valid transactions threshhold: ${threshhold}`);
+    console.log("7777777777777777")
+    for(let i = 0; i < this.length; i++)
+    {
+      let transaction = this.data[i];
+      logger.warning(`transaction: ${transaction.hash(true)}`);
+    }
+
+    console.log("66666666666666")
   }
 }
 
