@@ -155,7 +155,7 @@ class Processor
 					}
 				}
 
-				logger.info("processing transaction: ")
+				logger.info("################processing transaction: ################")
 				for(let i = 0; i < consistentBlock.transactions.length; i++)
 				{
 					logger.info("hash: " + consistentBlock.transactions[i].hash(true).toString("hex") + ", transaction: " + JSON.stringify(consistentBlock.transactions[i].toJSON(true)));
