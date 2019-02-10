@@ -1,7 +1,7 @@
 const Transaction = require("../../transaction")
 const Block = require("../../block")
 const BlockChain = require("../../block_chain")
-const util = require("util")
+const util = require("../../utils")
 const FlowStoplight = require("flow-stoplight")
 const async = require("async")
 const Pool = require("../ripple/data/pool")
@@ -116,7 +116,7 @@ class Processor
 		if(consistentBlock.transactions.length === 0)
 		{
 			// do not process block without transactions
-			logger.info(`Class Processor, block ${consistentBlock.hash()} has no transaction`);
+			logger.info(`Class Processor, block ${util.baToHexString(consistentBlock.header.number)} has no transaction`);
 			return cb();
 		}
 
