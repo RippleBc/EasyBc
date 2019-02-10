@@ -65,7 +65,7 @@ class Processor
 	 */
 	processTransaction(transaction, cb)
 	{
-		if(typeof transation !== "string")
+		if(typeof transaction !== "string")
 		{
 			throw new Error(`class Processor processTransaction, argument transaction's type should be string, now is ${typeof transaction}`);
 		}

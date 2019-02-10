@@ -148,7 +148,7 @@ class Pool
 			throw new Error(`class Pool get, argument index should be Number, now is ${typeof index}`);
 		}
 
-		return this.data[i];
+		return this.data[index];
 	}
 }
 
