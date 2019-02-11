@@ -4,11 +4,11 @@ const async = require("async")
 // node info
 module.exports.nodeList = [
 	// {
-	// 	"url": "http://localhost:8080",
+	// 	"url": "http://123.157.68.243:10010",
 	// 	"address": "0xca9be7fb7862aa5def7d322766a2cc01eceadeed" // "0xfffcfc72975ef9963e5cf1649a5819f6869dee32cf8a92c66b88d97f809c8f55"
 	// },
 	{
-		"url": "http://localhost:8081",
+		"url": "http://123.157.68.243:10011",
 		"address": "0xc1394e7a9b7f022e57e50490ab9b6af6cb0282dc" // "0x0138d51bbfc8ebf5d326d4b902b4596941d7e4f63ae6dd012c6ad657223b7aea"
 	}
 ];

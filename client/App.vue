@@ -87,7 +87,7 @@ export default {
 		this.getToHistory();
 		this.getLastestBlock();
 
-		setInterval(getLastestBlock, 2000)
+		setInterval(this.getLastestBlock, 2000);
   },
 
   methods:
