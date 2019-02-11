@@ -5,6 +5,7 @@ const Processor = require("./processor")
 const util = require("../utils")
 const {SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_UNPACKED, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS} = require("../const")
 const {host, port} = require("./nodes")
+const async = require("async")
 
 const log4js= require("./logConfig")
 const logger = log4js.getLogger()
@@ -168,7 +169,7 @@ app.post("/getBlockByNumber", function(req, res) {
         {
             res.send({
                 code: OTH_ERR,
-                msg: "getBlockByNumber error, on corresponding block"
+                msg: "getBlockByNumber error, no corresponding block"
             });
             return;
         }
@@ -179,4 +180,78 @@ app.post("/getBlockByNumber", function(req, res) {
             data: util.baToHexString(block.serialize())
         });
     })
+});
+
+app.post("/getLastestBlock", function(req, res) {
+
+    const EXIT_CODE = 1;
+
+    let blockNumber, blockHash;
+
+    async.waterfall([
+        function(cb) {
+            processor.blockChain.getLastestBlockNumber((err, bnLastestBlockNumber) => {
+                if(!!err)
+                {
+                    res.send({
+                        code: OTH_ERR,
+                        msg: "getLastestBlock getLastestBlockNumber error, inner err " + err
+                    });
+                    return cb(EXIT_CODE);
+                }
+
+                if(bnLastestBlockNumber.cmpn(0) === 0)
+                {
+                    res.send({
+                        code: OTH_ERR,
+                        msg: "getLastestBlock getLastestBlockNumber error, no corresponding block number"
+                    });
+                    return cb(EXIT_CODE);
+                }
+
+                blockNumber = util.baToHexString(util.toBuffer(bnLastestBlockNumber));
+
+                cb();
+            })
+        },
+
+        function(cb) {
+            processor.blockChain.getBlockHashByNumber(blockNumber, (err, hash) => {
+                if(!!err)
+                {
+                    res.send({
+                        code: OTH_ERR,
+                        msg: "getLastestBlock getBlockHashByNumber error, inner err " + err
+                    });
+                    return cb(EXIT_CODE);
+                }
+
+                if(hash === null)
+                {
+                    res.send({
+                        code: OTH_ERR,
+                        msg: "getLastestBlock getBlockHashByNumber error, no corresponding block hash"
+                    });
+                    return cb(EXIT_CODE);
+                }
+
+                blockHash = util.baToHexString(hash);
+                
+                cb();
+            })
+        }], err => {
+            if(!!err)
+            {
+                return;
+            }
+
+            res.send({
+                code: SUCCESS,
+                msg: "",
+                data: {
+                    number: blockNumber,
+                    hash: blockHash
+                }
+            });
+        });
 });
