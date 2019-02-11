@@ -155,10 +155,10 @@ class Processor
 					}
 				}
 
-				logger.info("################processing transaction: ################")
+				logger.warn("################processing transaction: ################")
 				for(let i = 0; i < consistentBlock.transactions.length; i++)
 				{
-					logger.info("hash: " + consistentBlock.transactions[i].hash(true).toString("hex") + ", transaction: " + JSON.stringify(consistentBlock.transactions[i].toJSON(true)));
+					logger.warn("hash: " + consistentBlock.transactions[i].hash(true).toString("hex") + ", transaction: " + JSON.stringify(consistentBlock.transactions[i].toJSON(true)));
 				}
 
 				self.blockChain.runBlock({block: consistentBlock, generate: ifGenerateStateRoot, skipNonce: true}, function(err, failedTransactions) {
@@ -180,7 +180,7 @@ class Processor
 				});
 			},
 			function(cb) {
-				self.blockChain.updateBlock(block, cb);
+				self.blockChain.updateBlock(consistentBlock, cb);
 			}], function(err) {
 				// some transaction is invalid, del them and run again
 				if(err === ERR_RUN_BLOCK_TX_PROCESS)
@@ -199,6 +199,8 @@ class Processor
 				{
 					throw new Error(`class Processor processBlock ${err}`);
 				}
+
+				logger.warn("################run block success################")
 
 				cb();
 			});
