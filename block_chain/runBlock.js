@@ -93,6 +93,13 @@ module.exports = function(opts, cb) {
             throw new Error(`runBlock, flush ${err}`);
           }
 
+          if(ifGenerateStateRoot)
+          {
+            console.log("11111111111111111111111111111111111111111111111111111111111: " + util.baToHexString(self.stateManager.trie.root))
+            // init state trie
+            block.header.stateRoot = self.stateManager.trie.root;
+          }
+        
           // check state trie
           if(validateStateRoot && self.stateManager.trie.root.toString("hex") !== block.header.stateRoot.toString("hex"))
           {
@@ -114,13 +121,6 @@ module.exports = function(opts, cb) {
           cb();
         });
       }], function() {
-        if(ifGenerateStateRoot)
-        {
-          console.log("11111111111111111111111111111111111111111111111111111111111: " + util.baToHexString(self.stateManager.trie.root))
-          // init state trie
-          block.header.stateRoot = self.stateManager.trie.root;
-        }
-
         cb();
       });
   }
