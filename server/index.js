@@ -186,7 +186,7 @@ app.post("/getLastestBlock", function(req, res) {
 
     const EXIT_CODE = 1;
 
-    let blockNumber, blockHash;
+    let blockNumber, block;
 
     async.waterfall([
         function(cb) {
@@ -216,26 +216,26 @@ app.post("/getLastestBlock", function(req, res) {
         },
 
         function(cb) {
-            processor.blockChain.getBlockHashByNumber(blockNumber, (err, hash) => {
+            processor.blockChain.getBlockByNumber(blockNumber, (err, _block) => {
                 if(!!err)
                 {
                     res.send({
                         code: OTH_ERR,
-                        msg: "getLastestBlock getBlockHashByNumber error, inner err " + err
+                        msg: "getLastestBlock getBlockByNumber error, inner err " + err
                     });
                     return cb(EXIT_CODE);
                 }
 
-                if(hash === null)
+                if(_block === null)
                 {
                     res.send({
                         code: OTH_ERR,
-                        msg: "getLastestBlock getBlockHashByNumber error, no corresponding block hash"
+                        msg: "getLastestBlock getBlockByNumber error, no corresponding block"
                     });
                     return cb(EXIT_CODE);
                 }
 
-                blockHash = util.baToHexString(hash);
+                block = _block;
                 
                 cb();
             })
@@ -244,13 +244,16 @@ app.post("/getLastestBlock", function(req, res) {
             {
                 return;
             }
-
+  
             res.send({
                 code: SUCCESS,
                 msg: "",
                 data: {
-                    number: blockNumber,
-                    hash: blockHash
+                    hash: util.baToHexString(block.hash()),
+                    number: util.baToHexString(block.header.number),
+                    parentHash: util.baToHexString(block.header.parentHash),
+                    transactionsTrie: util.baToHexString(block.header.transactionsTrie),
+                    stateRoot: util.baToHexString(block.header.stateRoot)
                 }
             });
         });
