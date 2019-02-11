@@ -209,9 +209,12 @@ class Update extends AsyncEventEmitter
 				self.processor.processBlock({generate: false}, block, () => {
 					// update lastest block number
 					self.localLastestBlockNumber = block.header.number;
-					//
+					// add block number
 					let bnNumber = new BN(self.localLastestBlockNumber).addn(1);
-					batchGetBlockByNumber(util.toBuffer(bnNumber));
+					// clear blocks
+					self.updatingBlocks = [];
+
+					self.batchGetBlockByNumber(util.toBuffer(bnNumber));
 				});
 			}], err => {
 				if(!!err)
@@ -227,7 +230,6 @@ class Update extends AsyncEventEmitter
 	batchGetBlockByNumber(number)
 	{
 		const self = this;
-
 		nodeList.forEach(function(node) {
 			self.getBlockByNumber(node.url, number, function(err, response) {
 				if(!!err)

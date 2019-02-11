@@ -86,17 +86,12 @@ class BlockHeader
       return cb();
     }
 
-    if(new BN(this.nonce).eq(bnZero))
-    {
-      return cb("class Block validate, property nonce can not be zero");
-    }
-
     // find the blocks parent
     blockchain.getBlockByHash(self.parentHash, function(err, parentBlock)
     {
       if(!!err)
       {
-        return cb("class Block validate, could not find parent block");
+        return cb("class Block validate, could not find parent block.");
       }
 
       self.parentBlock = parentBlock;
