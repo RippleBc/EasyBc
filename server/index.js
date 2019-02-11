@@ -248,13 +248,7 @@ app.post("/getLastestBlock", function(req, res) {
             res.send({
                 code: SUCCESS,
                 msg: "",
-                data: {
-                    hash: util.baToHexString(block.hash()),
-                    number: util.baToHexString(block.header.number),
-                    parentHash: util.baToHexString(block.header.parentHash),
-                    transactionsTrie: util.baToHexString(block.header.transactionsTrie),
-                    stateRoot: util.baToHexString(block.header.stateRoot)
-                }
+                data: util.baToHexString(block.serialize())
             });
         });
 });
