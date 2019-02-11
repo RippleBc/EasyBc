@@ -191,7 +191,7 @@ class Processor
 				// some transaction is invalid, del them and run again
 				if(err === ERR_RUN_BLOCK_TX_PROCESS)
 				{
-					self.processBlock();
+					self.processBlock(opts, consistentBlock, cb);
 					return;
 				}
 

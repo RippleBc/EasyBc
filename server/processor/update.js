@@ -17,6 +17,8 @@ const othlogger = log4js.getLogger("oth")
 const Buffer = util.Buffer;
 const BN = util.BN;
 
+// empty trie root: 0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421
+
 class Update extends AsyncEventEmitter
 {
 	constructor(processor)
@@ -92,6 +94,7 @@ class Update extends AsyncEventEmitter
 				// init block chain
 				let db = initDb();
 				let trie = new Trie(db);
+
 				self.processor.blockChain = new BlockChain({stateTrie: trie});
 
 				//
@@ -186,6 +189,22 @@ class Update extends AsyncEventEmitter
 				block.validate(self.processor.blockChain, cb);
 			},
 			function(cb) {
+				//log env
+				logger.warn("********************update block********************");
+				logger.warn(`Update, current stateTrie: ${util.baToHexString(self.processor.blockChain.stateManager.trie.root)}`);
+				logger.warn(`Update, current lastest block number: ${util.baToHexString(self.localLastestBlockNumber)}`);
+
+				// log block info
+				logger.warn(`Update, block info, parentHash: ${util.baToHexString(block.header.parentHash)}`);
+				logger.warn(`Update, block info, transactionsTrie: ${util.baToHexString(block.header.transactionsTrie)}`);
+				logger.warn(`Update, block info, stateTrie: ${util.baToHexString(block.header.stateRoot)}`);
+				logger.warn(`Update, block info, number: ${util.baToHexString(block.header.number)}`);
+
+				for(let i = 0; i < block.transactions.length; i++)
+				{
+					logger.warn(`Update, block info, transaction: ${JSON.stringify(block.transactions[i].toJSON(true))}`);
+				}
+
 				// process block
 				self.processor.processBlock({generate: false}, block, () => {
 					// update lastest block number

@@ -255,3 +255,4 @@ app.post("/getLastestBlock", function(req, res) {
             });
         });
 });
+

@@ -83,6 +83,7 @@ module.exports = function(opts, cb) {
 
     if(ifGenerateStateRoot)
     {
+      console.log("11111111111111111111111111111111111111111111111111111111111: " + util.baToHexString(self.stateManager.trie.root))
       block.header.stateRoot = self.stateManager.trie.root;
     }
 
