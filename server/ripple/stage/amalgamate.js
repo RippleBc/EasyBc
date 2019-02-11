@@ -152,7 +152,7 @@ class Amalgamate extends Stage
 	tryToEnterNextStage()
 	{
 		// check and transfer to next stage
-		if(this.checkIfTimeoutEnd() || this.checkIfCanEnterNextStage())
+		if(this.checkIfCanEnterNextStage())
 		{
 			logger.warn("class Amalgamate, amalgamate is over, go to next stage");
 
