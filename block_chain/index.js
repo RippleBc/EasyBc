@@ -149,7 +149,17 @@ class BlockChain extends AsyncEventEmitter
   }
 
   /**
-   * Add new block to block chain
+   * @param {*} number
+   */
+  updateMaxBlockNumber(number, cb)
+  {
+    number = util.toBuffer(number);
+
+    db.put(maxBlockNumberKey, number, cb);
+  }
+
+  /**
+   * Add new block to block chain, note!!! this func now is only for test
    * @param {Block} block
    */
   putBlock(block, cb)

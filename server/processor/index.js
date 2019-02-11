@@ -180,7 +180,13 @@ class Processor
 				});
 			},
 			function(cb) {
+				logger.warn("################update block: ################")
+				logger.warn(`block number: ${util.baToHexString(consistentBlock.header.number)}, block hash: ${util.baToHexString(consistentBlock.hash())}`)
+
 				self.blockChain.updateBlock(consistentBlock, cb);
+			},
+			function(cb) {
+				self.blockChain.updateMaxBlockNumber(consistentBlock.header.number, cb);
 			}], function(err) {
 				// some transaction is invalid, del them and run again
 				if(err === ERR_RUN_BLOCK_TX_PROCESS)
