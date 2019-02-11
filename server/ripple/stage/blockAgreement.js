@@ -161,13 +161,8 @@ class BlockAgreement extends Stage
 	{
 		const self = this;
 		
-		if(!this.checkIfTimeoutEnd())
-		{
-			return;
-		}
-		
 		// check and transfer to next round
-		if(this.checkIfCanEnterNextStage())
+		if(this.checkIfTimeoutEnd() || this.checkIfCanEnterNextStage())
 		{
 			// clear timeout
 			this.clearTimeout();
