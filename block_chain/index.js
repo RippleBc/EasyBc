@@ -153,6 +153,8 @@ class BlockChain extends AsyncEventEmitter
    */
   updateMaxBlockNumber(number, cb)
   {
+    let db = initDb();
+    
     number = ebUtil.toBuffer(number);
 
     db.put(maxBlockNumberKey, number, cb);
