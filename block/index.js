@@ -30,6 +30,11 @@ class Block {
 
     let rawTransactions = [];
 
+    if(typeof data === "string")
+    {
+      data = util.toBuffer(data);
+    }
+
     if(Buffer.isBuffer(data))
     {
       data = rlp.decode(data);

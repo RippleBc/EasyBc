@@ -48,12 +48,14 @@ class Update extends AsyncEventEmitter
 
 	run()
 	{
+		logger.warn("********************run begin********************");
+
 		const self = this;
 
 		// check if is updating
 		if(this.isUpdating)
 		{
-			logger.info("updating is proceeding, do not call again");
+			logger.warn("********************run is proceeding, do not call again********************");
 			return;
 		}
 
@@ -84,6 +86,15 @@ class Update extends AsyncEventEmitter
 			// genesis block
 			if(bnNumber.eqn(0))
 			{
+				// init localLastestBlockNumber, used for sync block
+				self.localLastestBlockNumber = util.toBuffer(bnNumber);
+
+				// init block chain
+				let db = initDb();
+				let trie = new Trie(db);
+				self.processor.blockChain = new BlockChain({stateTrie: trie});
+
+				//
 				self.processor.stoplight.go();
 				return cb();
 			}
@@ -103,7 +114,8 @@ class Update extends AsyncEventEmitter
 				{
 					throw new Error("class Processor initBlockChainState, getLastestBlockState no corresponding block");
 				}
-				//
+
+				// init localLastestBlockNumber, used for sync block
 				self.localLastestBlockNumber = block.header.number;
 
 				// init block chain
@@ -123,6 +135,8 @@ class Update extends AsyncEventEmitter
 	 */
 	updateBlocks()
 	{
+		logger.warn("****************begin to update blocks****************");
+
 		const self = this;
 
 		this.activeNodes++;
@@ -136,20 +150,20 @@ class Update extends AsyncEventEmitter
 		// check if there is new block
 		if(this.updatingBlocks.length === 0)
 		{
-			logger.info("*********** Class update, update is over ***********");
+			logger.warn("****************Class update, update is over****************");
 			this.isUpdating = false;
 			return;
 		}
 
 		// get the majority block
-		let rawNumblocks;
+		let rawNumblocks = {};
 		for(let i = 0; i < this.updatingBlocks.length; i++)
 		{
 			if(!rawNumblocks[this.updatingBlocks[i]])
 			{
 				rawNumblocks[this.updatingBlocks[i]] = 0;
 			}
-			
+
 			rawNumblocks[this.updatingBlocks[i]]++;
 		}
 
@@ -164,8 +178,8 @@ class Update extends AsyncEventEmitter
 				rawBlock = raw;
 			}
 		}
-		
-		//
+
+		// update block
 		let block = new Block(rawBlock);
 		async.waterfall([
 			function(cb) {
@@ -173,7 +187,7 @@ class Update extends AsyncEventEmitter
 			},
 			function(cb) {
 				// process block
-				this.processor.processBlock({generate: false}, block, () => {
+				self.processor.processBlock({generate: false}, block, () => {
 					// update lastest block number
 					self.localLastestBlockNumber = block.header.number;
 					//

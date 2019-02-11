@@ -118,6 +118,8 @@ class RippleBlock extends Base
     // check threshhold
     if(tmp / nodeNum >= AGREEMENT_THRESHHOLD)
     {
+      console.log("111: " + tmp + ", 222: " + nodeNum + ", 333: " + tmp / nodeNum);
+
       return block;
     }
     return null;

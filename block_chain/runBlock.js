@@ -99,7 +99,7 @@ module.exports = function(opts, cb) {
           // check state trie
           if(validateStateRoot && self.stateManager.trie.root.toString("hex") !== block.header.stateRoot.toString("hex"))
           {
-            throw new Error("runBlock, state trie err");
+            throw new Error(`runBlock, state trie err, computed stateTrie: ${self.stateManager.trie.root.toString("hex")}, block stateTrie: ${block.header.stateRoot.toString("hex")}`);
           }
 
           cb();

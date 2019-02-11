@@ -204,7 +204,7 @@ app.post("/getLastestBlock", function(req, res) {
                 {
                     res.send({
                         code: OTH_ERR,
-                        msg: "getLastestBlock getLastestBlockNumber error, no corresponding block number"
+                        msg: "getLastestBlock getLastestBlockNumber error, there is no block"
                     });
                     return cb(EXIT_CODE);
                 }
