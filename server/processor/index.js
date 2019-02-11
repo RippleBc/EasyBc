@@ -144,7 +144,7 @@ class Processor
 				else
 				{
 					// check if consistentBlock is a genesis block
-					if(new BN(consistentBlock.header.number).neqn(1))
+					if(new BN(consistentBlock.header.number).cmpn(1) !== 0)
 					{
 						logger.info("block chain's updating is not finish, begin to finish");
 
