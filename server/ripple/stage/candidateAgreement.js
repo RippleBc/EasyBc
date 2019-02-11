@@ -227,8 +227,13 @@ class CandidateAgreement extends Stage
 
 	tryToEnterNextStage()
 	{
+		if(!this.checkIfTimeoutEnd())
+		{
+			return;
+		}
+		
 		// check and transfer to next round
-		if(this.checkIfTimeoutEnd() || this.checkIfCanEnterNextStage())
+		if(this.checkIfCanEnterNextStage())
 		{
 			logger.warn("Class CandidateAgreement, candidate consensus is over, go to next round");
 			

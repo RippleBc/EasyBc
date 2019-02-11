@@ -125,8 +125,13 @@ class TimeAgreement extends Stage
 
 	tryToEnterNextStage()
 	{
+		if(!this.checkIfTimeoutEnd())
+		{
+			return;
+		}
+		
 		// check and transfer to next stage
-		if(this.checkIfTimeoutEnd() || this.checkIfCanEnterNextStage())
+		if(this.checkIfCanEnterNextStage())
 		{
 			logger.warn("Class TimeAgreement, time consensus is over, go to next stage");
 
