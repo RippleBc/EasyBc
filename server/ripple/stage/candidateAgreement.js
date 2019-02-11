@@ -162,12 +162,6 @@ class CandidateAgreement extends Stage
 		this.ripple.on("consensusCandidateSuccess", data => {
 			self.recordAccessedNode(data.node.address);
 
-			// check if mandatory time window is end
-			if(!self.checkIfTimeoutEnd())
-			{
-				return;
-			}
-
 			self.tryToEnterNextStage();
 		});
 	}
@@ -228,21 +222,18 @@ class CandidateAgreement extends Stage
 			this.ripple.candidate.batchPush(candidate.data);
 		}
 
-		// check if mandatory time window is end
-		if(!this.checkIfTimeoutEnd())
-		{
-			return;
-		}
-
 		this.tryToEnterNextStage();
 	}
 
 	tryToEnterNextStage()
 	{
 		// check and transfer to next round
-		if(this.checkIfCanEnterNextStage())
+		if(this.checkIfTimeoutEnd() || this.checkIfCanEnterNextStage())
 		{
 			logger.warn("Class CandidateAgreement, candidate consensus is over, go to next round");
+			
+			// clear timeout
+			this.clearTimeout();
 
 			this.ripple.state = RIPPLE_STATE_EMPTY;
 

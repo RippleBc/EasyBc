@@ -77,12 +77,6 @@ class TimeAgreement extends Stage
 		this.ripple.on("consensusTimeSuccess", data => {
 			self.recordAccessedNode(data.node.address);
 
-			// check if mandatory time window is end
-			if(!self.checkIfTimeoutEnd())
-			{
-				return;
-			}
-
 			self.tryToEnterNextStage();
 		});
 	}
@@ -126,23 +120,19 @@ class TimeAgreement extends Stage
 			this.ripple.time.push(util.bufferToInt(time.time));
 		}
 		
-
-		// check if mandatory time window is end
-		if(!this.checkIfTimeoutEnd())
-		{
-			return;
-		}
-		
 		this.tryToEnterNextStage();
 	}
 
 	tryToEnterNextStage()
 	{
 		// check and transfer to next stage
-		if(this.checkIfCanEnterNextStage())
+		if(this.checkIfTimeoutEnd() || this.checkIfCanEnterNextStage())
 		{
 			logger.warn("Class TimeAgreement, time consensus is over, go to next stage");
 
+			// clear timeout
+			this.clearTimeout();
+			
 			this.ripple.state = RIPPLE_STATE_EMPTY;
 
 			this.ripple.emit("timeAgreementOver");

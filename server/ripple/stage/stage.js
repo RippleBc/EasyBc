@@ -69,10 +69,23 @@ class Stage
 		const self = this;
 
 		this.timeout = setTimeout(() => {
+			// check if timeout is clear
+			if(self.timeout === null)
+			{
+				return;
+			}
+
 			self.timeout = null;
 
 			self.tryToEnterNextStage();
 		}, ROUND_DEFER);
+	}
+
+	clearTimeout()
+	{
+		clearTimeout(this.timeout);
+
+		this.timeout = null;
 	}
 
 	/**

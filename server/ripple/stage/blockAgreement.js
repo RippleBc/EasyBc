@@ -81,12 +81,6 @@ class BlockAgreement extends Stage
 
 		this.ripple.on("consensusBlockSuccess", data => {
 			self.recordAccessedNode(data.node.address);
-
-			// check if mandatory time window is end
-			if(!this.checkIfTimeoutEnd())
-			{
-				return;
-			}
 			
 			self.tryToEnterNextStage();
 		});
@@ -160,13 +154,6 @@ class BlockAgreement extends Stage
 			this.ripple.rippleBlock.push(new Block(rippleBlock.block));
 		}
 		
-
-		// check if mandatory time window is end
-		if(!this.checkIfTimeoutEnd())
-		{
-			return;
-		}
-		
 		this.tryToEnterNextStage();
 	}
 
@@ -175,8 +162,11 @@ class BlockAgreement extends Stage
 		const self = this;
 		
 		// check and transfer to next round
-		if(this.checkIfCanEnterNextStage())
+		if(this.checkIfTimeoutEnd() || this.checkIfCanEnterNextStage())
 		{
+			// clear timeout
+			this.clearTimeout();
+			
 			this.ripple.state = RIPPLE_STATE_EMPTY;
 
 			let consistentBlock = this.ripple.rippleBlock.getConsistentBlocks();
