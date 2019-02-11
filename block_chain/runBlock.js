@@ -57,6 +57,8 @@ module.exports = function(opts, cb) {
   {
     var validReceiptCount = 0
 
+    console.log("00000000000000000000000000000000000000000000000000000000000: " + util.baToHexString(self.stateManager.trie.root))
+
     async.eachSeries(block.transactions, function(tx, cb) {
       self.runTx({
         tx: tx,
@@ -79,12 +81,6 @@ module.exports = function(opts, cb) {
     if(failedTransactions.length > 0)
     {
       return cb("runBlock, some transactions is invalid", failedTransactions);
-    }
-
-    if(ifGenerateStateRoot)
-    {
-      console.log("11111111111111111111111111111111111111111111111111111111111: " + util.baToHexString(self.stateManager.trie.root))
-      block.header.stateRoot = self.stateManager.trie.root;
     }
 
     self.stateManager.checkpoint();
@@ -118,6 +114,13 @@ module.exports = function(opts, cb) {
           cb();
         });
       }], function() {
+        if(ifGenerateStateRoot)
+        {
+          console.log("11111111111111111111111111111111111111111111111111111111111: " + util.baToHexString(self.stateManager.trie.root))
+          // init state trie
+          block.header.stateRoot = self.stateManager.trie.root;
+        }
+
         cb();
       });
   }

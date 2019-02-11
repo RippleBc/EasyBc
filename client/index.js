@@ -2,7 +2,7 @@ const express = require("express")
 const path = require("path")
 const db = require("./backend/db")
 const {SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_UNCONSISTENT, TRANSACTION_STATE_CONSISTENT, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS} = require("../const")
-const {getTransactionState, getAccountInfo} = require("./backend/chat")
+const {getTransactionState, getAccountInfo, getLastestBlock} = require("./backend/chat")
 const util = require("../utils")
 
 const log4js= require("./logConfig")
@@ -213,6 +213,47 @@ app.get("/getAccountInfo", function(req, res) {
       data: JSON.stringify({
         "nonce": nonce,
         "balance": balance
+      })
+    });
+  });
+});
+
+app.get("/getLastestBlock", function(req, res) {
+  if(!req.query.url) {
+    res.send({
+        code: PARAM_ERR,
+        msg: "param error, need url"
+    });
+    return;
+  }
+
+  getLastestBlock(req.query.url, function(err, block) {
+    if(!!err)
+    {
+      res.send({
+        code: OTH_ERR,
+        msg: err
+      });
+      return;
+    }
+
+    //
+    let hash = util.baToHexString(block.hash())
+    let number = util.baToHexString(block.header.number);
+    let parentHash = util.baToHexString(block.header.parentHash);
+    let stateRoot = util.baToHexString(block.header.stateRoot)
+    let transactionsTrie = util.baToHexString(block.header.transactionsTrie)
+    
+    //
+    res.send({
+      code: SUCCESS,
+      msg: "",
+      data: JSON.stringify({
+        "hash": hash,
+        "number": number,
+        "parentHash": parentHash,
+        "stateRoot": stateRoot,
+        "transactionsTrie": transactionsTrie
       })
     });
   });
