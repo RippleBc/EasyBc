@@ -153,7 +153,7 @@ class BlockChain extends AsyncEventEmitter
    */
   updateMaxBlockNumber(number, cb)
   {
-    number = util.toBuffer(number);
+    number = ebUtil.toBuffer(number);
 
     db.put(maxBlockNumberKey, number, cb);
   }
