@@ -1,7 +1,6 @@
 const createKeccakHash = require("keccak")
 const secp256k1 = require("secp256k1")
 const assert = require("assert")
-const createHash = require("create-hash")
 const { randomBytes } = require("crypto")
 const path = require("path")
 const fs = require("fs")
