@@ -7,9 +7,9 @@
 		<div style="display:flex;justify-content;center;height:200px;margin:20px">
 			<dvi style="height:100%;width:100%;overflow:auto">
 				<span>node url list:</span>
-				<ul id="urls">
-					<li v-for="url in urls">
-						<p style="cursor:pointer;" @dblclick="chooseUrl(url)">{{url}}</p>
+				<ul id="nodesInfo">
+					<li v-for="nodeInfo in nodesInfo">
+						<p style="cursor:pointer;" @dblclick="chooseUrl(nodeInfo.url)">{{nodeInfo.url}}</p><p>{{nodeInfo.detail}}</p>
 					</li>
 				</ul>
 			</dvi>
@@ -19,7 +19,7 @@
 				<span>from history:</span>
 				<ul id="fromHistory">
 					<li v-for="from in froms">
-						<p style="cursor:pointer;" @dblclick="chooseFrom(from)">{{from}}</p><button @click="getAccountInfo(from)">get account info</button>
+						<p style="cursor:pointer;" @dblclick="chooseFrom(from)">{{from}}</p><button @click="getAccountInfo(from)">get account info</button><button @click="getPrivateKey(from)">get private key</button>
 					</li>
 				</ul>
 			</dvi>
@@ -77,7 +77,7 @@ export default {
     	value: 0,
     	transactionHash: "",
     	url: "http://localhost:8080",
-    	urls: ["http://localhost:8080","http://localhost:8080","http://localhost:8080","http://localhost:8080","http://localhost:8080","http://localhost:8080","http://localhost:8080"]
+    	nodesInfo: [{url: "http://localhost:8080", detail: ""}, {url: "http://localhost:8081", detail: ""}]
     }
   },
 
@@ -85,10 +85,36 @@ export default {
   {
 		this.getFromHistory();
 		this.getToHistory();
+		this.getLastestBlock();
+
+		setInterval(this.getLastestBlock, 2000);
   },
 
   methods:
   {
+  	getLastestBlock: function()
+  	{
+  		this.nodesInfo.forEach(function(nodeInfo) {
+  			axios.get("getLastestBlock", {url: nodeInfo.url}, response => {
+					if(response.status >= 200 && response.status < 300)
+					{
+						if(response.data.code === 0)
+						{
+							nodeInfo.detail = response.data.data;
+						}
+						else
+						{
+							alert(response.data.msg);
+						}
+					}
+					else
+					{
+						alert(response);
+					}
+				});
+  		});
+  	},
+
   	chooseFrom: function(value)
   	{
 			this.from = value;
@@ -227,6 +253,32 @@ export default {
     	const self = this;
 
       axios.get("getAccountInfo", {
+      	url: self.url,
+      	address: address
+      }, response => {
+				if (response.status >= 200 && response.status < 300)
+				{
+					if(response.data.code === 0)
+					{
+						alert(response.data.data);
+					}
+					else
+					{
+						alert(response.data.msg);
+					}
+				}
+				else
+				{
+					alert(response);
+				}
+			});
+    },
+
+    getPrivateKey: function(address)
+    {
+    	const self = this;
+
+      axios.get("getPrivateKey", {
       	url: self.url,
       	address: address
       }, response => {

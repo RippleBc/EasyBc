@@ -8,7 +8,7 @@
     "async-eventemitter": "^0.2.4",
     "axios": "^0.18.0",
     "bn.js": "^4.11.8",
-    "create-hash": "^1.2.0",
+    "body-parser": "^1.18.3",
     "express": "^4.16.4",
     "flow-stoplight": "^1.0.0",
     "functional-red-black-tree": "^1.0.1",

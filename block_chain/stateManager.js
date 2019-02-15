@@ -3,7 +3,6 @@ const async = require("async")
 const Account = require("../account")
 const Cache = require("./cache.js")
 const util = require("../utils")
-const initDb = require("../db")
 
 const BN = util.BN;
 const rlp = util.rlp;
@@ -27,8 +26,7 @@ class StateManager
 
     this.blockchain = opts.blockchain;
 
-    let db = initDb();
-    this.trie = opts.trie || new Trie(db);
+    this.trie = opts.trie || new Trie();
 
     this.cache = new Cache(this.trie);
   }

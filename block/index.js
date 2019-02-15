@@ -30,6 +30,11 @@ class Block {
 
     let rawTransactions = [];
 
+    if(typeof data === "string")
+    {
+      data = util.toBuffer(data);
+    }
+
     if(Buffer.isBuffer(data))
     {
       data = rlp.decode(data);
@@ -223,6 +228,24 @@ class Block {
       }
     }
     return null;
+  }
+
+  /**
+   * @param {Array/Transation} transactions
+   */
+  delInvalidTransactions(delTransactions)
+  {
+    let i, j;
+    for(i = 0; i < delTransactions.length; i++)
+    {
+      for(j = 0; j < this.transactions.length; j++)
+      {
+        if(delTransactions[i].hash(true).toString("hex") === this.transactions[j].hash(true).toString("hex"))
+        {
+          this.transactions.splice(j, 1);
+        }
+      }
+    }
   }
 }
 module.exports = Block;

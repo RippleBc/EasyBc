@@ -1,77 +1,67 @@
-const Pool = require("../processor/pool")
 const async = require("async")
 const semaphore = require("semaphore")
 const AsyncEventEmitter = require("async-eventemitter")
-const {RIPPLE_STATE_AMALGAMATE, RIPPLE_STATE_CANDIDATE_AGREEMENT, RIPPLE_STATE_BLOCK_AGREEMENT, ROUND_DEFER} = require("../constant")
-
-const ROUND1_THRESHHOLD = 0.5
-const ROUND2_THRESHHOLD = 0.6
-const ROUND3_THRESHHOLD = 0.8
+const {RIPPLE_STATE_AMALGAMATE, BLOCK_AGREEMENT_MAX_ROUND} = require("../constant")
+const Candidate = require("./data/candidate")
+const Time = require("./data/time")
+const RippleBlock = require("./data/rippleBlock")
+const Amalgamate = require("./stage/amalgamate")
+const CandidateAgreement = require("./stage/candidateAgreement")
+const TimeAgreement = require("./stage/timeAgreement")
+const BlockAgreement = require("./stage/blockAgreement")
+const util = require("../../utils")
 
 class Ripple extends AsyncEventEmitter
 {
-	constructor(expressApp)
+	constructor(processor, express)
 	{
 		super();
 
-		this.expressApp = expressApp;
+		this.processor = processor;
+		this.express = express;
 
-		this.state;
+		// record ripple consensus stage
+		this.state = null;
+		//
+		this.blockAgreementRound = 0;
 
-		this.activeNodes = [];
-		this.timeout = null;
-
-		this.candidatesPoolSem = semaphore(1);
 		this.amalgamate = new Amalgamate(this);
 		this.candidateAgreement = new CandidateAgreement(this);
+		this.timeAgreement = new TimeAgreement(this);
 		this.blockAgreement = new BlockAgreement(this);
 
-		this.candidatesPool = new Pool(100);
+		this.candidate = new Candidate();
+		this.time = new Time();
+		this.rippleBlock = new RippleBlock();
 	}
 
-	/**
-	 * @param {Number} threshhold
-	 */
-	round(threshhold, cb)
+	run(ifBlockAgreement)
 	{
+		this.blockAgreementRound ++;
 
-	}
+		// reset stage
+		this.amalgamate.reset();
+		this.candidateAgreement.reset();
+		this.timeAgreement.reset();
+		this.blockAgreement.reset();
 
-	run(cb)
-	{
-		async.waterfall([
-			function(cb)
-			{
-				round(ROUND1_THRESHHOLD, cb);
-			},
-			function(cb)
-			{
-				round(ROUND2_THRESHHOLD, cb);
-			},
-			function(cb)
-			{
-				round(ROUND3_THRESHHOLD, cb);
-			}], cb);
-	}
+		// clear data
+		this.time.reset();
+		this.rippleBlock.reset();
 
-	/**
-	 * @param {Buffer} address
-	 */
-	recordActiveNode(address)
-	{
-		for(let i = 0; i < this.activeNodes.length; i++)
+		// run block success or run block continuous failed times is exceed the bound
+		if(ifBlockAgreement || this.blockAgreementRound > BLOCK_AGREEMENT_MAX_ROUND)
 		{
-			if(util.baToHexString(address) === this.activeNodes[i])
-			{
-				return;
-			}
+			this.blockAgreementRound = 1;
+			// clear data
+			this.candidate.reset();
 		}
 
-		this.activeNodes.push(address);
-	}
+		// round begin
+		this.amalgamate.run();
 
-	initTimeout(func)
-	{
-		self.ripple.timeout = self.ripple.setTimeout(func, ROUND_DEFER);
+		this.state = RIPPLE_STATE_AMALGAMATE;
 	}
 }
+
+module.exports = Ripple;

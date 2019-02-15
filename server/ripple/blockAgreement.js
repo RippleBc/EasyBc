@@ -1,7 +1,0 @@
-class BlockAgreement
-{
-	constructor(ripple)
-	{
-		
-	}
-}

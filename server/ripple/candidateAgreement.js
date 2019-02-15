@@ -1,7 +1,0 @@
-class CandidateAgreement
-{
-	constructor(ripple)
-	{
-		
-	}
-}

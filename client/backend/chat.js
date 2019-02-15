@@ -2,6 +2,7 @@ const {post} = require("../../http/request")
 const util = require("../../utils")
 const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../../const")
 const Account = require("../../account");
+const Block = require("../../block");
 
 const log4js= require("../logConfig")
 const logger = log4js.getLogger()
@@ -65,5 +66,22 @@ module.exports.getAccountInfo = function(url, address, cb)
 		}
 		
 		cb(null, new Account(response.data));
+	});
+}
+
+module.exports.getLastestBlock = function(url, cb)
+{
+	post(logger, url + "/getLastestBlock", {}, function(err, response) {
+		if(!!err)
+		{
+			return cb(err);
+		}
+
+		if(response.code !== SUCCESS)
+		{
+			return cb(response.msg);
+		}
+		
+		cb(null, new Block(response.data));
 	});
 }

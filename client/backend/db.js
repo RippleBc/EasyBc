@@ -40,6 +40,36 @@ exports.generateKeyPiar = function(cb)
 }
 
 /**
+ * @param {String} address
+ */
+exports.getPrivateKey = function(address, cb)
+{
+	let db = getDb();
+
+	db.get(KEY_KEY_PIAR_ARRAY, function(err, raw) {
+		if(!!err)
+		{
+			if(err.notFound)
+			{
+	      return cb(null, []);
+	    }
+	    return cb(err);
+		}
+
+    let keyPairArray = rlp.decode(raw);
+    for(let i = 0; i < keyPairArray.length; i++)
+    {
+    	if(address === keyPairArray[i][2].toString("hex"))
+    	{
+    		return cb(null, keyPairArray[i][0].toString("hex"));
+    	}
+    }
+
+    cb(null, null);
+	});
+}
+
+/**
  * @param {Buffer} privateKey
  */
 exports.saveFrom = function(privateKey, cb)

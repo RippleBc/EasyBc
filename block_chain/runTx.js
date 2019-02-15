@@ -42,7 +42,7 @@ module.exports = function(opts, cb)
     {
       message = "sender " + tx.from.toString("hex") + " doesn't have enough funds to send tx. The upfront cost is: " + tx.getUpfrontCost().toString() + " and the sender's account only has: " + new BN(fromAccount.balance).toString();
       return cb(message);
-    } 
+    }
 
     // increment the nonce
     fromAccount.nonce = new BN(fromAccount.nonce).addn(1);

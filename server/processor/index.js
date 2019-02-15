@@ -1,26 +1,21 @@
 const Transaction = require("../../transaction")
 const Block = require("../../block")
 const BlockChain = require("../../block_chain")
-const Consensus = require("../consensus")
-const util = require("util")
-const AsyncEventEmitter = require("async-eventemitter")
+const util = require("../../utils")
 const FlowStoplight = require("flow-stoplight")
-const semaphore = require("semaphore")
 const async = require("async")
-const Pool = require("./pool")
-const Trie = require("merkle-patricia-tree/secure.js")
-const initDb = require("../../db")
-const {ERR_RUN_BLOCK_TX_PROCESS, ERR_RUN_BLOCK_TXS_SIZE, ERR_RUN_BLOCK_TXS_TRIE_STATE} = require("../../const")
+const Pool = require("../ripple/data/pool")
+const {ERR_RUN_BLOCK_TX_PROCESS} = require("../../const")
+const {TRANSACTION_CACHE_MAX_NUM} = require("../constant")
+const Update = require("./update")
+const Consensus = require("../consensus")
 
 const log4js= require("../logConfig");
 const logger = log4js.getLogger();
 const errLogger = log4js.getLogger("err");
 const othLogger = log4js.getLogger("oth");
 
-const BLOCK_TRANSACTIONS_SIZE_LIMIT = 2;
-
-const ERR_SERVER_TRANSACTION_SIZE_NOT_REACH = 1;
-const ERR_SERVER_RUN_BLOCK_ERR = 2;
+const BN = util.BN;
 
 /**
  * Creates a new processor object
@@ -29,50 +24,65 @@ const ERR_SERVER_RUN_BLOCK_ERR = 2;
  * @constructor
  * @prop 
  */
-class Processor extends AsyncEventEmitter
+class Processor
 {
-	constructor()
+	constructor(express)
 	{
-		super();
-
 		const self = this;
 
-		this.transactionsPoolSem = semaphore(1);
-		this.consistentTransactionsPoolSem = semaphore(1);
+		this.express = express;
+
 		this.stoplight = new FlowStoplight();
+
+		// use for manipulate block chain
 		this.blockChain = new BlockChain();
 
-		this.consensus = new Consensus(self);
-		this.transactionsPool = new Pool(100);
-		this.consistentTransactionsPool = new Pool(100);
+		// used for transaction consensus
+		this.consensus = new Consensus(self, express);
 
-		this.on("consistentTransaction", function(err, next) {
-				processBlock(self);
-				next();		
-		});
+		// used for block sync
+		this.update = new Update(self);
 
-		initBlockChainState(self);
+		// transactions cache
+		this.transactionsPool = new Pool();
 	}
 
-	/**
-	 * reset stateManager
-	 */
-	reset()
+	run()
 	{
-		initBlockChainState(this);
+		const self = this;
+
+		// update block chain
+		self.update.run();
+
+		// wait for the stateTrie init is ok
+		this.stoplight.await(function() {
+			// begin transaction consensus
+			self.consensus.consensusInstance.run();
+		});
 	}
 
 
 	/**
-	 * @param {Buffer|String|Array|Object}
+	 * @param {String}
 	 */
 	processTransaction(transaction, cb)
 	{
+		if(typeof transaction !== "string")
+		{
+			throw new Error(`class Processor processTransaction, argument transaction's type should be string, now is ${typeof transaction}`);
+		}
+
 		const self = this;
+
+		// wait for the stateTrie init is ok
 		self.stoplight.await(function() {
+			if(self.transactionsPool.length > TRANSACTION_CACHE_MAX_NUM)
+			{
+				return cb("transactions cache is full");
+			}
+
 			try
 			{
-				// check transaction
 				transaction = new Transaction(transaction);
 
 				let errString = transaction.validate(true);
@@ -86,204 +96,121 @@ class Processor extends AsyncEventEmitter
 				return cb(e);
 			}
 
-			logger.info("receive transaction, hash: " + transaction.hash(true).toString("hex") + ", transaction: " + JSON.stringify(transaction.toJSON(true)));
+			logger.info(`receive transaction, hash: ${transaction.hash(true).toString("hex")}, transaction: ${JSON.stringify(transaction.toJSON(true))}`);
 
-			self.transactionsPoolSem.take(function(semaphoreLeaveFunc) {
+			self.transactionsPool.push(transaction);
 
-				// push to transaction pool
-				self.transactionsPool.push(transaction, function(err) {
-
-					self.transactionsPoolSem.leave();
-
-					if(!!err)
-					{
-						return cb(err);
-					}
-
-					self.emit("transaction");
-					cb();
-				});
-			});
+			cb();
 		});
 	}
-}
 
-/**
- * Init stateTrie
- *
- */
-function initBlockChainState(processor)
-{
-	// get lastest block number
-	processor.blockChain.getLastestBlockNumber(function(err, bnNumber) {
-		if(!!err)
-		{
-			throw new Error("class Processor initBlockChainState, getLastestBlockNumber err " + err);
-		}
-
-		// genesis block
-		if(bnNumber.eqn(0))
-		{
-			processor.stoplight.go();
-			return;
-		}
-
-		getLastestBlockState(bnNumber);
-	});
-
-	function getLastestBlockState(bnNumber)
+	/**
+	 * @param {Boolean} opts.generate
+	 * @param {Block} consistentBlock
+	 */
+	processBlock(opts, consistentBlock, cb)
 	{
+		if(consistentBlock instanceof Block === false)
+		{
+			throw new Error("class Processor processBlock, argument consistentBlock's type should be Block");
+		}
+		
+		if(consistentBlock.transactions.length === 0)
+		{
+			// do not process block without transactions
+			logger.info(`Class Processor, block ${util.baToHexString(consistentBlock.header.number)} has no transaction`);
+			return cb();
+		}
+
+		const self = this;
+
+		const ifGenerateStateRoot = !!opts.generate
+
+		const ERR_SERVER_RUN_BLOCK_BLOCKS_UPDATING = 1;
+
 		async.waterfall([
 			function(cb) {
-				// get latest block
-				processor.blockChain.getBlockByNumber(bnNumber, cb);
-			},
-			function(block, cb) {
-				// init new state root
-				let db = initDb();
-				let trie = new Trie(db, block.header.stateRoot);
+				let bnParentBlockNumber = new BN(consistentBlock.header.number).subn(1);
 
-				// init block
-				processor.blockChain = new BlockChain({stateTrie: trie});
-				cb();
-			}], function(err) {
-				if(!!err)
+				// get block hash
+				self.blockChain.getBlockHashByNumber(bnParentBlockNumber, cb);
+			},
+			function(parentHash, cb) {
+				// init parantHash
+				if(parentHash)
 				{
-					throw new Error("class Processor initBlockChainState, getLastestBlockState err " + err);
+					consistentBlock.header.parentHash = parentHash;
+				}
+				else
+				{
+					// check if consistentBlock is a genesis block
+					if(new BN(consistentBlock.header.number).cmpn(1) !== 0)
+					{
+						logger.info("block chain's updating is not finish, begin to finish");
+
+						// blockChain is behind the latest version, begin update 
+						self.update.run();
+						//
+						return cb(ERR_SERVER_RUN_BLOCK_BLOCKS_UPDATING);
+					}
 				}
 
-				processor.stoplight.go();
-			});
-	}
-}
-
-/**
- * @param {Block} block 
- */
-function processBlock(processor)
-{
-	let waitingProcessTransactionSize;
-
-	let rawHeader = {
-		parentHash: Buffer.alloc(32),
-		stateRoot: Buffer.alloc(32),
-		transactionsTrie: Buffer.alloc(32),
-		number: 0,
-		timestamp: Date.now(),
-		extraData: Buffer.alloc(0),
-		transactionSizeLimit: BLOCK_TRANSACTIONS_SIZE_LIMIT
-	};
-
-	let block;
-
-	async.waterfall([
-		function(cb) {
-			// lock
-			processor.consistentTransactionsPoolSem.take(function(semaphoreLeaveFunc){
-				cb();
-			});
-		},
-		function(cb) {
-			if(processor.consistentTransactionsPool.length < BLOCK_TRANSACTIONS_SIZE_LIMIT)
-			{
-				return cb(ERR_SERVER_TRANSACTION_SIZE_NOT_REACH);
-			}
-
-			waitingProcessTransactionSize = processor.consistentTransactionsPool.length < BLOCK_TRANSACTIONS_SIZE_LIMIT ? processor.consistentTransactionsPool.length : BLOCK_TRANSACTIONS_SIZE_LIMIT;
-			cb();
-		},
-		function(cb) {
-			// get lastest block number
-			processor.blockChain.getLastestBlockNumber(cb);
-		},
-		function(lastestBlockNumber, cb) {
-			// init block number
-			rawHeader.number = lastestBlockNumber.addn(1);
-
-			// get lastest block hash
-			processor.blockChain.getBlockHashByNumber(lastestBlockNumber, cb);
-		},
-		function(parentHash, cb) {
-			// init parantHash
-			if(parentHash)
-			{
-				rawHeader.parentHash = parentHash;
-			}
-			
-			// init block
-			let rawBLock = {header: rawHeader, transactions: []};
-			rawBLock.transactions = processor.consistentTransactionsPool.slice(0, waitingProcessTransactionSize);
-
-			logger.info("processing transaction: ")
-			for(let i = 0; i < rawBLock.transactions.length; i++)
-			{
-				logger.info("hash: " + rawBLock.transactions[i].hash(true).toString("hex") + ", transaction: " + JSON.stringify(rawBLock.transactions[i].toJSON(true)));
-			}
-
-			block = new Block(rawBLock);
-
-			// generate transactionsTrie
-			block.genTxTrie(cb);
-		},
-		function(cb) {
-			// init transactionsTrie
-			block.header.transactionsTrie = block.txTrie.root;
-
-			// run block and init stateRoot
-			// skipNonce: true
-			processor.blockChain.runBlock({block: block, generate: true, skipNonce: true}, function(err, errCode, failedTransactions) {
-				if(!!err)
+				logger.warn("################processing transaction: ################")
+				for(let i = 0; i < consistentBlock.transactions.length; i++)
 				{
-					if(errCode === ERR_RUN_BLOCK_TX_PROCESS)
-					{						
+					logger.warn("hash: " + consistentBlock.transactions[i].hash(true).toString("hex") + ", transaction: " + JSON.stringify(consistentBlock.transactions[i].toJSON(true)));
+				}
+
+				self.blockChain.runBlock({block: consistentBlock, generate: ifGenerateStateRoot, skipNonce: true}, function(err, failedTransactions) {
+					if(!!err)
+					{	
 						errLogger.error("failed transactions: ")
 						for(let i = 0; i < failedTransactions.length; i++)
 						{
 							errLogger.error("hash: " + failedTransactions[i].hash(true).toString("hex") + ", transaction: " + JSON.stringify(failedTransactions[i].toJSON(true)));
 						}
 
-						// process failed transaction
-						processor.consistentTransactionsPool.delBatch(failedTransactions, function() {
-							cb(ERR_SERVER_RUN_BLOCK_ERR);
-						});
-						return;
+						// delete valid transactions
+						consistentBlock.delInvalidTransactions(failedTransactions);
+						
+						return cb(err);
 					}
 					
-					return cb(ERR_SERVER_RUN_BLOCK_ERR);
+					cb();
+				});
+			},
+			function(cb) {
+				logger.warn("################update block: ################")
+				logger.warn(`block number: ${util.baToHexString(consistentBlock.header.number)}, block hash: ${util.baToHexString(consistentBlock.hash())}`)
+
+				self.blockChain.updateBlock(consistentBlock, cb);
+			},
+			function(cb) {
+				self.blockChain.updateMaxBlockNumber(consistentBlock.header.number, cb);
+			}], function(err) {
+				// some transaction is invalid, del them and run again
+				if(err === ERR_RUN_BLOCK_TX_PROCESS)
+				{
+					self.processBlock(opts, consistentBlock, cb);
+					return;
 				}
-				
+
+				// blocks is updating
+				if(err === ERR_SERVER_RUN_BLOCK_BLOCKS_UPDATING)
+				{
+					return cb();
+				}
+
+				if(!!err)
+				{
+					throw new Error(`class Processor processBlock ${err}`);
+				}
+
+				logger.warn("################run block success################")
+
 				cb();
 			});
-		},
-		function(cb) {
-			processor.blockChain.putBlock(block, cb);
-		},
-		function(cb) {
-			processor.consistentTransactionsPool.splice(0, waitingProcessTransactionSize, cb);
-		}], function(err) {
-			// release semaphore
-			processor.consistentTransactionsPoolSem.leave();
-
-			if(err === ERR_SERVER_TRANSACTION_SIZE_NOT_REACH)
-			{
-				return;
-			}
-
-			if(err === ERR_SERVER_RUN_BLOCK_ERR)
-			{
-				return;
-			}
-
-			// log
-			if(!!err)
-			{
-				throw new Error("server processBlock err, " + err);
-			}
-
-			logger.info("*************** pack block success!!! ***************")
-		});
+	}
 }
-
-util.inherits(BlockChain, AsyncEventEmitter);
 
 module.exports = Processor;
