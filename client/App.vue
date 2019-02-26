@@ -63,6 +63,7 @@
 
 <script>
 import axios from "./front/axios.js";
+import nodesInfo from "./nodes.json";
 
 export default {
   name: "App",
@@ -76,8 +77,8 @@ export default {
     	to: "",
     	value: 0,
     	transactionHash: "",
-    	url: "http://localhost:8080",
-    	nodesInfo: [{url: "http://localhost:8080", detail: ""}, {url: "http://localhost:8081", detail: ""}]
+    	url: nodesInfo[0].url,
+    	nodesInfo: nodesInfo
     }
   },
 
