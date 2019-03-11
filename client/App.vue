@@ -1,30 +1,54 @@
 <template>
-	<div>
-		<h1 style="text-align:center;">Welcome to Easy Block Chain Coin System</h1>
-		<div style="margin:20px;">
-			<span>currnet node url: </span><p>{{url}}</p>
+	<div class="container">
+		<h1>欢迎进入区块链交易系统</h1>
+		<div class="current_node">
+			<p>当前选择节点: {{url}}</p>
 		</div>
-		<div style="display:flex;justify-content;center;height:200px;margin:20px">
-			<dvi style="height:100%;width:100%;overflow:auto">
-				<span>node url list:</span>
-				<ul id="nodesInfo">
-					<li v-for="nodeInfo in nodesInfo">
-						<p style="cursor:pointer;" @dblclick="chooseUrl(nodeInfo.url)">{{nodeInfo.url}}</p><p>{{nodeInfo.detail}}</p>
-					</li>
-				</ul>
-			</dvi>
+		<div class="node_list">
+			<span>节点列表:</span>
+			<ul id="nodesInfo">
+				<li v-for="nodeInfo in nodesInfo">
+					<p style="cursor:pointer;" @dblclick="chooseUrl(nodeInfo.url)">{{nodeInfo.url}}</p>
+					<ul class="chain">
+						<li><div class="chain_text">开始生成</div></li>
+						<li><div class="chain_text">{{nodeInfo.detail | filterXx}}</div></li>
+						<li><div class="chain_text">{{nodeInfo.detail | filterXxx}}</div></li>
+						<li>
+							<div class="chain_text">
+								<span>{{nodeInfo.detail | filterHash}}</span>
+								<span>{{nodeInfo.detail | filterNum}}</span>
+							</div>
+						</li>
+						<div class='generation'>
+							<i></i>
+							<i></i>
+							<i></i>
+							<i></i>
+							<i></i>
+							<i></i>
+							<i></i>
+							<i></i>
+							<span>正在生成中</span>
+						</div>
+					</ul>
+					<p></p>
+				</li>
+			</ul>
 		</div>
-		<div style="display:flex;justify-content;center;height:300px;margin:20px">
-			<dvi style="height:100%;width:50%;overflow:auto">
-				<span>from history:</span>
+		<div class="main_left">
+			<div class="senderRecord">
+				<span>发送者记录:</span>
 				<ul id="fromHistory">
 					<li v-for="from in froms">
-						<p style="cursor:pointer;" @dblclick="chooseFrom(from)">{{from}}</p><button @click="getAccountInfo(from)">get account info</button><button @click="getPrivateKey(from)">get private key</button>
+						<p style="cursor:pointer;" @dblclick="chooseFrom(from)">{{from}}
+						</p>
+						<button @click="getAccountInfo(from)" class="obtain1">获取账户信息</button>
+						<button @click="getPrivateKey(from)" class="obtain2">获取私钥</button>
 					</li>
 				</ul>
-			</dvi>
-			<div style="height:100%;width:50%;overflow:auto">
-				<span>to history:</span>
+			</div>
+			<div class="recipientRecord">
+				<span>接收者记录:</span>
 				<ul id="toHistory">
 					<li v-for="to in tos">
 						<p style="cursor:pointer;" @dblclick="chooseTo(to)">{{to}}</p>
@@ -32,30 +56,29 @@
 				</ul>
 			</div>
 		</div>
-		
-		<div style="display:flex;flex-direction:column;justify-content;center;">
-			<div style="display:flex;align-items:center;">
-				<span style="width:50px;">from: </span><input style="width:100%;margin:20px;" v-model="from"/>
+		<div class="main_right">
+			<div class="input_list">
+				<div class="from">
+					<span>发送者: </span>
+					<input v-model="from" placeholder="请输入发送者id"/>
+				</div>
+				<div class="to">
+					<span>接收者: </span>
+					<input v-model="to" placeholder="请输入接收者id"/>
+				</div>
+				<div class="value">
+					<span>值: </span>
+					<input v-model="value" placeholder="请输入值"/>
+				</div>
+				<button type="primary" @click="generateKeyPiar">生成密匙piar</button>
+			  <button type="primary" @click="sendTransaction">发送交易</button>
 			</div>
-			<div style="display:flex;align-items:center;">
-				<span style="width:50px;">to: </span><input style="width:100%;margin:20px;" v-model="to"/>
-			</div>
-			<div style="display:flex;align-items:center;">
-				<span style="width:50px;">value: </span><input style="width:100%;margin:20px;" v-model="value"/>
-			</div>
-		</div>
-
-		<div style="display:flex;justify-content:flex-end;margin:20px;">
-			<button @click="generateKeyPiar">generate key piar</button>
-		  <button @click="sendTransaction">send transaction</button>
-		</div>
-
-		<div style="display:flex;flex-direction:column;margin:20px;">
-			<div style="display:flex">
-				<span style="width:200px;">transaction hash: </span><input style="width:100%;" v-model="transactionHash"/>
-			</div>
-			<div style="display:flex;justify-content:flex-end;margin-top:20px;">
-				<button @click="getTransactionState">get transaction state</button>
+			<div class="transactionHash">
+				<div class="tHash">
+					<span>交易哈希值: </span>
+				<input v-model="transactionHash"/>
+				</div>
+				<button @click="getTransactionState">获取交易状态</button>
 			</div>
 		</div>
 	</div>
@@ -64,6 +87,8 @@
 <script>
 import axios from "./front/axios.js";
 import nodesInfo from "./nodes.json";
+import css from "./style/index.css";
+import js from "./js/index.js";
 
 export default {
   name: "App",
@@ -89,6 +114,37 @@ export default {
 		this.getLastestBlock();
 
 		setInterval(this.getLastestBlock, 2000);
+  },
+
+  filters:{
+    filterHash (value) {
+      if (!value) return ''
+      if (value.length > 50) {
+        return value = value.slice(1,15) 
+      }
+      return value
+    },
+    filterNum (value) {
+      if (!value) return ''
+      if (value.length > 50) {
+        return value = "\"" + value.slice(78,92)
+      }
+      return value
+    },
+    filterXx (value) {
+      if (!value) return ''
+      if (value.length > 50) {
+        return value = "\"" + value.slice(15,23) + "\""
+      }
+      return value
+    },
+    filterXxx (value) {
+      if (!value) return ''
+      if (value.length > 50) {
+        return value = "\"" + value.slice(24,32) + "\""
+      }
+      return value
+    }
   },
 
   methods:
