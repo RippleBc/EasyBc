@@ -26,13 +26,6 @@ class Account
     util.defineProperties(this, fields, data);
   }
 
-  /**
-   * Returns the rlp encoding of the account
-   * @method serialize
-   * @memberof Account
-   * @return {Buffer}
-   */
-
   isEmpty()
   {
     return this.balance.toString("hex") === "" && this.nonce.toString("hex") === "";
