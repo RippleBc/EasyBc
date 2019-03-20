@@ -1,8 +1,8 @@
 node_modules/
 db/data
-client/data
-server/data
-client/logs
-server/logs
+client/data/*
+server/data/*
+client/logs/*
+server/logs/*
 client/node_modules/
 server/node_modules/
