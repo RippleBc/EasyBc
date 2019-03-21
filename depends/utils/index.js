@@ -1,11 +1,11 @@
-const createKeccakHash = require("keccak")
-const secp256k1 = require("secp256k1")
-const assert = require("assert")
-const { randomBytes } = require("crypto")
-const path = require("path")
-const fs = require("fs")
+const createKeccakHash = require("keccak");
+const secp256k1 = require("secp256k1");
+const assert = require("assert");
+const { randomBytes } = require("crypto");
+const path = require("path");
+const fs = require("fs");
 
-const Buffer = exports.Buffer = require("safe-buffer").Buffer
+const Buffer = exports.Buffer = require("safe-buffer").Buffer;
 const rlp = exports.rlp = require("rlp");
 const BN = exports.BN = require("bn.js");
 
@@ -99,7 +99,7 @@ exports.isValidPrivate = function(privateKey)
  */
 exports.isValidPublic = function(publicKey)
 {
-  assert(Buffer.isBuffer(publickey), `utils isValidPublic, publicKey should be an Buffer, now is ${typeof publicKey}`);
+  assert(Buffer.isBuffer(publicKey), `utils isValidPublic, publicKey should be an Buffer, now is ${typeof publicKey}`);
 
   if(publicKey.length !== SANITIZED_PUBLIC_KEY && publicKey.length !== UNSANITIZED_PUBLIC_KEY)
   {
@@ -125,9 +125,9 @@ exports.publicToAddress = function(publicKey)
 {
   assert(Buffer.isBuffer(publicKey), `utils publicToAddress, publicToAddress should be an Buffer, now is ${typeof publicKey}`);
 
-  if(publicKey.lenth !== SANITIZED_PUBLIC_KEY && publicKey.lenth !== UNSANITIZED_PUBLIC_KEY)
+  if(publicKey.length !== SANITIZED_PUBLIC_KEY && publicKey.length !== UNSANITIZED_PUBLIC_KEY)
   {
-    throw Error(`utils publicToAddress, publicKey should be sanitized or unsanitized, it's length should be ${SANITIZED_PUBLIC_KEY} or ${UNSANITIZED_PUBLIC_KEY}`);
+    throw Error(`utils publicToAddress, publicKey should be sanitized or unsanitized, it's length should be ${SANITIZED_PUBLIC_KEY} or ${UNSANITIZED_PUBLIC_KEY}, now is ${publicKey.length}`);
   }
 
   // Convert to sanitized publicKey.
@@ -141,13 +141,13 @@ exports.publicToAddress = function(publicKey)
 }
 
 /**
- * Compute an uncompressed sanitzied publickkey.
+ * Compute an uncompressed sanitzied publickKey.
  * @param {Buffer} privateKey
  * @return {Buffer}
  */
 exports.privateToPublic = function(privateKey)
 {
-  assert(Buffer.isBuffer(privatekey), `utils privateToPublic, privateKey should be an Buffer, now is ${typeof privateKey}`);
+  assert(Buffer.isBuffer(privateKey), `utils privateToPublic, privateKey should be an Buffer, now is ${typeof privateKey}`);
 
   return secp256k1.publicKeyCreate(privateKey, false).slice(1);
 }
@@ -468,7 +468,7 @@ exports.defineProperties = function(self, fields, data)
 {
   assert(typeof self === "object", `utils defineProperties, self should be an Object, now is ${typeof self}`);
   assert(Array.isArray(fields), `utils defineProperties, fields should be an Array, now is ${typeof fields}`);
-  assert();
+  assert(typeof data === "string" || Buffer.isBuffer(data) || Array.isArray(data) || typeof data === "object", `utils defineProperties, data should be String or Buffer or Array or Object, now is ${typeof data}`);
 
   // Buffer Array
   self.raw = [];
@@ -528,28 +528,28 @@ exports.defineProperties = function(self, fields, data)
     Object.defineProperty(self, field.name, {
       enumerable: true,
       configurable: true,
-      value: field.default || undefined,
-      writable: true,
       get: getter,
       set: setter
     });
-    
+    if(field.default)
+    {
+      self[field.name] = field.default;
+    }
+
     if(field.alias)
     {
       Object.defineProperty(self, field.alias, {
         enumerable: false,
         configurable: true,
-        value: field.default || undefined,
-        writable: true,
         get: getter,
         set: setter
-      })
+      });
     }
   });
 
   if(data)
   {
-    if(exports.isHexString(data))
+    if(typeof data === "string" && exports.isHexString(data))
     {
       data = Buffer.from(exports.stripHexPrefix(data), "hex");
     }
@@ -561,7 +561,7 @@ exports.defineProperties = function(self, fields, data)
 
     if(Array.isArray(data))
     {
-      assert(data.length <= self._fields.length， `uitl defineProperties, data length should lower than ${self._fields.length}, now it's length is ${data.length}`);
+      assert(data.length <= self._fields.length, `uitl defineProperties, data length should lower than ${self._fields.length}, now it's length is ${data.length}`);
 
       data.forEach((value, index) => {
         self[self._fields[index]] = exports.toBuffer(value);
@@ -575,8 +575,7 @@ exports.defineProperties = function(self, fields, data)
 
         if(keys.indexOf(field.name) !== -1 || keys.indexOf(field.alias) !== -1)
         {
-          self[field.name] = data[field.name];
-          self[field.alias] = data[field.alias];
+          self[field.name || field.alias] = data[field.name || field.alias];
         }
       });
     }

@@ -40,7 +40,7 @@ module.exports = function(opts, cb) {
   {
     var accounts = new Set();
     block.transactions.forEach(function(tx) {
-      accounts.add(tx.getSenderAddress());
+      accounts.add(tx.from);
       accounts.add(tx.to);
     });
 

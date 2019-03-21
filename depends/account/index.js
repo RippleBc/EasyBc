@@ -1,4 +1,4 @@
-const util = require('../utils')
+const util = require("../utils");
 
 const Buffer = util.Buffer;
 
@@ -8,7 +8,6 @@ class Account
   {
     data = data || {};
 
-    // Define Properties
     let fields = [{
       length: 32,
       name: "nonce",
