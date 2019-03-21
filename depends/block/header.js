@@ -1,7 +1,9 @@
-const util = require("../utils")
+const utils = require("../utils");
+const assert = require("assert");
 
-const BN = util.BN;
-const Buffer = util.Buffer;
+const BN = utils.BN;
+const Buffer = utils.Buffer;
+const sha256 = utils.sha256;
 
 class BlockHeader
 {
@@ -40,71 +42,58 @@ class BlockHeader
       allowZero: true,
       allowLess: true,
       default: Buffer.alloc(0)
-    }, {
-      name: "nonce",
-      length: 32,
-      allowZero: true,
-      allowLess: true,
-      default: Buffer.alloc(0)
     }];
 
-    util.defineProperties(this, fields, data);
+    utils.defineProperties(this, fields, data);
   }
 
   /**
    * Validates the entire block header
-   * @method validate
-   * @param {Blockchain} blockChain the blockchain that this block is validating against
-   * @param {Function} cb the callback function. The callback is given an error if the block is invalid
+   * @param {Block} parentBlock
+   * @return {Object}
+   * @prop {Boolean} state.
+   * @prop {String} msg.
    */
-  validate(blockchain, cb)
+  validate(parentBlock)
   {
-    const self = this;
-
-    let bnZero = new BN(0);
+    assert(parentBlock instanceof this.blockClass || parentBlock === undefined, `Block Header validate, parentBlock should be an BLock or undefined, now is ${typeof parentBlock}`);
 
     // geneies block, no not need check
     if(this.isGenesis())
     {
-      return cb();
+      return {
+        state: true
+      };
     }
 
-    // find the blocks parent
-    blockchain.getBlockByHash(self.parentHash, function(err, parentBlock)
+    let errors = [];
+
+    // check block number
+    if(new BN(this.number).cmp(new BN(parentBlock.header.number).addn(1)) <= 0)
     {
-      if(!!err)
-      {
-        return cb("class Block validate, could not find parent block.");
-      }
+      errors.push(`property number should bigger than ${parentBlock.header.number}, now is ${this.number}`);
+    }
 
-      self.parentBlock = parentBlock;
+    // check block timestamp
+    if(new BN(this.timestamp).cmp(new BN(parentBlock.header.timestamp)) <= 0)
+    {
+      errors.push(`property timestamp should bigger than ${parentBlock.header.timestamp}, now is ${this.timestamp}`);
+    }
 
-      // check block number
-      var number = new BN(self.number);
-      if(number.cmp(new BN(parentBlock.header.number).iaddn(1)) !== 0)
-      {
-        return cb("class Block validate, invalid number");
-      }
-
-      // check block timestamp
-      if(util.bufferToInt(self.timestamp) <= util.bufferToInt(parentBlock.header.timestamp))
-      {
-        return cb("class Block validate, invalid timestamp");
-      }
-
-      cb();
-    });
+    return {
+      state: errors.length ? false : true,
+      msg: `block validate failed, ${errors.join("\r\n")}`
+    }
   }
 
   /**
-   * Returns the sha3 hash of the blockheader
+   * Returns the sha256 of the blockheader
    * @method hash
    * @return {Buffer}
    */
   hash()
   {
-    let rlpEncodedText = this.serialize();
-    return util.keccak256(rlpEncodedText);
+    return sha256(this.serialize());
   }
 
   isGenesis()

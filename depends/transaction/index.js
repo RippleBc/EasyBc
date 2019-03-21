@@ -1,10 +1,10 @@
-const util = require("../utils");
+const utils = require("../utils");
 const assert = require("assert");
 
-const Buffer = util.Buffer;
-const sha256 = util.sha256;
-const rlp = util.rlp;
-const BN = util.BN;
+const Buffer = utils.Buffer;
+const sha256 = utils.sha256;
+const rlp = utils.rlp;
+const BN = utils.BN;
 
 class Transaction
 {
@@ -53,7 +53,7 @@ class Transaction
       default: Buffer.alloc(32)
     }];
 
-    util.defineProperties(this, fields, data);
+    utils.defineProperties(this, fields, data);
 
     /**
      * @property {Buffer} from (read only). sender address of this transaction, mathematically derived from other parameters.
@@ -68,7 +68,7 @@ class Transaction
           return this._from;
         }
         const publicKey = this.getSenderPublicKey();
-        this._from = util.publicToAddress(publicKey);
+        this._from = utils.publicToAddress(publicKey);
         return this._from;
       }
     });
@@ -105,8 +105,8 @@ class Transaction
     if(!this._senderPubKey || !this._senderPubKey.length)
     {
       const msgHash = this.hash(false);
-      let v = util.bufferToInt(this.v);
-      this._senderPubKey = util.ecrecover(msgHash, v, this.r, this.s);
+      let v = utils.bufferToInt(this.v);
+      this._senderPubKey = utils.ecrecover(msgHash, v, this.r, this.s);
     }
 
     return this._senderPubKey;
@@ -138,7 +138,7 @@ class Transaction
 
     const msgHash = this.hash(false);
 
-    return util.ecverify(msgHash, this.r, this.s, this._senderPubKey);
+    return utils.ecverify(msgHash, this.r, this.s, this._senderPubKey);
   }
 
   /**
@@ -150,7 +150,7 @@ class Transaction
     assert(Buffer.isBuffer(privateKey), `Transaction sign, privateKey should be an Buffer, now is ${typeof privateKey}`);
 
     const msgHash = this.hash(false);
-    const sig = util.ecsign(msgHash, privateKey);
+    const sig = utils.ecsign(msgHash, privateKey);
 
     // copy sig's properties v, s, r to this
     Object.assign(this, sig);
@@ -200,7 +200,7 @@ class Transaction
 
     return {
       state: errors.length ? false : true,
-      msg: errors.join("\r\n")
+      msg: `transaction validate failed, ${errors.join("\r\n")}`
     }
   }
 }

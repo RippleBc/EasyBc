@@ -1,6 +1,6 @@
-const util = require("../utils");
+const utils = require("../utils");
 
-const Buffer = util.Buffer;
+const Buffer = utils.Buffer;
 
 class Account
 {
@@ -19,10 +19,10 @@ class Account
       name: "balance",
       allowZero: true,
       allowLess: true,
-      default: util.toBuffer("0x6000")
+      default: utils.toBuffer("0x6000")
     }];
 
-    util.defineProperties(this, fields, data);
+    utils.defineProperties(this, fields, data);
   }
 
   isEmpty()

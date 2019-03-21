@@ -1,68 +1,60 @@
-const util = require("../utils")
-const Tx = require("../transaction")
-const Trie = require("merkle-patricia-tree")
-const BN = util.BN
-const rlp = util.rlp
-const async = require("async")
-const BlockHeader = require("./header")
-const initDb = require("../db")
+const utils = require("../utils");
+const Transaction = require("../transaction");
+const Trie = require("../trie");
+const Header = require("./header");
+const assert = require("assert");
 
-/**
- * Creates a new block object
- *
- * @class
- * @constructor the raw serialized or the deserialized block.
- * @param {Array|Buffer|Object} data
- * @param {Array} data[0] raw header data 
- * @param {Array} data[1] the item of array is raw transaction data 
- * @prop {Header} header the block's header
- * @prop {Array.<Header>} uncleList an array of uncle headers
- * @prop {Array.<Buffer>} raw an array of buffers containing the raw blocks.
- */
-class Block {
+const BN = utils.BN;
+const rlp = utils.rlp;
+const toBuffer = utils.toBuffer;
+
+class Block 
+{
   constructor(data)
   {
     data = data || [[], []];
 
-    this.transactions = [];
-
     this.txTrie = new Trie();
 
-    let rawTransactions = [];
-
-    if(typeof data === "string")
+    // decode
+    if(typeof data === "string" && utils.isHexString(data))
     {
-      data = util.toBuffer(data);
+      data = toBuffer(data);
     }
-
     if(Buffer.isBuffer(data))
     {
       data = rlp.decode(data);
     }
 
+    // init header and transactions
+    let rawTransactions;
     if(Array.isArray(data))
     {
-      this.header = new BlockHeader(data[0]);
+      this.header = new Header(data[0]);
       rawTransactions = data[1];
+    }
+    else if(typeof data === "object")
+    {
+      this.header = new Header(data.header);
+      rawTransactions = data.transactions;
     }
     else
     {
-      this.header = new BlockHeader(data.header);
-      rawTransactions = data.transactions;
+      throw Error(`Block constructor, data which has been parsed should be an Array or Object, now is ${typeof data}`);
     }
-
-    // parse transactions
+    this.header.blockClass = Block;
+    assert(Array.isArray(rawTransactions), `rawTransactions should be an Array, now is ${typeof rawTransactions}`);
+    this.transactions = [];
     for(let i = 0; i < rawTransactions.length; i++)
     {
-      let tx = new Tx(rawTransactions[i]);
-      this.transactions.push(tx);
+      this.transactions.push(new Transaction(rawTransactions[i]));
     }
   }
 
 
   /**
    * Produces a hash the RLP of the block
-   * @method hash
+   * @return {Boolean}
    */
   hash()
   {
@@ -71,8 +63,7 @@ class Block {
 
   /**
    * Determines if a given block is the genesis block
-   * @method isGenisis
-   * @return Boolean
+   * @return {Boolean}
    */
   isGenesis()
   {
@@ -85,9 +76,7 @@ class Block {
    */
   serialize()
   {
-    let raw = [[], []];
-
-    raw[0] = this.header.raw;
+    const raw = [this.header.raw, []];
 
     for(let i = 0; i < this.transactions.length; i++)
     {
@@ -98,120 +87,106 @@ class Block {
   }
 
   /**
-   * Generate transaction trie. The tx trie must be generated before the transaction trie can
-   * be validated with `validateTransactionTrie`
-   * @method genTxTrie
-   * @param {Function} cb the callback
+   * Generate transaction trie. The tx trie must be generated before the transaction trie can be validated with `validateTransactionTrie`
    */
-  genTxTrie(cb)
+  async genTxTrie()
   {
-    let self = this;
+    const self = this;
 
-    async.eachSeries(self.transactions, function (tx, done) {
-      self.txTrie.put(tx.hash(true), tx.serialize(), done);
-    }, cb);
+    for(let i = 0 ; i < self.transactions.length; i++)
+    {
+      let transaction = self.transactions[i];
+
+      await self.txTrie.put(transaction.hash(true), transaction.serialize());
+    };
   }
 
   /**
    * Validates the transaction trie
-   * @method validateTransactionTrie
    * @return {Boolean}
    */
   validateTransactionsTrie()
   {
-    let txT = this.header.transactionsTrie.toString("hex");
-    if(this.transactions.length)
-    {
-      return txT === this.txTrie.root.toString("hex")
-    }
-   
-    return txT === util.SHA3_RLP.toString("hex")
+    return this.header.transactionsTrie.toString("hex") === this.txTrie.root.toString("hex");
   }
 
   /**
    * Validates the transactions
-   * @method validateTransactions
-   * @param {Boolean} [stringError=false] whether to return a string with a dscription of why the validation failed or return a Bloolean
-   * @return {Boolean|String}
+   * @return {Object}
+   * @prop {Boolean} state. if transactions are valid
+   * @prop {String} msg. failed info.
    */
-  validateTransactions(stringError)
+  validateTransactions()
   {
-    let errors = [];
+    const errors = [];
 
-    this.transactions.forEach(function(tx, i) {
-      let error = tx.validate(true);
-      if(!!error)
+    this.transactions.forEach(function(transaction, index) {
+      const {state, msg} = transaction.validate();
+      if(!state)
       {
-        errors.push("class Block validateTransactions, " + error + " at tx " + i);
+        errors.push(`index: ${index}, err: ${msg}`);
       }
     });
 
-    if (stringError === undefined || stringError === false)
-    {
-      return errors.length === 0;
+    return {
+      state: errors.length ? false : true,
+      msg: `validateTransactions failed, ${errors.join("\r\n")}`
     }
-   
-    return this.arrayToString(errors);
   }
 
   /**
-   * Validates the entire block. Returns a string to the callback if block is invalid
-   * Checks parent block's hash, timestamp, number and current block's transactionTrieRoot and the valid of transactions
-   * @method validate
-   * @param {BlockChain} blockChain the blockchain that this block wants to be part of
-   * @param {Function} cb the callback which is given arguments result{null|String}
+   * Validates the entire block.
+   * @return {Object}
+   * @prop {Boolean} state. if block is valid
+   * @prop {String} msg. failed info.
    */
-  validate(blockChain, cb)
+  async validate(parentBlock)
   {
-    let self = this;
-    let errors = [];
+    assert(parentBlock instanceof Block || parentBlock === undefined, `Block validate, parentBlock should be an BLock or undefined, now is ${typeof parentBlock}`);
 
-    async.parallel([
-      // validate block
-      self.header.validate.bind(self.header, blockChain),
-      // generate the transaction trie
-      self.genTxTrie.bind(self)
-    ], function(err) {
-      if(!!err)
-      {
-        errors.push(err);
-      }
+    const errors = [];
 
-      if(!self.validateTransactionsTrie())
-      {
-        errors.push("class Block, invalid transaction trie");
-      }
-
-      let txErrors = self.validateTransactions(true);
-      if (txErrors !== "")
-      {
-        errors.push(txErrors);
-      }
-
-      if(errors.length === 0)
-      {
-        return cb();
-      }
-
-      cb(self.arrayToString(errors));
-    })
-  }
-
-  arrayToString(array)
-  {
-    try {
-      return array.reduce(function(str, err) {
-        if(str)
-        {
-          str += "";
-        }
-        return str + err;
-      })
+    // generate the transaction trie
+    try
+    {
+      await this.genTxTrie();
     }
     catch(e)
     {
-      return "";
+      errors.push(`genTxTrie is failed, ${e}`);
     }
+    
+    try
+    {
+      // check header
+      const headerValidateResult = this.header.validate(parentBlock);
+      if(!headerValidateResult.state)
+      {
+        errors.push(headerValidateResult.msg);
+      }
+    }
+    catch(e)
+    {
+      await Promise.reject(`Block validate failed, header.validate failed, ${e}`);
+    }
+
+    // check transactions trie
+    if(!this.validateTransactionsTrie())
+    {
+      errors.push("invalid transactions trie");
+    }
+
+    // check transactions
+    let {state, msg} = this.validateTransactions();
+    if(!state)
+    {
+      errors.push(msg);
+    }
+
+    return {
+      state: errors.length ? false : true,
+      msg: `block validate is failed, ${errors.join("\r\n")}`
+    };
   }
 
   /**
@@ -220,6 +195,8 @@ class Block {
    */
   getTransaction(transactionHash)
   {
+    assert(Buffer.isBuffer(transactionHash), `transactionHash should be an Buffer, now is ${typeof transactionHash}`);
+
     for(let i = 0; i < this.transactions.length; i++)
     {
       if(this.transactions[i].hash(true).toString("hex") === transactionHash.toString("hex"))
@@ -227,20 +204,23 @@ class Block {
         return this.transactions[i];
       }
     }
+
     return null;
   }
 
   /**
-   * @param {Array/Transation} transactions
+   * @param {Array} transactions
    */
-  delInvalidTransactions(delTransactions)
+  delInvalidTransactions(transactions)
   {
+    assert(Array.isArray(transactions), `transactions should be an Array, now is ${typeof transactions}`);
+
     let i, j;
-    for(i = 0; i < delTransactions.length; i++)
+    for(i = 0; i < transactions.length; i++)
     {
       for(j = 0; j < this.transactions.length; j++)
       {
-        if(delTransactions[i].hash(true).toString("hex") === this.transactions[j].hash(true).toString("hex"))
+        if(transactions[i].hash(true).toString("hex") === this.transactions[j].hash(true).toString("hex"))
         {
           this.transactions.splice(j, 1);
         }
@@ -248,4 +228,5 @@ class Block {
     }
   }
 }
+
 module.exports = Block;
