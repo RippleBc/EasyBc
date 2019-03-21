@@ -3,20 +3,6 @@ const util = require("../utils")
 const BN = util.BN;
 const Buffer = util.Buffer;
 
-const DEFAULT_TRANSACTION_SIZE =  util.intToBuffer(50);
-
-/**
- * Creates a new BlockHeader object
- *
- * @class
- * @param {Buffer | Array | Object} data
- * @prop {Buffer} parentHash the blocks' parent's hash
- * @prop {Buffer} stateRoot The root of Trie containing the account info
- * @prop {Buffer} transactionTrie the root of a Trie containing the transactions
- * @prop {Buffer} timestamp
- * @prop {Buffer} extraData
- * @prop {Array.<Buffer>} raw an array of buffers containing the raw blocks.
- */
 class BlockHeader
 {
   constructor(data)
@@ -34,7 +20,7 @@ class BlockHeader
     }, {
       name: "transactionsTrie",
       length: 32,
-      default: util.SHA3_RLP
+      default: Buffer.alloc(32)
     }, {
       name: "number",
       length: 32,
@@ -43,12 +29,14 @@ class BlockHeader
       default: Buffer.alloc(0)
     }, {
       name: "timestamp",
+      length: 32,
       allowZero: true,
       allowLess: true,
       default: Buffer.alloc(0)
     }, {
-      name: "extraData",
+      name: "data",
       length: 32,
+      alias: "input",
       allowZero: true,
       allowLess: true,
       default: Buffer.alloc(0)
@@ -58,11 +46,6 @@ class BlockHeader
       allowZero: true,
       allowLess: true,
       default: Buffer.alloc(0)
-    }, {
-      name: "transactionSizeLimit",
-      length: 32,
-      allowLess: true,
-      default: DEFAULT_TRANSACTION_SIZE
     }];
 
     util.defineProperties(this, fields, data);

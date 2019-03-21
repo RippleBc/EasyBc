@@ -20,13 +20,24 @@ describe("transaction test", function() {
 		let transaction = new Transaction({
 			nonce: 255,
 			to: to,
-			value: 255
+			value: 255,
+			data: "0xd3d3"
 		});
 
+		// check alias
+		assert.equal(transaction.data.toString("hex"), "d3d3", `transaction.data should be d3d3, now is ${transaction.data.toString("hex")}`);
+		assert.equal(transaction.input.toString("hex"), "d3d3", `transaction.input should be d3d3, now is ${transaction.input.toString("hex")}`);
+		transaction.data = "0xd4d4";
+		assert.equal(transaction.data.toString("hex"), "d4d4", `transaction.data should be d4d4, now is ${transaction.data.toString("hex")}`);
+		assert.equal(transaction.input.toString("hex"), "d4d4", `transaction.input should be d4d4, now is ${transaction.input.toString("hex")}`);
+		transaction.input = "0xd5d5";
+		assert.equal(transaction.data.toString("hex"), "d4d4", `transaction.data should be d4d4, now is ${transaction.data.toString("hex")}`);
+		assert.equal(transaction.input.toString("hex"), "d4d4", `transaction.input should be d4d4, now is ${transaction.input.toString("hex")}`);
+
+		// check property
 		assert.equal(transaction.nonce.toString("hex"), "ff", `transaction.nonce should be ff, now is ${transaction.nonce.toString("hex")}`);
 		assert.equal(transaction.to.toString("hex"), "5da3ba30a7e81d92ad8aa2e359c5d8f297fc0ff3", `transaction.to should be 5da3ba30a7e81d92ad8aa2e359c5d8f297fc0ff3, now is ${transaction.to.toString("hex")}`);
 		assert.equal(transaction.value.toString("hex"), "ff", `transaction.value should be ff, now is ${transaction.value.toString("hex")}`);
-		assert.equal(transaction.data.toString("hex"), "", `transaction.data should be ff, now is ${transaction.data.toString("hex")}`);
 
 		// check failed signature
 		let {state, msg} = transaction.validate();

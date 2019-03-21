@@ -541,8 +541,7 @@ exports.defineProperties = function(self, fields, data)
       Object.defineProperty(self, field.alias, {
         enumerable: false,
         configurable: true,
-        get: getter,
-        set: setter
+        get: getter
       });
     }
   });
