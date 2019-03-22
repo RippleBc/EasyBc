@@ -36,15 +36,6 @@ class BlockChain extends AsyncEventEmitter
   }
 
   /**
-   * @param {Array} addresses
-   */
-  populateCache(addresses, cb)
-  {
-    this.stateManager.warmCache(addresses, cb);
-  }
-
-
-  /**
    * @param {*} hash
    */
   getBlockByHash(hash, cb) {

@@ -1,74 +1,93 @@
-const Trie = require("merkle-patricia-tree/secure.js")
-const async = require("async")
-const Account = require("../account")
-const Cache = require("./cache.js")
-const util = require("../utils")
+const Trie = require("../trie");
+const async = require("async");
+const Account = require("../account");
+const Cache = require("./cache.js");
+const util = require("../utils");
+const assert = require("assert");
 
 const BN = util.BN;
 const rlp = util.rlp;
 const Buffer = util.Buffer;
 
-/**
-  * Create a state manager object
-  *
-  * @class
-  * @constructor
-  * @param {Trie} opts.trie
-  * @param {BlockChain} opts.blockchain
-  */
 class StateManager
 {
   constructor(opts)
   {
     opts = opts || {};
 
-    const self = this;
-
-    this.blockchain = opts.blockchain;
-
     this.trie = opts.trie || new Trie();
-
     this.cache = new Cache(this.trie);
   }
 
   /**
    * @param {Buffer} address
    */
-  getAccount(address, cb)
+  async getAccount(address)
   {
-    address = util.toBuffer(address);
+    assert(Buffer.isBuffer(address), `StateManager getAccount, address should be an Buffer, now is ${typeof address}`);
 
-    this.cache.getOrLoad(address, cb);
+    const account =  await this.cache.getOrLoad(address);
+    return account;
   }
 
   /**
    * @param {Buffer} address
-   * @param {Account} account
+   * @param {Buufer} account
    */
-  putAccount(address, account, cb)
+  putAccount(address, account)
   {
-    address = util.toBuffer(address);
+    assert(Buffer.isBuffer(address), `StateManager putAccount, address should be an Buffer, now is ${typeof address}`);
+    assert(Buffer.isBuffer(account), `StateManager putAccount, account should be an Buffer, now is ${typeof account}`);
 
-    this.cache.put(address, account);
-    cb();
+    this.cache.put(address, account, true);
   }
 
   /**
    * @param {Buffer} address
-   * @return cb a function which is given the arguments err and {Buffer}balance
    */
-  getAccountBalance(address, cb)
+  delAccount(address)
   {
-    address = util.toBuffer(address);
+    assert(Buffer.isBuffer(address), `StateManager delAccount, address should be an Buffer, now is ${typeof address}`);
 
-    this.getAccount(address, function(err, account) {
-      if(!!err)
-      {
-        return cb(err);
-      }
+    this.cache.del(address);
+  }
 
-      cb(null, account.balance);
-    })
+  /**
+   * @param {Array} addresses 
+   */
+  async warmCache(addresses)
+  {
+    assert(Array.isArray(addresses), `StateManager warmCache, addresses should be an Array, now is ${typeof addresses}`);
+
+    await this.cache.warm(addresses);
+  }
+
+  async flushCache()
+  {
+    await this.cache.flush();
+  }
+
+  clearCache()
+  {
+    this.cache.clear();
+  }
+
+  /*
+   * @param {Buffer} root
+   */
+  initTrie(_root)
+  {
+    assert(Buffer.isBuffer(_root), `StateManager initTrie, root should be an Buffer, now is ${typeof _root}`);
+
+    this.trie = new Trie(_root);
+  }
+
+  /**
+   * @return {Buffer}
+   */
+  getTrieRoot()
+  {
+    return this.trie.root;
   }
 
   checkpoint()
@@ -76,36 +95,36 @@ class StateManager
     this.trie.checkpoint();
   }
 
-  commit(cb)
+  async commit()
   {
-    this.trie.commit(function(err) {
-      if(!!err)
-      {
-        return cb(err);
-      }
-
-      cb();
+    const promise = new Promise((resolve, reject) => {
+      this.trie.commit(function(err) {
+        if(!!err)
+        {
+          reject(err);
+        }
+        
+        resolve();
+      });
     });
+
+    return promise;
   }
 
-  revert(cb)
+  async revert()
   {
-    this.trie.revert(function(err) {
-      if(!!err)
-      {
-        return cb(err);
-      }
-      
-      cb();
+    const promise = new Promise((resolve, reject) => {
+      this.trie.revert(function(err) {
+        if(!!err)
+        {
+          reject(err);
+        }
+        
+        resolve();
+      });
     });
-  }
 
-  /**
-    * @param {Array} addresses the type of array item is string
-    */
-  warmCache(addresses, cb)
-  {
-    this.cache.warm(addresses, cb);
+    return promise;
   }
 }
 module.exports = StateManager;

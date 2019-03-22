@@ -7,7 +7,7 @@ class Trie extends MerklePatriciaTree
 		super(data);
 	}
 
-	put(key, value)
+	async put(key, value)
 	{
 		const promise = new Promise((resolve, reject) => {
 			super.put(key, value, err => {
@@ -23,7 +23,7 @@ class Trie extends MerklePatriciaTree
 		return promise;
 	}
 
-	del(key)
+	async del(key)
 	{
 		const promise = new Promise((resolve, reject) => {
 			super.del(key, err => {
@@ -39,7 +39,7 @@ class Trie extends MerklePatriciaTree
 		return promise;
 	}
 
-	get(key)
+	async get(key)
 	{
 		const promise = new Promise((resolve, reject) => {
 			super.get(key, (err, value) => {

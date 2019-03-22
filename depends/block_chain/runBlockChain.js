@@ -7,7 +7,7 @@ const BN = util.BN;
  * processes blocks and adds them to the blockchain, blocks should be ordered by block.number like a, a+1, a+1, a+2, a+3 ..., a+n, the block with same block.number is allowed.
  * @param blockchain
  */
-module.exports = function(data, cb)
+module.exports = async function(data, cb)
 {
   let parentState, parentBlock;
 

@@ -1,25 +1,25 @@
-const util = require("../utils")
-const Trie = require("merkle-patricia-tree/secure")
-const async = require("async")
-const initDb = require("../db")
+const util = require("../utils");
+const async = require("async");
+const initDb = require("../db");
 
 const rlp = util.rlp;
 const BN = util.BN;
 const Buffer = util.Buffer;
 
 /**
- * process the transaction in a block
- * @param opts
- * @param opts.block {Block} the block we are processing
- * @param opts.root {Buffer|String} the parent block stateRoot
- * @param opts.generate {Boolean} [gen=false] whether to generate the stateRoot
- * @param opts.skipNonce {Boolean} if ignore transaction nonce check
- * @param opts.skipBalance {Boolean} if ignore transaction balance check
- * @param cb {Function} the callback which is given arguments errString, errCode and failedTransactions
+ * Process the transactions in an block
+ * @param {Object} opts
+ * @prop {Block} opts.block - the block we are processing
+ * @prop {Buffer} opts.root - the parent block stateRoot
+ * @prop {Boolean} opts.generate - whether to generate the stateRoot
+ * @prop {Boolean} opts.skipNonce - if ignore transaction nonce check
+ * @prop {Boolean} opts.skipBalance - if ignore transaction balance check
+ * @return {Object} 
+ * @prop {Number} state
+ * @prop {String} msg
+ * @prop {Array} transactions  
  */
-module.exports = function(opts, cb) {
-  const self = this;
-
+module.exports = async function(opts) {
   const block = opts.block;
   const ifGenerateStateRoot = !!opts.generate;
   const validateStateRoot = !ifGenerateStateRoot;
@@ -28,100 +28,66 @@ module.exports = function(opts, cb) {
 
   if(opts.root)
   {
-    self.stateManager.trie = new Trie(opts.root);
+    this.stateManager.initTrie(opts.root);
   }
 
-  async.series([
-    populateCache,
-    processTransactions
-  ], parseBlockResults);
+  // populate cache
+  let addresses = [];
+  block.transactions.forEach(function(tx) {
+    addresses.push(tx.from);
+    addresses.push(tx.to);
+  });
+  // delete same ele
+  addresses = [...new Set(addresses)];
+  await this.stateManager.warmCache(addresses);
 
-  function populateCache(cb)
+
+  // process transactions
+  for(let i = 0; i < block.transactions.length; i++)
   {
-    var accounts = new Set();
-    block.transactions.forEach(function(tx) {
-      accounts.add(tx.from);
-      accounts.add(tx.to);
-    });
-
-    self.populateCache(accounts, function(err) {
-      if(!!err)
-      {
-        throw new Error(`runBlock populateCache ${err}`);
-      }
-      cb();
-    });
-  }
-
-  function processTransactions(cb)
-  {
-    var validReceiptCount = 0
-
-    console.log("00000000000000000000000000000000000000000000000000000000000: " + util.baToHexString(self.stateManager.trie.root))
-
-    async.eachSeries(block.transactions, function(tx, cb) {
-      self.runTx({
-        tx: tx,
-        block: block,
+    let transaction = block.transactions[i];
+    try
+    {
+      await this.runTx({
+        tx: transaction,
         skipNonce: opts.skipNonce,
         skipBalance: opts.skipBalance
-      }, function(err) {
-        if(!!err)
-        {
-          // record failed transaction
-          failedTransactions.push(tx);
-        }
-        cb()
       });
-    }, cb);
+    }
+    catch(e)
+    {
+      failedTransactions.push(transaction);
+    }
+  }
+  
+  if(failedTransactions.length > 0)
+  {
+    return {
+      state: false,
+      msg: `runBlock, some transactions is invalid`,
+      transactions: failedTransactions
+    };
   }
 
-  function parseBlockResults()
+  // flush state to db
+  this.stateManager.checkpoint();
+  await this.stateManager.flushCache();
+  if(ifGenerateStateRoot)
   {
-    if(failedTransactions.length > 0)
-    {
-      return cb("runBlock, some transactions is invalid", failedTransactions);
-    }
+    block.header.stateRoot = self.stateManager.getTrieRoot();
+  }     
+  // check state trie
+  if(validateStateRoot && self.stateManager.getTrieRoot().toString("hex") !== block.header.stateRoot.toString("hex"))
+  {
+    await Promise.reject(`runBlock, stateTrie should be ${self.stateManager.getTrieRoot().toString("hex")}, now is ${block.header.stateRoot.toString("hex")}`);
+  }
 
-    self.stateManager.checkpoint();
+  await this.stateManager.commit();
+  this.stateManager.clearCache();
 
-    async.waterfall([
-      function(cb) {
-        self.stateManager.cache.flush(function(err) {
-          if(!!err)
-          {
-            throw new Error(`runBlock, flush ${err}`);
-          }
-
-          if(ifGenerateStateRoot)
-          {
-            console.log("11111111111111111111111111111111111111111111111111111111111: " + util.baToHexString(self.stateManager.trie.root))
-            // init state trie
-            block.header.stateRoot = self.stateManager.trie.root;
-          }
-        
-          // check state trie
-          if(validateStateRoot && self.stateManager.trie.root.toString("hex") !== block.header.stateRoot.toString("hex"))
-          {
-            throw new Error(`runBlock, state trie err, computed stateTrie: ${self.stateManager.trie.root.toString("hex")}, block stateTrie: ${block.header.stateRoot.toString("hex")}`);
-          }
-
-          cb();
-        })
-      },
-      function(cb) {
-        self.stateManager.commit(function(err) {
-          if(!!err)
-          {
-            throw new Error(`runBlock, commit ${err}`);
-          }
-
-          self.stateManager.cache.clear();
-
-          cb();
-        });
-      }], function() {
-        cb();
-      });
+  return {
+    state: true,
+    msg: "",
+    transactions: []
   }
 }
