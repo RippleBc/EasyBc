@@ -167,7 +167,7 @@ class Block
     }
     catch(e)
     {
-      await Promise.reject(`Block validate failed, header.validate failed, ${e}`);
+      await Promise.reject(`block validate failed, header.validate throw exception, ${e}`);
     }
 
     // check transactions trie
@@ -185,7 +185,7 @@ class Block
 
     return {
       state: errors.length ? false : true,
-      msg: `block validate is failed, ${errors.join("\r\n")}`
+      msg: `block validate failed, ${errors.join("\r\n")}`
     };
   }
 

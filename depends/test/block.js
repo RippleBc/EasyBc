@@ -19,12 +19,13 @@ const transaction = new Transaction({
 });
 
 describe("block test", function() {
-	it("check privateKey and publicKey", function() {
+	it("check privateKey and publicKey", function(done) {
 		assert.equal(utils.isValidPrivate(privateKey), true, `privateKey 0x${privateKey.toString("hex")} is invalid`);
 		assert.equal(utils.isValidPublic(publicKey), true, `publicKey 0x${publicKey.toString("hex")} is invalid`);
+		done();
 	});
 
-	it("check signature", function() {
+	it("check signature", function(done) {
 		// check alias
 		assert.equal(transaction.data.toString("hex"), "d3d3", `transaction.data should be d3d3, now is ${transaction.data.toString("hex")}`);
 		assert.equal(transaction.input.toString("hex"), "d3d3", `transaction.input should be d3d3, now is ${transaction.input.toString("hex")}`);
@@ -40,10 +41,11 @@ describe("block test", function() {
 		assert.equal(transaction.validate().state, true, `transaction should be valid`);
 		assert.equal(transaction.from.toString("hex"), from.toString("hex"), `transaction.from shoud be ${from.toString("hex")}, now is ${transaction.from.toString("hex")}`);
   	assert.equal(transaction.getSenderPublicKey().toString("hex"), publicKey.toString("hex"), `transaction publicKey should be ${publicKey.toString("hex")}, now is ${transaction.getSenderPublicKey().toString("hex")}`);
+  	done()
   });
 
-	it("check block", function() {
-		const timeNow = Date.now();
+	it("check block", function(done) {
+		const timeNow = "0x456321987";
 
 		const parentBlock = new Block({
 			header: {
@@ -56,23 +58,88 @@ describe("block test", function() {
 		
 		const block = new Block({
 			header: {
-				// parentHash: 
-				// stateRoot:
-				number: 1,
-				timestamp: timeNow
+				parentHash: "0x5daaa848a9239e8b36fae3c24f4820b293bf7b3cc028b7adca6c3d2a7c3ea701",
+				number: 2,
+				timestamp: timeNow + 2,
+				transactionsTrie: "0x57fdab0bfdd14f7e8f9f7bb8a328fa9527550fca063b2abb84cf86a81569bc65"
 			},
-			transactions: [transaction, transaction, transaction]
+			transactions: [transaction, transaction, transaction, transaction]
 		});
 
-		(async function()
-		{	
-			const validateResult = await parentBlock.validate();
-			return validateResult;
-		})().then(({state, msg}) => {
-			console.log(state)
-			console.log(msg)
+		const checkBlock = async function()
+		{
+			let validateResult = await parentBlock.validate();
+			if(!validateResult.state)
+			{
+				await Promise.reject(validateResult.msg);
+			}
+
+			validateResult = await block.validate(parentBlock);
+			if(!validateResult.state)
+			{
+				await Promise.reject(validateResult.msg);
+			}
+
+			// change number
+			block.header.number = 1;
+			validateResult = await block.validate(parentBlock);
+			if(validateResult.state)
+			{
+				await Promise.reject("change number, block validate should failed");
+			}
+			else if(validateResult.msg.indexOf("number") === -1)
+			{
+				await Promise.reject(`change number, block validate should failed, and the failed reason should be invalid number, now is ${validateResult.msg}`);
+			}
+			block.header.number = 2;
+			validateResult = await block.validate(parentBlock);
+			if(!validateResult.state)
+			{
+				await Promise.reject(validateResult.msg);
+			}
+
+			// change timestamp
+			block.header.timestamp = timeNow;
+			validateResult = await block.validate(parentBlock);
+			if(validateResult.state)
+			{
+				await Promise.reject("change timestamp, block validate should failed");
+			}
+			else if(validateResult.msg.indexOf("timestamp") === -1)
+			{
+				await Promise.reject(`change timestamp, block validate should failed, and the failed reason should be invalid number, now is ${validateResult.msg}`);
+			}
+			block.header.timestamp = timeNow + 2;
+			validateResult = await block.validate(parentBlock);
+			if(!validateResult.state)
+			{
+				await Promise.reject(validateResult.msg);;
+			}
+
+			// change parentHash
+			block.header.parentHash = "0x0000000000000000000000000000000000000000000000000000000000000001";
+			validateResult = await block.validate(parentBlock);
+			if(validateResult.state)
+			{
+				await Promise.reject("change parentHash, block validate should failed");
+			}
+			else if(validateResult.msg.indexOf("parentHash") === -1)
+			{
+				await Promise.reject(`change parentHash, block validate should failed, and the failed reason should be invalid number, now is ${validateResult.msg}`);
+			}
+			block.header.parentHash = "0x5daaa848a9239e8b36fae3c24f4820b293bf7b3cc028b7adca6c3d2a7c3ea701";
+			validateResult = await block.validate(parentBlock);
+			if(!validateResult.state)
+			{
+				await Promise.reject(validateResult.msg);
+			}
+		}
+		
+		checkBlock().then(value => {
+			done();
 		}).catch(e => {
-			console.log(e)
+			done(e);
 		});
+		
 	});
 });

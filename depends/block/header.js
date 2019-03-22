@@ -69,20 +69,26 @@ class BlockHeader
     let errors = [];
 
     // check block number
-    if(new BN(this.number).cmp(new BN(parentBlock.header.number).addn(1)) <= 0)
+    if(new BN(this.number).cmp(new BN(parentBlock.header.number).addn(1)) !== 0)
     {
-      errors.push(`property number should bigger than ${parentBlock.header.number}, now is ${this.number}`);
+      errors.push(`property number should bigger 1 than ${parentBlock.header.number.toString("hex")}, now is ${this.number.toString("hex")}`);
     }
 
     // check block timestamp
     if(new BN(this.timestamp).cmp(new BN(parentBlock.header.timestamp)) <= 0)
     {
-      errors.push(`property timestamp should bigger than ${parentBlock.header.timestamp}, now is ${this.timestamp}`);
+      errors.push(`property timestamp should bigger than ${parentBlock.header.timestamp.toString("hex")}, now is ${this.timestamp.toString("hex")}`);
+    }
+
+    // check parentHash
+    if(this.parentHash.toString("hex") !== parentBlock.hash().toString("hex"))
+    {
+      errors.push(`property parentHash should equal to ${parentBlock.hash().toString("hex")}, now is ${this.parentHash.toString("hex")}`);
     }
 
     return {
       state: errors.length ? false : true,
-      msg: `block validate failed, ${errors.join("\r\n")}`
+      msg: `header validate failed, ${errors.join("\r\n")}`
     }
   }
 
