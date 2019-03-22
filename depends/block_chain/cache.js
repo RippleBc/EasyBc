@@ -1,9 +1,11 @@
-const Buffer = require("safe-buffer").Buffer;
+const utils = require("../utils");
 const createTree = require("functional-red-black-tree");
 const Account = require("../account");
 const async = require("async");
 const assert = require("assert");
 const Trie = require("merkle-patricia-tree");
+
+const Buffer = utils.Buffer;
 
 class Cache
 {
@@ -58,7 +60,7 @@ class Cache
       await Promise.reject(`Cache getOrLoad, _lookupAccountFromCache throw exception ${e}`);
     }
 
-    if(account)
+    if(!account.isEmpty())
     {
       return account;
     }
@@ -69,7 +71,7 @@ class Cache
     // account into cache
     try
     {
-      this._updateToCache(address, account, false);
+      this._updateToCache(address, account.serialize(), false);
     }
     catch(e)
     {
@@ -84,7 +86,7 @@ class Cache
    */
   async warm(addresses)
   {
-    assert(Array.isArray(addresses), `Cache warm, addresses should be an Array`);
+    assert(Array.isArray(addresses), `Cache warm, addresses should be an Array, now is ${typeof addresses}`);
 
     for(let i = 0; i < addresses.length; i++)
     {
@@ -94,7 +96,7 @@ class Cache
 
       try
       {
-        this._updateToCache(address, account, false);
+        this._updateToCache(address, account.serialize(), false);
       }
       catch(e)
       {
@@ -125,16 +127,21 @@ class Cache
     var it = this._cache.begin;
     
     // flush modified account
-    while(it.hasNext)
+    while(true)
     {
       if(it.value && it.value.modified)
       {
         it.value.modified = false;
         await this._trie.put(it.key, it.value.val);
       }
-      else
+
+      if(it.hasNext)
       {
         it.next();
+      }
+      else
+      {
+        break;
       }
     }
       
@@ -144,7 +151,7 @@ class Cache
       let address = this._deletes[i];
       await this._trie.del(address);
     }
-    self._deletes = [];
+    this._deletes = [];
   }
 
   /**
