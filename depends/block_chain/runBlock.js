@@ -21,7 +21,7 @@ const Buffer = util.Buffer;
  */
 module.exports = async function(opts) {
   const block = opts.block;
-  const ifGenerateStateRoot = !!opts.generate;
+  const ifGenerateStateRoot = opts.generate || false;
   const validateStateRoot = !ifGenerateStateRoot;
 
   let failedTransactions = [];

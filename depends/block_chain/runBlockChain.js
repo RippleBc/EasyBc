@@ -1,59 +1,41 @@
-const async = require("async")
-const util = require("../utils")
-
-const BN = util.BN;
-
 /**
- * processes blocks and adds them to the blockchain, blocks should be ordered by block.number like a, a+1, a+1, a+2, a+3 ..., a+n, the block with same block.number is allowed.
- * @param blockchain
+ * processes block and add to the blockchain
+ * @param {Object} opts
+ * @prop {Block} opts.block
+ * @prop {Boolean} opts.generate
+ * @prop {Boolean} opts.skipNonce
+ * @prop {Boolean} opts.skipBalance
  */
-module.exports = async function(data, cb)
+module.exports = async function(opts)
 {
-  let parentState, parentBlock;
-
-  blockchain = data.blockchain || this.stateManager.blockchain;
-
-  blockchain.eachSeries(data.blocks, processBlock, cb);
-
-  function processBlock(block, cb)
+  const block = opts.block;
+  
+  // fetch parent block
+  let parentBlock;
+  if(block.isGenesis())
   {
-    async.series([
-      getStartingState,
-      runBlock
-    ], cb);
-
-    function getStartingState(cb)
-    {
-      if(parentBlock)
-      {
-        parentState = parentBlock.header.stateRoot;
-        return cb();
-      }
-
-      if(block.isGenesis())
-      {
-        return cb();
-      }
-
-      blockchain.getBlockByHash(block.header.parentHash, function(err, parentBlock) {
-        parentState = parentBlock.header.stateRoot;
-        cb(err);
-      });
-    }
-
-    function runBlock(cb)
-    {
-      self.runBlock({
-        block: block,
-        root: parentState
-      }, function(err, errCode, failedTransactions) {
-        if(!!err)
-        {
-          blockchain.delBlockByHash(block.header.hash(), cb);
-          return;
-        }
-        parentBlock = block;
-      })
-    }
+    parentBlock = await this.getBlockByHash(block.header.parentHash);
   }
+
+  // check parentHash and number
+  await block.validate(parentBlock);
+
+  // run block
+  const result = await this.runBlock({
+    block: block,
+    root: parentBlock.header.stateRoot,
+    generate: opts.generate,
+    skipNonce: opts.skipNonce,
+    skipBalance: opts.skipBalance
+  });
+
+  if(result.state)
+  {
+    // add to block chain
+    await this.addBlockChain(block);
+    // refresh block height
+    await this.updateBlockChainHeight(block.header.number);
+  }
+
+  return result;
 }

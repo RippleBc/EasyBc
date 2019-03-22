@@ -16,8 +16,8 @@ module.exports = async function(opts)
 {
   const block = opts.block;
   const tx = opts.tx;
-  const skipNonce = opts.skipNonce | false;
-  const skipBalance = opts.skipBalance | false;
+  const skipNonce = opts.skipNonce || false;
+  const skipBalance = opts.skipBalance || false;
 
 
   let fromAccount = this.stateManager.cache.get(tx.from);

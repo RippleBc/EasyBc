@@ -253,3 +253,81 @@ app.post("/getLastestBlock", function(req, res) {
         });
 });
 
+/**
+* get transaction
+* @param {*} trasactionHash
+*/
+getTrasaction(trasactionHash, cb)
+{
+  const TRANSACTION_FOUND = 1;
+  
+  trasactionHash = util.toBuffer(trasactionHash);
+  let transaction;
+
+  const self = this;
+
+  self.getLastestBlockNumber(function(err, bnNumber) {
+    if(!!err)
+    {
+      return cb(err);
+    }
+
+    getTransactionTraverse(bnNumber, cb)
+  });
+
+  /**
+   * @param {Buffer} bnLastestBlockNumber
+   * @return {Function} cb 
+   */
+  function getTransactionTraverse(bnLastestBlockNumber, cb)
+  {
+    let bnIndex = bnLastestBlockNumber;
+
+    async.whilst(function() {
+      return bnIndex.gtn(0);
+    }, function(done) {
+      getTransaction(bnIndex, function(err, _transaction) {
+        bnIndex.isubn(1);
+
+        if(!!err)
+        {
+          transaction = _transaction;
+          return done(err);
+        }
+
+        done();
+      });
+    }, function(err) {
+      if(!!err && err === TRANSACTION_FOUND)
+      {
+        return cb(null, transaction);
+      }
+
+      cb(err);
+    });
+  }
+
+  /**
+   * @param {*} blockNumber
+   */
+  function getTransaction(blockNumber, cb)
+  {
+    async.waterfall([
+      function(cb) {
+        self.getBlockByNumber(blockNumber, cb);
+      },
+      
+      function(block, cb) {
+        if(block === null)
+        {
+          return cb();
+        }
+        let transaction = block.getTransaction(trasactionHash);
+        if(transaction)
+        {
+          return cb(TRANSACTION_FOUND, transaction);
+        }
+        cb();
+      }], cb);
+  }
+}

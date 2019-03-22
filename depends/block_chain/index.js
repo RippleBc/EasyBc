@@ -1,34 +1,25 @@
-const util = require("util")
-const ebUtil = require("../utils")
-const StateManager = require("./stateManager.js")
-const AsyncEventEmitter = require("async-eventemitter")
-const Block = require("../block")
-const initDb = require("../db")
-const async = require("async")
+const utils = require("../utils");
+const StateManager = require("./stateManager.js");
+const AsyncEventEmitter = require("async-eventemitter");
+const Block = require("../block");
+const assert = require("assert");
 
-const BN = ebUtil.BN;
-const Buffer = ebUtil.Buffer;
+const Buffer = utils.Buffer;
 
-const maxBlockNumberKey = ebUtil.toBuffer("maxBlockNumberKey");
+const KEY_BLOCK_CHAIN_HEGHIT = utils.toBuffer("KEY_BLOCK_CHAIN_HEGHIT");
 
-/**
- * @constructor
- * @param {Trie} opts.stateTrie A merkle-patricia-tree instance for the state tree
- */
 class BlockChain extends AsyncEventEmitter
 {
   constructor(opts)
   {
     super();
 
-    const self = this;
-
     opts = opts || {};
 
     this.stateManager = new StateManager({
-      trie: opts.stateTrie,
-      blockChain: self
+      trie: opts.trie
     });
+    this.db = opts.db;
 
     this.runBlockchain = require("./runBlockChain.js");
     this.runBlock = require("./runBlock.js");
@@ -36,290 +27,68 @@ class BlockChain extends AsyncEventEmitter
   }
 
   /**
-   * @param {*} hash
+   * @param {Buffer} number
    */
-  getBlockByHash(hash, cb) {
-    const db = initDb();
+  async getBlockHashByNumber(number)
+  {
+    assert(Buffer.isBuffer(number), `BlockChain getBlockHashByNumber, number should be an Buffer, now is ${typeof number}`);
 
-    hash = ebUtil.toBuffer(hash);
+    const hash = await this.db.get(number);
 
-    db.get(hash, function(err, raw) {
-      if(!!err)
-      {
-        if(err.notFound)
-        {
-          return cb(`BlockChain getBlockByHash, block, hash: ${hash.toString("hex")} not exist`);
-        }
-        return cb("BlockChain getBlockByHash, " + err);
-      }
-      cb(null, new Block(raw));
-    });
+    return hash;
   }
 
   /**
-   * @param {*} number
+   * @param {Buffer} hash
    */
-  getBlockByNumber(number, cb)
+  async getBlockByHash(hash) 
   {
-    const self = this;
+    assert(Buffer.isBuffer(hash), `BlockChain getBlockByHash, hash should be an Buffer, now is ${typeof hash}`);
 
-    async.waterfall([
-      function(cb) {
-        self.getBlockHashByNumber(number, cb);
-      },
-      function(hash, cb) {
-        if(hash === null)
-        {
-          return cb(null, null);
-        }
-        self.getBlockByHash(hash, cb);
-      }], cb);
+    const raw = await this.db.get(hash);
+     
+    return new Block(raw)
   }
 
   /**
-   * @param {*} hash
+   * @param {Buffer} number
    */
-  delBlockByHash(hash, cb)
+  async getBlockByNumber(number)
   {
-    const db = initDb();
-
-    hash = ebUtil.toBuffer(hash);
-
-    db.del(hash, function(err) {
-      if(!!err)
-      {
-        return cb("BlockChain delBlockByHash, " + err);
-      }
-      cb();
-    });
-  }
-
-  /**
-   * @param {*} number
-   */
-  delBlockByNumber(number, cb)
-  {
-    const self = this;
-
-    async.waterfall([
-      function(cb) {
-        self.getBlockHashByNumber(number, cb)
-      },
-      function(hash, cb) {
-        if(hash === null)
-        {
-          return cb(`BlockChain delBlockByNumber, block, number: ${ebUtil.toBuffer(number).toString("hex")} not exist`);
-        }
-        self.delBlockByHash(hash, cb);
-      }], cb);
-  }
-
-  /**
-   * @param {Block} block
-   */
-  updateBlock(block, cb)
-  {
-    const db = initDb();
-
-    const blockHash = block.hash();
-    const number = block.header.number;
-
-    async.waterfall([
-      function(cb) {
-        db.put(blockHash, block.serialize(), cb);
-      },
-      function(cb) {
-        db.put(number, blockHash, cb);
-      }], function(err) {
-        if(!!err)
-        {
-          return cb("BlockChain updateBlock, " + err);
-        }
-        cb();
-      });
-  }
-
-  /**
-   * @param {*} number
-   */
-  updateMaxBlockNumber(number, cb)
-  {
-    let db = initDb();
+    assert(Buffer.isBuffer(number), `BlockChain getBlockByNumber, number should be an Buffer, now is ${typeof number}`);
     
-    number = ebUtil.toBuffer(number);
+    const hash = await this.getBlockHashByNumber(number);
+    const block = await this.getBlockByHash(hash); 
+    
+    return block;
+  }
 
-    db.put(maxBlockNumberKey, number, cb);
+  async getBlockChainHeight()
+  {
+    const blockChainHeight = await this.db.get(KEY_BLOCK_CHAIN_HEGHIT);
+    return blockChainHeight;
   }
 
   /**
-   * Add new block to block chain, note!!! this func now is only for test
+   * @param {Buffer} number
+   */
+  async updateBlockChainHeight(number)
+  {
+    assert(Buffer.isBuffer(number), `BlockChain updateBlockChainHeight, number should be an Buffer, now is ${typeof number}`);
+    await this.db.put(KEY_BLOCK_CHAIN_HEGHIT, number);
+  }
+
+  /**
+   * Add new block to block chain
    * @param {Block} block
    */
-  putBlock(block, cb)
+  async addBlock(block)
   {
-    const self = this;
+    assert(block instanceof Block, `BlockChain addBlock, block should be an Block Object, now is ${typeof block}`);
 
-    let db = initDb();
-
-    async.waterfall([
-      function(cb) {
-        if(block.header.isGenesis())
-        {
-          return cb(null, new BN(0));
-        }
-
-        db.get(maxBlockNumberKey, function(err, number) {
-          if(!!err)
-          {
-            if(err.notFound)
-            {
-              return cb(null, new BN(0));
-            }
-            return cb(err);
-          }
-          
-          cb(null, new BN(number));
-        });
-      },
-      function(number, cb) {
-        block.header.number = ebUtil.toBuffer(number.iaddn(1));
-        db.put(maxBlockNumberKey, block.header.number, cb);
-      },
-      function(cb) {
-        self.updateBlock(block, cb);
-      }], function(err) {
-        if(!!err)
-        {
-          return cb("BlockChain putBlock, " + err);
-        }
-        cb();
-      });
+    await db.put(block.header.number, block.hash());
+    await db.put(block.hash(), block.serialize());
   }
-
-  /**
-   * @param {*} number
-   * @return cb a callback function which is given the arguments err - for errors that may have occured and value - the found value in a Buffer or if no value was found null
-   */
-  getBlockHashByNumber(number, cb)
-  {
-    let db = initDb();
-
-    number = ebUtil.toBuffer(number);
-
-    db.get(number, function(err, hash) {
-      if(!!err)
-      {
-        if(err.notFound)
-        {
-          return cb(null, null);
-        }
-        return cb("BlockChain getBlockHashByNumber, " + err);
-      }
-      cb(null, hash);
-    });
-  }
-
-  /**
-   * Get max block number
-   * @param cb a function with arguments err and {BN}maxBlockNumber
-   */
-  getLastestBlockNumber(cb)
-  {
-    let db = initDb();
-
-    db.get(maxBlockNumberKey, function(err, number) {
-      if(!!err)
-      {
-        if(err.notFound)
-        {
-          return cb(null, new BN(0));
-        }
-        return cb(err);
-      }
-      
-      cb(null, new BN(number));
-    });
-  }
-
-  /**
-   * get transaction
-   * @param {*} trasactionHash
-   */
-   getTrasaction(trasactionHash, cb)
-   {
-      const TRANSACTION_FOUND = 1;
-      
-      trasactionHash = ebUtil.toBuffer(trasactionHash);
-      let transaction;
-
-      const self = this;
-
-      self.getLastestBlockNumber(function(err, bnNumber) {
-        if(!!err)
-        {
-          return cb(err);
-        }
-
-        getTransactionTraverse(bnNumber, cb)
-      });
-
-      /**
-       * @param {Buffer} bnLastestBlockNumber
-       * @return {Function} cb 
-       */
-      function getTransactionTraverse(bnLastestBlockNumber, cb)
-      {
-        let bnIndex = bnLastestBlockNumber;
-
-        async.whilst(function() {
-          return bnIndex.gtn(0);
-        }, function(done) {
-          getTransaction(bnIndex, function(err, _transaction) {
-            bnIndex.isubn(1);
-
-            if(!!err)
-            {
-              transaction = _transaction;
-              return done(err);
-            }
-
-            done();
-          });
-        }, function(err) {
-          if(!!err && err === TRANSACTION_FOUND)
-          {
-            return cb(null, transaction);
-          }
-
-          cb(err);
-        });
-      }
-
-      /**
-       * @param {*} blockNumber
-       */
-      function getTransaction(blockNumber, cb)
-      {
-        async.waterfall([
-          function(cb) {
-            self.getBlockByNumber(blockNumber, cb);
-          },
-          
-          function(block, cb) {
-            if(block === null)
-            {
-              return cb();
-            }
-            let transaction = block.getTransaction(trasactionHash);
-            if(transaction)
-            {
-              return cb(TRANSACTION_FOUND, transaction);
-            }
-            cb();
-          }], cb);
-      }
-   }
-
 }
 
 module.exports = BlockChain;
