@@ -51,8 +51,8 @@ class BlockHeader
    * Validates the entire block header
    * @param {Block} parentBlock
    * @return {Object}
-   * @prop {Boolean} state.
-   * @prop {String} msg.
+   * @prop {Boolean} state
+   * @prop {String} msg
    */
   validate(parentBlock)
   {

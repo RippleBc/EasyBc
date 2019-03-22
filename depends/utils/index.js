@@ -63,7 +63,7 @@ exports.SHA3_RLP = exports.KECCAK256_RLP;
 /***************************************** ecc begin *****************************************/
 
 /**
- * Create an ECDSA privateKey.
+ * Create an ECDSA privateKey
  * @return {Buffer}
  */
 exports.createPrivateKey = function()
@@ -81,7 +81,7 @@ exports.createPrivateKey = function()
 }
 
 /**
- * Verify an ECDSA privateKey.
+ * Verify an ECDSA privateKey
  * @param {Buffer} privateKey
  * @return {Boolean}
  */
@@ -93,7 +93,7 @@ exports.isValidPrivate = function(privateKey)
 }
 
 /**
- * Verify an ECDSA publicKey.
+ * Verify an ECDSA publicKey
  * @param {Buffer} publicKey
  * @return {Boolean}
  */
@@ -117,8 +117,8 @@ exports.isValidPublic = function(publicKey)
 }
 
 /**
- * Convert a publicKey to address.
- * @param {Buffer} publicKey. an sanitized publicKey
+ * Convert a publicKey to address
+ * @param {Buffer} publicKey - an sanitized publicKey
  * @return {Buffer}
  */
 exports.publicToAddress = function(publicKey)
@@ -141,7 +141,7 @@ exports.publicToAddress = function(publicKey)
 }
 
 /**
- * Compute an uncompressed sanitzied publickKey.
+ * Compute an uncompressed sanitzied publickKey
  * @param {Buffer} privateKey
  * @return {Buffer}
  */
@@ -248,8 +248,8 @@ exports.ecrecover = function(msgHash, v, r, s)
 /***************************************** sha-3 begin *****************************************/
 /**
  * Creates Keccak hash of the input
- * @param {Buffer} value the input data
- * @param {Number} [bits=256] the Keccak width
+ * @param {Buffer} value - the input data
+ * @param {Number} bits - the Keccak width
  * @return {Buffer}
  */
 exports.sha3 = exports.keccak = function(value, bits = 256)
@@ -262,7 +262,7 @@ exports.sha3 = exports.keccak = function(value, bits = 256)
 
 /**
  * Creates Keccak-256 hash of the input, alias for keccak(value, 256)
- * @param {Buffer} value the input data
+ * @param {Buffer} value - the input data
  * @return {Buffer}
  */
 exports.sha256 = exports.keccak256 = function(value)
@@ -340,7 +340,7 @@ exports.intToBuffer = function(value)
 /**
  * Converts a Buffer to a Number
  * @param {Buffer} value
- * @throws If the input number exceeds 53 bits.
+ * @throws - if the input number exceeds 53 bits
  */
 exports.bufferToInt = function(value)
 {
@@ -350,8 +350,8 @@ exports.bufferToInt = function(value)
 }
 
 /**
- * Attempts to turn a value into a Buffer. As input it supports Buffer, String, Number, null/undefined, BN and other objects with a toArray() method.
- * @param {Buffer|Array|String|Number|BN} value the value
+ * Attempts to turn a value into a Buffer. As input it supports Buffer, String, Number, null/undefined, BN and other objects with a toArray() method
+ * @param {Buffer|Array|String|Number|BN} value
  */
 exports.toBuffer = function(value)
 {
@@ -398,10 +398,10 @@ exports.toBuffer = function(value)
 /***************************************** buffer end *****************************************/
 
 /**
- * Left Pads an Array or Buffer with leading zeros till it has length bytes or it truncates the beginning if it exceeds.
+ * Left Pads an Array or Buffer with leading zeros till it has length bytes or it truncates the beginning if it exceeds
  * @param {Buffer} value
- * @param {Number} length. the number of bytes the output should be
- * @param {Boolean} right. whether to start padding form the left or right
+ * @param {Number} length - the number of bytes the output should be
+ * @param {Boolean} right - whether to start padding form the left or right
  * @return {Buffer}
  */
 exports.setLength = function(value, length, right = false) {
@@ -454,14 +454,14 @@ exports.baToHexString = function(value)
 
 /**
  * Defines properties on a Object. It make the assumption that underlying data is binary.
- * @param {Object} self. the Object to define properties on
- * @param {Array} fields. an array fields to define. Fields can contain:
- * * name - the name of the properties
- * * alias - the alias of the properties, note that property can not be modifid by alias
- * * default - the default value
- * * length - the number of bytes
- * * allowLess - if the field can be less than the length
- * * allowZero - if the field can be zero 
+ * @param {Object} self - the Object to define properties on
+ * @param {Array} fields - an array fields to define. Fields can contain:
+ * @prop name - the name of the properties
+ * @prop alias - the alias of the properties, note that property can not be modifid by alias
+ * @prop default - the default value
+ * @prop length - the number of bytes
+ * @prop allowLess - if the field can be less than the length
+ * @prop allowZero - if the field can be zero 
  * @param {String|Buffer|Array|Object} data.
  */
 exports.defineProperties = function(self, fields, data)
@@ -587,7 +587,7 @@ exports.defineProperties = function(self, fields, data)
 
 /**
  * Delete files recursively
- * @param {String} path absolute path of the dir
+ * @param {String} path - absolute path of the dir
  */
 exports.delDir = function(path)
 {

@@ -113,8 +113,8 @@ class Block
   /**
    * Validates the transactions
    * @return {Object}
-   * @prop {Boolean} state. if transactions are valid
-   * @prop {String} msg. failed info.
+   * @prop {Boolean} state - if transactions are valid
+   * @prop {String} msg - failed info.
    */
   validateTransactions()
   {
@@ -135,10 +135,10 @@ class Block
   }
 
   /**
-   * Validates the entire block.
+   * Validates the entire block
    * @return {Object}
-   * @prop {Boolean} state. if block is valid
-   * @prop {String} msg. failed info.
+   * @prop {Boolean} state - if block is valid
+   * @prop {String} msg - failed info.
    */
   async validate(parentBlock)
   {

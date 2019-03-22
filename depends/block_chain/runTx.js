@@ -1,24 +1,19 @@
-const Buffer = require("safe-buffer").Buffer
-const async = require("async")
-const util = require("../utils")
-const Block = require("../block")
+const async = require("async");
+const util = require("../utils");
+const Block = require("../block");
 
-const log4js= require("../server/logConfig");
-const logger = log4js.getLogger();
-const errLogger = log4js.getLogger("err");
-const othLogger = log4js.getLogger("oth");
-
+const Buffer = utils.Buffer;
 const BN = util.BN;
 
 /**
- * Process a transaction. Transfers coin. Checks balances.
+ * Process a transaction.
  * @method processTx
- * @param opts
- * @param opts.block {Block} needed to process the transaction
- * @param opts.tx {Transaction} - a transaction
- * @param opts.skipNonce - skips the nonce check
- * @param opts.skipBalance - skips the balance check
- * @param cb {Function} - the callback
+ * @param {Object} opts
+ * @prop {Block} opts.block needed to process the transaction
+ * @prop {Transaction} opts.tx - a transaction
+ * @prop {Boolean} opts.skipNonce - skips the nonce check
+ * @prop {Boolean} opts.skipBalance - skips the balance check
+ * @prop cb {Function} - the callback
  */
 module.exports = function(opts, cb)
 {

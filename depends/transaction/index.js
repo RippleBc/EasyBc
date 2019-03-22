@@ -76,7 +76,7 @@ class Transaction
 
   /**
    * Computes a sha3-256 hash of the serialized tx
-   * @param {Boolean} [includeSignature=true] whether or not to inculde the signature
+   * @param {Boolean} includeSignature - whether or not to inculde the signature
    * @return {Buffer}
    */
   hash(includeSignature = true)
@@ -159,8 +159,8 @@ class Transaction
   /**
    * Validates the signature, checks transaction's property and signature
    * @return {Object}
-   * @prop {Boolean} state. if transaction is valid
-   * @prop {String} msg. failed info.
+   * @prop {Boolean} state - if transaction is valid
+   * @prop {String} msg - failed info.
    */
   validate()
   {
