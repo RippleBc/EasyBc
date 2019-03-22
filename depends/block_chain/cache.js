@@ -1,13 +1,17 @@
-const Buffer = require("safe-buffer").Buffer
-const Tree = require("functional-red-black-tree")
-const Account = require("../account")
-const async = require("async")
+const Buffer = require("safe-buffer").Buffer;
+const createTree = require("functional-red-black-tree");
+const Account = require("../account");
+const async = require("async");
+const assert = require("assert");
+const Trie = require("merkle-patricia-tree");
 
 class Cache
 {
   constructor(trie)
   {
-    this._cache = Tree();
+    assert(trie instanceof Trie, `Cache constructor, trie should be a Tire Object, now is ${typeof Trie}`);
+
+    this._cache = createTree();
     this._deletes = [];
     this._trie = trie;
   }
@@ -15,13 +19,15 @@ class Cache
   /**
    * @param {Buffer} address
    * @param {Buffer} val
-   * @param {Boolean} fromTrie if address-value is from db
+   * @param {Boolean} modified
    */
-  put(address, val, fromTrie)
+  put(address, val, modified)
   {
-    let modified = !fromTrie;
+    assert(Buffer.isBuffer(address), `Cache put, address should be an Buffer, now is ${typeof address}`);
+    assert(Buffer.isBuffer(val), `Cache put, val should be an Buffer, now is ${typeof val}`);
+    assert(typeof modified === "boolean", `Cache put, modified should be an Boolean, now is ${typeof modified}`);
 
-    this._updateToCache(address, val, modified, true);
+    this._updateToCache(address, val, modified);
   }
 
   /**
@@ -29,196 +35,171 @@ class Cache
    */
   get(address)
   {
-    let account = this._lookupAccountFromCache(address);
+    assert(Buffer.isBuffer(address), `Cache get, address should be an Buffer, now is ${typeof address}`);
 
-    if(!account)
-    {
-      account = new Account();
-      account.exists = false;
-    }
-
-    return account;
+    return this._lookupAccountFromCache(address);
   }
 
   /**
    * @param {Buffer} address
    */
-  getOrLoad(address, cb)
+  async getOrLoad(address)
   {
-    var self = this;
-    var account = this._lookupAccountFromCache(address);
+    assert(Buffer.isBuffer(address), `Cache getOrLoad, address should be an Buffer, now is ${typeof address}`);
+
+    // try to fetch account from cache
+    let account;
+    try
+    {
+      account = this._lookupAccountFromCache(address);
+    }
+    catch(e)
+    {
+      await Promise.reject(`Cache getOrLoad, _lookupAccountFromCache throw exception ${e}`);
+    }
+
     if(account)
     {
-      cb(null, account);
+      return account;
     }
-    else
+ 
+    // try to fetch account from db
+    account = await this._lookupAccountFromDb(address);
+
+    // account into cache
+    try
     {
-      self._lookupAccountFromDb(address, function(err, account) {
-        if(err)
-        {
-          return cb(err);
-        }
-        self._updateToCache(address, account, false, account.exists);
-        cb(null, account);
-      })
+      this._updateToCache(address, account, false);
     }
+    catch(e)
+    {
+      await Promise.reject(`Cache getOrLoad, _updateToCache throw exception ${e}`);
+    }
+      
+    return account;
   }
 
   /**
-   * @param {Array} addresses the item of addresses is Buffer
+   * @param {Array/Buffer} addresses
    */
-  warm(addresses, cb)
+  async warm(addresses)
   {
-    var self = this;
+    assert(Array.isArray(addresses), `Cache warm, addresses should be an Array`);
 
-    // shim till async supports iterators
-    var accountArr = [];
-    addresses.forEach(function(val) {
-      if(!!val)
+    for(let i = 0; i < addresses.length; i++)
+    {
+      let address = addresses[i];
+
+      const account = await this._lookupAccountFromDb(address);
+
+      try
       {
-        accountArr.push(val);
+        this._updateToCache(address, account, false);
       }
-    });
-    
-    async.eachSeries(accountArr, function(address, done) {
-      self._lookupAccountFromDb(address, function(err, account) {
-        if(err)
-        {
-          return done(err);
-        }
-        self._updateToCache(address, account, false, account.exists);
-        done();
-      });
-    }, cb);
+      catch(e)
+      {
+        await Promise.reject(`Cache warm, _updateToCache throw exception ${e}`)
+      }
+    } 
   }
 
+  /**
+   * @param {Buffer} address
+   */
   del(address)
   {
+    assert(Buffer.isBuffer(address), `Cache del, address should be an Buffer, now is ${typeof address}`);
+
     this._deletes.push(address);
-    address = address.toString("hex");
     this._cache = this._cache.remove(address);
   }
 
   clear()
   {
     this._deletes = [];
-    this._cache = Tree();
+    this._cache = createTree();
   }
 
-  /**
-   * flush cache to db
-   * @method flush
-   */
-  flush(cb)
+  async flush()
   {
     var it = this._cache.begin;
-    var self = this;
-    var next = true;
-    async.whilst(function() {
-      return next;
-    }, function(done) {
+    
+    // flush modified account
+    while(it.hasNext)
+    {
       if(it.value && it.value.modified)
       {
         it.value.modified = false;
-        it.value.val = it.value.val.serialize();
-        self._trie.put(Buffer.from(it.key, "hex"), it.value.val, function(err) {
-          if(!!err)
-          {
-            return done(err);
-          }
-
-          next = it.hasNext;
-          it.next();
-          done();
-        });
+        await this._trie.put(it.key, it.value.val);
       }
       else
       {
-        next = it.hasNext;
         it.next();
-        done();
       }
-    }, function(err) {
-      if(!!err)
-      {
-        return cb(err);
-      }
+    }
       
-      async.eachSeries(self._deletes, function(address, done) {
-        self._trie.del(Buffer.from(address, "hex"), done);
-      }, function(err) {
-        if(!!err)
-        {
-          return cb(err);
-        }
-        self._deletes = [];
-        cb();
-      });
-    });
+    // flush deleted account
+    for(let i = 0; i < this._deletes.length; i++)
+    {
+      let address = this._deletes[i];
+      await this._trie.del(address);
+    }
+    self._deletes = [];
   }
 
   /**
-    * @param {Buffer} address 
-    */
+   * @param {Buffer} address 
+   */
   _lookupAccountFromCache(address)
   {
-    address = address.toString("hex");
+    assert(Buffer.isBuffer(address), `Cache _lookupAccountFromCache, address should be an Buffer, now is ${typeof address}`);
 
     let it = this._cache.find(address);
     if(it.node)
     {
-      let account = new Account(it.value.val);
-      account.exists = it.value.exists;
-      return account;
+      return new Account(it.value.val);
     }
 
-    return null;
+    return new Account();
   }
 
   /**
     * @param {Buffer} address 
     */
-  _lookupAccountFromDb(address, cb)
+  async _lookupAccountFromDb(address)
   {
-    this._trie.get(address, function(err, raw) {
-      if(err) 
-      {
-        return cb(err);
-      }
-      let account = new Account(raw);
+    assert(Buffer.isBuffer(address), `Cache _lookupAccountFromDb, address should be an Buffer, now is ${typeof address}`);
 
-      // account not exist
-      let exists = !!raw;
-      account.exists = exists;
-
-      cb(null, account);
-    })
+    const accountRaw = await this._trie.get(address);
+    
+    return new Account(accountRaw);
   }
 
   /**
-    * @param {Buffer} address 
-    * @param {Buffer} val 
-    * @param {Boolean} modified 
-    */
-  _updateToCache(address, val, modified, exists)
+   * @param {Buffer} address 
+   * @param {Buffer} val 
+   * @param {Boolean} modified
+   */
+  _updateToCache(address, val, modified)
   {
-    address = address.toString("hex");
+    assert(Buffer.isBuffer(address), `Cache _updateToCache, address should be an Buffer, now is ${typeof address}`);
+    assert(Buffer.isBuffer(val), `Cache _updateToCache, val should be an Buffer, now is ${typeof val}`);
+    assert(typeof modified === "boolean", `Cache _updateToCache, modified should be an Boolean, now is ${typeof modified}`);
+
     var it = this._cache.find(address);
 
     if(it.node)
     {
       this._cache = it.update({
         val: val,
-        modified: modified,
-        exists: exists || it.value.exists
+        modified: modified
       });
     }
     else
     {
       this._cache = this._cache.insert(address, {
         val: val,
-        modified: modified,
-        exists: exists
+        modified: modified
       })
     }
   }

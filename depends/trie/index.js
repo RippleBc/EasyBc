@@ -22,6 +22,38 @@ class Trie extends MerklePatriciaTree
 
 		return promise;
 	}
+
+	del(key)
+	{
+		const promise = new Promise((resolve, reject) => {
+			super.del(key, err => {
+				if(!!err)
+				{
+					return reject(err);
+				}
+
+				resolve();
+			})
+		});
+
+		return promise;
+	}
+
+	get(key)
+	{
+		const promise = new Promise((resolve, reject) => {
+			super.get(key, (err, value) => {
+				if(!!err)
+				{
+					return reject(err);
+				}
+
+				resolve(value);
+			})
+		});
+
+		return promise;
+	}
 }
 
 module.exports = Trie;

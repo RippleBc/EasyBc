@@ -34,23 +34,6 @@ class StateManager
   /**
    * @param {Buffer} address
    */
-  exists(address, cb)
-  {
-    address = util.toBuffer(address);
-
-    this.cache.getOrLoad(address, function(err, account) {
-      if(!!err)
-      {
-        return cb(err);
-      }
-
-      cb(err, account.exists);
-    })
-  }
-
-  /**
-   * @param {Buffer} address
-   */
   getAccount(address, cb)
   {
     address = util.toBuffer(address);
@@ -85,33 +68,6 @@ class StateManager
       }
 
       cb(null, account.balance);
-    })
-  }
-
-  /**
-   * @param {Buffer} address
-   * @param {Buffer} balance
-   */
-  putAccountBalance(address, balance, cb)
-  {
-    address = util.toBuffer(address);
-    balance = util.toBuffer(balance);
-
-    const self = this;
-
-    self.getAccount(address, function(err, account) {
-      if(!!err)
-      {
-        return cb(err);
-      }
-
-      if((new BN(balance)).isZero() && !account.exists)
-      {
-        return cb(null);
-      }
-
-      account.balance = balance;
-      self.putAccount(address, account, cb);
     })
   }
 
