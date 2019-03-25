@@ -1,0 +1,21 @@
+[2019-01-28T11:16:17.261] [INFO] default - [::1 GET / 404 4ms][ HTTP/1.1 Mozilla/5.0 (Windows NT 6.2; Win64; x64; rv:64.0) Gecko/20100101 Firefox/64.0]
+[2019-01-28T11:16:17.283] [INFO] default - [::1 GET /favicon.ico 404 0ms][ HTTP/1.1 Mozilla/5.0 (Windows NT 6.2; Win64; x64; rv:64.0) Gecko/20100101 Firefox/64.0]
+[2019-01-28T11:16:27.184] [INFO] default - [::ffff:127.0.0.1 POST /getAccountInfo 200 4ms][ HTTP/1.1 undefined]
+[2019-01-28T11:16:28.974] [INFO] default - [::ffff:127.0.0.1 POST /getAccountInfo 200 1ms][ HTTP/1.1 undefined]
+[2019-01-28T11:16:38.895] [INFO] default - receive transaction, hash: 11be540a5eec1ebd4addee4fce86a457c72c1240da49085939325fa1753b234a, transaction: {"nonce":"0x016892757964","to":"0x97dc8f311bc75fdef0c105726c3456218340c007","value":"0x10","data":"0x","v":"0x1c","r":"0x8d08dcc6b1c96afc3ccff808f3ad46e72d14299a983650fb30a6f1744a6c2785","s":"0x142761ebc031d72af9324bffdd3f41c7cf431b0c14fc853eabfd6d7f6b40ab7b"}
+[2019-01-28T11:16:38.896] [INFO] default - [::ffff:127.0.0.1 POST /sendTransaction 200 5ms][ HTTP/1.1 undefined]
+[2019-01-28T11:16:43.223] [INFO] default - [::ffff:127.0.0.1 POST /getTransactionState 200 0ms][ HTTP/1.1 undefined]
+[2019-01-28T11:16:45.025] [INFO] default - receive transaction, hash: bf9721cb68e27215879f09ee805487ea12da936d56a2f2ee7fd801d72e467d72, transaction: {"nonce":"0x01689275915d","to":"0x97dc8f311bc75fdef0c105726c3456218340c007","value":"0x10","data":"0x","v":"0x1b","r":"0xc5c2e4749cfb65a8ace03a343c344e9ff99f5d78fb570455bc8203301fa8581f","s":"0x1b13ac3a5751a7b1c9c81dc6d8778c8abfe74cf8d7de43c2924c3db3b252d66c"}
+[2019-01-28T11:16:45.026] [INFO] default - [::ffff:127.0.0.1 POST /sendTransaction 200 3ms][ HTTP/1.1 undefined]
+[2019-01-28T11:16:45.027] [INFO] default - processing transaction: 
+[2019-01-28T11:16:45.027] [INFO] default - hash: 11be540a5eec1ebd4addee4fce86a457c72c1240da49085939325fa1753b234a, transaction: {"nonce":"0x016892757964","to":"0x97dc8f311bc75fdef0c105726c3456218340c007","value":"0x10","data":"0x","v":"0x1c","r":"0x8d08dcc6b1c96afc3ccff808f3ad46e72d14299a983650fb30a6f1744a6c2785","s":"0x142761ebc031d72af9324bffdd3f41c7cf431b0c14fc853eabfd6d7f6b40ab7b"}
+[2019-01-28T11:16:45.027] [INFO] default - hash: bf9721cb68e27215879f09ee805487ea12da936d56a2f2ee7fd801d72e467d72, transaction: {"nonce":"0x01689275915d","to":"0x97dc8f311bc75fdef0c105726c3456218340c007","value":"0x10","data":"0x","v":"0x1b","r":"0xc5c2e4749cfb65a8ace03a343c344e9ff99f5d78fb570455bc8203301fa8581f","s":"0x1b13ac3a5751a7b1c9c81dc6d8778c8abfe74cf8d7de43c2924c3db3b252d66c"}
+[2019-01-28T11:16:45.037] [INFO] default - subTxValue address: 3be909bdea41172e5e81f9e1c9fce4bb24cca346, nonce: 0, balance: 24576
+[2019-01-28T11:16:45.038] [INFO] default - addTxValue address: 97dc8f311bc75fdef0c105726c3456218340c007, nonce: 0, balance: 24576
+[2019-01-28T11:16:45.038] [INFO] default - subTxValue address: 3be909bdea41172e5e81f9e1c9fce4bb24cca346, nonce: 1, balance: 24560
+[2019-01-28T11:16:45.039] [INFO] default - addTxValue address: 97dc8f311bc75fdef0c105726c3456218340c007, nonce: 0, balance: 24592
+[2019-01-28T11:16:45.046] [INFO] default - *************** pack block success!!! ***************
+[2019-01-28T11:16:46.672] [INFO] default - [::ffff:127.0.0.1 POST /getTransactionState 200 1ms][ HTTP/1.1 undefined]
+[2019-01-28T11:16:48.128] [INFO] default - [::ffff:127.0.0.1 POST /getAccountInfo 200 0ms][ HTTP/1.1 undefined]
+[2019-01-28T11:16:49.716] [INFO] default - [::ffff:127.0.0.1 POST /getAccountInfo 200 0ms][ HTTP/1.1 undefined]
+[2019-01-28T11:16:51.609] [INFO] default - [::ffff:127.0.0.1 POST /getAccountInfo 200 1ms][ HTTP/1.1 undefined]

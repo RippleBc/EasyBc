@@ -1,0 +1,7 @@
+[2019-03-18T15:42:50.512] [INFO] default - [::1 GET / 200 7ms][ HTTP/1.1 Mozilla/5.0 (Windows NT 6.2; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0]
+[2019-03-18T15:42:50.550] [INFO] default - [::1 GET /css/app.65c00da5.css 200 2ms][http://localhost:9090/ HTTP/1.1 Mozilla/5.0 (Windows NT 6.2; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0]
+[2019-03-18T15:42:50.552] [INFO] default - [::1 GET /js/app.ff6bcb8d.js 200 3ms][http://localhost:9090/ HTTP/1.1 Mozilla/5.0 (Windows NT 6.2; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0]
+[2019-03-18T15:42:50.552] [INFO] default - [::1 GET /js/chunk-vendors.87c8fc81.js 200 3ms][http://localhost:9090/ HTTP/1.1 Mozilla/5.0 (Windows NT 6.2; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0]
+[2019-03-18T15:42:50.635] [INFO] default - [::1 GET /getFromHistory 200 31ms][http://localhost:9090/ HTTP/1.1 Mozilla/5.0 (Windows NT 6.2; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0]
+[2019-03-18T15:42:50.639] [INFO] default - [::1 GET /getToHistory 200 27ms][http://localhost:9090/ HTTP/1.1 Mozilla/5.0 (Windows NT 6.2; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0]
+[2019-03-18T15:42:50.862] [INFO] default - [::1 GET /favicon.ico 404 1ms][ HTTP/1.1 Mozilla/5.0 (Windows NT 6.2; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0]

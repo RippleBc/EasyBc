@@ -1,0 +1,21 @@
+module.exports.RIPPLE_STATE_AMALGAMATE = 1;
+module.exports.RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND1 = 2;
+module.exports.RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND2 = 3;
+module.exports.RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND3 = 4;
+module.exports.RIPPLE_STATE_TIME_AGREEMENT = 5;
+module.exports.RIPPLE_STATE_BLOCK_AGREEMENT = 6;
+module.exports.RIPPLE_STATE_EMPTY = 7;
+
+
+module.exports.ROUND_DEFER = 3000;
+module.exports.ROUND_NUM = 3;
+
+module.exports.TRANSACTION_NUM_EACH_ROUND = 100;
+
+module.exports.TRANSACTION_CACHE_MAX_NUM = 500;
+
+module.exports.AGREEMENT_THRESHHOLD = 0.8;
+
+module.exports.BLOCK_AGREEMENT_MAX_ROUND = 3;
+
+module.exports.SEND_DATA_DEFER = 500
