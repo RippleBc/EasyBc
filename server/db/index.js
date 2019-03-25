@@ -10,7 +10,7 @@ module.exports = function()
 {
 	if(!db)
 	{
-		let dbDir = path.join(__dirname, "../data");
+		let dbDir = path.join(__dirname, "./data");
 		db = levelup(leveldown(dbDir));
 	}
 	

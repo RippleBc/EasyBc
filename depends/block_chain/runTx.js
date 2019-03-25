@@ -1,10 +1,9 @@
 const async = require("async");
-const util = require("../utils");
-const Block = require("../block");
+const utils = require("../utils");
 
 const Buffer = utils.Buffer;
-const BN = util.BN;
-const toBuffer = 
+const BN = utils.BN;
+
 /**
  * Process a transaction.
  * @param {Object} opts
@@ -14,7 +13,6 @@ const toBuffer =
  */
 module.exports = async function(opts)
 {
-  const block = opts.block;
   const tx = opts.tx;
   const skipNonce = opts.skipNonce || false;
   const skipBalance = opts.skipBalance || false;
@@ -24,25 +22,25 @@ module.exports = async function(opts)
   // check balance
   if(!opts.skipBalance && new BN(fromAccount.balance).lt(tx.getUpfrontCost()))
   {
-    await Promise.reject(`runTx, address ${tx.from.toString("hex")}'s fund should bigger than ${tx.getUpfrontCost().toString(16)}, now is ${fromAccount.balance.toString("hex")}`);
+    await Promise.reject(`runTx ${tx.hash(true).toString("hex")}, address ${tx.from.toString("hex")}'s fund should bigger than ${tx.getUpfrontCost().toString(10)}, now is ${utils.bufferToInt(fromAccount.balance)}`);
   }
   // compute the nonce
   fromAccount.nonce = new BN(fromAccount.nonce).addn(1);
   // check nonce
   if(!opts.skipNonce && !(new BN(fromAccount.nonce).eq(new BN(tx.nonce))))
   {
-    await Promise.reject(`runTx, transaction ${tx.hash(true)}'s nonce should be ${fromAccount.nonce.toString("hex")}, now is ${tx.nonce}`);
+    await Promise.reject(`runTx ${tx.hash(true).toString("hex")}, transaction ${tx.hash(true).toString("hex")}'s nonce should be ${utils.bufferToInt(fromAccount.nonce)}, now is ${utils.bufferToInt(tx.nonce)}`);
   }
   // sub coin
-  const newBalance = new BN(fromAccount.balance).sub(new BN(tx.value));
-  fromAccount.balance = util.toBuffer(newBalance);
+  let newBalance = new BN(fromAccount.balance).sub(new BN(tx.value));
+  fromAccount.balance = utils.toBuffer(newBalance);
   
  
-  let toAccount = self.stateManager.cache.get(tx.to);
+  let toAccount = this.stateManager.cache.get(tx.to);
   // add coin
-  var newBalance = new BN(toAccount.balance).add(new BN(tx.value));
-  toAccount.balance = util.toBuffer(newBalance);
+  newBalance = new BN(toAccount.balance).add(new BN(tx.value));
+  toAccount.balance = utils.toBuffer(newBalance);
 
-  await stateManager.putAccount(tx.from, fromAccount);
-  await stateManager.putAccount(tx.to, toAccount);
+  await this.stateManager.putAccount(tx.from, fromAccount.serialize());
+  await this.stateManager.putAccount(tx.to, toAccount.serialize());
 }

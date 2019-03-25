@@ -12,7 +12,7 @@ module.exports = async function(opts)
   
   // fetch parent block
   let parentBlock;
-  if(block.isGenesis())
+  if(!block.isGenesis())
   {
     parentBlock = await this.getBlockByHash(block.header.parentHash);
   }
@@ -23,7 +23,7 @@ module.exports = async function(opts)
   // run block
   const result = await this.runBlock({
     block: block,
-    root: parentBlock.header.stateRoot,
+    root: parentBlock ? parentBlock.header.stateRoot : undefined,
     generate: opts.generate,
     skipNonce: opts.skipNonce,
     skipBalance: opts.skipBalance

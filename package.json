@@ -32,14 +32,7 @@
     "server": "node server/index.js",
     "client": "node client/index.js",
     "dev": "node index.js",
-    "testUtil": "node utils/test/index.js",
-    "testTransaction": "node transaction/test/index.js",
-    "testDb": "node db/test/index.js",
-    "testBlockChain": "node block_chain/test/index.js",
-    "testAccount": "node account/test/index.js",
-    "testBlock": "node block/test/index.js",
-    "testServer": "mocha server/test/index.js",
-    "test": "node utils/test/index.js && node transaction/test/index.js && node db/test/index.js && node block_chain/test/index.js && node account/test/index.js && node block/test/index.js && mocha server/test/index.js"
+    "test": "mocha depends/test/account.js && mocha depends/test/transaction.js && mocha depends/test/block.js && mocha depends/test/cache.js && mocha depends/test/stateManager.js"
   },
   "keywords": [
     "block",

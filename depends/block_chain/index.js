@@ -21,7 +21,7 @@ class BlockChain extends AsyncEventEmitter
     });
     this.db = opts.db;
 
-    this.runBlockchain = require("./runBlockChain.js");
+    this.runBlockChain = require("./runBlockChain.js");
     this.runBlock = require("./runBlock.js");
     this.runTx = require("./runTx.js");
   }

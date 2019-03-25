@@ -1,6 +1,5 @@
 const util = require("../utils");
 const async = require("async");
-const initDb = require("../db");
 
 const rlp = util.rlp;
 const BN = util.BN;
@@ -25,6 +24,7 @@ module.exports = async function(opts) {
   const validateStateRoot = !ifGenerateStateRoot;
 
   let failedTransactions = [];
+  let errors = [];
 
   if(opts.root)
   {
@@ -33,10 +33,21 @@ module.exports = async function(opts) {
 
   // populate cache
   let addresses = [];
-  block.transactions.forEach(function(tx) {
-    addresses.push(tx.from);
+  for(let i = 0; i < block.transactions.length; i++)
+  {
+    let tx = block.transactions[i];
+
+    try
+    {
+      addresses.push(tx.from);
+    }
+    catch(e)
+    {
+      await Promise.reject(`runBlock, trasaction ${tx.hash(true).toString("hex")}'s property from is invalid`);
+    }
     addresses.push(tx.to);
-  });
+  }
+
   // delete same ele
   addresses = [...new Set(addresses)];
   await this.stateManager.warmCache(addresses);
@@ -56,15 +67,16 @@ module.exports = async function(opts) {
     }
     catch(e)
     {
+      errors.push(e);
       failedTransactions.push(transaction);
     }
   }
-  
+
   if(failedTransactions.length > 0)
   {
     return {
       state: false,
-      msg: `runBlock, some transactions is invalid`,
+      msg: `runBlock, some transactions is invalid\r\n${errors.join("\r\n")}`,
       transactions: failedTransactions
     };
   }
