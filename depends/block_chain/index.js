@@ -85,9 +85,9 @@ class BlockChain extends AsyncEventEmitter
   async addBlock(block)
   {
     assert(block instanceof Block, `BlockChain addBlock, block should be an Block Object, now is ${typeof block}`);
-
-    await db.put(block.header.number, block.hash());
-    await db.put(block.hash(), block.serialize());
+    
+    await this.db.put(block.header.number, block.hash());
+    await this.db.put(block.hash(), block.serialize());
   }
 }
 

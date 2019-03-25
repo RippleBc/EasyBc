@@ -1,5 +1,5 @@
 node_modules/
-db/data
+depends/test/data/*
 client/data/*
 server/data/*
 client/logs/*

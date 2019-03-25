@@ -91,13 +91,11 @@ class Block
    */
   async genTxTrie()
   {
-    const self = this;
-
-    for(let i = 0 ; i < self.transactions.length; i++)
+    for(let i = 0 ; i < this.transactions.length; i++)
     {
-      let transaction = self.transactions[i];
+      let transaction = this.transactions[i];
 
-      await self.txTrie.put(transaction.hash(true), transaction.serialize());
+      await this.txTrie.put(transaction.hash(true), transaction.serialize());
     };
   }
 

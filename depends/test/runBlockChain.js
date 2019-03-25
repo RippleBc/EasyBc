@@ -11,27 +11,9 @@ const {assert, expect, should} = require("chai");
 const toBuffer = utils.toBuffer;
 const bufferToInt = utils.bufferToInt;
 
-const db_instance = levelup(leveldown(path.join(__dirname, "./data")));
-const trie = new Trie(db_instance);
-const db = {
-	get: async function(key)
-	{
-		const promise = new Promise((resolve, reject) => {
-			db_instance.get(key, (err, value) => {
-				if(!!err)
-				{
-					if(err.isExist())
-				}
-			});
-		})
-	}
-	put: async function(key, value)
-	{
-
-	}
-};
-
-
+const dbDir = leveldown(path.join(__dirname, "./data"));
+const db = levelup(dbDir);
+const trie = new Trie(db);
 
 const privateKey = toBuffer("0x459705e79404b3604e4eef0aa1becedef1a227865a122826106f7f511682ea86");
 const publicKey = toBuffer("0x873426d507b1ce4401a28908ce1af24b61aa0cc4187de39b812d994b656fd095120732955193857afd876066e9c481dea6968afe423ae104224b026ee5fddeca");
@@ -40,7 +22,7 @@ const to = toBuffer("0x5da3ba30a7e81d92ad8aa2e359c5d8f297fc0ff3");
 
 const timeNow = "0x456321987";
 
-describe("transaction test", function() {
+describe("run block chain test", function() {
 	it("check privateKey and publicKey", function() {
 		assert.equal(utils.isValidPrivate(privateKey), true, `privateKey 0x${privateKey.toString("hex")} is invalid`);
 		assert.equal(utils.isValidPublic(publicKey), true, `publicKey 0x${publicKey.toString("hex")} is invalid`);
@@ -226,6 +208,7 @@ describe("transaction test", function() {
 	});
 
 	it("check run blockChain", function(done) {
+		// init txs
 		const transaction1 = new Transaction({
 			nonce: 1,
 			to: to,
@@ -243,39 +226,75 @@ describe("transaction test", function() {
 		transaction1.sign(privateKey);
 		transaction2.sign(privateKey);
 
+		// 
 		const blockChain = new BlockChain({
-			db: db,
+			trie: trie,
+			db: db
 		});
 
+		// init block
 		const parentBlock = new Block({
 			header: {
 				number: 1,
 				timestamp: timeNow,
-				transactionsTrie: "0x57fdab0bfdd14f7e8f9f7bb8a328fa9527550fca063b2abb84cf86a81569bc65"
+				transactionsTrie: "0xec9554dcc2796f2c493b5f1782bf2eab646a458db1eaceb0d4a15deb67b8a267"
 			},
 			transactions: [transaction1]
 		});
 
 		const block = new Block({
 			header: {
-				parentHash: "0x5daaa848a9239e8b36fae3c24f4820b293bf7b3cc028b7adca6c3d2a7c3ea701",
+				parentHash: "0xa2b6c509506e8e53d457fdfe309ca48edf55e032d463128ffd819b8498c27d9e",
 				number: 2,
 				timestamp: timeNow + 2,
-				transactionsTrie: "0x57fdab0bfdd14f7e8f9f7bb8a328fa9527550fca063b2abb84cf86a81569bc65"
+				transactionsTrie: "0xa63280a882356c733cf44030e7759e54d3f42aaf74e7a5ece70849845dd44dae"
 			},
 			transactions: [transaction2]
 		});
 
 		const checkRunBlockChain = async function()
 		{
-			await blockChain.runBlockChain({
-				block: parentBlock
-			});
+			utils.delDir(dbDir);
 
-			await blockChain.runBlockChain({
+			// init account balance
+			let fromAccount = await blockChain.stateManager.getAccount(from);
+			fromAccount.balance = 255 * 2;
+			blockChain.stateManager.putAccount(from, fromAccount.serialize());
+			await blockChain.stateManager.flushCache();
+
+			// run block
+			let runBlockChainResult = await blockChain.runBlockChain({
+				block: parentBlock,
+				generate: true
+			});
+			assert.equal(runBlockChainResult.state, true, `run parent block failed, ${runBlockChainResult.msg}`);
+
+			// init account nonce
+			fromAccount = await blockChain.stateManager.getAccount(from);
+			fromAccount.nonce = 1;
+			blockChain.stateManager.putAccount(from, fromAccount.serialize());
+			await blockChain.stateManager.flushCache();
+
+			// run block
+			runBlockChainResult = await blockChain.runBlockChain({
 				block: block,
 				generate: true
-			})
+			});
+			assert.equal(runBlockChainResult.state, true, `run block failed, ${runBlockChainResult.msg}`);
+
+			// check number 1 block
+			const parentBlockTmp = await blockChain.getBlockByNumber(toBuffer(1));
+			assert.equal(parentBlockTmp.hash().toString("hex"), "a2b6c509506e8e53d457fdfe309ca48edf55e032d463128ffd819b8498c27d9e", `parent block hash should be a2b6c509506e8e53d457fdfe309ca48edf55e032d463128ffd819b8498c27d9e, now is ${parentBlockTmp.hash().toString("hex")}`);
+			assert.equal(bufferToInt(parentBlockTmp.header.number), 1, `parent block number should be 1, now is ${bufferToInt(parentBlockTmp.header.number)}`);
+			assert.equal(bufferToInt(parentBlockTmp.header.timestamp), timeNow, `parent block timestamp should be ${timeNow}, now is ${bufferToInt(parentBlockTmp.header.timestamp)}`);
+			assert.equal(parentBlockTmp.header.transactionsTrie.toString("hex"), "ec9554dcc2796f2c493b5f1782bf2eab646a458db1eaceb0d4a15deb67b8a267", `parent block transactionsTrie should be ec9554dcc2796f2c493b5f1782bf2eab646a458db1eaceb0d4a15deb67b8a267, now is ${bufferToInt(parentBlockTmp.header.number)}`);
+
+			// check number 2 block
+			const blockTmp = await blockChain.getBlockByNumber(toBuffer(2));
+			assert.equal(blockTmp.hash().toString("hex"), "741ea0a732f24afc80483dfb9f2e95d019d56843562d5743560b75d098cd7dc8", `block hash should be 741ea0a732f24afc80483dfb9f2e95d019d56843562d5743560b75d098cd7dc8, now is ${blockTmp.hash().toString("hex")}`);
+			assert.equal(bufferToInt(blockTmp.header.number), 2, `block number should be 2, now is ${bufferToInt(blockTmp.header.number)}`);
+			assert.equal(bufferToInt(blockTmp.header.timestamp), timeNow + 2, `block timestamp should be ${timeNow + 2}, now is ${bufferToInt(blockTmp.header.timestamp)}`);
+			assert.equal(blockTmp.header.transactionsTrie.toString("hex"), "a63280a882356c733cf44030e7759e54d3f42aaf74e7a5ece70849845dd44dae", `block transactionsTrie should be a63280a882356c733cf44030e7759e54d3f42aaf74e7a5ece70849845dd44dae, now is ${bufferToInt(blockTmp.header.number)}`);
 		}
 
 		checkRunBlockChain().then(() => {

@@ -597,7 +597,7 @@ exports.delDir = function(path)
     files = fs.readdirSync(path);
     files.forEach(function(file, index)
     {
-      var curPath = path + "/" + file;
+      var curPath = `${path}/${file}`;
       if(fs.statSync(curPath).isDirectory())
       { 
         // recursive

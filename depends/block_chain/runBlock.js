@@ -86,12 +86,12 @@ module.exports = async function(opts) {
   await this.stateManager.flushCache();
   if(ifGenerateStateRoot)
   {
-    block.header.stateRoot = self.stateManager.getTrieRoot();
+    block.header.stateRoot = this.stateManager.getTrieRoot();
   }     
   // check state trie
-  if(validateStateRoot && self.stateManager.getTrieRoot().toString("hex") !== block.header.stateRoot.toString("hex"))
+  if(validateStateRoot && this.stateManager.getTrieRoot().toString("hex") !== block.header.stateRoot.toString("hex"))
   {
-    await Promise.reject(`runBlock, stateTrie should be ${self.stateManager.getTrieRoot().toString("hex")}, now is ${block.header.stateRoot.toString("hex")}`);
+    await Promise.reject(`runBlock, stateTrie should be ${this.stateManager.getTrieRoot().toString("hex")}, now is ${block.header.stateRoot.toString("hex")}`);
   }
 
   await this.stateManager.commit();

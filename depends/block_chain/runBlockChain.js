@@ -32,7 +32,7 @@ module.exports = async function(opts)
   if(result.state)
   {
     // add to block chain
-    await this.addBlockChain(block);
+    await this.addBlock(block);
     // refresh block height
     await this.updateBlockChainHeight(block.header.number);
   }
