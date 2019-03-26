@@ -1,46 +1,60 @@
-const utils = require("../utils");
+const utils = require("../../utils");
 const assert = require("assert");
 
 const Buffer = utils.Buffer;
-const MAX_MSG_LENGTH = 1024 * 1024 * 10;
 
 class MessageChunk
 {
 	constructor(data)
 	{
-    assert(Buffer.isBuffer(data), `MessageChunk constructor, data should be an Buffer, now is ${typeof data}`);
+    if(data)
+    {
+      assert(Buffer.isBuffer(data), `MessageChunk constructor, data should be an Buffer, now is ${typeof data}`);
+    }
 
-    this.data = data;
+    this.data = data || Buffer.alloc(0);
     this.writePos = 0;
     this.readPos = 0;
+
+    const self = this;
+    Object.defineProperty(self, "length", {
+      enumerable: true,
+      configurable: true,
+      get: () => {
+        return self.data.length;
+      }
+    });
+
+    Object.defineProperty(self, "remainDataSize", {
+      enumerable: true,
+      configurable: true,
+      get: () => {
+        return self.data.length - self.readPos;
+      }
+    })
 	}
 
-  length()
+  read(count)
   {
-    this.data.length();
-  }
+    assert(typeof count === "number", `MessageChunk read, count should be a Number, now is ${typeof count}`);
 
-	getReadPos()
-  {
-    return this.readPos;
-  }
-
-  setReadPos(count)
-  {
-    assert(typeof count === "number", `MessageChunk readPos, count should be a Number, now is ${typeof count}`);
-
+    const returnData = this.data.slice(this.readPos, this.readPos + count);
     this.readPos += count;
+    return returnData;
   }
 
-  getWritePos()
+  readRemainData()
   {
-    return this.writePos;
+    return this.read(this.remainDataSize)
   }
 
-  setWritePos(count)
+  write(data)
   {
-    assert(typeof count === "number", `MessageChunk writePos, count should be a Number, now is ${typeof count}`);
+    assert(Buffer.isBuffer(data), `MessageChunk write, data should be a Number, now is ${typeof data}`);
 
-    this.writePos += count;
+    this.data = Buffer.concat([this.data, data]);
+    this.writePos += data.length;
   }
 }
+
+module.exports = MessageChunk;

@@ -1,15 +1,20 @@
 const MessageChunk = require("./message_chunk");
-const utils = require("../utils");
+const Message = require("./message");
+const utils = require("../../utils");
+const assert = require("assert");
 
 const Buffer = utils.Buffer;
+const bufferToInt = utils.bufferToInt;
+
 const CMD_DATA_SIZE = 4;
+const MAX_MSG_LENGTH = 1024 * 1024 * 10;
 
 class MessageChunkQueue
 {
 	constructor()
 	{
 		this.data = [];
-		this.messagesSize = 0;
+		this.length = 0;
 		this.curMessageLength = 0;
 	}
 
@@ -17,25 +22,74 @@ class MessageChunkQueue
 	{
 		assert(Buffer.isBuffer(data), `MessageChunkQueue push, data should be an Buffer, now is ${typeof data}`);
 
-		let messageChunk = new MessageChunk(data);
+		const messageChunk = new MessageChunk(data);
 
-		this.data.push();
-		this.messagesSize += messageChunk.length();
+		this.data.push(messageChunk);
+		this.length += messageChunk.length;
 	}
 
 	getMessage()
 	{
-		if(this.messagesSize < CMD_DATA_SIZE)
+		if(this.length < CMD_DATA_SIZE)
 		{
 			return undefined;
 		}
 
-		if(this.messagesSize < this.curMessageLength)
+		if(this.curMessageLength === 0)
+		{
+			// fetch msg size
+			let messageSizeBuffer = Buffer.alloc(0);
+			while(messageSizeBuffer.length < CMD_DATA_SIZE)
+			{
+				const messageChunk = this.data[0];
+				if(messageChunk.remainDataSize + messageSizeBuffer.length > CMD_DATA_SIZE)
+				{
+					messageSizeBuffer = Buffer.concat([messageSizeBuffer, messageChunk.read(CMD_DATA_SIZE - messageSizeBuffer.length)]);
+					break;
+				}
+				else
+				{
+					messageSizeBuffer = Buffer.concat([messageSizeBuffer, messageChunk.readRemainData()]);
+					this.data.splice(0, 1);
+				}
+			}
+
+			// init curMessageLength
+			this.curMessageLength = bufferToInt(messageSizeBuffer);
+
+			// check msg size
+			if(this.curMessageLength > MAX_MSG_LENGTH)
+			{
+				throw Error(`MessageChunkQueue getMessage, message size must not bigger than ${MAX_MSG_LENGTH}, now is ${this.curMessageLength}`);
+			}
+		}
+
+		// check msg size
+		if(this.length < this.curMessageLength + CMD_DATA_SIZE)
 		{
 			return undefined;
 		}
 
-		
+		// fetch message data
+		let messageDataBuffer = Buffer.alloc(0);
+		while(messageDataBuffer.length < this.curMessageLength)
+		{
+			const messageChunk = this.data[0];
+			if(messageChunk.remainDataSize + messageDataBuffer.length > this.curMessageLength)
+			{
+				messageDataBuffer = Buffer.concat([messageDataBuffer, messageChunk.read(this.curMessageLength - messageDataBuffer.length)]);
+				break;
+			}
+			else
+			{
+				messageDataBuffer = Buffer.concat([messageDataBuffer, messageChunk.readRemainData()]);
+				this.data.splice(0, 1);
+			}
+		}
 
+		// init message
+		return new Message(messageDataBuffer);
 	}
 }
+
+module.exports = MessageChunkQueue;
