@@ -1,5 +1,8 @@
 const net = require("net");
 const assert = require("assert");
+const Connection = require("./net/connection");
+
+var connectionIndex = 1;
 
 module.exports.createClient = function(opts)
 {
@@ -16,6 +19,11 @@ module.exports.createClient = function(opts)
 	});
 
 	client.on("connect", () => {
+		new Connection({
+			socket: client,
+			dispatcher: dispatcher
+		});
+
 		const address = client.address();
 		logger.info(`client connected on port: ${address.port}, family: ${address.family}, address: ${address.address}`);
 	});
@@ -37,7 +45,10 @@ module.exports.createServer = function(opts)
 	});
 
 	server.on("connection", connection => {
-		const address = connection.address();
+		new Connection({
+			socket: connection,
+			dispatcher: dispatcher
+		});
 		logger.info(`receive an connection port: ${address.port}, family: ${address.family}, address: ${address.address}`);
 	});
 

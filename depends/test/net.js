@@ -115,26 +115,42 @@ describe("net test", function() {
 		assert.equal(message.cmd, 1, `cmd should be 1, now is ${message.cmd}`);
 		assert.equal(message.data.name, "walker", `data.name should be walker, now is ${message.data.name}`);
 		assert.equal(message.data.age, 1, `data.age should be 1, now is ${message.data.age}`);
-	})
+	});
+
+	it("check server and client", function(done) => {
+		let testJSON = {
+			"cmd": 1,
+			"data": {
+				"name": "walker",
+				"age": 1
+			}
+		}
+
+		let testBuffer = utils.setLength(utils.toBuffer(42), 4);
+
+		testBuffer = Buffer.concat([testBuffer, toBuffer(JSON.stringify(testJSON))]);
+
+		createServer({
+			host: "localhost",
+			port: 8080,
+			dispatcher: function() {
+
+			}
+		});
+
+		setTimeout(() => {
+			let client = createClient({
+				host: "localhost",
+				port: 8080,
+				dispatcher: function() {
+
+				}
+			});
+		}, 2000)
+	});
 });
 
-// createServer({
-// 	host: "localhost",
-// 	port: 8080,
-// 	dispatcher: function() {
 
-// 	}
-// });
-
-// setTimeout(() => {
-// 	createClient({
-// 		host: "localhost",
-// 		port: 8080,
-// 		dispatcher: function() {
-
-// 		}
-// 	});
-// }, 2000)
 
 
 

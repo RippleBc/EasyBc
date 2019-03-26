@@ -13,7 +13,6 @@ class MessageChunk
     }
 
     this.data = data || Buffer.alloc(0);
-    this.writePos = 0;
     this.readPos = 0;
 
     const self = this;
@@ -46,14 +45,6 @@ class MessageChunk
   readRemainData()
   {
     return this.read(this.remainDataSize)
-  }
-
-  write(data)
-  {
-    assert(Buffer.isBuffer(data), `MessageChunk write, data should be a Number, now is ${typeof data}`);
-
-    this.data = Buffer.concat([this.data, data]);
-    this.writePos += data.length;
   }
 }
 
