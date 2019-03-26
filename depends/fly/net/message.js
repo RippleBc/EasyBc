@@ -57,11 +57,19 @@ class Message
       	self.json.data = data;
       }
     });
+
+    Object.defineProperty(self, "length", {
+      enumerable: true,
+      configurable: true,
+      get: () => {
+      	return toBuffer(JSON.stringify(self.json)).length;
+      }
+    });
 	}
 
 	serialize()
 	{
-		return toBuffer(JSON.stringify(this.json));
+		return Buffer.concat([utils.setLength(toBuffer(this.length), 4), toBuffer(JSON.stringify(this.json))]);
 	}
 }
 

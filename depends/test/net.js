@@ -2,7 +2,7 @@ const Message = require("../fly/net/message");
 const MessageChunk = require("../fly/net/message_chunk");
 const MessageChunkQueue = require("../fly/net/message_chunk_queue");
 const utils = require("../utils");
-const { createClient, createServer } = require("../fly");
+const { createClient, createServer, connectionManager } = require("../fly");
 const {assert, expect, should} = require("chai"); 
 
 const toBuffer = utils.toBuffer;
@@ -46,6 +46,7 @@ describe("net test", function() {
 		assert.equal(message.cmd, 1, `cmd should be 1, now is ${message.cmd}`);
 		assert.equal(message.data.name, "walker", `data.name should be walker, now is ${message.data.name}`);
 		assert.equal(message.data.age, 1, `data.age should be 1, now is ${message.data.age}`);
+		assert.equal(message.length, 42, `length should be 42, now is ${message.length}`);
 
 		// check serialize
 		message = new Message();
@@ -54,7 +55,8 @@ describe("net test", function() {
 			"name": "walker",
 			"age": 1
 		}
-		assert.equal(message.serialize().toString(), `{"cmd":1,"data":{"name":"walker","age":1}}`, `message serialize should be {"cmd":1,"data":{"name":"walker","age":1}}, now is ${message.serialize().toString()}`);
+
+		assert.equal(message.serialize().toString().slice(4), `{"cmd":1,"data":{"name":"walker","age":1}}`, `message serialize should be {"cmd":1,"data":{"name":"walker","age":1}}, now is ${message.serialize().toString()}`);
 	});
 
 	it("check message chunk", function() {
@@ -117,7 +119,7 @@ describe("net test", function() {
 		assert.equal(message.data.age, 1, `data.age should be 1, now is ${message.data.age}`);
 	});
 
-	it("check server and client", function(done) => {
+	it("check server and client", function(done) {
 		let testJSON = {
 			"cmd": 1,
 			"data": {
@@ -126,27 +128,43 @@ describe("net test", function() {
 			}
 		}
 
-		let testBuffer = utils.setLength(utils.toBuffer(42), 4);
+		testData = toBuffer(JSON.stringify(testJSON));
 
-		testBuffer = Buffer.concat([testBuffer, toBuffer(JSON.stringify(testJSON))]);
-
-		createServer({
+		const server = createServer({
 			host: "localhost",
 			port: 8080,
-			dispatcher: function() {
-
+			dispatcher: function(message) {
+				assert.equal(message.cmd, 1, `cmd should be 1, now is ${message.cmd}`);
+				assert.equal(message.data.name, "walker", `data.name should be walker, now is ${message.data.name}`);
+				assert.equal(message.data.age, 1, `data.age should be 1, now is ${message.data.age}`);
+				assert.equal(message.length, 42, `length should be 42, now is ${message.length}`);
+				this.write(new Message(testData).serialize());
 			}
 		});
 
 		setTimeout(() => {
-			let client = createClient({
+			createClient({
 				host: "localhost",
 				port: 8080,
-				dispatcher: function() {
+				dispatcher: function(message) {
+					assert.equal(message.cmd, 1, `cmd should be 1, now is ${message.cmd}`);
+					assert.equal(message.data.name, "walker", `data.name should be walker, now is ${message.data.name}`);
+					assert.equal(message.data.age, 1, `data.age should be 1, now is ${message.data.age}`);
+					assert.equal(message.length, 42, `length should be 42, now is ${message.length}`);
 
+					server.close();
+					connectionManager.closeAll();
+
+					done();
 				}
+			}).then(connection => {
+				setTimeout(() => {
+					connection.write(new Message(testData).serialize());
+				}, 500);
+			}).catch(e => {
+				done(e);
 			});
-		}, 2000)
+		}, 1000)
 	});
 });
 

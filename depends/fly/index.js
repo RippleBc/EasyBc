@@ -1,10 +1,30 @@
 const net = require("net");
 const assert = require("assert");
 const Connection = require("./net/connection");
+const ConnectionManager =require("./manager");
 
-var connectionIndex = 1;
+exports.connectionManager = new ConnectionManager();
 
-module.exports.createClient = function(opts)
+
+const onConnect = async function(client, dispatcher)
+{
+	const promise = new Promise((resolve, reject) => {
+		client.on("connect", () => {
+			// manage connection
+			const connection = new Connection({
+				socket: client,
+				dispatcher: dispatcher
+			});
+			exports.connectionManager.push(connection);
+
+			resolve(connection);
+		});
+	});
+
+	return promise;
+}
+
+exports.createClient = async function(opts)
 {
 	const host = opts.host || "localhost";
 	const port = opts.port || 8080;
@@ -18,18 +38,16 @@ module.exports.createClient = function(opts)
 	  port: port
 	});
 
-	client.on("connect", () => {
-		new Connection({
-			socket: client,
-			dispatcher: dispatcher
-		});
+	const connection = await onConnect(client, dispatcher);
 
-		const address = client.address();
-		logger.info(`client connected on port: ${address.port}, family: ${address.family}, address: ${address.address}`);
-	});
+	// info
+	const address = client.address();
+	logger.info(`client connected on port: ${address.port}, family: ${address.family}, address: ${address.address}`);
+
+	return connection;
 }
 
-module.exports.createServer = function(opts)
+exports.createServer = function(opts)
 {
 	const host = opts.host || "localhost";
 	const port = opts.port || 8080;
@@ -44,16 +62,28 @@ module.exports.createServer = function(opts)
 		logger.info("opened server on", server.address());
 	});
 
-	server.on("connection", connection => {
-		new Connection({
-			socket: connection,
+	server.on("connection", socket => {
+		// manage connection
+		const connection = new Connection({
+			socket: socket,
 			dispatcher: dispatcher
 		});
+		exports.connectionManager.push(connection);
+
+		// info
+		const address = socket.address();
 		logger.info(`receive an connection port: ${address.port}, family: ${address.family}, address: ${address.address}`);
 	});
 
-	server.on("error", (err) => {
-		throw Error(`server err, ${err}`);
+	server.on("close", () => {
+		logger.info("server close success");
+	});
+
+	server.on("error", err => {
+		logger.error(`server throw exception, ${err}`);
+
+		server.close();
+		exports.connectionManager.closeAll();
 	});
 
 	server.listen({
@@ -62,4 +92,5 @@ module.exports.createServer = function(opts)
 	  exclusive: true
 	});
 
+	return server;
 }

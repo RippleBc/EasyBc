@@ -14,8 +14,22 @@ class MessageChunkQueue
 	constructor()
 	{
 		this.data = [];
-		this.length = 0;
 		this.curMessageLength = 0;
+
+		const self = this;
+		Object.defineProperty(self, "length", {
+      enumerable: true,
+      configurable: true,
+      get: () => {
+        let length = 0;
+        for(let i = 0; i < self.data.length; i++)
+        {
+        	length += self.data[i].remainDataSize;
+        }
+
+        return length;
+      }
+    });
 	}
 
 	push(data)
@@ -25,7 +39,6 @@ class MessageChunkQueue
 		const messageChunk = new MessageChunk(data);
 
 		this.data.push(messageChunk);
-		this.length += messageChunk.length;
 	}
 
 	getMessage()
@@ -35,9 +48,9 @@ class MessageChunkQueue
 			return undefined;
 		}
 
+		// fetch msg size
 		if(this.curMessageLength === 0)
 		{
-			// fetch msg size
 			let messageSizeBuffer = Buffer.alloc(0);
 			while(messageSizeBuffer.length < CMD_DATA_SIZE)
 			{
@@ -50,7 +63,8 @@ class MessageChunkQueue
 				else
 				{
 					messageSizeBuffer = Buffer.concat([messageSizeBuffer, messageChunk.readRemainData()]);
-					this.data.splice(0, 1);
+
+					const delMessageChunk = this.data.splice(0, 1);
 				}
 			}
 
@@ -65,7 +79,7 @@ class MessageChunkQueue
 		}
 
 		// check msg size
-		if(this.length < this.curMessageLength + CMD_DATA_SIZE)
+		if(this.length < this.curMessageLength)
 		{
 			return undefined;
 		}
@@ -83,9 +97,12 @@ class MessageChunkQueue
 			else
 			{
 				messageDataBuffer = Buffer.concat([messageDataBuffer, messageChunk.readRemainData()]);
+				
 				this.data.splice(0, 1);
 			}
 		}
+
+		this.curMessageLength = 0;
 
 		// init message
 		return new Message(messageDataBuffer);

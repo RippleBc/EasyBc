@@ -3,7 +3,8 @@ const Message = require("./message");
 const MessageChunk = require("./message_chunk");
 const MessageChunkQueue = require("./message_chunk_queue");
 
-const END_CLEAR_SEND_BUFFER_TIME_DEAY = 1000 * 10;
+const END_CLEAR_SEND_BUFFER_TIME_DEAY = 1000 * 5;
+const HEART_BEAT_TIME = 1000 * 10;
 
 class Connection
 {
@@ -11,14 +12,23 @@ class Connection
 	{
 		this.socket = opts.socket;
 		this.dispatcher = opts.dispatcher;
+		this.logger = opts.logger || {info: console.info, warn: console.warn, error: console.error};
 		this.authorized = false;
 		this.closed = false;
+		this.address = "";
+
+		this.endTimeOut;
 
 		this.sendKenelBufferFull = false;
 		this.sendBufferArray = [];
 		this.receiveMessageChunkQueue = new MessageChunkQueue();
 
 		const self = this;
+		let timeOut;
+
+		this.socket.setTimeout(HEART_BEAT_TIME, () => {
+        self.socket.end();
+    });
 
 		this.socket.on("data", data => {
 			if(!self.closed)
@@ -26,21 +36,41 @@ class Connection
 				self.receiveMessageChunkQueue.push(data);
 				self.parse();
 			}
-			
 		});
 
-		// if allowHalfOpen is true, the other end of the connection may send data, but will not read data
+		// the other end of the connection will continue read data, but will not write data
 		this.socket.on("end", () => {
-			self.setTimeout(() => {
-				self.closed = true;
+			self.endTimeout = setTimeout(() => {
+				if(!self.socket.destroyed)
+				{
+					// half close socket, socket will not write data, but will read data from socket
+					self.socket.end();
+				}
 			}, END_CLEAR_SEND_BUFFER_TIME_DEAY);
 		});
 
-		// socket write buffer is empty
 		this.socket.on("drain", () => {
 			self.sendKenelBufferFull = false;
 			self.flush();
 		});
+
+		this.socket.on("close", () => {
+			if(self.endTimeout)
+			{
+				clearInterval(self.endTimeout);
+			}
+
+			self.closed = true;
+		});
+
+		this.socket.on("error", e => {
+			self.logger.error(`socket ${self.address} throw error, ${e}`);
+		});
+	}
+
+	close()
+	{
+		this.socket.end();
 	}
 
 	flush()
@@ -51,9 +81,9 @@ class Connection
 			return;
 		}
 
-		for(let i = 0; i < this.sendBufferArray.length; i++)
+		while(this.sendBufferArray.length > 0)
 		{
-			const writeResult = this.socket.write(this.sendBufferArray[i]);
+			const writeResult = this.socket.write(this.sendBufferArray[0]);
 
 			this.sendBufferArray.splice(0, 1);
 
@@ -83,7 +113,8 @@ class Connection
 		}
 		catch(e)
 		{
-			socket.end();
+			// half close socket, socket will not write data, but will read data from socket
+			this.socket.end();
 		}
 
 		while(message)
@@ -96,7 +127,8 @@ class Connection
 			}
 			catch(e)
 			{
-				socket.end();
+				// half close socket, socket will not write data, but will read data from socket
+				this.socket.end();
 			}
 		}
 	}
