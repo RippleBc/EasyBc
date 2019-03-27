@@ -62,7 +62,7 @@ exports.createServer = function(opts)
 {
 	const host = opts.host || "localhost";
 	const port = opts.port || 8080;
-	const logger = opts.logger || {info: console.info, warn: console.warn, err: console.err};
+	const logger = opts.logger || {info: console.info, warn: console.warn, error: console.error};
 	const dispatcher = opts.dispatcher;
 
 	assert(typeof dispatcher === "function", `fly createServer, dispatcher should be a function, now is ${typeof dispatcher}`);

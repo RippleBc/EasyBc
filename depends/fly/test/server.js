@@ -4,6 +4,9 @@ const assert = require("assert");
 const Message = require("../net/message");
 
 const toBuffer = utils.toBuffer;
+const bufferToInt = utils.bufferToInt;
+
+process[Symbol.for("privateKey")] = toBuffer("0x459705e79404b3604e4eef0aa1becedef1a227865a122826106f7f511682ea86");
 
 let testJSON = {
 	"cmd": 1,
@@ -19,13 +22,11 @@ const server = createServer({
 	host: "localhost",
 	port: 8080,
 	dispatcher: function(message) {
-		console.log(`server receive message: ${JSON.stringify(message.json)}`);
+		console.log(`server receive message: ${message.data.toString()}`);
 
-		assert(message.cmd == 1, `cmd should be 1, now is ${message.cmd}`);
-		assert(message.data.name == "walker", `data.name should be walker, now is ${message.data.name}`);
-		assert(message.data.age == 1, `data.age should be 1, now is ${message.data.age}`);
-		assert(message.length == 42, `length should be 42, now is ${message.length}`);
+		assert.equal(bufferToInt(message.cmd), 10, `cmd should be 10, now is ${bufferToInt(message.cmd)}`);
+		assert.equal(message.data.toString(), "walker", `data.name should be walker, now is ${message.data.toString()}`);
 		
-		this.write(new Message(testData).serialize());
+		this.write(10, "walker");
 	}
 });

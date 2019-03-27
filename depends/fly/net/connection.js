@@ -83,7 +83,7 @@ class Connection extends AsyncEventEmitter
 		});
 
 		this.socket.on("error", e => {
-			self.logger.error(`socket ${self.address} throw error, ${e}`);
+			self.logger.error(`socket ${self.address.toString("hex")} throw error, ${e}`);
 		});
 	}
 
