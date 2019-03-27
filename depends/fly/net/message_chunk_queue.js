@@ -104,7 +104,6 @@ class MessageChunkQueue
 
 		this.curMessageLength = 0;
 
-		// init message
 		return new Message(messageDataBuffer);
 	}
 }

@@ -4,70 +4,44 @@ const MessageChunkQueue = require("../fly/net/message_chunk_queue");
 const utils = require("../utils");
 const { createClient, createServer, connectionManager } = require("../fly");
 const {assert, expect, should} = require("chai"); 
+const process = require("process");
 
 const toBuffer = utils.toBuffer;
+const bufferToInt = utils.bufferToInt;
+
+process[Symbol.for("privateKey")] = toBuffer("0x459705e79404b3604e4eef0aa1becedef1a227865a122826106f7f511682ea86");
+process[Symbol.for("publicKey")] = toBuffer("0x873426d507b1ce4401a28908ce1af24b61aa0cc4187de39b812d994b656fd095120732955193857afd876066e9c481dea6968afe423ae104224b026ee5fddeca");
 
 describe("net test", function() {
 	it("check message", function() {
-		// check property lost
-		let err;
-		let testJSON = {
-			"data": {
-				"name": "walker",
-				"age": 1
-			}
-		}
-		try
-		{
-			let message = new Message(toBuffer(JSON.stringify(testJSON)));
-		}
-		catch(e)
-		{
-			err = e;
-		}
-		if(err === undefined)
-		{
-			assert.equal(true, false, "new Message() should throw exception");
-		}
-		else if(err.toString().indexOf("cmd can not be undefined") === -1)
-		{
-			assert.equal(true, false, `new Message() should throw exception with the reason cmd can not be undefined, now is ${err}`);
-		}
-
 		// check new Message
-		testJSON = {
-			"cmd": 1,
-			"data": {
-				"name": "walker",
-				"age": 1
-			}
+		testData = {
+			cmd: 1,
+			data: "walker"
 		}
-		message = new Message(toBuffer(JSON.stringify(testJSON)));
-		assert.equal(message.cmd, 1, `cmd should be 1, now is ${message.cmd}`);
-		assert.equal(message.data.name, "walker", `data.name should be walker, now is ${message.data.name}`);
-		assert.equal(message.data.age, 1, `data.age should be 1, now is ${message.data.age}`);
-		assert.equal(message.length, 42, `length should be 42, now is ${message.length}`);
+		message = new Message(testData);
+		assert.equal(bufferToInt(message.cmd), 1, `cmd should be 1, now is ${bufferToInt(message.cmd)}`);
+		assert.equal(message.data, "walker", `data should be walker, now is ${message.data}`);
 
 		// check serialize
 		message = new Message();
 		message.cmd = 1;
-		message.data = {
-			"name": "walker",
-			"age": 1
-		}
+		message.data = "walker"
 
-		assert.equal(message.serialize().toString().slice(4), `{"cmd":1,"data":{"name":"walker","age":1}}`, `message serialize should be {"cmd":1,"data":{"name":"walker","age":1}}, now is ${message.serialize().toString()}`);
+		assert.equal(message.serialize().toString("hex"), "00000009c8018677616c6b6572", `message serialize should be 00000009c8018677616c6b6572, now is ${message.serialize().toString("hex")}`);
+		assert.equal(message.length, 9, `message.length should 9, now is ${message.length}`);
+
 	});
 
 	it("check message chunk", function() {
-		let testJSON = {
+		let testData = {
 			"cmd": 1,
 			"data": {
 				"name": "walker",
 				"age": 1
 			}
 		}
-		let testBuffer = toBuffer(JSON.stringify(testJSON));
+		let testBuffer = toBuffer(JSON.stringify(testData));
 		let messageChunk = new MessageChunk(testBuffer);
 
 		assert.equal(messageChunk.length, 42, `messageChunk.length should be 42, now is ${messageChunk.length}`);
@@ -85,60 +59,46 @@ describe("net test", function() {
 	});
 
 	it("check message chunk queue", function() {
-		let testJSON = {
-			"cmd": 1,
-			"data": {
-				"name": "walker",
-				"age": 1
-			}
+		let testData = {
+			cmd: 1,
+			data: "walker"
 		}
 
+		let testBuffer = toBuffer(new Message(testData).serialize());
+
 		const messageChunkQueue = new MessageChunkQueue();
-		messageChunkQueue.push(utils.setLength(utils.toBuffer(42), 4));
 
-		let testBuffer = toBuffer(JSON.stringify(testJSON));
-
-		let chunkData = testBuffer.slice(0, 1);
-		messageChunkQueue.push(chunkData);
-
-		chunkData = testBuffer.slice(1, 2);
+		let chunkData = testBuffer.slice(0, 2);
 		messageChunkQueue.push(chunkData);
 
 		chunkData = testBuffer.slice(2, 4);
 		messageChunkQueue.push(chunkData);
 
+		chunkData = testBuffer.slice(4, 8);
+		messageChunkQueue.push(chunkData);
+
 		let message = messageChunkQueue.getMessage();
 		assert.equal(message, undefined, `message should be undfined, now is ${message}`);
 
-		chunkData = testBuffer.slice(4, 42);
+		chunkData = testBuffer.slice(8, 13);
 		messageChunkQueue.push(chunkData);
 
 		message = messageChunkQueue.getMessage();
-		assert.equal(message.cmd, 1, `cmd should be 1, now is ${message.cmd}`);
-		assert.equal(message.data.name, "walker", `data.name should be walker, now is ${message.data.name}`);
-		assert.equal(message.data.age, 1, `data.age should be 1, now is ${message.data.age}`);
+		assert.equal(bufferToInt(message.cmd), 1, `cmd should be 1, now is ${bufferToInt(message.cmd)}`);
+		assert.equal(message.data.toString(), "walker", `data should be 1, now is ${message.data.toString()}`);
 	});
 
 	it("check server and client", function(done) {
-		let testJSON = {
-			"cmd": 1,
-			"data": {
-				"name": "walker",
-				"age": 1
-			}
-		}
 
-		testData = toBuffer(JSON.stringify(testJSON));
+		this.timeout(60000);
 
 		const server = createServer({
 			host: "localhost",
 			port: 8080,
 			dispatcher: function(message) {
-				assert.equal(message.cmd, 1, `cmd should be 1, now is ${message.cmd}`);
-				assert.equal(message.data.name, "walker", `data.name should be walker, now is ${message.data.name}`);
-				assert.equal(message.data.age, 1, `data.age should be 1, now is ${message.data.age}`);
-				assert.equal(message.length, 42, `length should be 42, now is ${message.length}`);
-				this.write(new Message(testData).serialize());
+				assert.equal(bufferToInt(message.cmd), 10, `cmd should be 10, now is ${bufferToInt(message.cmd)}`);
+				assert.equal(message.data.toString(), "walker", `data.name should be walker, now is ${message.data.toString()}`);
+				this.write(10, "walker");
 			}
 		});
 
@@ -147,19 +107,18 @@ describe("net test", function() {
 				host: "localhost",
 				port: 8080,
 				dispatcher: function(message) {
-					assert.equal(message.cmd, 1, `cmd should be 1, now is ${message.cmd}`);
-					assert.equal(message.data.name, "walker", `data.name should be walker, now is ${message.data.name}`);
-					assert.equal(message.data.age, 1, `data.age should be 1, now is ${message.data.age}`);
-					assert.equal(message.length, 42, `length should be 42, now is ${message.length}`);
+					assert.equal(bufferToInt(message.cmd), 10, `cmd should be 10, now is ${bufferToInt(message.cmd)}`);
+					assert.equal(message.data.toString(), "walker", `data.name should be walker, now is ${message.data.toString()}`);
 
 					server.close();
 					connectionManager.closeAll();
 
 					done();
-				}
+				},
+				address: toBuffer("0x6ea3ba30a7e81d92ad8aa2e359c5d8f297fc0fb1")
 			}).then(connection => {
 				setTimeout(() => {
-					connection.write(new Message(testData).serialize());
+					connection.write(10, "walker");
 				}, 500);
 			}).catch(e => {
 				done(e);

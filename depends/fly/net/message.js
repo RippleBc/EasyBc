@@ -3,73 +3,45 @@ const assert = require("assert");
 
 const Buffer = utils.Buffer;
 const toBuffer = utils.toBuffer;
+const rlp = utils.rlp;
+
+const MAX_MESSAGE_DATA_SIZE = 1024 * 1024 * 50;
 
 class Message
 {
 	constructor(data)
 	{
-		this.json = {
-			"cmd": undefined, 
-			"data": undefined
-		};
+		data = data || {};
 
-		if(data)
-		{
-			assert(Buffer.isBuffer(data), `Message constructor, data should be an Buffer, now is ${typeof data}`);
-		
-			try
-			{
-				this.json = JSON.parse(data);
-				if(this.json.cmd === undefined)
-				{
-					throw new Error("data property cmd can not be undefined");
-				}
-				if(this.json.data === undefined)
-				{
-					throw new Error("data property data can not be undefined");
-				}
-			}
-			catch(e)
-			{
-				throw new Error(`Message constructor, ${e}`);
-			}
-		}
-		
-		const self = this;
-		Object.defineProperty(self, "cmd", {
-      enumerable: true,
-      configurable: true,
-      get: () => {
-      	return self.json.cmd;
-      },
-      set: (cmd) => {
-      	self.json.cmd = cmd;
-      }
-    });
+    const fields = [{
+      name: "cmd",
+      length: 4,
+      allowZero: true,
+      allowLess: true,
+      default: Buffer.alloc(0)
+    }, {
+      name: "data",
+      length: MAX_MESSAGE_DATA_SIZE,
+      allowZero: true,
+      allowLess: true,
+      default: Buffer.alloc(0)
+    }];
 
-    Object.defineProperty(self, "data", {
-      enumerable: true,
-      configurable: true,
-      get: () => {
-      	return self.json.data;
-      },
-      set: (data) => {
-      	self.json.data = data;
-      }
-    });
+    utils.defineProperties(this, fields, data);
 
+    const self = this;
     Object.defineProperty(self, "length", {
       enumerable: true,
       configurable: true,
       get: () => {
-      	return toBuffer(JSON.stringify(self.json)).length;
+      	return rlp.encode(self.raw).length;
       }
     });
-	}
 
-	serialize()
-	{
-		return Buffer.concat([utils.setLength(toBuffer(this.length), 4), toBuffer(JSON.stringify(this.json))]);
+    this.serialize = function()
+    {
+      return Buffer.concat([utils.setLength(toBuffer(this.length), 4), rlp.encode(this.raw)]);
+    }
 	}
 }
 
