@@ -13,12 +13,14 @@ const Buffer = utils.Buffer;
 
 const END_CLEAR_SEND_BUFFER_TIME_DEAY = 1000 * 5;
 const HEART_BEAT_TIME = 1000 * 10;
+const AUTHORIZE_DELAY_TIME = 5000;
 
 const AUTHORIZE_GET_NONCE_CMD = 1;
 const AUTHORIZE_RETURN_NONCE_CMD = 2;
 const AUTHORIZE_BEGIN_CMD = 3;
 const AUTHORIZE_SUCCESS_CMD = 4;
 const AUTHORIZE_FAILED_CMD = 5;
+const AUTHORIZE_END_CMD = 6;
 
 class Connection extends AsyncEventEmitter
 {
@@ -92,7 +94,7 @@ class Connection extends AsyncEventEmitter
 		this.write(AUTHORIZE_GET_NONCE_CMD);
 
 		const self = this;
-		const promise = new Promise((resolve) => {
+		const promise = new Promise((resolve, reject) => {
 			self.on("authorizeSuccessed", () => {
 				resolve();
 			});
@@ -100,6 +102,11 @@ class Connection extends AsyncEventEmitter
 			self.on("authorizeFailed", () => {
 				reject();
 			});
+
+			const timeOut = setTimeout(() => {
+				reject();
+			}, AUTHORIZE_DELAY_TIME);
+			timeOut.unref();
 		});
 
 		return promise;
@@ -197,11 +204,15 @@ class Connection extends AsyncEventEmitter
 					{
 						this.address = token.address;
 						this.write(AUTHORIZE_SUCCESS_CMD);
+
+						this.emit("authorizeSuccessed");
 					}
 					else
 					{
 						this.write(AUTHORIZE_FAILED_CMD);
 						this.socket.end();
+
+						this.emit("authorizeFailed");
 					}
 				}
 				break;

@@ -15,7 +15,6 @@ const onConnect = async function(client, dispatcher, address)
 				dispatcher: dispatcher,
 				address: address
 			});
-			exports.connectionManager.push(connection);
 
 			resolve(connection);
 		});
@@ -49,11 +48,13 @@ exports.createClient = async function(opts)
 	}
 	catch(e)
 	{
-		return Promise.reject(`connection authorize is failed, ${e}`);
+		return Promise.reject(`authorize is failed, client connected on port: ${client.address().port}, family: ${client.address().family}, address: ${client.address().address}, ${e}`);
 	}
 
+	exports.connectionManager.push(connection);
+
 	// info
-	logger.info(`client connected on port: ${client.address().port}, family: ${client.address().family}, address: ${client.address().address}`);
+	logger.info(`authorize successed, client connected on port: ${client.address().port}, family: ${client.address().family}, address: ${client.address().address}`);
 
 	return connection;
 }
@@ -79,11 +80,16 @@ exports.createServer = function(opts)
 			socket: socket,
 			dispatcher: dispatcher
 		});
-		exports.connectionManager.push(connection);
 
-		// info
-		const address = socket.address();
-		logger.info(`receive an connection port: ${address.port}, family: ${address.family}, address: ${address.address}`);
+		connection.authorize().then(() => {
+			exports.connectionManager.push(connection);
+
+			// info
+			const address = socket.address();
+			logger.info(`authorize successed, receive an connection port: ${address.port}, family: ${address.family}, address: ${address.address}`);
+		}).catch(e => {
+			logger.error(`authorize failed, receive an connection port: ${address.port}, family: ${address.family}, address: ${address.address}, ${e}`)
+		});
 	});
 
 	server.on("close", () => {
