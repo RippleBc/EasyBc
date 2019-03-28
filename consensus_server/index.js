@@ -1,18 +1,29 @@
-const process = require("process")
+const process = require("process");
 const express = require("express");
-const bodyParser = require("body-parser") 
-const Processor = require("./processor")
-const util = require("../utils")
-const {SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_UNPACKED, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS} = require("../const")
-const {host, port} = require("./nodes")
-const async = require("async")
+const bodyParser = require("body-parser");
+const assert = require("assert");
 
-const log4js= require("./logConfig")
-const logger = log4js.getLogger()
-const errlogger = log4js.getLogger("err")
-const othlogger = log4js.getLogger("oth")
+const Processor = require("./processor");
+const {SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_UNPACKED, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS} = require("../constant");
 
-const Buffer = util.Buffer;
+const log4js= require("./logConfig");
+const logger = log4js.getLogger();
+const errlogger = log4js.getLogger("err");
+const othlogger = log4js.getLogger("oth");
+
+const Buffer = utils.Buffer;
+const toBuffer = utils.toBuffer;
+const bufferToInt = utils.bufferToInt;
+
+//
+process.on("uncaughtException", function (err) {
+    errlogger.error(err.stack);
+
+    // const processor = new Processor(app);
+    // processor.run();
+
+    process.exit(1);
+});
 
 // express
 const app = express();
@@ -32,21 +43,7 @@ app.all('*', function(req, res, next) {
     res.header("Content-Type", "application/json;charset=utf-8");
     next();
 });
-
-// logger
 log4js.useLogger(app, logger);
-
-// consensus
-const processor = new Processor(app);
-processor.run();
-process.on("uncaughtException", function (err) {
-    errlogger.error(err.stack);
-
-    // const processor = new Processor(app);
-    // processor.run();
-
-    process.exit(1);
-});
 
 app.post("/sendTransaction", function(req, res) {
     if(!req.body.tx) {
@@ -72,3 +69,7 @@ app.post("/sendTransaction", function(req, res) {
         });
     });
 });
+
+// consensus
+const processor = new Processor(app);
+processor.run();

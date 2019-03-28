@@ -5,7 +5,9 @@ const ConnectionManager =require("./manager");
 
 exports.connectionManager = new ConnectionManager();
 
-const onConnect = async function(client, dispatcher, address)
+const CONNECT_TIMEOUT = 5 * 1000;
+
+const onConnect = async function(client, dispatcher, address, host, port)
 {
 	const promise = new Promise((resolve, reject) => {
 		client.on("connect", () => {
@@ -18,6 +20,15 @@ const onConnect = async function(client, dispatcher, address)
 
 			resolve(connection);
 		});
+
+		client.on("error", e => {
+			reject(`client connected on host: ${host}, port: ${port}, address: ${client.address().address} failed, ${e}`);
+		});
+
+		const timeout = setTimeout(() => {
+			reject(`client connected on host: ${host}, port: ${port}, address: ${client.address().address} timeout`);
+		}, CONNECT_TIMEOUT);
+		timeout.unref();
 	});
 
 	return promise;
@@ -40,7 +51,7 @@ exports.createClient = async function(opts)
 	  port: port
 	});
 
-	const connection = await onConnect(client, dispatcher, address);
+	const connection = await onConnect(client, dispatcher, address, host, port);
 
 	try
 	{

@@ -1,0 +1,20 @@
+{
+	"privateKey": "0x459705e79404b3604e4eef0aa1becedef1a227865a122826106f7f511682ea86",
+	"unl": 
+	[
+		{
+			"host": "localhost",
+			"port": 9091
+		}
+	],
+	"http":
+	{
+		"host": "localhost",
+		"port": 8080 
+	},
+	"tcp":
+	{
+		"host": "localhost",
+		"port": 9091
+	}
+}
