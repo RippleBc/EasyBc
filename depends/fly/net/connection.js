@@ -65,14 +65,14 @@ class Connection extends AsyncEventEmitter
 		});
 
 		this.socket.on("end", () => {
-			let endTimeout = setTimeout(() => {
-				if(!self.socket.destroyed)
+			let timeout = setTimeout(() => {
+				if(self.socket && !self.socket.destroyed)
 				{
 					self.socket.end();
 				}
 			}, END_CLEAR_SEND_BUFFER_TIME_DEAY);
 
-			endTimeout.unref();
+			timeout.unref();
 		});
 
 		this.socket.on("drain", () => {
@@ -81,6 +81,9 @@ class Connection extends AsyncEventEmitter
 		});
 
 		this.socket.on("close", () => {
+			const address = self.socket.address();
+			self.logger.info(`socket ${self.address.toString("hex")} close success`);
+
 			self.closed = true;
 		});
 

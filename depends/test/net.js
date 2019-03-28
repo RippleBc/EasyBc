@@ -111,7 +111,6 @@ describe("net test", function() {
 					assert.equal(message.data.toString(), "walker", `data.name should be walker, now is ${message.data.toString()}`);
 
 					server.close();
-					connectionManager.closeAll();
 
 					done();
 				},
@@ -121,7 +120,7 @@ describe("net test", function() {
 			}).catch(e => {
 				done(e);
 			});
-		}, 1000)
+		}, 1000);
 	});
 });
 
