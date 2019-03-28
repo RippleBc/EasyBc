@@ -4,7 +4,8 @@
 	[
 		{
 			"host": "localhost",
-			"port": 9091
+			"port": 9092,
+			"address": "0x6ea3ba30a7e81d92ad8aa2e359c5d8f297fc0fb1"
 		}
 	],
 	"http":

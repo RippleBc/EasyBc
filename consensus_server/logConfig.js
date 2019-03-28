@@ -12,23 +12,23 @@ log4js.configure({
             pattern: "req-yyyy-MM-dd.log",
             alwaysIncludePattern: true
         },
-        err: {
+        p2p: {
             type: "dateFile",
-            filename: "server/logs/err_log/",
-            pattern: "err-yyyy-MM-dd.log",
+            filename: "server/logs/p2p_log/",
+            pattern: "p2p-yyyy-MM-dd.log",
             alwaysIncludePattern: true
         },
-        oth: {
+        net: {
             type: "dateFile",
-            filename: "server/logs/oth_log/",
-            pattern: "oth-yyyy-MM-dd.log",
+            filename: "server/logs/net_log/",
+            pattern: "net-yyyy-MM-dd.log",
             alwaysIncludePattern: true
         }
     },
     categories: {
-        default: { appenders: ["stdout", "req"], level: "debug" },
-        err: { appenders: ["stdout", "err"], level: "error" },
-        oth: { appenders: ["stdout", "oth"], level: "info" }
+        default: { appenders: ["stdout", "req"], level: "info" },
+        p2p: { appenders: ["stdout", "p2p"], level: "info" },
+        net: { appenders: ["stdout", "net"], level: "info" }
     }
 })
  

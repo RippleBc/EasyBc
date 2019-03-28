@@ -2,7 +2,7 @@ const Message = require("../fly/net/message");
 const MessageChunk = require("../fly/net/message_chunk");
 const MessageChunkQueue = require("../fly/net/message_chunk_queue");
 const utils = require("../utils");
-const { createClient, createServer, connectionManager } = require("../fly");
+const { createClient, createServer, connectionsManager } = require("../fly");
 const {assert, expect, should} = require("chai"); 
 const process = require("process");
 
@@ -116,7 +116,7 @@ describe("net test", function() {
 				},
 				address: toBuffer("0x6ea3ba30a7e81d92ad8aa2e359c5d8f297fc0fb1")
 			}).then(connection => {
-				connectionManager.get(toBuffer("0x6ea3ba30a7e81d92ad8aa2e359c5d8f297fc0fb1")).write(10, "walker");
+				connectionsManager.get(toBuffer("0x6ea3ba30a7e81d92ad8aa2e359c5d8f297fc0fb1")).write(10, "walker");
 			}).catch(e => {
 				done(e);
 			});

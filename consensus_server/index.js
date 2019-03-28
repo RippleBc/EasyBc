@@ -1,28 +1,34 @@
 const process = require("process");
+const log4js= require("./logConfig");
+const logger = log4js.getLogger();
+
+process[Symbol.for("loggerP2p")] = log4js.getLogger("p2p");
+process[Symbol.for("loggerNet")] = log4js.getLogger("net");
+
 const express = require("express");
 const bodyParser = require("body-parser");
 const assert = require("assert");
+const utils = require("../depends/utils");
+const P2p = require("./p2p");
+const { http } = require("./config");
 
-const Processor = require("./processor");
+// const Processor = require("./processor");
 const {SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_UNPACKED, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS} = require("../constant");
-
-const log4js= require("./logConfig");
-const logger = log4js.getLogger();
-const errlogger = log4js.getLogger("err");
-const othlogger = log4js.getLogger("oth");
 
 const Buffer = utils.Buffer;
 const toBuffer = utils.toBuffer;
 const bufferToInt = utils.bufferToInt;
 
 //
-process.on("uncaughtException", function (err) {
-    errlogger.error(err.stack);
-
-    // const processor = new Processor(app);
-    // processor.run();
-
+process.on("uncaughtException", function(err) {
+    logger.error(err.stack);
     process.exit(1);
+});
+
+// p2p
+const p2p = process[Symbol.for("p2p")] = new P2p();
+p2p.init(() => {
+
 });
 
 // express
@@ -31,9 +37,8 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 app.use(bodyParser.json({limit: "1mb"}));
-const server = app.listen(port, function() {
-    let host = server.address().address;
-    console.log("server listening at http://%s:%s", host, port);
+const server = app.listen(http.port, http.host, function() {
+    logger.info(`server listening at http://${http.host}:${http.port}`);
 });
 app.all('*', function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
@@ -53,23 +58,23 @@ app.post("/sendTransaction", function(req, res) {
         });
         return;
     }
-    processor.processTransaction(req.body.tx, function(err) {
-        if(!!err)
-        {
-            res.send({
-                code: OTH_ERR,
-                msg: err
-            });
-            return;
-        }
+    // processor.processTransaction(req.body.tx, function(err) {
+    //     if(!!err)
+    //     {
+    //         res.send({
+    //             code: OTH_ERR,
+    //             msg: err
+    //         });
+    //         return;
+    //     }
 
-        res.send({
-            code: SUCCESS,
-            msg: ""
-        });
-    });
+    //     res.send({
+    //         code: SUCCESS,
+    //         msg: ""
+    //     });
+    // });
 });
 
 // consensus
-const processor = new Processor(app);
-processor.run();
+// const processor = new Processor(app);
+// processor.run();
