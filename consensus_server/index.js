@@ -4,6 +4,7 @@ const logger = log4js.getLogger();
 
 process[Symbol.for("loggerP2p")] = log4js.getLogger("p2p");
 process[Symbol.for("loggerNet")] = log4js.getLogger("net");
+process[Symbol.for("loggerConsensus")] = log4js.getLogger("consensus");
 
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -12,7 +13,6 @@ const utils = require("../depends/utils");
 const P2p = require("./p2p");
 const { http } = require("./config");
 
-// const Processor = require("./processor");
 const {SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_UNPACKED, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS} = require("../constant");
 
 const Buffer = utils.Buffer;
@@ -25,13 +25,16 @@ process.on("uncaughtException", function(err) {
     process.exit(1);
 });
 
-// p2p
+/************************************** consensus **************************************/
+const Processor = require("./processor");
+const processor = new Processor();
+processor.run();
+
+/************************************** p2p **************************************/
 const p2p = process[Symbol.for("p2p")] = new P2p();
-p2p.init(() => {
+p2p.init(processor.handleMessages);
 
-});
-
-// express
+/************************************** http **************************************/
 const app = express();
 app.use(bodyParser.urlencoded({
   extended: true
@@ -58,23 +61,18 @@ app.post("/sendTransaction", function(req, res) {
         });
         return;
     }
-    // processor.processTransaction(req.body.tx, function(err) {
-    //     if(!!err)
-    //     {
-    //         res.send({
-    //             code: OTH_ERR,
-    //             msg: err
-    //         });
-    //         return;
-    //     }
 
-    //     res.send({
-    //         code: SUCCESS,
-    //         msg: ""
-    //     });
-    // });
+    processor.processTransaction(req.body.tx)
+    .then(() => {
+        res.send({
+            code: SUCCESS,
+            msg: ""
+        });
+    })
+    .catch(e => {
+        res.send({
+            code: OTH_ERR,
+            msg: err
+        });
+    })
 });
-
-// consensus
-// const processor = new Processor(app);
-// processor.run();

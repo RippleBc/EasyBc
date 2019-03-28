@@ -1,8 +1,10 @@
 node_modules/
 depends/test/data/*
-client/data/*
-server/data/*
-client/logs/*
-server/logs/*
-client/node_modules/
-server/node_modules/
+monitor_client/data/*
+monitor_client/logs/*
+transaction_client/data/*
+transaction_client/logs/*
+consensus_server/data/*
+consensus_server/logs/*
+query_server/data/*
+query_server/logs/*

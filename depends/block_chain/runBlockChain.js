@@ -14,7 +14,17 @@ module.exports = async function(opts)
   let parentBlock;
   if(!block.isGenesis())
   {
-    parentBlock = await this.getBlockByHash(block.header.parentHash);
+    try
+    {
+      parentBlock = await this.getBlockByHash(block.header.parentHash);
+    }
+    catch(e)
+    {
+      return {
+        state: false,
+        msg: `run block chain, getBlockByHash failed, ${e}`
+      }
+    }
   }
 
   // check parentHash and number

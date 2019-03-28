@@ -8,27 +8,41 @@ log4js.configure({
         },
         req: {
             type: "dateFile",
-            filename: "server/logs/req_log/",
+            filename: "consensus_server/logs/req_log/",
             pattern: "req-yyyy-MM-dd.log",
             alwaysIncludePattern: true
         },
         p2p: {
             type: "dateFile",
-            filename: "server/logs/p2p_log/",
+            filename: "consensus_server/logs/p2p_log/",
             pattern: "p2p-yyyy-MM-dd.log",
             alwaysIncludePattern: true
         },
         net: {
             type: "dateFile",
-            filename: "server/logs/net_log/",
+            filename: "consensus_server/logs/net_log/",
             pattern: "net-yyyy-MM-dd.log",
+            alwaysIncludePattern: true
+        },
+        consensus: {
+            type: "dateFile",
+            filename: "consensus_server/logs/consensus_log/",
+            pattern: "consensus-yyyy-MM-dd.log",
+            alwaysIncludePattern: true
+        },
+        update: {
+            type: "dateFile",
+            filename: "consensus_server/logs/update_log/",
+            pattern: "update-yyyy-MM-dd.log",
             alwaysIncludePattern: true
         }
     },
     categories: {
         default: { appenders: ["stdout", "req"], level: "info" },
         p2p: { appenders: ["stdout", "p2p"], level: "info" },
-        net: { appenders: ["stdout", "net"], level: "info" }
+        net: { appenders: ["stdout", "net"], level: "info" },
+        consensus: { appenders: ["stdout", "consensus"], level: "info" },
+        update: { appenders: ["stdout", "update"], level: "info" }
     }
 })
  

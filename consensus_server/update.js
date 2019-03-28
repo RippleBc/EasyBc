@@ -1,23 +1,17 @@
-const async = require("async")
-const Block = require("../../block")
-const {getNodeNum, nodeList} = require("../nodes")
-const util = require("../../utils")
-const {post} = require("../../http/request")
-const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../../const")
-const AsyncEventEmitter = require("async-eventemitter")
-const initDb = require("../../db")
-const Trie = require("merkle-patricia-tree/secure.js")
-const BlockChain = require("../../block_chain")
+const Block = require("../../depends/block");
+const BlockChain = require("../../depends/block_chain");
+const request = require("request");
+const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../../constant");
+const initDb = require("../../db");
+const Trie = require("merkle-patricia-tree");
+const utils = require("../../depends/utils");
+const AsyncEventEmitter = require("async-eventemitter");
 
 const log4js= require("../logConfig")
-const logger = log4js.getLogger()
-const errlogger = log4js.getLogger("err")
-const othlogger = log4js.getLogger("oth")
+const logger = log4js.getLogger("update")
 
 const Buffer = util.Buffer;
 const BN = util.BN;
-
-// empty trie root: 0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421
 
 class Update extends AsyncEventEmitter
 {

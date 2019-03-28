@@ -54,7 +54,6 @@ class P2p
 		}
 
 		// check connections
-		const self = this;
 		setTimeout(() => {
 			// init conn
 			for(let i = 0; i < unl.length; i++)
