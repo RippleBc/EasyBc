@@ -27,6 +27,8 @@ class ConnectionsManager
 		if(i === this.connections.length)
 		{
 			this.connections.push(connection);
+			
+			connection.logger.info(`ConnectionsManager push, new address ${connection.address.toString("hex")} has connected`);
 		}
 		else
 		{
@@ -37,11 +39,14 @@ class ConnectionsManager
 
 				// add new connection
 				this.connections.push(connection);
+
+				connection.logger.warn(`ConnectionsManager push, address ${connection.address.toString("hex")} has closed, replace with new connection`);
 			}
 			else
 			{
-				connection.logger.warn(`ConnectionsManager push, connection ${connection.address.toString("hex")} has connected`)
 				connection.close();
+
+				connection.logger.warn(`ConnectionsManager push, address ${connection.address.toString("hex")} has connected, close the same connection`);
 			}
 		}
 	}
