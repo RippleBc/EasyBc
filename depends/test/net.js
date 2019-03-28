@@ -117,9 +117,7 @@ describe("net test", function() {
 				},
 				address: toBuffer("0x6ea3ba30a7e81d92ad8aa2e359c5d8f297fc0fb1")
 			}).then(connection => {
-				setTimeout(() => {
-					connection.write(10, "walker");
-				}, 500);
+				connectionManager.get(toBuffer("0x6ea3ba30a7e81d92ad8aa2e359c5d8f297fc0fb1")).write(10, "walker");
 			}).catch(e => {
 				done(e);
 			});

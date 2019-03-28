@@ -15,19 +15,47 @@ class ConnectionsManager
 	{
 		assert(connection instanceof Connection, `ConnectionsManager push, connection should be an Connection Object, now is ${typeof connection}`);
 
-		this.connections.push(connection)
+		let i;
+		for(i = 0; i < this.connections.length; i++)
+		{
+			if(this.connections[i].address.toString("hex") === connection.address.toString("hex"))
+			{
+				break;
+			}
+		}
+		
+		if(i === this.connections.length)
+		{
+			this.connections.push(connection);
+		}
+		else
+		{
+			if(this.connections[i].closed === true)
+			{
+				// del closed connection
+				this.connections.splice(i, 1);
+
+				// add new connection
+				this.connections.push(connection);
+			}
+			else
+			{
+				connection.logger.warn(`ConnectionsManager push, connection ${connection.address.toString("hex")} has connected`)
+				connection.close();
+			}
+		}
 	}
 
 	/**
-	 * @param {String} address
+	 * @param {Buffer} address
 	 */
 	get(address)
 	{
-		assert(typeof index === "string", `ConnectionsManager get, index should be an String, now is ${typeof connection}`);
+		assert(Buffer.isBuffer(address), `ConnectionsManager get, address should be an Buffer, now is ${typeof address}`);
 
 		for(let i = 0; i < this.connections.length; i++)
 		{
-			if(this.connections[i].address === address)
+			if(this.connections[i].address.toString("hex") === address.toString("hex"))
 			{
 				return this.connections[i];
 			}
