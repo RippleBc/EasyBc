@@ -6,5 +6,7 @@ transaction_client/data/*
 transaction_client/logs/*
 consensus_server/data/*
 consensus_server/logs/*
+update_server/data/*
+update_server/logs/*
 query_server/data/*
 query_server/logs/*

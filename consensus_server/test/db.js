@@ -17,6 +17,7 @@ describe("check db", function() {
 		checkGet().then(value => {
 			done("value should not exist");
 		}).catch(e => {
+			console.info(e)
 			done();
 		});
 	});

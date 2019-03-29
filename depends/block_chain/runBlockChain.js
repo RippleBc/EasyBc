@@ -20,10 +20,14 @@ module.exports = async function(opts)
     }
     catch(e)
     {
-      return {
-        state: false,
-        msg: `run block chain, getBlockByHash failed, ${e}`
+      if(e.toString().indexOf("NotFoundError: Key not found in database") >= 0)
+      {
+        return {
+          state: false,
+          msg: "run block chain, getBlockByHash key not found"
+        }
       }
+      await Promise.reject(`run block chain, getBlockByHash throw exception, ${e}`);
     }
   }
 

@@ -5,8 +5,8 @@ const Block = require("../../depends/block");
 const BlockChain = require("../../depends/block_chain");
 const utils = require("../../depends/utils");
 const FlowStoplight = require("flow-stoplight");
-const Pool = require("../ripple/data/pool");
-const Consensus = require("../ripple");
+// const Pool = require("../ripple/data/pool");
+// const Consensus = require("../ripple");
 const { ERR_RUN_BLOCK_TX_PROCESS } = require("../../constant");
 const { TRANSACTION_CACHE_MAX_NUM } = require("../constant");
 const assert = require("assert");
@@ -19,6 +19,7 @@ const BN = utils.BN;
 const bufferToInt = utils.bufferToInt;
 
 var updateInstance;
+
 function update()
 {
 	if(!updateInstance)
@@ -50,17 +51,17 @@ class Processor
 
 		this.blockChain = new BlockChain();
 
-		this.consensus = new Consensus(self);
+		// this.consensus = new Consensus(self);
 
 		// transactions cache
-		this.transactionsPool = new Pool();
+		this.transactionsPool = [];
 	}
 
 	run()
 	{
 		update();
 
-		self.consensus.run();
+		// self.consensus.run();
 
 		this.stoplight.go()
 	}
@@ -72,10 +73,10 @@ class Processor
 		const cmd = bufferToInt(message.data)
 		const data = message.data;
 
-		switch(cmd)
-		{
+		// switch(cmd)
+		// {
 			
-		}
+		// }
 	}
 
 	/**
@@ -144,7 +145,7 @@ class Processor
 			const { state, msg, failedTransactions } = await this.blockChain.runBlockChain({block: block, generate: generate});
 
 			// block chain is out of date, need update
-			if(state === false && msg.indexOf("run block chain, getBlockByHash failed") >= 0)
+			if(state === false && msg.indexOf("run block chain, getBlockByHash key not found") >= 0)
 			{
 				update();
 				return;
@@ -154,6 +155,7 @@ class Processor
 			block.delInvalidTransactions(failedTransactions);
 		}
 		while(state === false);
+	}
 }
 
 module.exports = Processor;
