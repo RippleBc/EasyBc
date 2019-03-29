@@ -1,43 +1,36 @@
-const util = require("../../../utils")
-const Pool = require("./pool")
+const utils = require("../../../depends/utils");
+const { unl } = require("../../config.json");
 
-const rlp = util.rlp;
+const rlp = utils.rlp;
+const sha256 = utils.sha256;
 
-/**
- * Creates a new Base object
- *
- * @class
- * @constructor
- * @prop 
- */
-class Base extends Pool
+class Base
 {
 	constructor()
-	{
-		super();
-		
-		/**
-     * @property {Buffer} from (read only) sender address of this block, mathematically derived from other parameters.
-     * @memberof Transaction
-     */
+	{	
     Object.defineProperty(this, "from", {
       enumerable: true,
       configurable: true,
-      get: this.getSenderAddress.bind(this)
+      get: function() {
+        if(this._from)
+        {
+          return this._from;
+        }
+        const publicKey = this.getSenderPublicKey();
+        this._from = utils.publicToAddress(publicKey);
+        return this._from;
+      }
     });
 	}
 
 	/**
    * Computes a sha3-256 hash of the serialized txs
-   * @param {Boolean} [includeSignature=true] whether or not to inculde the signature
+   * @param {Boolean}  whether or not to inculde the signature
    * @return {Buffer}
    */
-  hash(includeSignature)
+  hash(includeSignature = true)
   {
-    if(includeSignature === undefined)
-    {
-      includeSignature = true;
-    }
+    assert(typeof includeSignature === "boolean", `Base hash, includeSignature should be an Boolean, now is ${typeof includeSignature}`);
 
     let items;
     if(includeSignature)
@@ -50,22 +43,7 @@ class Base extends Pool
     }
 
     // create hash
-    return util.keccak(util.rlp.encode(items));
-  }
-
-  /**
-   * Returns the sender's address
-   * @return {Buffer}
-   */
-  getSenderAddress()
-  {
-    if(this._from)
-    {
-      return this._from;
-    }
-    const pubkey = this.getSenderPublicKey();
-    this._from = util.publicToAddress(pubkey);
-    return this._from;
+    return sha256(rlp.encode(items));
   }
 
   /**
@@ -77,8 +55,8 @@ class Base extends Pool
     if(!this._senderPubKey || !this._senderPubKey.length)
     {
       const msgHash = this.hash(false);
-      let v = util.bufferToInt(this.v);
-      this._senderPubKey = util.ecrecover(msgHash, v, this.r, this.s);
+      let v = utils.bufferToInt(this.v);
+      this._senderPubKey = utils.ecrecover(msgHash, v, this.r, this.s);
     }
     
     return this._senderPubKey;
@@ -90,12 +68,18 @@ class Base extends Pool
    */
   verifySignature()
   {
-    // compute publickey
-    this.getSenderPublicKey();
+    try
+    {
+      this.getSenderPublicKey();
+    }
+    catch(e)
+    {
+      return false;
+    }
 
     const msgHash = this.hash(false);
 
-    return util.ecverify(msgHash, this.r, this.s, this._senderPubKey);
+    return utils.ecverify(msgHash, this.r, this.s, this._senderPubKey);
   }
 
   /**
@@ -104,11 +88,33 @@ class Base extends Pool
    */
   sign(privateKey)
   {
+    assert(Buffer.isBuffer(privateKey), `Base sign, privateKey should be an Buffer, now is ${typeof privateKey}`);
+
     const msgHash = this.hash(false);
-    const sig = util.ecsign(msgHash, privateKey);
+    const sig = utils.ecsign(msgHash, privateKey);
 
     // copy sig's properties v, s, r to this
     Object.assign(this, sig);
+  }
+
+  /**
+   * @param {Buffer} address
+   */
+  checkAddress(address)
+  {
+    assert(Buffer.isBuffer(address), `Base checkAddress, address should be an Buffer, now is ${typeof address}`);
+
+    for(let i = 0; i < unl.length; i++)
+    {
+      const node = unl[i];
+
+      if(address.toString("hex") === uitls.stripHexPrefix(node.address))
+      {
+        return true;
+      }
+    }
+
+    return false;
   }
 }
 

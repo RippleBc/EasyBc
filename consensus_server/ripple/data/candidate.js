@@ -1,12 +1,9 @@
-const Base = require("./base")
-const util = require("../../../utils")
-const Transaction = require("../../../transaction")
-const {checkNodeAddress, getNodeNum} = require("../../nodes")
+const process = require("process");
+const Base = require("./base");
+const util = require("../../../depends/utils");
+const Transaction = require("../../../depends/transaction");
 
-const log4js= require("../../logConfig");
-const logger = log4js.getLogger();
-const errLogger = log4js.getLogger("err");
-const othLogger = log4js.getLogger("oth");
+const logger = process[Symbol.for("loggerConsensus")];
 
 const rlp = util.rlp;
 
@@ -18,10 +15,9 @@ class Candidate extends Base
 
 		data = data || {};
 
-		// Define Properties
     const fields = [{
       name: "transactions",
-      allowZero: true,
+      allowLess: true,
       default: util.Buffer.alloc(0)
     }, {
       name: "v",
@@ -43,147 +39,57 @@ class Candidate extends Base
       default: util.Buffer.alloc(0)
     }];
 
-    /**
-     * Returns the rlp encoding of the candidate
-     * @method serialize
-     * @memberof Transaction
-     * @return {Buffer}
-     */
-
-    // attached serialize
     util.defineProperties(this, fields, data);
 	}
 
   /**
    * Validates the signature
    * Checks candidate's property and signature
-   * @param {Boolean} [stringError=false] whether to return a string with a description of why the validation failed or return a Boolean
-   * @return {Boolean|String}
+   * @return {String}
    */
-  validateSignatrue(stringError)
+  validate()
   {
     const errors = [];
 
-    // verify
+    // verify signature
     if(!this.verifySignature())
     {
-      errors.push("class Candidate validateSignatrue, Invalid Candidate Signature");
+      logger.error("Candidate validate, invalid signature");
+
+      return false;
     }
 
     // check address
-    if(!checkNodeAddress(this.from))
+    if(!this.checkAddress(this.from))
     {
-    	errors.push("class Candidate validateSignatrue, Invalid node address");
+      logger.error("Candidate validate, invalid address");
+
+      return false;
     }
 
-    if(stringError === undefined || stringError === false)
-    {
-      return errors.length === 0;
-    }
-    else
-    {
-      return errors.join(" ");
-    }
-  }
-
-  validateTransactions(stringError)
-  {
-    const errors = [];
-    
     // verify transactions
-    let rawTransactions = rlp.decode(this.transactions);
-    for(let i = 0; i < rawTransactions.length; i++)
+    try
     {
-      let transaction = new Transaction(rawTransactions[i]);
-      if(!transaction.verifySignature())
+      const transactionRawsArray = rlp.decode(this.transactions);
+      for(let i = 0; i < transactionRawsArray.length; i++)
       {
-        errors.push(`class Candidate validate, Invalid Transaction Signature ${JSON.stringify(transaction.toJSON(true))}`);
-      }
-    }
+        const transaction = new Transaction(transactionRawsArray[i]);
+        if(!transaction.verifySignature())
+        {
+          logger.error("Candidate validate, invalid transaction");
 
-    if(stringError === undefined || stringError === false)
+          return false;
+        }
+      } 
+    }
+    catch(e)
     {
-      return errors.length === 0;
-    }
-    else
-    {
-      return errors.join(" ");
-    }
-  }
+      logger.error(`Candidate validate, check transactions failed, ${e}`);
 
-  poolDataToCandidateTransactions()
-  {
-  	let transactions = [];
-  	for(let i = 0; i < this.length; i++)
-  	{
-  		transactions.push(this.get(i).serialize())
-  	}
-
-  	this.transactions = rlp.encode(transactions);
-  }
-
-  candidateTransactionsToPoolData()
-  {
-  	let transactions = rlp.decode(this.transactions);
-  	for(let i = 0; i < transactions.length; i++)
-  	{
-  		this.push(new Transaction(transactions[i]));
-  	}
-  }
-
-  /**
-   * @param {Number} threshhold
-   */
-  clearInvalidTransaction(threshhold)
-  {
-    // logger transaction
-    logger.warn(`***********candidate transactions***********`);
-    for(let i = 0; i < this.length; i++)
-    {
-      let transaction = this.data[i];
-      logger.warn(`transaction: ${util.baToHexString(transaction.hash(true))}`);
+      return false;
     }
 
-    //
-    let transactions = {};
-    for(let i = 0; i < this.length; i++)
-    {
-      let transaction = this.data[i];
-      let key = util.baToHexString(transaction.hash(true));
-      if(!transactions[key])
-      {
-        transactions[key] = {
-          tx: transaction,
-          num: 0
-        };
-      }
-      transactions[key].num++;
-    }
-
-    // filter invalid transactions
-    let validTransactions = [];
-    let nodeNum = getNodeNum() + 1;
-    for(let hash in transactions)
-    {
-      if(transactions[hash].num / nodeNum >= threshhold)
-      {
-        validTransactions.push(transactions[hash].tx);
-      }
-    }
-
-    // clear transactions
-    this.reset();
-
-    // record valid transactions
-    this.batchPush(validTransactions);
-
-    // logger valid transaction
-    logger.warn(`***********valid transactions threshhold: ${threshhold}***********`);
-    for(let i = 0; i < this.length; i++)
-    {
-      let transaction = this.data[i];
-      logger.warn(`transaction: ${util.baToHexString(transaction.hash(true))}`);
-    }
+    return true;
   }
 }
 

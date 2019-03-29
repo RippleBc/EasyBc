@@ -9,6 +9,7 @@ process[Symbol.for("loggerConsensus")] = log4js.getLogger("consensus");
 const express = require("express");
 const bodyParser = require("body-parser");
 const assert = require("assert");
+const semaphore = require("semaphore");
 const utils = require("../depends/utils");
 const P2p = require("./p2p");
 const { http } = require("./config");
@@ -32,7 +33,10 @@ processor.run();
 
 /************************************** p2p **************************************/
 const p2p = process[Symbol.for("p2p")] = new P2p();
-p2p.init(processor.handleMessages);
+p2p.init((message) => {
+    const self = this; // note this reprent a fly Connection Object
+    processor.handleMessage(self.address, message);
+});
 
 /************************************** http **************************************/
 const app = express();

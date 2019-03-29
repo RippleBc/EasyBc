@@ -1,15 +1,14 @@
-const async = require("async")
-const semaphore = require("semaphore")
-const AsyncEventEmitter = require("async-eventemitter")
-const {RIPPLE_STATE_AMALGAMATE, BLOCK_AGREEMENT_MAX_ROUND} = require("../constant")
-const Candidate = require("./data/candidate")
-const Time = require("./data/time")
-const RippleBlock = require("./data/rippleBlock")
-const Amalgamate = require("./stage/amalgamate")
-const CandidateAgreement = require("./stage/candidateAgreement")
-const TimeAgreement = require("./stage/timeAgreement")
-const BlockAgreement = require("./stage/blockAgreement")
-const util = require("../../utils")
+const async = require("async");
+const AsyncEventEmitter = require("async-eventemitter");
+const {RIPPLE_STATE_AMALGAMATE, BLOCK_AGREEMENT_MAX_ROUND} = require("../constant");
+const Candidate = require("./data/candidate");
+const Time = require("./data/time");
+const RippleBlock = require("./data/rippleBlock");
+const Amalgamate = require("./stage/amalgamate");
+const CandidateAgreement = require("./stage/candidateAgreement");
+const TimeAgreement = require("./stage/timeAgreement");
+const BlockAgreement = require("./stage/blockAgreement");
+const util = require("../../utils");
 
 class Ripple extends AsyncEventEmitter
 {
@@ -61,6 +60,22 @@ class Ripple extends AsyncEventEmitter
 		this.amalgamate.run();
 
 		this.state = RIPPLE_STATE_AMALGAMATE;
+	}
+
+	handleMessage(address, cmd, data)
+	{
+		switch(cmd)
+		{
+			case:
+			{
+
+			} 
+			break;
+			case:
+			{
+
+			}
+		}
 	}
 }
 

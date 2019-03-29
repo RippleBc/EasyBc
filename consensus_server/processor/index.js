@@ -5,8 +5,7 @@ const Block = require("../../depends/block");
 const BlockChain = require("../../depends/block_chain");
 const utils = require("../../depends/utils");
 const FlowStoplight = require("flow-stoplight");
-// const Pool = require("../ripple/data/pool");
-// const Consensus = require("../ripple");
+const Consensus = require("../ripple");
 const { ERR_RUN_BLOCK_TX_PROCESS } = require("../../constant");
 const { TRANSACTION_CACHE_MAX_NUM } = require("../constant");
 const assert = require("assert");
@@ -51,10 +50,10 @@ class Processor
 
 		this.blockChain = new BlockChain();
 
-		// this.consensus = new Consensus(self);
+		this.consensus = new Consensus(self);
 
 		// transactions cache
-		this.transactionsPool = [];
+		this.transactionRawsCache = new Set();
 	}
 
 	run()
@@ -66,17 +65,14 @@ class Processor
 		this.stoplight.go()
 	}
 
-	handleMessages(message)
+	handleMessage(address, message)
 	{
 		assert(message instanceof Message, `Processor handleMessages, message should be a Message Object, now is ${typeof message}`);
 
 		const cmd = bufferToInt(message.data)
 		const data = message.data;
 
-		// switch(cmd)
-		// {
-			
-		// }
+		this.consensus.handleMessage(address, cmd, data);
 	}
 
 	/**
@@ -90,9 +86,9 @@ class Processor
 
 		const promise = new Promise((resolve, reject) => {
 			self.stoplight.await(() => {
-				if(self.transactionsPool.length > TRANSACTION_CACHE_MAX_NUM)
+				if(self.transactionRawsCache.size > TRANSACTION_CACHE_MAX_NUM)
 				{
-					reject(`Processor processTransaction, this.transactionsPool length should be litter than ${TRANSACTION_CACHE_MAX_NUM}`);
+					reject(`Processor processTransaction, this.transactionRawsCache length should be litter than ${TRANSACTION_CACHE_MAX_NUM}`);
 				}
 
 				let transaction;
@@ -113,7 +109,7 @@ class Processor
 
 				loggerConsensus.info(`Processor processTransaction, transaction ${transaction.hash().toString("hex")}: ${JSON.stringify(transaction.toJSON())}`);
 
-				self.transactionsPool.push(transaction);
+				self.transactionRawsCache.add(transactionRaw);
 
 				resolve();
 			});

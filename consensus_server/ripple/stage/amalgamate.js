@@ -28,7 +28,7 @@ class Amalgamate extends Stage
 				return;
 			}
 
-	    	// check stage
+			// check stage
 			if(self.ripple.state !== RIPPLE_STATE_AMALGAMATE)
 			{
 				res.send({
