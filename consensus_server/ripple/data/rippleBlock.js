@@ -1,8 +1,6 @@
 const process = require("process");
 const Base = require("./base");
 const utils = require("../../../depends/utils");
-const {AGREEMENT_THRESHHOLD} = require("../../constant");
-const {getNodeNum, checkNodeAddress} = require("../../nodes");
 
 const logger = process[Symbol.for("loggerConsensus")];
 
@@ -19,7 +17,6 @@ class RippleBlock extends Base
 
     const fields = [{
       name: "block",
-      allowLess: true,
       default: Buffer.alloc(0)
     }, {
       name: "v",
@@ -43,27 +40,6 @@ class RippleBlock extends Base
 
     utils.defineProperties(this, fields, data);
 	}
-
-  /**
-   * Validates the signature
-   * Checks block's property and signature
-   */
-  validate()
-  {
-    // verify
-    if(!this.verifySignature())
-    {
-      logger.error("RippleBlock validate, invalid signature");
-    }
-
-    // check node address
-    if(!this.checkAddress(this.from))
-    {
-    	logger.error("RippleBlock validate, invalid address");
-    }
-
-    return true;
-  }
 }
 
 module.exports = RippleBlock;

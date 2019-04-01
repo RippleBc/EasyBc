@@ -4,6 +4,7 @@ const Trie = require("../trie");
 const Header = require("./header");
 const assert = require("assert");
 
+const Buffer = utils.Buffer;
 const BN = utils.BN;
 const rlp = utils.rlp;
 const toBuffer = utils.toBuffer;
@@ -43,6 +44,10 @@ class Block
       throw Error(`Block constructor, data which has been parsed should be an Array or Object, now is ${typeof data}`);
     }
     this.header.blockClass = Block;
+    if(Buffer.isBuffer(rawTransactions))
+    {
+      rawTransactions = rlp.decode(rawTransactions);
+    }
     assert(Array.isArray(rawTransactions), `rawTransactions should be an Array, now is ${typeof rawTransactions}`);
     this.transactions = [];
     for(let i = 0; i < rawTransactions.length; i++)

@@ -60,16 +60,33 @@ class Processor
 	{
 		update();
 
-		// self.consensus.run();
+		self.consensus.run();
 
 		this.stoplight.go()
 	}
 
+	/**
+	 * @param {Number} size
+	 */
+	getTransactions(size)
+	{
+		assert(typeof size === "number", `Processor getTransactions, size should be a Number, now is ${typeof size}`);
+
+		size = size > this.transactionRawsCache.size() ? this.transactionRawsCache.size() : size;
+
+		return this.transactionRawsCache.splice(0, size);
+	}
+
+	/**
+	 * @param {Buffer} address
+	 * @param {Message} message
+	 */
 	handleMessage(address, message)
 	{
+		assert(Buffer.isBuffer(address), `Processor handleMessages, address should be an Buffer, now is ${typeof message}`);
 		assert(message instanceof Message, `Processor handleMessages, message should be a Message Object, now is ${typeof message}`);
 
-		const cmd = bufferToInt(message.data)
+		const cmd = bufferToInt(message.cmd);
 		const data = message.data;
 
 		this.consensus.handleMessage(address, cmd, data);

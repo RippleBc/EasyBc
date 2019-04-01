@@ -1,176 +1,123 @@
-const Candidate = require("../data/candidate")
-const util = require("../../../utils")
-const {postAmalgamateCandidate, postBatchAmalgamateCandidate} = require("../chat")
-const async = require("async")
-const {SUCCESS, PARAM_ERR, OTH_ERR, STAGE_INVALID} = require("../../../const")
-const {RIPPLE_STATE_EMPTY, RIPPLE_STATE_AMALGAMATE, TRANSACTION_NUM_EACH_ROUND, SEND_DATA_DEFER} = require("../../constant")
-const Stage = require("./stage")
+const Candidate = require("../data/candidate");
+const utils = require("../../../depends/utils");
+const Stage = require("./stage");
+const process = require("process");
 
-const log4js= require("../../logConfig");
-const logger = log4js.getLogger();
-const errLogger = log4js.getLogger("err");
-const othLogger = log4js.getLogger("oth");
+const rlp = utils.rlp;
+
+const p2p = process[Symbol.for("p2p")];
+const logger = process[Symbol.for("loggerConsensus")];
+const privateKey = process[Symbol.for("privateKey")];
+
+const PROTOCOL_CMD_CANDIDATE_AMALGAMATE = 100;
+const PROTOCOL_CMD_CANDIDATE_AMALGAMATE_FINISH_STATE_REQUEST = 101;
+const PROTOCOL_CMD_CANDIDATE_AMALGAMATE_FINISH_STATE_RESPONSE = 102;
 
 class Amalgamate extends Stage
 {
 	constructor(ripple)
 	{
-		super(ripple);
-		
-		const self = this;
-
-		this.ripple.express.post("/amalgamateCandidate", function(req, res) {
-			if(!req.body.candidate) {
-				res.send({
-					code: PARAM_ERR,
-					msg: "param error, need candidate"
-				});
-				return;
-			}
-
-			// check stage
-			if(self.ripple.state !== RIPPLE_STATE_AMALGAMATE)
-			{
-				res.send({
-					code: STAGE_INVALID,
-					msg: `state ${RIPPLE_STATE_AMALGAMATE} invalid, current stage is ${self.ripple.state}`
-				});
-				return;
-			}
-
-			res.send({
-				code: SUCCESS,
-				msg: ""
-			});
-
-			self.receive(req.body.candidate);
+		super({
+			finish_state_request_cmd: PROTOCOL_CMD_CANDIDATE_AMALGAMATE_FINISH_STATE_REQUEST,
+			finish_state_response_cmd: PROTOCOL_CMD_CANDIDATE_AMALGAMATE_FINISH_STATE_RESPONSE,
+			handler: this.handler
 		});
 
-		this.ripple.on("amalgamateCandidateInnerErr", data => {
-			// check stage
-			if(self.ripple.state !== RIPPLE_STATE_AMALGAMATE)
-			{
-				return;
-			}
-
-			setTimeout(() => {
-				postAmalgamateCandidate(self.ripple, data.node, self.ripple.candidate);
-			}, SEND_DATA_DEFER);
-		});
-
-		this.ripple.on("amalgamateCandidateErr", data => {
-			// check stage
-			if(self.ripple.state !== RIPPLE_STATE_AMALGAMATE)
-			{
-				return;
-			}
-			
-			setTimeout(() => {
-				postAmalgamateCandidate(self.ripple, data.node, self.ripple.candidate);
-			}, SEND_DATA_DEFER);
-		});
-
-		this.ripple.on("amalgamateCandidateSuccess", data => {
-			self.recordAccessedNode(data.node.address);
-
-			self.tryToEnterNextStage();
-		});
+		this.ripple = ripple;
+		this.candidates = [];
 	}
 
-	run()
+	handler()
 	{
-		const self = this;
+		const transactions = new Set();
+		this.candidates.forEach(candidate => {
+			const rawTransactions = rlp.decode(candidate.transactions);
 
-		this.send();
+			rawTransactions.forEach(rawTransaction => {
+				transactions.add(rawTransaction);
+			})
+		});
 
-		this.initTimeout();
+		this.ripple.candidateAgreement.run([...transactions]);
 	}
 
-	send()
+	/**
+	 * @param {Array} transactions
+	 */
+	run(transactions)
 	{
-		// check if begin a new candidate
-		if(this.ripple.candidate.length === 0)
+		assert(Array.isArray(transactions), `Amalgamate run, transactions should be an Array, now is ${typeof transactions}`);
+
+		// init candidate
+		const candidate = new Candidate({
+			transactions: rlp.encode(transactions)
+		});
+		candidate.sign(privateKey);
+
+		// broadcast candidate
+		p2p.sendAll(PROTOCOL_CMD_CANDIDATE_AMALGAMATE, candidate.serialize());
+
+		this.initFinishTimeout();
+	}
+
+	/**
+	 * @param {Buffer} address
+	 * @param {Number} cmd
+	 * @param {Buffer} data
+	 */
+	handleMessage(address, cmd, data)
+	{
+		assert(Buffer.isBuffer(address), `Amalgamate handleMessage, address should be an Buffer, now is ${typeof address}`);
+		assert(typeof cmd === "number", `Amalgamate handleMessage, cmd should be a Number, now is ${typeof cmd}`);
+		assert(Buffer.isBuffer(data), `Amalgamate handleMessage, data should be an Buffer, now is ${typeof data}`);
+
+		switch(cmd)
 		{
-			// get cached transactions
-			let transactions = this.ripple.processor.transactionsPool.splice(0, TRANSACTION_NUM_EACH_ROUND);
-				
-			logger.warn("*********************amalgamate send transactions*********************")
-			for(let i = 0; i < transactions.length; i++)
+			case PROTOCOL_CMD_CANDIDATE_AMALGAMATE:
 			{
-				let hash = util.baToHexString(transactions[i].hash(true));
-				logger.warn(`transaction index: ${i}, hash: ${hash}`);
+				this.handleAmalgamate(data);
 			}
-
-			// encode tranasctions
-			this.ripple.candidate.batchPush(transactions);
+			break;
+			default:
+			{
+				super.handleMessage(address, cmd, data);
+			}
 		}
-		
-		this.ripple.candidate.poolDataToCandidateTransactions();
-		//
-		postBatchAmalgamateCandidate(this.ripple);
 	}
 
-	receive(candidate)
+	/**
+	 * @param {Buffer} data
+	 */
+	handleAmalgamate(address, data)
 	{
-		candidate = new Candidate(candidate);
+		assert(Buffer.isBuffer(address), `Amalgamate handleAmalgamate, address should be an Buffer, now is ${typeof address}`);
+		assert(Buffer.isBuffer(data), `Amalgamate handleAmalgamate, data should be an Buffer, now is ${typeof data}`);
 
-		// check candidate
-		let errors1 = candidate.validateSignatrue(true);
-		if(!!errors1 === true)
+		const candidate = new Candidate(candidate);
+
+		if(candidate.validate())
 		{
-			logger.error(`class Amalgamate, candidate validateSignatrue is failed, ${errors1}`);
+			if(address.toString("hex") !== candidate.from.toString("hex"))
+			{
+				logger.error(`Amalgamate handleAmalgamate, address is invalid, address should be ${address.toString("hex")}, now is ${candidate.from.toString("hex")}`);
+			}
+			else
+			{
+				this.candidates.push(candidate);
+			}
 		}
 		else
 		{
-			this.recordActiveNode(util.baToHexString(candidate.from));
-		}
-		
-		let errors2 = candidate.validateTransactions(true)
-		if(!!errors2 === true)
-		{
-			logger.error(`class Amalgamate, candidate transactions is failed, ${errors2}`);
-		}
-		
-		if(!!errors1 === false && !!errors2 === false)
-		{
-			// merge transactions, filter same transaction
-			candidate.candidateTransactionsToPoolData();
-
-			logger.warn("*********************amalgamate receive transactions*********************")
-			for(let i = 0; i < candidate.length; i++)
-			{
-				let hash = util.baToHexString(candidate.get(i).hash(true));
-				logger.warn(`transaction index: ${i}, hash: ${hash}`);
-			}
-
-			this.ripple.candidate.batchPush(candidate.data, true);
+			logger.error(`Amalgamate handleAmalgamate, address ${address.toString("hex")}, send an invalid message`);
 		}
 
-		this.tryToEnterNextStage();
+		this.recordFinishNode(candidate.from.toString("hex"));
 	}
 
-	tryToEnterNextStage()
-	{	
-		// check and transfer to next stage
-		if(this.checkIfCanEnterNextStage())
-		{
-			logger.warn("class Amalgamate, amalgamate is over, go to next stage");
-
-			// clear timeout
-			this.clearTimeout();
-
-			this.ripple.state = RIPPLE_STATE_EMPTY;
-
-			// log
-			for(let i = 0; i < this.ripple.candidate.length; i++)
-			{
-				let hash = util.baToHexString(this.ripple.candidate.get(i).hash(true));
-				logger.warn(`transaction index: ${i}, hash: ${hash}`)
-			}
-			
-			// transfer to transaction agreement stage
-			this.ripple.emit("amalgamateOver");
-		}
+	reset()
+	{
+		super.reset();
+		this.candidates = [];
 	}
 }
 

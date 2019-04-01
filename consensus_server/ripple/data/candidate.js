@@ -17,7 +17,6 @@ class Candidate extends Base
 
     const fields = [{
       name: "transactions",
-      allowLess: true,
       default: util.Buffer.alloc(0)
     }, {
       name: "v",
@@ -74,9 +73,10 @@ class Candidate extends Base
       for(let i = 0; i < transactionRawsArray.length; i++)
       {
         const transaction = new Transaction(transactionRawsArray[i]);
-        if(!transaction.verifySignature())
+        const { state, msg } = transaction.validate()
+        if(!state)
         {
-          logger.error("Candidate validate, invalid transaction");
+          logger.error(`Candidate validate, invalid transaction, ${msg}`);
 
           return false;
         }

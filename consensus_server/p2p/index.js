@@ -79,6 +79,26 @@ class P2p
 		}, CHECK_CONNECT_INTERVAL);
 	}
 
+	send(address, cmd, data)
+	{
+		assert(typeof cmd === "number", `P2p send, cmd should be a Number, now is ${typeof cmd}`);
+		assert(Buffer.isBuffer(address), `P2p send, data should be an Buffer, now is ${typeof address}`);
+		
+		const connection = connectionsManager.get(address);
+		if(connection && !connection.closed)
+		{
+			try
+			{
+				connection.write(cmd, data);
+			}
+			catch(e)
+			{
+				const address = connection.address();
+				loggerP2p.error(`P2p sendAll failed, address: ${connection.address}, host: ${address.address}, port: ${address.port}, family: ${address.family}, ${e}`);
+			}
+		}
+	}
+
 	sendAll(cmd, data)
 	{
 		assert(typeof cmd === "number", `P2p sendAll, cmd should be a Number, now is ${typeof cmd}`);

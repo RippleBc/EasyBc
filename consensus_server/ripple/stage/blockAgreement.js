@@ -1,187 +1,182 @@
-const RippleBlock = require("../data/rippleBlock")
-const Block = require("../../../block")
-const util = require("../../../utils")
-const {postConsensusBlock, postBatchConsensusBlock} = require("../chat")
-const {RIPPLE_STATE_BLOCK_AGREEMENT, RIPPLE_STATE_EMPTY, SEND_DATA_DEFER} = require("../../constant")
-const {SUCCESS, PARAM_ERR, OTH_ERR, STAGE_INVALID} = require("../../../const")
-const Stage = require("./stage")
-const async = require("async")
+const Block = require("../../../depends/block");
+const RippleBlock = require("../data/rippleBlock");
+const utils = require("../../../depends/utils");
+const Stage = require("./stage");
+const process = require("process");
+const async = require("async");
 
-const log4js= require("../../logConfig");
-const logger = log4js.getLogger();
-const errLogger = log4js.getLogger("err");
-const othLogger = log4js.getLogger("oth");
+const sha256 = utils.sha256;
 
-const ERR_SERVER_RUN_BLOCK_ERR = 1;
+const p2p = process[Symbol.for("p2p")];
+const logger = process[Symbol.for("loggerConsensus")];
+const privateKey = process[Symbol.for("privateKey")];
+
+const PROTOCOL_CMD_BLOCK_AGREEMENT = 400;
+const PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_REQUEST = 401;
+const PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE = 402;
 
 class BlockAgreement extends Stage
 {
 	constructor(ripple)
 	{
-		super(ripple);
+		super({
+			finish_state_request_cmd: PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_REQUEST,
+			finish_state_response_cmd: PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE,
+			handler: this.handler
+		});
 
-		const self = this;
+		this.ripple = ripple;
+		this.rippleBlocks = [];
+	}
 
-		this.ripple.express.post("/consensusBlock", function(req, res) {
-			if(!req.body.rippleBlock) {
-				res.send({
-					code: PARAM_ERR,
-					msg: "param error, need rippleBlock"
-				});
-				return;
+	handler()
+	{
+		const blockHash = new Hash();
+		this.rippleBlocks.forEach(rippleBlock => {
+			const key = sha256(rippleBlock.block);
+
+			if(blockHash.has(key))
+			{
+				blockHash[key].count += 1;
 			}
-
-			// check stage
-			if(self.ripple.state !== RIPPLE_STATE_BLOCK_AGREEMENT)
+			else
 			{
-				res.send({
-					code: STAGE_INVALID,
-					msg: `param error, current stage is ${self.ripple.state}`
-				});
-				return;
-			}	
-			
-			res.send({
-				code: SUCCESS,
-				msg: ""
-			});
-      		
-			self.receive(req.body.rippleBlock);
+				blockHash[key] = {
+					count: 1,
+					data: rippleBlock.block
+				};
+			}
 		});
 
-		this.ripple.on("timeAgreementOver", ()=> {
-			self.ripple.state = RIPPLE_STATE_BLOCK_AGREEMENT;
-
-			self.run();
-		})
-
-		this.ripple.on("consensusBlockInnerErr", data => {
-			// check stage
-			if(self.ripple.state !== RIPPLE_STATE_BLOCK_AGREEMENT)
-			{
-				return;
-			}	
-
-			setTimeout(() => {
-				postConsensusBlock(self.ripple, data.node, self.ripple.rippleBlock);
-			}, SEND_DATA_DEFER);
+		const primaryBlock = [...blockHash].sort(block => {
+			return -block[1].count;
 		});
 
-		this.ripple.on("consensusBlockErr", data => {
-			// check stage
-			if(self.ripple.state !== RIPPLE_STATE_BLOCK_AGREEMENT)
-			{
-				return;
-			}	
-
-			setTimeout(() => {
-				postConsensusBlock(self.ripple, data.node, self.ripple.rippleBlock);
-			}, SEND_DATA_DEFER);
-		});
-
-		this.ripple.on("consensusBlockSuccess", data => {
-			self.recordAccessedNode(data.node.address);
-			
-			self.tryToEnterNextStage();
-		});
-	}
-
-	run()
-	{
-		const self = this;
-
-		this.send();
-
-		this.initTimeout();
-	}
-
-	send()
-	{
-		const self = this;
-
-		let block = new Block({
-			header: {
-				timestamp: this.ripple.time.getTime()
-			}, 
-			transactions: this.ripple.candidate.data
-		});
-		async.waterfall([
-			function(cb) {
-				block.genTxTrie(cb);
-			},
-			function(cb) {
-				// init txsTrie
-				block.header.transactionsTrie = block.txTrie.root;
-
-				self.ripple.processor.blockChain.getLastestBlockNumber(cb);
-			},
-			function(bnLastestBlockNumber, cb)
-			{	
-				// init block number
-				block.header.number = bnLastestBlockNumber.addn(1);
-
-				// init block
-				self.ripple.rippleBlock.block = block.serialize();
-				// record block
-				self.ripple.rippleBlock.push(block);
-
-				postBatchConsensusBlock(self.ripple);
-
-				cb();
-			}], err => {
-				if(!!err) 
-				{
-					throw new Error("class BlockAgreement sendBlock, " + err);
-				}
-			});
-	}
-
-	receive(rippleBlock)
-	{
-		rippleBlock = new RippleBlock(rippleBlock);
-
-		// check rippleBlock
-		let errors = rippleBlock.validateSignatrue(true)
-		if(!!errors == true)
+		if(primaryBlock[0][1] / unl.length >= 0.8)
 		{
-			logger.error(`class BlockAgreement, receive is failed, ${errors}`);
+			const tmp = new Block(primaryBlock[0]);
+
+			this.ripple.processor.run(tmp);
 		}
 		else
 		{
-			this.recordActiveNode(util.baToHexString(rippleBlock.from));
 
-			// record
-			this.ripple.rippleBlock.push(new Block(rippleBlock.block));
+			const tmp = new Candidate(primaryBlock[0]);
+
+			this.ripple.amalgamate.reset();
+			this.ripple.amalgamate.run(rlp.decode(tmp.transactions));
 		}
-		
-		this.tryToEnterNextStage();
 	}
 
-	tryToEnterNextStage()
-	{
-		const self = this;
-		
-		// check and transfer to next round
-		if(this.checkIfTimeoutEnd() || this.checkIfCanEnterNextStage())
-		{
-			// clear timeout
-			this.clearTimeout();
-			
-			this.ripple.state = RIPPLE_STATE_EMPTY;
+	/**
+	 * @param {Buffer} transactions
+	 */
+ 	run(transactions)
+ 	{
+ 		assert(Buffer.isArray(transactions), `BlockAgreement run, transactions should be an Buffer, now is ${typeof transactions}`);
 
-			let consistentBlock = this.ripple.rippleBlock.getConsistentBlocks();
-			// block consensus failed, do not clear candidate, begin new consensus
-			if(consistentBlock === null)
+ 		// init block
+		const block = new Block({
+			transactions: transactions
+		});
+
+		async.waterfall([
+			function(cb)
 			{
-				this.ripple.run(false);
-				return;
-			}
+				this.ripple.processor.blockChain.getBlockChainHeight().then(height => {
+					block.number = (new BN(height).iaddn(1)).toString(16);
 
-			// block consensus success, run block
-			this.ripple.processor.processBlock({generate: true}, consistentBlock, () => {
-				self.ripple.run(true);
-			});
+					cb(null, height);
+				}).catch(e => {
+					cb(e);
+				});
+			},
+
+			function(height, cb)
+			{
+				this.ripple.processor.blockChain.getBlockHashByNumber(height).then(parentHash => {
+					block.header.parentHash = parentHash;
+
+					cb();
+				}).catch(e => {
+					cb(e);
+				});
+			}], e => {
+				if(!!e)
+				{
+					throw new Error(`BlockAgreement run failed, ${e}`);
+				}
+
+				const rippleBlock = new RippleBlock({
+					block: block.serialize()
+				});
+				rippleBlock.sign(privateKey);
+
+				// broadcast block
+				p2p.sendAll(PROTOCOL_CMD_BLOCK_AGREEMENT, rippleBlock.serialize());
+
+				this.initFinishTimeout();
+			});	
+ 	}
+
+ 	/**
+	 * @param {Buffer} address
+	 * @param {Number} cmd
+	 * @param {Buffer} data
+	 */
+	handleMessage(address, cmd, data)
+	{
+		assert(Buffer.isBuffer(address), `BlockAgreement handleMessage, address should be an Buffer, now is ${typeof address}`);
+		assert(typeof cmd === "number", `BlockAgreement handleMessage, cmd should be a Number, now is ${typeof cmd}`);
+		assert(Buffer.isBuffer(data), `BlockAgreement handleMessage, data should be an Buffer, now is ${typeof data}`);
+
+		switch(cmd)
+		{
+			case PROTOCOL_CMD_BLOCK_AGREEMENT:
+			{
+				this.handleBlockAgreement(data);
+			}
+			break;
+			default:
+			{
+				super.handleMessage(address, cmd, data);
+			}
 		}
+	}
+
+	/**
+	 * @param {Buffer} data
+	 */
+	handleBlockAgreement(address, data)
+	{
+		assert(Buffer.isBuffer(address), `BlockAgreement handleBlockAgreement, address should be an Buffer, now is ${typeof address}`);
+		assert(Buffer.isBuffer(data), `BlockAgreement handleBlockAgreement, data should be an Buffer, now is ${typeof data}`);
+
+		const block = new Block(data);
+
+		if(block.validate())
+		{
+			if(address.toString("hex") !== block.from.toString("hex"))
+			{
+				logger.error(`BlockAgreement handleBlockAgreement, address is invalid, address should be ${address.toString("hex")}, now is ${block.from.toString("hex")}`);
+			}
+			else
+			{
+				this.rippleBlocks.push(block);
+			}
+		}
+		else
+		{
+			logger.error(`BlockAgreement handleBlockAgreement, address ${address.toString("hex")}, send an invalid message`);
+		}
+
+		this.recordFinishNode(block.from.toString("hex"));
+	}
+
+	reset()
+	{
+		super.reset();
+		this.rippleBlocks = [];
 	}
 }
 

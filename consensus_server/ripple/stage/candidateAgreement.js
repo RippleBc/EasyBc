@@ -1,246 +1,146 @@
-const Candidate = require("../data/candidate")
-const util = require("../../../utils")
-const {postConsensusCandidate, postBatchConsensusCandidate} = require("../chat")
-const {RIPPLE_STATE_EMPTY, ROUND_NUM, SEND_DATA_DEFER, RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND1, RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND2, RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND3} = require("../../constant")
-const {SUCCESS, PARAM_ERR, OTH_ERR, STAGE_INVALID} = require("../../../const")
-const Stage = require("./stage")
+const Candidate = require("../data/candidate");
+const utils = require("../../../depends/utils");
+const Stage = require("./stage");
+const process = require("process");
+const { unl } = require("../../config.json");
 
-const log4js= require("../../logConfig");
-const logger = log4js.getLogger();
-const errLogger = log4js.getLogger("err");
-const othLogger = log4js.getLogger("oth");
+const sha256 = utils.sha256;
 
-const ROUND1_THRESHHOLD = 0.5
-const ROUND2_THRESHHOLD = 0.6
-const ROUND3_THRESHHOLD = 0.8
+const p2p = process[Symbol.for("p2p")];
+const logger = process[Symbol.for("loggerConsensus")];
+const privateKey = process[Symbol.for("privateKey")];
+
+const PROTOCOL_CMD_CANDIDATE_AGREEMENT = 200;
+const PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_REQUEST = 201;
+const PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_RESPONSE = 202;
+const THRESHOULD = 0.8;
 
 class CandidateAgreement extends Stage
 {
 	constructor(ripple)
 	{
-		super(ripple);
-		
-		const self = this;
-
-		this.round = 1;
-
-		this.ripple.express.post("/consensusCandidate", function(req, res) {
-			if(!req.body.candidate) {
-		        res.send({
-		            code: PARAM_ERR,
-		            msg: "param error, need candidate"
-		        });
-		        return;
-		    }
-
-		    if(!req.body.state) {
-		        res.send({
-		            code: PARAM_ERR,
-		            msg: "param error, need state"
-		        });
-		        return;
-		    }
-
-			// check stage
-			if(self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND1 &&
-				self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND2 &&
-				self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND3)
-			{
-				res.send({
-					code: STAGE_INVALID,
-					msg: `stage invalid, current stage is ${self.ripple.state}`
-				});
-
-				return;
-			}
-
-		    // check stage
-		    if(self.ripple.state !== req.body.state)
-			{
-				res.send({
-					code: STAGE_INVALID,
-					msg: `stage ${req.body.state} invalid, current stage is ${self.ripple.state}`
-				});
-
-				return;
-			}
-
-			res.send({
-				code: SUCCESS,
-				msg: ""
-	      	});
-
-		    self.receive(req.body.candidate);
+		super({
+			finish_state_request_cmd: PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_REQUEST,
+			finish_state_response_cmd: PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_RESPONSE,
+			handler: this.handler
 		});
 
-		this.ripple.on("amalgamateOver", () => {
-			this.round = 1;
-
-			this.ripple.emit("candidateAgreementRound");
-	  	});
-
-		this.ripple.on("candidateAgreementRound", () => {
-			logger.warn(`class CandidateAgreement, candidate consensus begin, round ${self.round}`);
-
-			// clear state
-			self.reset();
-
-			// clear invalid transactions
-			if(self.round === 2 || self.round === 3 || self.round === 4)
-			{
-				logger.warn(`class CandidateAgreement, clear invalid transactions, round ${self.round - 1}`);
-				self.ripple.candidate.clearInvalidTransaction(self.threshhold);
-			}
-
-			// check if stage is over
-			if(self.round > ROUND_NUM)
-			{
-				logger.warn("class CandidateAgreement, candidate consensus is over, go to next stage");
-
-				self.ripple.state = RIPPLE_STATE_EMPTY;
-
-				// transfer to block agreement stage
-				self.ripple.emit("candidateAgreementOver");
-				return;
-			}
-
-			// compute state
-			if(self.round === 1)
-			{
-				self.ripple.state = RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND1;
-
-				self.threshhold = ROUND1_THRESHHOLD;
-			}
-
-			if(self.round === 2)
-			{
-				self.ripple.state = RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND2;
-
-				self.threshhold = ROUND2_THRESHHOLD;
-			}
-
-			if(self.round === 3)
-			{
-				self.ripple.state = RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND3;
-
-				self.threshhold = ROUND3_THRESHHOLD;
-			}
-
-			// begin consensus
-			self.run();
-		});
-
-	  	this.ripple.on("consensusCandidateInnerErr", data => {
-	  		// check stage
-			if(self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND1 &&
-				self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND2 &&
-				self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND3)
-			{
-				return;
-			}
-
-			setTimeout(() => {
-				postConsensusCandidate(self.ripple, data.node, self.ripple.candidate);
-			}, SEND_DATA_DEFER);
-			
-		});
-
-	  	this.ripple.on("consensusCandidateErr", data => {
-	  		// check stage
-			if(self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND1 &&
-				self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND2 &&
-				self.ripple.state !== RIPPLE_STATE_CANDIDATE_AGREEMENT_ROUND3)
-			{
-				return;
-			}
-			
-			setTimeout(() => {
-				postConsensusCandidate(self.ripple, data.node, self.ripple.candidate);
-			}, SEND_DATA_DEFER);
-		});
-
-		this.ripple.on("consensusCandidateSuccess", data => {
-			self.recordAccessedNode(data.node.address);
-
-			self.tryToEnterNextStage();
-		});
+		this.ripple = ripple;
+		this.candidates = [];
 	}
 
-	/**
-	 * transactions consensus, note!!! this is a private func, please no not call it
-	 */
-	run()
+	handler()
 	{
-		const self = this;
+		const transactions = new Hash();
+		this.candidates.forEach(candidate => {
+			const key = sha256(candidate.transactions);
 
-		this.send();
+			if(transactions.has(key))
+			{
+				transactions[key].count += 1;
+			}
+			else
+			{
+				transactions[key] = {
+					count: 1,
+					data: candidate.transactions
+				};
+			}
+		});
 
-		this.initTimeout();
-	}
+		const primaryTransactions = [...transactions].sort(transaction => {
+			return -transaction[1].count;
+		});
 
-	send()
-	{	
-		// encode tranasctions
-		this.ripple.candidate.poolDataToCandidateTransactions();
-		//
-		logger.warn("*********************candidate send transactions*********************")
-		for(let i = 0; i < this.ripple.candidate.length; i++)
+		if(primaryTransactions[0] && primaryTransactions[0][1].count / unl.length >= THRESHOULD)
 		{
-			let hash = util.baToHexString(this.ripple.candidate.get(i).hash(true));
-			logger.warn(`transaction index: ${i}, hash: ${hash}`);
-		}
-		//
-		postBatchConsensusCandidate(this.ripple);
-	}
-
-	receive(candidate)
-	{
-		candidate = new Candidate(candidate);
-
-		// check candidate
-		let errors = candidate.validateSignatrue(true);
-		if(!!errors === true)
-		{
-			logger.error(`class CandidateAgreement, candidate receive is failed, ${errors}`);
+			this.ripple.blockAgreement.run(primaryTransactions[0][1].data);
 		}
 		else
 		{
-			this.recordActiveNode(util.baToHexString(candidate.from));
-
-			// record transactions
-			candidate.candidateTransactionsToPoolData();
-
-			//
-			logger.warn("*********************candidate receive transactions*********************")
-			for(let i = 0; i < candidate.length; i++)
-			{
-				let hash = util.baToHexString(candidate.get(i).hash(true));
-				logger.warn(`transaction index: ${i}, hash: ${hash}`);
-			}
-
-			//
-			this.ripple.candidate.batchPush(candidate.data);
+			this.ripple.amalgamate.reset();
+			this.ripple.amalgamate.run(rlp.decode(primaryTransactions[0][1].data));
 		}
-
-		this.tryToEnterNextStage();
 	}
 
-	tryToEnterNextStage()
-	{	
-		// check and transfer to next round
-		if(this.checkIfTimeoutEnd() || this.checkIfCanEnterNextStage())
+	/**
+	 * @param {Array} transactions
+	 */
+	run(transactions)
+	{
+		assert(Array.isArray(transactions), `CandidateAgreement run, transactions should be an Array, now is ${typeof transactions}`);
+
+		// init candidate
+		const candidate = new Candidate({
+			transactions: rlp.encode(transactions)
+		});
+		candidate.sign(privateKey);
+
+		// broadcast candidate
+		p2p.sendAll(PROTOCOL_CMD_CANDIDATE_AGREEMENT, candidate.serialize());
+		this.candidates.push(candidate);
+
+		this.initFinishTimeout();
+	}
+
+	/**
+	 * @param {Buffer} address
+	 * @param {Number} cmd
+	 * @param {Buffer} data
+	 */
+	handleMessage(address, cmd, data)
+	{
+		assert(Buffer.isBuffer(address), `CandidateAgreement handleMessage, address should be an Buffer, now is ${typeof address}`);
+		assert(typeof cmd === "number", `CandidateAgreement handleMessage, cmd should be a Number, now is ${typeof cmd}`);
+		assert(Buffer.isBuffer(data), `CandidateAgreement handleMessage, data should be an Buffer, now is ${typeof data}`);
+
+		switch(cmd)
 		{
-			logger.warn("Class CandidateAgreement, candidate consensus is over, go to next round");
-			
-			// clear timeout
-			this.clearTimeout();
-
-			this.ripple.state = RIPPLE_STATE_EMPTY;
-
-			this.round++;
-
-			this.ripple.emit("candidateAgreementRound");
+			case PROTOCOL_CMD_CANDIDATE_AGREEMENT:
+			{
+				this.handleCandidateAgreement(data);
+			}
+			break;
+			default:
+			{
+				super.handleMessage(address, cmd, data);
+			}
 		}
+	}
+
+	/**
+	 * @param {Buffer} data
+	 */
+	handleCandidateAgreement(address, data)
+	{
+		assert(Buffer.isBuffer(address), `CandidateAgreement handleCandidateAgreement, address should be an Buffer, now is ${typeof address}`);
+		assert(Buffer.isBuffer(data), `CandidateAgreement handleCandidateAgreement, data should be an Buffer, now is ${typeof data}`);
+
+		const candidate = new Candidate(data);
+
+		if(candidate.validate())
+		{
+			if(address.toString("hex") !== candidate.from.toString("hex"))
+			{
+				logger.error(`CandidateAgreement handleCandidateAgreement, address is invalid, address should be ${address.toString("hex")}, now is ${candidate.from.toString("hex")}`);
+			}
+			else
+			{
+				this.candidates.push(candidate);
+			}
+		}
+		else
+		{
+			logger.error(`CandidateAgreement handleCandidateAgreement, address ${address.toString("hex")}, send an invalid message`);
+		}
+
+		this.recordFinishNode(candidate.from.toString("hex"));
+	}
+
+	reset()
+	{
+		super.reset();
+		this.candidates = [];
 	}
 }
 module.exports = CandidateAgreement;
