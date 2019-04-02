@@ -85,6 +85,8 @@ class CandidateAgreement extends Stage
 	{
 		assert(Array.isArray(transactions), `CandidateAgreement run, transactions should be an Array, now is ${typeof transactions}`);
 
+		this.init();
+
 		// init candidate
 		const candidate = new Candidate({
 			transactions: rlp.encode(transactions)
@@ -96,8 +98,6 @@ class CandidateAgreement extends Stage
 
 		//
 		this.candidates.push(candidate);
-
-		this.initFinishTimeout();
 	}
 
 	/**

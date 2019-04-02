@@ -6,6 +6,7 @@ const rp = require("request-promise");
 const { SUCCESS } = require("../constant");
 const db = require("./db");
 const { unl } = require("./config.json");
+const process = require("process");
 
 const log4js= require("./logConfig");
 const logger = log4js.getLogger();
@@ -97,15 +98,15 @@ class Update
 
 				try
 				{
-					if(blocks.has(reponse))
+					if(blocks.has(response.data))
 					{
-						const count = blocks.get(reponse);
+						const count = blocks.get(response.data);
 						
-						blocks.set(reponse, count + 1);
+						blocks.set(response.data, count + 1);
 					}
 					else
 					{
-						blocks.set(reponse, 1);
+						blocks.set(response.data, 1);
 					}
 				}
 				catch(e)

@@ -23,7 +23,7 @@ function update()
 	if(!updateInstance)
 	{
 		loggerConsensus.info("block chain update start");
-		updateInstance = child_process.fork("../update.js");
+		updateInstance = child_process.fork("./update_server/index.js");
 
 		updateInstance.on("exit", () => {
 			loggerConsensus.info("block chain update finished");
@@ -32,7 +32,7 @@ function update()
 		});
 
 		updateInstance.on("error", e => {
-			loggerConsensus.info(`block chain update failed, ${e}`);
+			loggerConsensus.error(`block chain update failed, ${e}`);
 
 			updateInstance = undefined;
 		});

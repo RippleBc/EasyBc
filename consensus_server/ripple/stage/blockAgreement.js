@@ -78,6 +78,8 @@ class BlockAgreement extends Stage
  	{
  		assert(Buffer.isArray(transactions), `BlockAgreement run, transactions should be an Buffer, now is ${typeof transactions}`);
 
+ 		this.init();
+ 		
  		// init block
 		const block = new Block({
 			transactions: transactions
@@ -117,8 +119,6 @@ class BlockAgreement extends Stage
 
 				// broadcast block
 				p2p.sendAll(PROTOCOL_CMD_BLOCK_AGREEMENT, rippleBlock.serialize());
-
-				this.initFinishTimeout();
 			});	
  	}
 

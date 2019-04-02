@@ -1,5 +1,5 @@
 const { unl } = require("../../config.json");
-const { STAGE_PRIMARY_TIMEOUT, STAGE_FINISH_TIMEOUT, STAGE_MAX_FINISH_TIMES } = require("../../constant");
+const { STAGE_PRIMARY_TIMEOUT, STAGE_FINISH_TIMEOUT, STAGE_MAX_FINISH_TIMES, STATE_EMPTY, STATE_PROCESSING, STATE_SUCCESS_FINISH, STATE_TIMEOUT_FINISH } = require("../../constant");
 const process = require("process");
 const utils = require("../../../depends/utils");
 
@@ -10,10 +10,6 @@ const bufferToInt = utils.bufferToInt;
 
 const logger = process[Symbol.for("loggerConsensus")];
 const p2p = process[Symbol.for("p2p")];
-
-const STATE_EMPTY = 0;
-const STATE_SUCCESS_FINISH = 1;
-const STATE_TIMEOUT_FINISH = 2;
 
 class Stage
 {
@@ -50,6 +46,7 @@ class Stage
 				{
 					logger.warn("finish stage retry");
 
+					self.finish.reset();
 					self.finish.initFinishTimeout();
 					p2p.sendAll(self.finish_state_request_cmd);
 
@@ -58,19 +55,26 @@ class Stage
 				else
 				{
 					logger.warn("finish stage is over because of timeout");
+
+					self.reset();
 					self.handler(false);
 				}
 			}
 			else
 			{
 				logger.info("finish stage is over success");
+
+				self.reset();
 				self.handler(true);
 			}
 		}, STAGE_FINISH_TIMEOUT);
 	}
 
-	initFinishTimeout()
+	init()
 	{
+		// init state
+		this.state = STATE_PROCESSING;
+
 		this.primary.initFinishTimeout();
 	}
 
@@ -146,13 +150,15 @@ class Stage
 							this.timeoutNodes[addressHex] = 1;
 						}
 					});
+
+					this.finish.recordFinishNode(address);
 				}
 				else
 				{
-					
-				}
+					this.finish.recordFinishNode(address);
 
-				this.finish.recordFinishNode(address);
+					logger.warn(`Stage handleMessage, address ${address.toString("hex")}, can success handle all stage`);
+				}
 			}
 		}
 	}
@@ -162,6 +168,16 @@ class Stage
 		this.state = STATE_EMPTY;
 		this.primary.reset();
 		this.finish.reset();
+	}
+
+	checkFinishState()
+	{
+		return this.state === STATE_TIMEOUT_FINISH || this.state === STATE_SUCCESS_FINISH;
+	}
+
+	checkProcessingState()
+	{
+		return this.state === STATE_PROCESSING;
 	}
 }
 
@@ -224,6 +240,8 @@ class Sender
 
 	reset()
 	{
+		clearTimeout(this.timeout);
+
 		this.finishAddresses = new Set();
 		this.timeoutAddresses = new Set();
 	}

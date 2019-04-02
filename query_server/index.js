@@ -3,7 +3,7 @@ const express = require("express");
 const bodyParser = require("body-parser") 
 const Processor = require("./processor")
 const util = require("../utils")
-const {SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_UNPACKED, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS} = require("../const")
+const { SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_UNPACKED, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS } = require("../constant");
 const {host, port} = require("./nodes")
 const async = require("async")
 
@@ -46,31 +46,6 @@ process.on("uncaughtException", function (err) {
     // processor.run();
 
     process.exit(1);
-});
-
-app.post("/sendTransaction", function(req, res) {
-    if(!req.body.tx) {
-        res.send({
-            code: PARAM_ERR,
-            msg: "param error, need tx"
-        });
-        return;
-    }
-    processor.processTransaction(req.body.tx, function(err) {
-        if(!!err)
-        {
-            res.send({
-                code: OTH_ERR,
-                msg: err
-            });
-            return;
-        }
-
-        res.send({
-            code: SUCCESS,
-            msg: ""
-        });
-    });
 });
 
 app.post("/getAccountInfo", function(req, res) {
@@ -257,7 +232,7 @@ app.post("/getLastestBlock", function(req, res) {
 * get transaction
 * @param {*} trasactionHash
 */
-getTrasaction(trasactionHash, cb)
+const getTrasaction = function(trasactionHash, cb)
 {
   const TRANSACTION_FOUND = 1;
   
@@ -272,7 +247,7 @@ getTrasaction(trasactionHash, cb)
       return cb(err);
     }
 
-    getTransactionTraverse(bnNumber, cb)
+    getTransactionTraverse(bnNumber, cb);
   });
 
   /**
