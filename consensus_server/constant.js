@@ -15,3 +15,6 @@ module.exports.STATE_EMPTY = 0;
 module.exports.STATE_PROCESSING = 1;
 module.exports.STATE_SUCCESS_FINISH = 2;
 module.exports.STATE_TIMEOUT_FINISH = 3;
+
+//
+module.exports.INVALID_STAGE_RETRY_TIME = 1000;
