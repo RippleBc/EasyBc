@@ -124,7 +124,10 @@ class Stage
 			{
 				const nodeInfo = rlp.decode(data);
 				const state = bufferToInt(nodeInfo[0]);
-				if(state === STATE_EMPTY)
+				
+				assert(state !== STATE_EMPTY, `Stage handleMessage, address ${address.toString("hex")}, message should not enter an emtpy stage`);
+
+				if(state === STATE_PROCESSING)
 				{
 					const addressHex = address.toString("hex");
 					if(this.timeoutNodes.has(addressHex))
