@@ -11,9 +11,8 @@ const assert = require("assert");
 const Message = require("../../depends/fly/net/message");
 const levelup = require("levelup");
 const leveldown = require("leveldown");
-const Trie = require("../../depneds/tire");
-
-const db = levelup(leveldown(BLOCK_CHAIN_DATA_DIR));
+const Trie = require("../../depends/trie");
+const path = require("path");
 
 const loggerConsensus = process[Symbol.for("loggerConsensus")];
 const p2p = process[Symbol.for("p2p")];
@@ -50,33 +49,17 @@ class Processor
 	{
 		const self = this;
 
-		this.blockChain = undefined;
+		const db = levelup(leveldown("../../block_chain_data"));
+
+		this.blockChain = new BlockChain({
+			trie: new Trie(db),
+			db: db
+		});
 
 		this.consensus = new Consensus(self);
 
 		// transactions cache
 		this.transactionRawsCache = new Set();
-	}
-
-	async [Symbol.for("initBlockChain")]()
-	{
-		const tmpBlockChain = new BlockChain({db: db});
-
-		try
-		{
-			const blockChainHeight = tmpBlockChain.getBlockChainHeight();
-		}
-		catch(e)
-		{
-			if(e.toString().indexOf("NotFoundError: Key not found in database") >= 0)
-      {
-        this.blockChain = new BlockChain({
-        	trie: new Trie(db),
-        	db: db
-        });
-      }
-      await Promise.reject(`Processor initBlockChain, getBlockChainHeight throw exception, ${e}`);
-		}
 	}
 
 	run()
