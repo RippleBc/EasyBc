@@ -2,7 +2,8 @@ const process = require("process");
 const express = require("express");
 const bodyParser = require("body-parser");
 const utils = require("../depends/utils");
-const { SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_UNPACKED, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS } = require("../constant");
+const Cache = require("./cache");
+const { SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS } = require("../constant");
 
 const log4js= require("./logConfig");
 const logger = log4js.getLogger();
@@ -17,9 +18,9 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 app.use(bodyParser.json({limit: "1mb"}));
-const server = app.listen(port, function() {
+const server = app.listen(8081, function() {
     let host = server.address().address;
-    console.log("server listening at http://%s:%s", host, port);
+    console.log("server listening at http://%s:%s", host, 8081);
 });
 app.all('*', function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
@@ -33,28 +34,25 @@ app.all('*', function(req, res, next) {
 // logger
 log4js.useLogger(app, logger);
 
+//
+const cache = new Cache();
 app.post("/getAccountInfo", function(req, res) {
 	if(!req.body.address) {
-        res.send({
+        return res.send({
             code: PARAM_ERR,
             msg: "param error, need address"
         });
-        return;
     }
-    processor.blockChain.stateManager.getAccount(req.body.address, function(err, account) {
-        if(!!err)
-        {
-            res.send({
-                code: OTH_ERR,
-                msg: err
-            });
-            return;
-        }
-
+    cache.getAccountInfo(req.body.address).then(account => {
         res.send({
             code: SUCCESS,
             msg: "",
             data: account.serialize().toString("hex")
+        });
+    }).catch(e => {
+        res.send({
+            code: OTH_ERR,
+            msg: e
         });
     });
 });
@@ -62,40 +60,20 @@ app.post("/getAccountInfo", function(req, res) {
 
 app.post("/getTransactionState", function(req, res) {
     if(!req.body.hash) {
-        res.send({
+        return res.send({
             code: PARAM_ERR,
             msg: "param error, need data"
         });
-        return;
     }
 
-    if(processor.transactionsPool.ifExist(req.body.hash))
-    {
-        res.send({
-            code: SUCCESS,
-            msg: "",
-            data: TRANSACTION_STATE_UNPACKED
-        });
-        return;
-    }
-
-    processor.blockChain.getTrasaction(req.body.hash, function(err, transaction) {
-        if(!!err)
-        {
-            res.send({
-                code: OTH_ERR,
-                msg: err
-            });
-            return;
-        }
+    cache.getTrasaction(req.body.hash).then(transaction => {
         if(!transaction)
         {
-            res.send({
+            return res.send({
                 code: SUCCESS,
                 msg: "",
                 data: TRANSACTION_STATE_NOT_EXISTS
             });
-            return;
         }
 
         res.send({
@@ -103,191 +81,63 @@ app.post("/getTransactionState", function(req, res) {
             msg: "",
             data: TRANSACTION_STATE_PACKED
         });
-   });
+    }).catch(e => {
+         res.send({
+            code: OTH_ERR,
+            msg: e
+        });
+    });
 });
 
 app.post("/getBlockByNumber", function(req, res) {
     if(!req.body.number) {
-        res.send({
+        return res.send({
             code: PARAM_ERR,
-            msg: "param error, need number"
+            msg: "getBlockByNumber, param error, need number"
         });
-        return;
     }
 
-    processor.blockChain.getBlockByNumber(req.body.number, (err, block) => {
-        if(!!err)
+    cache.getBlockByNumber(req.body.number).then(block => {
+        if(block)
         {
-            res.send({
-                code: OTH_ERR,
-                msg: "getBlockByNumber error, inner err " + err
+            return res.send({
+                code: SUCCESS,
+                msg: "",
+                data: block.serialize().toString("hex")
             });
-            return;
         }
-
-        if(block === null)
-        {
-            res.send({
-                code: OTH_ERR,
-                msg: "getBlockByNumber error, no corresponding block"
-            });
-            return;
-        }
-
-        res.send({
-            code: SUCCESS,
-            msg: "",
-            data: util.baToHexString(block.serialize())
+       
+        return res.send({
+            code: OTH_ERR,
+            msg: `getBlockByNumber, block not exist, number ${req.body.number}`
         });
-    })
+    }).catch(e => {
+        return res.send({
+            code: OTH_ERR,
+            msg: `getBlockByNumber, throw exception, number ${req.body.number}`
+        });
+    });
 });
 
 app.post("/getLastestBlock", function(req, res) {
-
-    const EXIT_CODE = 1;
-
-    let blockNumber, block;
-
-    async.waterfall([
-        function(cb) {
-            processor.blockChain.getLastestBlockNumber((err, bnLastestBlockNumber) => {
-                if(!!err)
-                {
-                    res.send({
-                        code: OTH_ERR,
-                        msg: "getLastestBlock getLastestBlockNumber error, inner err " + err
-                    });
-                    return cb(EXIT_CODE);
-                }
-
-                if(bnLastestBlockNumber.cmpn(0) === 0)
-                {
-                    res.send({
-                        code: OTH_ERR,
-                        msg: "getLastestBlock getLastestBlockNumber error, there is no block"
-                    });
-                    return cb(EXIT_CODE);
-                }
-
-                blockNumber = util.baToHexString(util.toBuffer(bnLastestBlockNumber));
-
-                cb();
-            })
-        },
-
-        function(cb) {
-            processor.blockChain.getBlockByNumber(blockNumber, (err, _block) => {
-                if(!!err)
-                {
-                    res.send({
-                        code: OTH_ERR,
-                        msg: "getLastestBlock getBlockByNumber error, inner err " + err
-                    });
-                    return cb(EXIT_CODE);
-                }
-
-                if(_block === null)
-                {
-                    res.send({
-                        code: OTH_ERR,
-                        msg: "getLastestBlock getBlockByNumber error, no corresponding block"
-                    });
-                    return cb(EXIT_CODE);
-                }
-
-                block = _block;
-                
-                cb();
-            })
-        }], err => {
-            if(!!err)
-            {
-                return;
-            }
-  
-            res.send({
+    cache.getLastestBlock().then(block => {
+        if(block)
+        {
+            return res.send({
                 code: SUCCESS,
                 msg: "",
-                data: util.baToHexString(block.serialize())
+                data: block.serialize().toString("hex")
             });
+        }
+       
+        return res.send({
+            code: OTH_ERR,
+            msg: `getLastestBlock, block not exist, number ${req.body.number}`
         });
-});
-
-/**
-* get transaction
-* @param {*} trasactionHash
-*/
-const getTrasaction = function(trasactionHash, cb)
-{
-  const TRANSACTION_FOUND = 1;
-  
-  trasactionHash = util.toBuffer(trasactionHash);
-  let transaction;
-
-  const self = this;
-
-  self.getLastestBlockNumber(function(err, bnNumber) {
-    if(!!err)
-    {
-      return cb(err);
-    }
-
-    getTransactionTraverse(bnNumber, cb);
-  });
-
-  /**
-   * @param {Buffer} bnLastestBlockNumber
-   * @return {Function} cb 
-   */
-  function getTransactionTraverse(bnLastestBlockNumber, cb)
-  {
-    let bnIndex = bnLastestBlockNumber;
-
-    async.whilst(function() {
-      return bnIndex.gtn(0);
-    }, function(done) {
-      getTransaction(bnIndex, function(err, _transaction) {
-        bnIndex.isubn(1);
-
-        if(!!err)
-        {
-          transaction = _transaction;
-          return done(err);
-        }
-
-        done();
-      });
-    }, function(err) {
-      if(!!err && err === TRANSACTION_FOUND)
-      {
-        return cb(null, transaction);
-      }
-
-      cb(err);
+    }).catch(e => {
+        return res.send({
+            code: OTH_ERR,
+            msg: `getLastestBlock, throw exception, ${req.body.number}`
+        });
     });
-  }
-
-  /**
-   * @param {*} blockNumber
-   */
-  function getTransaction(blockNumber, cb)
-  {
-    async.waterfall([
-      function(cb) {
-        self.getBlockByNumber(blockNumber, cb);
-      },
-      
-      function(block, cb) {
-        if(block === null)
-        {
-          return cb();
-        }
-        let transaction = block.getTransaction(trasactionHash);
-        if(transaction)
-        {
-          return cb(TRANSACTION_FOUND, transaction);
-        }
-        cb();
-      }], cb);
-  }
-}
+});

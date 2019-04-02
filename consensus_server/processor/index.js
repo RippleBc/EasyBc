@@ -49,7 +49,7 @@ class Processor
 	{
 		const self = this;
 
-		const db = levelup(leveldown("../../block_chain_data"));
+		const db = levelup(leveldown(BLOCK_CHAIN_DATA_DIR));
 
 		this.blockChain = new BlockChain({
 			trie: new Trie(db),

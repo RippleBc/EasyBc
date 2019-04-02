@@ -67,14 +67,8 @@ class BlockChain
 
   async getBlockChainHeight()
   {
-    try
-    {
-      const blockChainHeight = await this.db.get(KEY_BLOCK_CHAIN_HEGHIT);
-    }
-    catch
-    {
-      
-    }
+    const blockChainHeight = await this.db.get(KEY_BLOCK_CHAIN_HEGHIT);
+    
     return blockChainHeight;
   }
 

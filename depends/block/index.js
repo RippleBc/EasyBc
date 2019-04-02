@@ -208,7 +208,7 @@ class Block
       }
     }
 
-    return null;
+    return undefined;
   }
 
   /**
