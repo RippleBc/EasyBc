@@ -1,3 +1,4 @@
+const assert = require("assert");
 const utils = require("../../../depends/utils");
 const { unl } = require("../../config.json");
 

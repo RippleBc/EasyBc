@@ -22,7 +22,6 @@ class Stage
 		this.state = STATE_EMPTY;
 		this.timeoutNodes = new Set();
 
-		this.handler = opts.handler;
 		this.finish_state_request_cmd = opts.finish_state_request_cmd;
 		this.finish_state_response_cmd = opts.finish_state_response_cmd;
 		
@@ -33,27 +32,41 @@ class Stage
 
 			if(result)
 			{
+				logger.warn("primary stage is over because of timeout");
 				self.state = STATE_SUCCESS_FINISH;
 			}
 			else
 			{
+				logger.info("primary stage is over success");
 				self.state = STATE_TIMEOUT_FINISH;
 			}
-		}, PRIMARY_TIMEOUT);
+		}, STAGE_PRIMARY_TIMEOUT);
 
 		let finishTimes = STAGE_MAX_FINISH_TIMES;
 		this.finish = new Sender(result => {
-			if(!result && finishTimes > 0)
+			if(!result)
 			{
-				self.finish.initFinishTimeout();
-				p2p.sendAll(self.finish_state_request_cmd);
-				finishTimes -= 1;
+				if(finishTimes > 0)
+				{
+					logger.warn("finish stage retry");
+
+					self.finish.initFinishTimeout();
+					p2p.sendAll(self.finish_state_request_cmd);
+
+					finishTimes -= 1;
+				}
+				else
+				{
+					logger.warn("finish stage is over because of timeout");
+					self.handler(false);
+				}
 			}
 			else
 			{
-				self.handler();
+				logger.info("finish stage is over success");
+				self.handler(true);
 			}
-		}, FINISH_TIMEOUT);
+		}, STAGE_FINISH_TIMEOUT);
 	}
 
 	initFinishTimeout()
@@ -89,14 +102,14 @@ class Stage
 				const addresses = [];
 				for(let i = 0; i < unl.length; i++)
 				{
-					if(!this.primary.finishAddresses.has(stripHexPrefix(unl.[i])))
+					if(!this.primary.finishAddresses.has(stripHexPrefix(unl[i].address)))
 					{
-						addresses.push(toBuffer(unl.[i]));
+						addresses.push(toBuffer(unl[i].address));
 					}
 
-					if(!this.finish.finishAddresses.has(stripHexPrefix(unl.[i])))
+					if(!this.finish.finishAddresses.has(stripHexPrefix(unl[i].address)))
 					{
-						addresses.push(toBuffer(unl.[i]));
+						addresses.push(toBuffer(unl[i].address));
 					}
 				}
 				
@@ -159,8 +172,8 @@ class Sender
 		this.handler = handler;
 		this.expiration = expiration;
 
-		this.finishAddresses = []
-		this.timeoutAddresses = [];
+		this.finishAddresses = new Set()
+		this.timeoutAddresses = new Set();
 	}
 
 	/**
@@ -201,7 +214,7 @@ class Sender
 			{
 				if(!this.finishAddresses.has(stripHexPrefix(unl[i])))
 				{
-					this.timeoutAddresses.push(stripHexPrefix(unl[i]));
+					this.timeoutAddresses.add(stripHexPrefix(unl[i]));
 				}
 			}
 
@@ -211,8 +224,8 @@ class Sender
 
 	reset()
 	{
-		this.finishAddresses = []
-		this.timeoutAddresses = [];
+		this.finishAddresses = new Set();
+		this.timeoutAddresses = new Set();
 	}
 }
 

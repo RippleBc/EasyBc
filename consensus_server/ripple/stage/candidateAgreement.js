@@ -3,8 +3,10 @@ const utils = require("../../../depends/utils");
 const Stage = require("./stage");
 const process = require("process");
 const { unl } = require("../../config.json");
+const assert = require("assert");
 
 const sha256 = utils.sha256;
+const rlp = utils.rlp;
 
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
@@ -13,6 +15,7 @@ const privateKey = process[Symbol.for("privateKey")];
 const PROTOCOL_CMD_CANDIDATE_AGREEMENT = 200;
 const PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_REQUEST = 201;
 const PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_RESPONSE = 202;
+
 const THRESHOULD = 0.8;
 
 class CandidateAgreement extends Stage
@@ -21,8 +24,7 @@ class CandidateAgreement extends Stage
 	{
 		super({
 			finish_state_request_cmd: PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_REQUEST,
-			finish_state_response_cmd: PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_RESPONSE,
-			handler: this.handler
+			finish_state_response_cmd: PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_RESPONSE
 		});
 
 		this.ripple = ripple;
@@ -31,36 +33,49 @@ class CandidateAgreement extends Stage
 
 	handler()
 	{
-		const transactions = new Hash();
+		const transactionCollsHash = new Map();
 		this.candidates.forEach(candidate => {
 			const key = sha256(candidate.transactions);
 
-			if(transactions.has(key))
+			if(transactionCollsHash.has(key))
 			{
-				transactions[key].count += 1;
+				transactionCollsHash[key].count += 1;
 			}
 			else
 			{
-				transactions[key] = {
+				transactionCollsHash[key] = {
 					count: 1,
 					data: candidate.transactions
 				};
 			}
 		});
 
-		const primaryTransactions = [...transactions].sort(transaction => {
-			return -transaction[1].count;
+		const sortedTransactionColls = [...transactionCollsHash].sort(transactionColl => {
+			return -transactionColl[1].count;
 		});
 
-		if(primaryTransactions[0] && primaryTransactions[0][1].count / unl.length >= THRESHOULD)
+		if(sortedTransactionColls[0] && sortedTransactionColls[0][1].count / unl.length >= THRESHOULD)
 		{
-			this.ripple.blockAgreement.run(primaryTransactions[0][1].data);
+			logger.info("candidate agreement success, go to next stage");
+
+			this.ripple.blockAgreement.run(sortedTransactionColls[0][1].data);
+			return;
 		}
-		else
-		{
-			this.ripple.amalgamate.reset();
-			this.ripple.amalgamate.run(rlp.decode(primaryTransactions[0][1].data));
-		}
+		
+		// return to amalgamate stage
+		logger.info("candidate agreement failed, go to stage amalgamate");
+
+		const transactions = new Set();
+		this.candidates.forEach(candidate => {
+			const rawTransactions = rlp.decode(candidate.transactions);
+
+			rawTransactions.forEach(rawTransaction => {
+				transactions.add(rawTransaction);
+			});
+		});
+
+		this.ripple.amalgamate.reset();
+		this.ripple.amalgamate.run([...transactions]);
 	}
 
 	/**
@@ -78,6 +93,8 @@ class CandidateAgreement extends Stage
 
 		// broadcast candidate
 		p2p.sendAll(PROTOCOL_CMD_CANDIDATE_AGREEMENT, candidate.serialize());
+
+		//
 		this.candidates.push(candidate);
 
 		this.initFinishTimeout();
@@ -109,6 +126,7 @@ class CandidateAgreement extends Stage
 	}
 
 	/**
+	 * @param {Buffer} address
 	 * @param {Buffer} data
 	 */
 	handleCandidateAgreement(address, data)
@@ -134,7 +152,7 @@ class CandidateAgreement extends Stage
 			logger.error(`CandidateAgreement handleCandidateAgreement, address ${address.toString("hex")}, send an invalid message`);
 		}
 
-		this.recordFinishNode(candidate.from.toString("hex"));
+		this.recordFinishNode(address.toString("hex"));
 	}
 
 	reset()

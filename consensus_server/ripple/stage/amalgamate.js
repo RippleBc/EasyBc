@@ -2,6 +2,7 @@ const Candidate = require("../data/candidate");
 const utils = require("../../../depends/utils");
 const Stage = require("./stage");
 const process = require("process");
+const assert = require("assert");
 
 const rlp = utils.rlp;
 
@@ -19,8 +20,7 @@ class Amalgamate extends Stage
 	{
 		super({
 			finish_state_request_cmd: PROTOCOL_CMD_CANDIDATE_AMALGAMATE_FINISH_STATE_REQUEST,
-			finish_state_response_cmd: PROTOCOL_CMD_CANDIDATE_AMALGAMATE_FINISH_STATE_RESPONSE,
-			handler: this.handler
+			finish_state_response_cmd: PROTOCOL_CMD_CANDIDATE_AMALGAMATE_FINISH_STATE_RESPONSE
 		});
 
 		this.ripple = ripple;
@@ -57,6 +57,9 @@ class Amalgamate extends Stage
 		// broadcast candidate
 		p2p.sendAll(PROTOCOL_CMD_CANDIDATE_AMALGAMATE, candidate.serialize());
 
+		//
+		this.candidates.push(candidate);
+
 		this.initFinishTimeout();
 	}
 
@@ -86,6 +89,7 @@ class Amalgamate extends Stage
 	}
 
 	/**
+	 * @param {Buffer} address
 	 * @param {Buffer} data
 	 */
 	handleAmalgamate(address, data)
@@ -93,7 +97,7 @@ class Amalgamate extends Stage
 		assert(Buffer.isBuffer(address), `Amalgamate handleAmalgamate, address should be an Buffer, now is ${typeof address}`);
 		assert(Buffer.isBuffer(data), `Amalgamate handleAmalgamate, data should be an Buffer, now is ${typeof data}`);
 
-		const candidate = new Candidate(candidate);
+		const candidate = new Candidate(data);
 
 		if(candidate.validate())
 		{
@@ -111,7 +115,7 @@ class Amalgamate extends Stage
 			logger.error(`Amalgamate handleAmalgamate, address ${address.toString("hex")}, send an invalid message`);
 		}
 
-		this.recordFinishNode(candidate.from.toString("hex"));
+		this.recordFinishNode(address.toString("hex"));
 	}
 
 	reset()

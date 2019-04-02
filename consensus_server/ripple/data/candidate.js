@@ -17,6 +17,7 @@ class Candidate extends Base
 
     const fields = [{
       name: "transactions",
+      allowZero: true,
       default: util.Buffer.alloc(0)
     }, {
       name: "v",

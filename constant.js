@@ -9,7 +9,6 @@ module.exports.STAGE_INVALID = 3;
 //
 module.exports.ERR_RUN_BLOCK_TX_PROCESS = 1;
 
-
 //
 module.exports.TRANSACTION_STATE_UNPACKED = 1;
 module.exports.TRANSACTION_STATE_PACKED = 2;

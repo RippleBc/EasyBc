@@ -3,14 +3,13 @@ const CandidateAgreement = require("./stage/candidateAgreement");
 const BlockAgreement = require("./stage/blockAgreement");
 
 const logger = process[Symbol.for("loggerConsensus")];
+
 const MAX_PROCESS_TRANSACTIONS_SIZE = 100;
 
 class Ripple
 {
 	constructor(processor)
 	{
-		super();
-
 		this.processor = processor;
 
 		this.amalgamate = new Amalgamate(this);

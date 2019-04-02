@@ -9,12 +9,10 @@ process[Symbol.for("loggerConsensus")] = log4js.getLogger("consensus");
 const express = require("express");
 const bodyParser = require("body-parser");
 const assert = require("assert");
-const semaphore = require("semaphore");
 const utils = require("../depends/utils");
 const P2p = require("./p2p");
 const { http } = require("./config");
-
-const {SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_UNPACKED, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS} = require("../constant");
+const { SUCCESS, PARAM_ERR, OTH_ERR } = require("../constant");
 
 const Buffer = utils.Buffer;
 const toBuffer = utils.toBuffer;
@@ -26,17 +24,20 @@ process.on("uncaughtException", function(err) {
     process.exit(1);
 });
 
+/************************************** p2p **************************************/
+const p2p = process[Symbol.for("p2p")] = new P2p();
+
 /************************************** consensus **************************************/
 const Processor = require("./processor");
 const processor = new Processor();
-processor.run();
 
-/************************************** p2p **************************************/
-const p2p = process[Symbol.for("p2p")] = new P2p();
+/************************************** init p2p and consensus **************************************/
 p2p.init((message) => {
     const self = this; // note this reprent a fly Connection Object
     processor.handleMessage(self.address, message);
 });
+
+processor.run();
 
 /************************************** http **************************************/
 const app = express();

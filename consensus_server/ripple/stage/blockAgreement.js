@@ -4,8 +4,10 @@ const utils = require("../../../depends/utils");
 const Stage = require("./stage");
 const process = require("process");
 const async = require("async");
+const assert = require("assert");
 
 const sha256 = utils.sha256;
+const Buffer = utils.Buffer;
 
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
@@ -15,14 +17,15 @@ const PROTOCOL_CMD_BLOCK_AGREEMENT = 400;
 const PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_REQUEST = 401;
 const PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE = 402;
 
+const THRESHOULD = 0.8;
+
 class BlockAgreement extends Stage
 {
 	constructor(ripple)
 	{
 		super({
 			finish_state_request_cmd: PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_REQUEST,
-			finish_state_response_cmd: PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE,
-			handler: this.handler
+			finish_state_response_cmd: PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE
 		});
 
 		this.ripple = ripple;
@@ -31,41 +34,41 @@ class BlockAgreement extends Stage
 
 	handler()
 	{
-		const blockHash = new Hash();
+		const blocksHash = new Hash();
 		this.rippleBlocks.forEach(rippleBlock => {
 			const key = sha256(rippleBlock.block);
 
-			if(blockHash.has(key))
+			if(blocksHash.has(key))
 			{
-				blockHash[key].count += 1;
+				blocksHash[key].count += 1;
 			}
 			else
 			{
-				blockHash[key] = {
+				blocksHash[key] = {
 					count: 1,
 					data: rippleBlock.block
 				};
 			}
 		});
 
-		const primaryBlock = [...blockHash].sort(block => {
+		const sortedBlocks = [...blocksHash].sort(block => {
 			return -block[1].count;
 		});
 
-		if(primaryBlock[0][1] / unl.length >= 0.8)
+		if(sortedBlocks[0] && sortedBlocks[0][1] / unl.length >= THRESHOULD)
 		{
-			const tmp = new Block(primaryBlock[0]);
+			this.ripple.processor.processBlock({
+				block: new Block(sortedBlocks[0][1].data)
+			}).then(() => {
+				this.ripple.run();
+			}).catch(e => {
+				throw new Error(`BlockAgreement handle, processBlock failed, ${e}`);
+			});
 
-			this.ripple.processor.run(tmp);
+			return;
 		}
-		else
-		{
 
-			const tmp = new Candidate(primaryBlock[0]);
-
-			this.ripple.amalgamate.reset();
-			this.ripple.amalgamate.run(rlp.decode(tmp.transactions));
-		}
+		this.ripple.run();
 	}
 
 	/**
@@ -84,7 +87,7 @@ class BlockAgreement extends Stage
 			function(cb)
 			{
 				this.ripple.processor.blockChain.getBlockChainHeight().then(height => {
-					block.number = (new BN(height).iaddn(1)).toString(16);
+					block.number = (new BN(height).addn(1)).toArrayLike(Buffer);
 
 					cb(null, height);
 				}).catch(e => {
@@ -152,17 +155,17 @@ class BlockAgreement extends Stage
 		assert(Buffer.isBuffer(address), `BlockAgreement handleBlockAgreement, address should be an Buffer, now is ${typeof address}`);
 		assert(Buffer.isBuffer(data), `BlockAgreement handleBlockAgreement, data should be an Buffer, now is ${typeof data}`);
 
-		const block = new Block(data);
+		const rippleBlock = new RippleBlock(data);
 
-		if(block.validate())
+		if(rippleBlock.validate())
 		{
-			if(address.toString("hex") !== block.from.toString("hex"))
+			if(address.toString("hex") !== rippleBlock.from.toString("hex"))
 			{
-				logger.error(`BlockAgreement handleBlockAgreement, address is invalid, address should be ${address.toString("hex")}, now is ${block.from.toString("hex")}`);
+				logger.error(`BlockAgreement handleBlockAgreement, address is invalid, address should be ${address.toString("hex")}, now is ${rippleBlock.from.toString("hex")}`);
 			}
 			else
 			{
-				this.rippleBlocks.push(block);
+				this.rippleBlocks.push(rippleBlock);
 			}
 		}
 		else
@@ -170,7 +173,7 @@ class BlockAgreement extends Stage
 			logger.error(`BlockAgreement handleBlockAgreement, address ${address.toString("hex")}, send an invalid message`);
 		}
 
-		this.recordFinishNode(block.from.toString("hex"));
+		this.recordFinishNode(address.toString("hex"));
 	}
 
 	reset()

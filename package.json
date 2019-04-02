@@ -30,7 +30,7 @@
     "mocha": "^5.2.0"
   },
   "scripts": {
-    "server": "node server/index.js",
+    "consensus_server": "node consensus_server/index.js",
     "client": "node client/index.js",
     "dev": "node index.js",
     "test": "mocha depends/test/account.js && mocha depends/test/transaction.js && mocha depends/test/block.js && mocha depends/test/cache.js && mocha depends/test/stateManager.js && mocha depends/test/runBlockChain.js && mocha depends/test/net.js"

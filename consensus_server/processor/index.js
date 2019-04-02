@@ -4,7 +4,6 @@ const Transaction = require("../../depends/transaction");
 const Block = require("../../depends/block");
 const BlockChain = require("../../depends/block_chain");
 const utils = require("../../depends/utils");
-const FlowStoplight = require("flow-stoplight");
 const Consensus = require("../ripple");
 const { ERR_RUN_BLOCK_TX_PROCESS } = require("../../constant");
 const { TRANSACTION_CACHE_MAX_NUM } = require("../constant");
@@ -42,11 +41,9 @@ function update()
 
 class Processor
 {
-	constructor(opts)
+	constructor()
 	{
 		const self = this;
-
-		this.stoplight = new FlowStoplight();
 
 		this.blockChain = new BlockChain();
 
@@ -60,9 +57,7 @@ class Processor
 	{
 		update();
 
-		self.consensus.run();
-
-		this.stoplight.go()
+		this.consensus.run();
 	}
 
 	/**
@@ -72,9 +67,9 @@ class Processor
 	{
 		assert(typeof size === "number", `Processor getTransactions, size should be a Number, now is ${typeof size}`);
 
-		size = size > this.transactionRawsCache.size() ? this.transactionRawsCache.size() : size;
+		size = size > this.transactionRawsCache.size ? this.transactionRawsCache.size : size;
 
-		return this.transactionRawsCache.splice(0, size);
+		return [...this.transactionRawsCache].splice(0, size);
 	}
 
 	/**
@@ -102,34 +97,32 @@ class Processor
 		const self = this;
 
 		const promise = new Promise((resolve, reject) => {
-			self.stoplight.await(() => {
-				if(self.transactionRawsCache.size > TRANSACTION_CACHE_MAX_NUM)
+			if(self.transactionRawsCache.size > TRANSACTION_CACHE_MAX_NUM)
+			{
+				reject(`Processor processTransaction, this.transactionRawsCache length should be litter than ${TRANSACTION_CACHE_MAX_NUM}`);
+			}
+
+			let transaction;
+			try
+			{
+				transaction = new Transaction(transactionRaw);
+
+				let {state, msg} = transaction.validate();
+				if(!state)
 				{
-					reject(`Processor processTransaction, this.transactionRawsCache length should be litter than ${TRANSACTION_CACHE_MAX_NUM}`);
+					reject(`Processor processTransaction, transaction invalid failed, ${msg}`);
 				}
+			}
+			catch(e)
+			{
+				reject(`Processor processTransaction, new Transaction() failed, ${e}`)
+			}
 
-				let transaction;
-				try
-				{
-					transaction = new Transaction(transactionRaw);
+			loggerConsensus.info(`Processor processTransaction, transaction ${transaction.hash().toString("hex")}: ${JSON.stringify(transaction.toJSON())}`);
 
-					let {state, msg} = transaction.validate();
-					if(!state)
-					{
-						reject(`Processor processTransaction, transaction invalid failed, ${msg}`);
-					}
-				}
-				catch(e)
-				{
-					reject(`Processor processTransaction, new Transaction() failed, ${e}`)
-				}
+			self.transactionRawsCache.add(transactionRaw);
 
-				loggerConsensus.info(`Processor processTransaction, transaction ${transaction.hash().toString("hex")}: ${JSON.stringify(transaction.toJSON())}`);
-
-				self.transactionRawsCache.add(transactionRaw);
-
-				resolve();
-			});
+			resolve();
 		});
 
 		return promise;
