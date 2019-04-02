@@ -1,18 +1,15 @@
-const process = require("process")
+const process = require("process");
 const express = require("express");
-const bodyParser = require("body-parser") 
-const Processor = require("./processor")
-const util = require("../utils")
+const bodyParser = require("body-parser");
+const utils = require("../depends/utils");
 const { SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_UNPACKED, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS } = require("../constant");
-const {host, port} = require("./nodes")
-const async = require("async")
 
-const log4js= require("./logConfig")
-const logger = log4js.getLogger()
-const errlogger = log4js.getLogger("err")
-const othlogger = log4js.getLogger("oth")
+const log4js= require("./logConfig");
+const logger = log4js.getLogger();
 
-const Buffer = util.Buffer;
+process[Symbol.for("loggerQuery")] = log4js.getLogger("query");
+
+const Buffer = utils.Buffer;
 
 // express
 const app = express();
@@ -35,18 +32,6 @@ app.all('*', function(req, res, next) {
 
 // logger
 log4js.useLogger(app, logger);
-
-// consensus
-const processor = new Processor(app);
-processor.run();
-process.on("uncaughtException", function (err) {
-    errlogger.error(err.stack);
-
-    // const processor = new Processor(app);
-    // processor.run();
-
-    process.exit(1);
-});
 
 app.post("/getAccountInfo", function(req, res) {
 	if(!req.body.address) {

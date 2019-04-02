@@ -1,6 +1,5 @@
 const utils = require("../utils");
 const StateManager = require("./stateManager.js");
-const AsyncEventEmitter = require("async-eventemitter");
 const Block = require("../block");
 const assert = require("assert");
 
@@ -8,18 +7,21 @@ const Buffer = utils.Buffer;
 
 const KEY_BLOCK_CHAIN_HEGHIT = utils.toBuffer("KEY_BLOCK_CHAIN_HEGHIT");
 
-class BlockChain extends AsyncEventEmitter
+class BlockChain
 {
   constructor(opts)
   {
-    super();
-
     opts = opts || {};
 
     this.stateManager = new StateManager({
       trie: opts.trie
     });
     this.db = opts.db;
+
+    if(this.db === undefined)
+    {
+      throw new Error(`BlockChain constructor, opts.db should not be undefined`);
+    }
 
     this.runBlockChain = require("./runBlockChain.js");
     this.runBlock = require("./runBlock.js");
@@ -65,7 +67,14 @@ class BlockChain extends AsyncEventEmitter
 
   async getBlockChainHeight()
   {
-    const blockChainHeight = await this.db.get(KEY_BLOCK_CHAIN_HEGHIT);
+    try
+    {
+      const blockChainHeight = await this.db.get(KEY_BLOCK_CHAIN_HEGHIT);
+    }
+    catch
+    {
+      
+    }
     return blockChainHeight;
   }
 

@@ -28,7 +28,7 @@ module.exports = async function(opts) {
 
   if(opts.root)
   {
-    this.stateManager.initTrie(opts.root);
+    await this.stateManager.resetTrieRoot(opts.root);
   }
 
   // populate cache

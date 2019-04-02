@@ -5,10 +5,15 @@ const Block = require("../../depends/block");
 const BlockChain = require("../../depends/block_chain");
 const utils = require("../../depends/utils");
 const Consensus = require("../ripple");
-const { ERR_RUN_BLOCK_TX_PROCESS } = require("../../constant");
+const { BLOCK_CHAIN_DATA_DIR } = require("../../constant");
 const { TRANSACTION_CACHE_MAX_NUM } = require("../constant");
 const assert = require("assert");
 const Message = require("../../depends/fly/net/message");
+const levelup = require("levelup");
+const leveldown = require("leveldown");
+const Trie = require("../../depneds/tire");
+
+const db = levelup(leveldown(BLOCK_CHAIN_DATA_DIR));
 
 const loggerConsensus = process[Symbol.for("loggerConsensus")];
 const p2p = process[Symbol.for("p2p")];
@@ -45,12 +50,33 @@ class Processor
 	{
 		const self = this;
 
-		this.blockChain = new BlockChain();
+		this.blockChain = undefined;
 
 		this.consensus = new Consensus(self);
 
 		// transactions cache
 		this.transactionRawsCache = new Set();
+	}
+
+	async [Symbol.for("initBlockChain")]()
+	{
+		const tmpBlockChain = new BlockChain({db: db});
+
+		try
+		{
+			const blockChainHeight = tmpBlockChain.getBlockChainHeight();
+		}
+		catch(e)
+		{
+			if(e.toString().indexOf("NotFoundError: Key not found in database") >= 0)
+      {
+        this.blockChain = new BlockChain({
+        	trie: new Trie(db),
+        	db: db
+        });
+      }
+      await Promise.reject(`Processor initBlockChain, getBlockChainHeight throw exception, ${e}`);
+		}
 	}
 
 	run()
@@ -148,7 +174,10 @@ class Processor
 
 		do
 		{
-			const { state, msg, failedTransactions } = await this.blockChain.runBlockChain({block: block, generate: generate});
+			const { state, msg, failedTransactions } = await this.blockChain.runBlockChain({
+				block: block, 
+				generate: generate
+			});
 
 			// block chain is out of date, need update
 			if(state === false && msg.indexOf("run block chain, getBlockByHash key not found") >= 0)

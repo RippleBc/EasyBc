@@ -13,7 +13,6 @@ const bufferToInt = utils.bufferToInt;
 
 const dbDir = leveldown(path.join(__dirname, "./data"));
 const db = levelup(dbDir);
-const trie = new Trie(db);
 
 const privateKey = toBuffer("0x459705e79404b3604e4eef0aa1becedef1a227865a122826106f7f511682ea86");
 const publicKey = toBuffer("0x873426d507b1ce4401a28908ce1af24b61aa0cc4187de39b812d994b656fd095120732955193857afd876066e9c481dea6968afe423ae104224b026ee5fddeca");
@@ -36,7 +35,9 @@ describe("run block chain test", function() {
 			data: "0xd3d3"
 		});
 
-		const blockChain = new BlockChain();
+		const blockChain = new BlockChain({
+			db: db
+		});
 
 		const runTx = async function()
 		{
@@ -94,7 +95,9 @@ describe("run block chain test", function() {
 
 		transaction1.sign(privateKey);
 
-		const blockChain = new BlockChain();
+		const blockChain = new BlockChain({
+			db: db
+		});
 
 		const parentBlock = new Block({
 			header: {
@@ -228,7 +231,7 @@ describe("run block chain test", function() {
 
 		// 
 		const blockChain = new BlockChain({
-			trie: trie,
+			trie: new Trie(db),
 			db: db
 		});
 
@@ -291,7 +294,7 @@ describe("run block chain test", function() {
 
 			// check number 2 block
 			const blockTmp = await blockChain.getBlockByNumber(toBuffer(2));
-			assert.equal(blockTmp.hash().toString("hex"), "741ea0a732f24afc80483dfb9f2e95d019d56843562d5743560b75d098cd7dc8", `block hash should be 741ea0a732f24afc80483dfb9f2e95d019d56843562d5743560b75d098cd7dc8, now is ${blockTmp.hash().toString("hex")}`);
+			assert.equal(blockTmp.hash().toString("hex"), "2f07c1a80ad3c9dbd761da679126f10a95ea99710ac52002a36aff657b66bf89", `block hash should be 2f07c1a80ad3c9dbd761da679126f10a95ea99710ac52002a36aff657b66bf89, now is ${blockTmp.hash().toString("hex")}`);
 			assert.equal(bufferToInt(blockTmp.header.number), 2, `block number should be 2, now is ${bufferToInt(blockTmp.header.number)}`);
 			assert.equal(bufferToInt(blockTmp.header.timestamp), timeNow + 2, `block timestamp should be ${timeNow + 2}, now is ${bufferToInt(blockTmp.header.timestamp)}`);
 			assert.equal(blockTmp.header.transactionsTrie.toString("hex"), "a63280a882356c733cf44030e7759e54d3f42aaf74e7a5ece70849845dd44dae", `block transactionsTrie should be a63280a882356c733cf44030e7759e54d3f42aaf74e7a5ece70849845dd44dae, now is ${bufferToInt(blockTmp.header.number)}`);
@@ -304,4 +307,3 @@ describe("run block chain test", function() {
 		});
 	});
 })
-		

@@ -75,11 +75,28 @@ class StateManager
   /*
    * @param {Buffer} root
    */
-  initTrie(_root)
+  async resetTrieRoot(root)
   {
-    assert(Buffer.isBuffer(_root), `StateManager initTrie, root should be an Buffer, now is ${typeof _root}`);
+    assert(Buffer.isBuffer(root), `StateManager resetTrieRoot, root should be an Buffer, now is ${typeof root}`);
 
-    this.trie = new Trie(_root);
+    const promise = new Promise((resolve, reject) => {
+      this.trie.checkRoot(root, (e, ifRootExist) => {
+        if(!!e)
+        {
+          reject(`StateManager resetTrieRoot, this.trie.checkRoot throw exception, ${e}`);
+        }
+
+        if(!ifRootExist)
+        {
+          reject(`StateManager resetTrieRoot, root ${root.toString("hex")} is not exist`);
+        }
+
+        this.trie.root = root;
+        resolve();
+      });
+    });
+   
+    return promise;
   }
 
   /**
