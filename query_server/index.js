@@ -4,11 +4,13 @@ const bodyParser = require("body-parser");
 const utils = require("../depends/utils");
 const Cache = require("./cache");
 const { SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS } = require("../constant");
+const { host, port } = require("./config.json");
 
 const log4js= require("./logConfig");
 const logger = log4js.getLogger();
 
-process[Symbol.for("loggerQuery")] = log4js.getLogger("query");
+process[Symbol.for("loggerErr")] = log4js.getLogger("err");
+process[Symbol.for("loggerOth")] = log4js.getLogger("oth");
 
 const Buffer = utils.Buffer;
 
@@ -18,9 +20,8 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 app.use(bodyParser.json({limit: "1mb"}));
-const server = app.listen(8081, function() {
-    let host = server.address().address;
-    console.log("server listening at http://%s:%s", host, 8081);
+const server = app.listen(port, host, function() {
+    logger.info(`server listening at http://${host}:${port}`);
 });
 app.all('*', function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");

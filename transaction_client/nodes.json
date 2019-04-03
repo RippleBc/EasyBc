@@ -1,10 +1,13 @@
 [
 	{
-		"url": "http://123.157.68.243:10010", 
-		"detail": ""
-	}, 
-	{
-		"url": "http://123.157.68.243:10011", 
+		"query":
+		{
+			"url": "http://localhost:8081"
+		},
+		"consensus":
+		{
+			"url": "http://localhost:8080"
+		},
 		"detail": ""
 	}
 ]

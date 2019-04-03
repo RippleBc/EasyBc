@@ -2,13 +2,13 @@
 	<div class="container">
 		<h1>欢迎进入区块链交易系统</h1>
 		<div class="current_node">
-			<p>当前选择节点: {{url}}</p>
+			<p>当前选择节点: {{currentNode.consensus.url}}</p>
 		</div>
 		<div class="node_list">
 			<span>节点列表:</span>
 			<ul id="nodesInfo">
 				<li v-for="nodeInfo in nodesInfo">
-					<p style="cursor:pointer;" @dblclick="chooseUrl(nodeInfo.url)">{{nodeInfo.url}}</p>
+					<p style="cursor:pointer;" @dblclick="chooseNode(nodeInfo)">{{nodeInfo.consensus.url}}</p>
 					<ul class="chain">
 						<li><div class="chain_text">开始生成</div></li>
 						<li><div class="chain_text">{{nodeInfo.detail | filterXx}}</div></li>
@@ -102,7 +102,7 @@ export default {
     	to: "",
     	value: 0,
     	transactionHash: "",
-    	url: nodesInfo[0].url,
+    	currentNode: nodesInfo[0],
     	nodesInfo: nodesInfo
     }
   },
@@ -152,7 +152,7 @@ export default {
   	getLastestBlock: function()
   	{
   		this.nodesInfo.forEach(function(nodeInfo) {
-  			axios.get("getLastestBlock", {url: nodeInfo.url}, response => {
+  			axios.get("getLastestBlock", {url: nodeInfo.query.url}, response => {
 					if(response.status >= 200 && response.status < 300)
 					{
 						if(response.data.code === 0)
@@ -255,7 +255,7 @@ export default {
     	const self = this;
 
       axios.get("sendTransaction", {
-      	url: self.url,
+      	url: self.currentNode.consensus.url,
       	from: self.from,
       	to: self.to,
       	value: self.value
@@ -284,7 +284,7 @@ export default {
     	const self = this;
 
       axios.get("getTransactionState", {
-      	url: self.url,
+      	url: self.currentNode.query.url,
       	hash: self.transactionHash
       }, response => {
 				if (response.status >= 200 && response.status < 300)
@@ -310,7 +310,7 @@ export default {
     	const self = this;
 
       axios.get("getAccountInfo", {
-      	url: self.url,
+      	url: self.currentNode.query.url,
       	address: address
       }, response => {
 				if (response.status >= 200 && response.status < 300)
@@ -336,7 +336,7 @@ export default {
     	const self = this;
 
       axios.get("getPrivateKey", {
-      	url: self.url,
+      	url: self.currentNode.query.url,
       	address: address
       }, response => {
 				if (response.status >= 200 && response.status < 300)
@@ -357,9 +357,9 @@ export default {
 			});
     },
 
-    chooseUrl: function(url)
+    chooseNode: function(node)
     {
-    	this.url = url;
+    	this.currentNode = node;
     }
   }
 }

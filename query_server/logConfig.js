@@ -8,20 +8,27 @@ log4js.configure({
         },
         req: {
             type: "dateFile",
-            filename: "query_server/logs/req_log/",
+            filename: "client/logs/req_log/",
             pattern: "req-yyyy-MM-dd.log",
             alwaysIncludePattern: true
         },
-        query: {
+        err: {
             type: "dateFile",
-            filename: "query_server/logs/query_log/",
-            pattern: "query-yyyy-MM-dd.log",
+            filename: "client/logs/err_log/",
+            pattern: "err-yyyy-MM-dd.log",
+            alwaysIncludePattern: true
+        },
+        oth: {
+            type: "dateFile",
+            filename: "client/logs/oth_log/",
+            pattern: "oth-yyyy-MM-dd.log",
             alwaysIncludePattern: true
         }
     },
     categories: {
-        default: { appenders: ["stdout", "req"], level: "info" },
-        query: { appenders: ["stdout", "query"], level: "info" }
+        default: { appenders: ["stdout", "req"], level: "debug" },
+        err: { appenders: ["stdout", "err"], level: "error" },
+        oth: { appenders: ["stdout", "oth"], level: "info" }
     }
 })
  

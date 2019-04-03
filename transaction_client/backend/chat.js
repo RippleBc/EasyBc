@@ -1,87 +1,105 @@
-const {post} = require("../../http/request")
-const util = require("../../utils")
-const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../../const")
-const Account = require("../../account");
-const Block = require("../../block");
+const utils = require("../../depends/utils")
+const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../../constant")
+const Account = require("../../depends/account");
+const Block = require("../../depends/block");
+const rp = require("request-promise");
 
-const log4js= require("../logConfig")
-const logger = log4js.getLogger()
-const errlogger = log4js.getLogger("err")
-const othlogger = log4js.getLogger("oth")
+const options = {
+    method: "POST",
+    uri: "",
+    body: {
+        
+    },
+    json: true // Automatically stringifies the body to JSON
+};
 
 /**
- * @param {Transaction} tx
+ * @param {String} url
+ * @param {String} tx
  */
-module.exports.sendTransactionToWorkNodes = function(url, tx, cb)
+module.exports.sendTransaction = async function(url, tx)
 {
-	post(logger, url + "/sendTransaction", {tx: util.baToHexString(tx.serialize())}, function(err, response) {
-		if(!!err)
-		{
-			return cb(err);
-		}
+	assert(typeof url === "string", `chat sendTransaction, url should be a String, now is ${typeof url}`);
+	assert(typeof tx === "string", `chat sendTransaction, tx should be a String, now is ${typeof tx}`);
 
-		if(response.code !== SUCCESS)
-		{
-			return cb(response.msg);
-		}
-		
-		cb(null);
-	});
+	tx = `0x${utils.padToEven(tx)}`;
+
+	options.uri = `${url}/sendTransaction`;
+	options.body = {
+		tx: tx
+	}
+	
+	const response = await rp(options);
+	if(response.code !== SUCCESS)
+	{
+		await Promise.reject(response.msg);
+	}
 }
 
 /**
- * @param {Buffer} transactionHash
+ * @param {String} url
+ * @param {String} transactionHash
  */
-module.exports.getTransactionState = function(url, transactionHash,  cb)
+module.exports.getTransactionState = async function(url, transactionHash)
 {
-	post(logger, url + "/getTransactionState", {hash: util.baToHexString(transactionHash)}, function(err, response) {
-		if(!!err)
-		{
-			return cb(err);
-		}
+	assert(typeof url === "string", `chat getTransactionState, url should be a String, now is ${typeof url}`);
+	assert(typeof transactionHash === "string", `chat getTransactionState, transactionHash should be a String, now is ${typeof transactionHash}`);
 
-		if(response.code !== SUCCESS)
-		{
-			return cb(response.msg);
-		}
-		
-		cb(null, response.data);
-	});
+	transactionHash = `0x${utils.padToEven(transactionHash)}`;
+
+	options.uri = `${url}/getTransactionState`;
+	options.body = {
+		hash: transactionHash
+	}
+
+	const reponse = await rp(options);
+	if(response.code !== SUCCESS)
+	{
+		await Promise.reject(response.msg);
+	}
+
+	return response.data;
 }
 
 /**
- * @param {Buffer} address
+ * @param {String} url
+ * @param {String} address
  */
-module.exports.getAccountInfo = function(url, address, cb)
+module.exports.getAccountInfo = async function(url, address)
 {
-	post(logger, url + "/getAccountInfo", {address: util.baToHexString(address)}, function(err, response) {
-		if(!!err)
-		{
-			return cb(err);
-		}
+	assert(typeof url === "string", `chat getAccountInfo, url should be a String, now is ${typeof url}`);
+	assert(typeof address === "string", `chat getAccountInfo, address should be a String, now is ${typeof address}`);
 
-		if(response.code !== SUCCESS)
-		{
-			return cb(response.msg);
-		}
-		
-		cb(null, new Account(response.data));
-	});
+	address = `0x${utils.padToEven(address)}`;
+
+	options.uri = `${url}/getAccountInfo`;
+	options.body = {
+		address: address
+	}
+
+	const reponse = await rp(options);
+	if(response.code !== SUCCESS)
+	{
+		await Promise.reject(response.msg);
+	}
+
+	return new Account(response.data);
 }
 
-module.exports.getLastestBlock = function(url, cb)
+/**
+ * @param {String} url
+ */
+module.exports.getLastestBlock = async function(url)
 {
-	post(logger, url + "/getLastestBlock", {}, function(err, response) {
-		if(!!err)
-		{
-			return cb(err);
-		}
+	assert(typeof url === "string", `chat getAccountInfo, url should be a String, now is ${typeof url}`);
 
-		if(response.code !== SUCCESS)
-		{
-			return cb(response.msg);
-		}
-		
-		cb(null, new Block(response.data));
-	});
+	options.uri = `${url}/getLastestBlock`;
+
+	const reponse = await rp(options);
+	if(response.code !== SUCCESS)
+	{
+		await Promise.reject(response.msg);
+	}
+
+	return new Block(response.data);
 }

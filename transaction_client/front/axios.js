@@ -1,4 +1,5 @@
 import axios from "axios";
+import { host, port } from "../config.json";
 
 let http = axios.create({
   baseURL: "http://localhost:9090/",

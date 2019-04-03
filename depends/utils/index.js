@@ -441,7 +441,7 @@ exports.baToHexString = function(value)
 
   if(Buffer.isBuffer(value))
   {
-    return "0x" + value.toString("hex");
+    return `0x${value.toString("hex")}`;
   }
  
   const array = [];
