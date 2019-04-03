@@ -1,8 +1,8 @@
 const express = require("express");
 const path = require("path");
 const db = require("./backend/db");
-const { SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS } = require("../constant");
-const {getTransactionState, getAccountInfo, getLastestBlock} = require("./backend/chat");
+const { SUCCESS, PARAM_ERR, OTH_ERR } = require("../constant");
+const { getTransactionState, getAccountInfo, getLastestBlock } = require("./backend/net");
 const utils = require("../depends/utils");
 const { port, host } = require("./config.json");
 
@@ -30,7 +30,7 @@ app.get("/generateKeyPiar", function(req, res) {
   }).catch(e => {
     res.send({
         code: OTH_ERR,
-        msg: e,
+        msg: e.toString(),
     });
   });
 });
@@ -51,7 +51,7 @@ app.get("/getPrivateKey", function(req, res) {
   }).catch(e => {
     res.send({
         code: OTH_ERR,
-        msg: e,
+        msg: e.toString(),
     });
   });
 })
@@ -65,7 +65,7 @@ app.get("/getFromHistory", function(req, res) {
   }).catch(e => {
     res.send({
         code: OTH_ERR,
-        msg: e,
+        msg: e.toString(),
     });
   });
 });
@@ -79,7 +79,7 @@ app.get("/getToHistory", function(req, res) {
   }).catch(e => {
     res.send({
         code: OTH_ERR,
-        msg: e,
+        msg: e.toString(),
     });
   });
 });
@@ -125,7 +125,7 @@ app.get("/sendTransaction", function(req, res) {
   }).catch(e => {
     res.send({
         code: OTH_ERR,
-        msg: e,
+        msg: e.toString(),
     });
   });
 });
@@ -155,7 +155,7 @@ app.get("/getTransactionState", function(req, res) {
   }).catch(e => {
     res.send({
         code: OTH_ERR,
-        msg: e,
+        msg: e.toString(),
     });
   });
 });
@@ -185,7 +185,7 @@ app.get("/getAccountInfo", function(req, res) {
   }).catch(e => {
     res.send({
         code: OTH_ERR,
-        msg: e,
+        msg: e.toString(),
     });
   });
 });
@@ -207,7 +207,7 @@ app.get("/getLastestBlock", function(req, res) {
   }).catch(e => {
     res.send({
         code: OTH_ERR,
-        msg: e,
+        msg: e.toString(),
     });
   });
 });

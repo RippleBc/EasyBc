@@ -133,12 +133,12 @@ app.post("/getLastestBlock", function(req, res) {
        
         return res.send({
             code: OTH_ERR,
-            msg: `getLastestBlock, block not exist, number ${req.body.number}`
+            msg: `getLastestBlock, block not exist`
         });
     }).catch(e => {
         return res.send({
             code: OTH_ERR,
-            msg: `getLastestBlock, throw exception, ${req.body.number}`
+            msg: `getLastestBlock, throw exception, ${e}`
         });
     });
 });

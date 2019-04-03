@@ -3,6 +3,7 @@ const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../../constant")
 const Account = require("../../depends/account");
 const Block = require("../../depends/block");
 const rp = require("request-promise");
+const assert = require("assert");
 
 const options = {
     method: "POST",
@@ -95,7 +96,7 @@ module.exports.getLastestBlock = async function(url)
 
 	options.uri = `${url}/getLastestBlock`;
 
-	const reponse = await rp(options);
+	const response = await rp(options);
 	if(response.code !== SUCCESS)
 	{
 		await Promise.reject(response.msg);

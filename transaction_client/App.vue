@@ -88,7 +88,6 @@
 import axios from "./front/axios.js";
 import nodesInfo from "./nodes.json";
 import css from "./style/index.css";
-import js from "./js/index.js";
 
 export default {
   name: "App",

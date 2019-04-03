@@ -2,7 +2,7 @@ import axios from "axios";
 import { host, port } from "../config.json";
 
 let http = axios.create({
-  baseURL: "http://localhost:9090/",
+  baseURL: `http://${host}:${port}`,
   withCredentials: true,
   headers: {
     "Content-Type": "application/x-www-form-urlencoded;charset=utf-8"

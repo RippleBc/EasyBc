@@ -3,11 +3,10 @@ const leveldown = require("leveldown");
 const Trie = require("merkle-patricia-tree");
 const path = require("path");
 const utils = require("../../depends/utils");
-const async = require("async");
 const Account = require("../../depends/account");
 const Transaction = require("../../depends/transaction");
-const {post} = require("../../http/request");
-const { sendTransaction, getAccountInfo } = require("./chat");
+const { sendTransaction, getAccountInfo } = require("./net");
+const assert = require("assert");
 
 const rlp = utils.rlp;
 const Buffer = utils.Buffer;
@@ -16,7 +15,38 @@ const BN = utils.BN;
 const KEY_KEY_PIAR_ARRAY = "key_piar_array";
 const KEY_TO_ARRAY = "to_array";
 
-const db = levelup(leveldown(path.join(__dirname, "../data")));
+class Db 
+{
+	constructor()
+	{
+		this.db = levelup(leveldown(path.join(__dirname, "../data")));
+	}
+	
+
+	async get(key)
+	{
+		try
+		{
+			return await this.db.get(key);
+		}
+		catch(e)
+		{
+			if(e.toString().indexOf("NotFoundError: Key not found in database") >= 0)
+			{
+				return undefined;
+			}
+
+			await Promise.reject(`Db get, throw exception, ${e}`);
+		}
+	}
+
+	async put(key, value)
+	{
+		await this.db.put(key, value);
+	}
+};
+
+const db = new Db();
 
 exports.generateKeyPiar = async function()
 {
@@ -34,7 +64,16 @@ exports.getPrivateKey = async function(address)
 	assert(typeof address === "string", `getPrivateKey address should be a String, now is ${typeof address}`);
 
 	const keyPairArrayRaw = await db.get(KEY_KEY_PIAR_ARRAY);
-	const keyPairArray = rlp.decode(raw);
+	let keyPairArray;
+	if(keyPairArrayRaw)
+	{
+		keyPairArray = rlp.decode(keyPairArrayRaw);
+	}
+	else
+	{
+		keyPairArray = [];
+	}
+	
 
 	for(let i = 0; i < keyPairArray.length; i++)
 	{
@@ -43,6 +82,8 @@ exports.getPrivateKey = async function(address)
 			return keyPairArray[i][0].toString("hex");
 		}
 	}
+
+	await Promise.reject(`address ${address}'s privateKey is not exist`);
 }
 
 /**
@@ -51,7 +92,16 @@ exports.getPrivateKey = async function(address)
 exports.getFromHistory = async function()
 {
 	const keyPairArrayRaw = await db.get(KEY_KEY_PIAR_ARRAY);
-	const keyPairArray = rlp.decode(keyPairArrayRaw);
+	let keyPairArray;
+	if(keyPairArrayRaw)
+	{
+		keyPairArray = rlp.decode(keyPairArrayRaw);
+	}
+	else
+	{
+		return [];
+	}
+	
 
 	const addressArray = [];
   for(let i = 0; i < keyPairArray.length; i++)
@@ -68,7 +118,15 @@ exports.getFromHistory = async function()
 exports.getToHistory = async function()
 {
 	const addressArrayRaw = await db.get(KEY_TO_ARRAY);
-	const addressArray = rlp.decode(addressArrayRaw);
+	let addressArray;
+	if(addressArrayRaw)
+	{
+		addressArray = rlp.decode(addressArrayRaw);
+	}
+	else
+	{
+		return [];
+	}
 
 	const addressHexArray = [];
 	for(let i = 0; i < addressArray.length; i++)
@@ -114,7 +172,16 @@ exports.sendTransaction = async function(url, from, to, value)
 
 	// get corresponding private key
 	const keyPairArrayRaw = await	db.get(KEY_KEY_PIAR_ARRAY);
-	const keyPairArray = rlp.decode(keyPairArrayRaw);
+	let keyPairArray;
+	if(keyPairArrayRaw)
+	{
+		keyPairArray = rlp.decode(keyPairArrayRaw);
+	}
+	else
+	{
+		keyPairArray = [];
+	}
+
 	let keyPair;
 	for(let i = 0; i < keyPairArray.length; i++)
 	{
@@ -159,8 +226,16 @@ async function saveFrom(privateKey)
 	const address = utils.publicToAddress(publicKey)
 
 	const keyPairArrayRaw = await db.get(KEY_KEY_PIAR_ARRAY);
-	const keyPairArray = rlp.decode(raw);
-		  
+	let keyPairArray;
+	if(keyPairArrayRaw)
+	{
+		keyPairArray = rlp.decode(keyPairArrayRaw);
+	}
+	else
+	{
+		keyPairArray = [];
+	} 
+
 	// check if privateKey is exist
 	for(let i = 0; i < keyPairArray.length; i++)
 	{
@@ -185,7 +260,15 @@ async function saveTo(to)
 	assert(Buffer.isBuffer(to), `saveTo, to should be an Buffer, now is ${typeof to}`);
 
 	const toArrayRaw = await db.get(KEY_TO_ARRAY);
-	const toArray = rlp.decode(toArrayRaw);
+	let toArray;
+	if(toArrayRaw)
+	{
+		toArray = rlp.decode(toArrayRaw);
+	}
+	else
+	{
+		toArray = [];
+	}
 
 	for(let i = 0; i < toArray.length; i++)
 	{
@@ -196,5 +279,5 @@ async function saveTo(to)
 	}
 	toArray.push(to);
 
-	await db.put(KEY_TO_ARRAY, rlp.encode(toArray);
+	await db.put(KEY_TO_ARRAY, rlp.encode(toArray));
 }

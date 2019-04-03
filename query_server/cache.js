@@ -34,7 +34,7 @@ class Cache
 		{
 			if(e.toString().indexOf("NotFoundError: Key not found in database") === -1)
       {
-				await Promise.reject(`run block chain, getBlockByHash throw exception, ${e}`);
+				await Promise.reject(`run block chain, getBlockByHash throw exception, ${e.toString()}`);
       }
       return;
 		}
@@ -56,7 +56,7 @@ class Cache
 	{
 		assert(typeof address === "string", `Cache getAccountInfo, address should be a String, now is ${typeof address}`);
 
-		await refreshStateRoot();
+		await this.refreshStateRoot();
 
 		return await this.blockChain.stateManager.getAccount(toBuffer(address));
 	}
@@ -68,7 +68,7 @@ class Cache
 	{
 		assert(typeof hash === "string", `Cache getTransactionState, hash should be a String, now is ${typeof hash}`);
 
-		await refreshStateRoot();
+		await this.refreshStateRoot();
 
 	  hash = toBuffer(hash);
 	 
@@ -97,14 +97,14 @@ class Cache
 	{
 		assert(typeof number === "string", `Cache getBlockByNumber, number should be a String, now is ${typeof number}`);
 
-		await refreshStateRoot();
+		await this.refreshStateRoot();
 
 		return await this.blockChain.getBlockByNumber(toBuffer(number));
 	}
 
 	async getLastestBlock()
 	{
-		await refreshStateRoot();
+		await this.refreshStateRoot();
 
 		return this.lastestBlock;
 	}
