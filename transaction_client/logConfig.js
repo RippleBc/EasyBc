@@ -8,19 +8,19 @@ log4js.configure({
         },
         req: {
             type: "dateFile",
-            filename: "client/logs/req_log/",
+            filename: "transaction_client/logs/req_log/",
             pattern: "req-yyyy-MM-dd.log",
             alwaysIncludePattern: true
         },
         err: {
             type: "dateFile",
-            filename: "client/logs/err_log/",
+            filename: "transaction_client/logs/err_log/",
             pattern: "err-yyyy-MM-dd.log",
             alwaysIncludePattern: true
         },
         oth: {
             type: "dateFile",
-            filename: "client/logs/oth_log/",
+            filename: "transaction_client/logs/oth_log/",
             pattern: "oth-yyyy-MM-dd.log",
             alwaysIncludePattern: true
         }

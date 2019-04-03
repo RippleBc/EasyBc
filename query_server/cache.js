@@ -24,19 +24,11 @@ class Cache
 	}
 
 	async refreshStateRoot()
-	{
-		let newBlockChainHeight;
-		try
+	{	
+		const newBlockChainHeight = await this.blockChain.getBlockChainHeight();
+		if(!newBlockChainHeight)
 		{
-			newBlockChainHeight = await this.blockChain.getBlockChainHeight();
-		}
-		catch(e)
-		{
-			if(e.toString().indexOf("NotFoundError: Key not found in database") === -1)
-      {
-				await Promise.reject(`run block chain, getBlockByHash throw exception, ${e.toString()}`);
-      }
-      return;
+			return;
 		}
 
 		if(this.blockChainHeight.toString("hex") === newBlockChainHeight.toString("hex"))
@@ -46,6 +38,11 @@ class Cache
 
 		this.blockChainHeight = newBlockChainHeight;
 		this.lastestBlock = await this.blockChain.getBlockByNumber(this.blockChainHeight);
+		if(!this.lastestBlock)
+		{
+			throw new Error(`refreshStateRoot, getBlockByNumber(${this.blockChainHeight.toString()}) should not return undefined`);
+		}
+
 		this.blockChain.stateManager.resetTrieRoot(lastestBlock.header.stateRoot);
 	}
 
@@ -75,7 +72,11 @@ class Cache
 	 	const blockNumber = new BN(this.blockChainHeight);
 	 	while(blockNumber.gtn(0))
 	 	{
-	 		const block = await this.getBlockByNumber(blockNumber, cb);
+	 		const block = await this.getBlockByNumber(blockNumber.toString(16));
+	 		if(!block)
+	 		{
+	 			throw new Error(`getTransactionState, getBlockByNumber(${blockNumber.toString(16)}) should not return undefined`);
+	 		}
 
 	 		const transaction = block.getTransaction(hash);
 

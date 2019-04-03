@@ -85,41 +85,35 @@ class BlockAgreement extends Stage
 			transactions: transactions
 		});
 
-		async.waterfall([
-			function(cb)
+		const self = this;
+		const run  = async function()
+		{
+			const height = await self.ripple.processor.blockChain.getBlockChainHeight();
+
+			if(!height)
 			{
-				this.ripple.processor.blockChain.getBlockChainHeight().then(height => {
-					block.number = (new BN(height).addn(1)).toArrayLike(Buffer);
-
-					cb(null, height);
-				}).catch(e => {
-					cb(e);
-				});
-			},
-
-			function(height, cb)
+				block.header.number = 1;
+			}
+			else
 			{
-				this.ripple.processor.blockChain.getBlockHashByNumber(height).then(parentHash => {
-					block.header.parentHash = parentHash;
-
-					cb();
-				}).catch(e => {
-					cb(e);
-				});
-			}], e => {
-				if(!!e)
+				block.header.number = (new BN(height).addn(1)).toArrayLike(Buffer);
+				const parentHash = await self.ripple.processor.blockChain.getBlockHashByNumber(height);
+				if(!parentHash)
 				{
-					throw new Error(`BlockAgreement run failed, ${e}`);
+					throw new Error(`BlockAgreement run, getBlockHashByNumber(${height.toString("hex")}) should not return undefined`);
 				}
 
-				const rippleBlock = new RippleBlock({
-					block: block.serialize()
-				});
-				rippleBlock.sign(privateKey);
+				block.header.parentHash = parentHash;
+			}
 
-				// broadcast block
-				p2p.sendAll(PROTOCOL_CMD_BLOCK_AGREEMENT, rippleBlock.serialize());
-			});	
+			const rippleBlock = new RippleBlock({
+				block: block.serialize()
+			});
+			rippleBlock.sign(privateKey);
+
+			// broadcast block
+			p2p.sendAll(PROTOCOL_CMD_BLOCK_AGREEMENT, rippleBlock.serialize());
+		} 
  	}
 
  	/**

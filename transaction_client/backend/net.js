@@ -102,5 +102,10 @@ module.exports.getLastestBlock = async function(url)
 		await Promise.reject(response.msg);
 	}
 
-	return new Block(response.data);
+	if(response.data)
+	{
+		return new Block(response.data);
+	}
+	
+	return new Block();
 }

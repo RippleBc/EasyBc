@@ -202,7 +202,10 @@ app.get("/getLastestBlock", function(req, res) {
   getLastestBlock(req.query.url).then(block => {
     res.send({
         code: SUCCESS,
-        data: block.toJSON()
+        data: {
+          hash: block.header.hash().toString("hex"),
+          number: block.header.number.toString("hex")
+        }
     });
   }).catch(e => {
     res.send({

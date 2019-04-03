@@ -13,6 +13,7 @@ const logger = log4js.getLogger();
 
 const BN = utils.BN;
 const toBuffer = utils.toBuffer;
+const Buffer = utils.Buffer;
 
 class Update
 {
@@ -32,25 +33,24 @@ class Update
 	{
 		const blockChain = new BlockChain({db: db});
 
-		try
+		this.blockChainHeight = await blockChain.getBlockChainHeight();
+		if(!this.blockChainHeight)
 		{
-			this.blockChainHeight = await blockChain.getBlockChainHeight();
-		}
-		catch(e)
-		{
+			this.blockChainHeight = Buffer.alloc(0);
 
-			if(e.toString().indexOf("NotFoundError: Key not found in database") >= 0)
-			{
-				this.blockChain = new BlockChain({
-					db: db,
-					trie: new Trie(db)
-				});
-				return;
-			}
-			await Promise.reject(`Update initBlockChain, getBlockChainHeight throw exception, ${e}`);
+			this.blockChain = new BlockChain({
+				db: db,
+				trie: new Trie(db)
+			});
+			return;
 		}
 
 		const lastestBlock = await blockChain.getBlockByNumber(this.blockChainHeight);
+		if(!lastestBlock)
+		{
+			throw new Error(`Update initBlockChain, blockChain.getBlockByNumber(${this.blockChainHeight.toString("hex")}) should not return undefined`);
+		}
+
 		this.blockChain = new BlockChain({
 			db: db,
 			trie: new Trie(db, lastestBlock.header.stateRoot)

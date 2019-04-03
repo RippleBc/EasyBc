@@ -130,11 +130,14 @@ app.post("/getLastestBlock", function(req, res) {
                 data: block.serialize().toString("hex")
             });
         }
-       
-        return res.send({
-            code: OTH_ERR,
-            msg: `getLastestBlock, block not exist`
-        });
+        else
+        {
+            return res.send({
+                code: SUCCESS,
+                msg: ""
+            });
+        }
+        
     }).catch(e => {
         return res.send({
             code: OTH_ERR,

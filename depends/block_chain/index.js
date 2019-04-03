@@ -35,7 +35,20 @@ class BlockChain
   {
     assert(Buffer.isBuffer(number), `BlockChain getBlockHashByNumber, number should be an Buffer, now is ${typeof number}`);
 
-    const hash = await this.db.get(number);
+    let hash;
+    try
+    {
+      hash = await this.db.get(number);
+    }
+    catch(e)
+    {
+      if(e.toString().indexOf("NotFoundError: Key not found in database") >= 0)
+      {
+        return undefined;
+      }
+
+      await Promise.reject(`getBlockHashByNumber, throw exception, ${e}`)
+    }
 
     return hash;
   }
@@ -47,7 +60,20 @@ class BlockChain
   {
     assert(Buffer.isBuffer(hash), `BlockChain getBlockByHash, hash should be an Buffer, now is ${typeof hash}`);
 
-    const raw = await this.db.get(hash);
+    let raw;
+    try
+    {
+      raw = await this.db.get(hash);
+    }
+    catch(e)
+    {
+      if(e.toString().indexOf("NotFoundError: Key not found in database") >= 0)
+      {
+        return undefined;
+      }
+
+      await Promise.reject(`getBlockByHash, throw exception, ${e}`);
+    }
      
     return new Block(raw)
   }
@@ -60,6 +86,11 @@ class BlockChain
     assert(Buffer.isBuffer(number), `BlockChain getBlockByNumber, number should be an Buffer, now is ${typeof number}`);
     
     const hash = await this.getBlockHashByNumber(number);
+    if(!hash)
+    {
+      return undefined;
+    }
+
     const block = await this.getBlockByHash(hash); 
     
     return block;
@@ -67,7 +98,21 @@ class BlockChain
 
   async getBlockChainHeight()
   {
-    const blockChainHeight = await this.db.get(KEY_BLOCK_CHAIN_HEGHIT);
+    let blockChainHeight;
+    try
+    {
+      blockChainHeight = await this.db.get(KEY_BLOCK_CHAIN_HEGHIT);
+    }
+    catch(e)
+    {
+      if(e.toString().indexOf("NotFoundError: Key not found in database") >= 0)
+      {
+        return undefined;
+      }
+
+      await Promise.reject(`getBlockChainHeight, throw exception, ${e}`);
+    }
+    
     
     return blockChainHeight;
   }

@@ -27,7 +27,8 @@
   },
   "devDependencies": {
     "chai": "^4.2.0",
-    "mocha": "^5.2.0"
+    "mocha": "^5.2.0",
+    "mysql": "^2.16.0"
   },
   "scripts": {
     "consensus_server": "node consensus_server/index.js",

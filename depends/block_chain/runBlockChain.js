@@ -14,20 +14,14 @@ module.exports = async function(opts)
   let parentBlock;
   if(!block.isGenesis())
   {
-    try
+    parentBlock = await this.getBlockByHash(block.header.parentHash);
+    
+    if(!parentBlock)
     {
-      parentBlock = await this.getBlockByHash(block.header.parentHash);
-    }
-    catch(e)
-    {
-      if(e.toString().indexOf("NotFoundError: Key not found in database") >= 0)
-      {
-        return {
+      return {
           state: false,
           msg: "run block chain, getBlockByHash key not found"
         }
-      }
-      await Promise.reject(`run block chain, getBlockByHash throw exception, ${e}`);
     }
   }
 
