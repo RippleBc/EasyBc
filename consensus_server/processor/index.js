@@ -13,6 +13,7 @@ const levelup = require("levelup");
 const leveldown = require("leveldown");
 const Trie = require("../../depends/trie");
 const path = require("path");
+const db = require("./db");
 
 const loggerConsensus = process[Symbol.for("loggerConsensus")];
 const p2p = process[Symbol.for("p2p")];
@@ -173,6 +174,10 @@ class Processor
 			block.delInvalidTransactions(failedTransactions);
 		}
 		while(state === false);
+
+		// record
+		db.recordBlock(block);
+		db.recordAccount(accounts);
 	}
 }
 

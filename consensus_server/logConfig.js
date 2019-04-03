@@ -29,20 +29,13 @@ log4js.configure({
             filename: "consensus_server/logs/consensus_log/",
             pattern: "consensus-yyyy-MM-dd.log",
             alwaysIncludePattern: true
-        },
-        records: {
-            type: "dateFile",
-            filename: "records_data/",
-            pattern: "records-yyyy-MM-dd.log",
-            alwaysIncludePattern: true
         }
     },
     categories: {
         default: { appenders: ["stdout", "req"], level: "info" },
         p2p: { appenders: ["stdout", "p2p"], level: "info" },
         net: { appenders: ["stdout", "net"], level: "info" },
-        consensus: { appenders: ["stdout", "consensus"], level: "info" },
-        records: { appenders: ["stdout", "records"], level: "info" }
+        consensus: { appenders: ["stdout", "consensus"], level: "info" }
     }
 })
  
