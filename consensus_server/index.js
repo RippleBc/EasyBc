@@ -5,6 +5,7 @@ const logger = log4js.getLogger();
 process[Symbol.for("loggerP2p")] = log4js.getLogger("p2p");
 process[Symbol.for("loggerNet")] = log4js.getLogger("net");
 process[Symbol.for("loggerConsensus")] = log4js.getLogger("consensus");
+process[Symbol.for("loggerRecords")] = log4js.getLogger("records");
 
 const express = require("express");
 const bodyParser = require("body-parser");

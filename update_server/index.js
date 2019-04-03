@@ -4,9 +4,13 @@ const Trie = require("../depends/trie");
 const utils = require("../depends/utils");
 const rp = require("request-promise");
 const { SUCCESS } = require("../constant");
-const db = require("./db");
 const { unl } = require("./config.json");
 const process = require("process");
+const levelup = require("levelup")
+const leveldown = require("leveldown")
+const { BLOCK_CHAIN_DATA_DIR } = require("../constant");
+
+const db = levelup(leveldown(BLOCK_CHAIN_DATA_DIR));
 
 const log4js= require("./logConfig");
 const logger = log4js.getLogger();
@@ -139,9 +143,23 @@ const update = new Update();
 update.run().then(() => {
 	logger.info("update success");
 
-	process.send({ state: true});
+	try
+	{
+		process.send({ state: true});
+	}
+	catch(e)
+	{
+		logger.error(`process.send({ state: true}) failed, ${e}`);
+	}
 }).catch(e => {
-	process.send({ state: false });
+	try
+	{
+		process.send({ state: false });
+	}
+	catch(e)
+	{
+		logger.error(`process.send({ state: false}) failed, ${e}`);
+	}
 
 	logger.error(`update failed, ${e}`);
 })

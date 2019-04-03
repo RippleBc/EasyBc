@@ -47,7 +47,7 @@ class BlockChain
         return undefined;
       }
 
-      await Promise.reject(`getBlockHashByNumber, throw exception, ${e}`)
+      await Promise.reject(`getBlockHashByNumber, throw exception, ${e}`);
     }
 
     return hash;
