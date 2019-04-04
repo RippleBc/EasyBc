@@ -5,7 +5,8 @@ const logger = log4js.getLogger();
 process[Symbol.for("loggerP2p")] = log4js.getLogger("p2p");
 process[Symbol.for("loggerNet")] = log4js.getLogger("net");
 process[Symbol.for("loggerConsensus")] = log4js.getLogger("consensus");
-process[Symbol.for("loggerRecords")] = log4js.getLogger("records");
+process[Symbol.for("loggerMysql")] = log4js.getLogger("mysql");
+process[Symbol.for("loggerUpdate")] = log4js.getLogger("update");
 
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -13,7 +14,11 @@ const assert = require("assert");
 const utils = require("../depends/utils");
 const P2p = require("./p2p");
 const { http } = require("./config");
-const { SUCCESS, PARAM_ERR, OTH_ERR } = require("../constant");
+const { SUCCESS, PARAM_ERR, OTH_ERR, BLOCK_CHAIN_DATA_DIR } = require("../constant");
+const levelup = require("levelup");
+const leveldown = require("leveldown");
+
+process[Symbol.for("db")] = levelup(leveldown(BLOCK_CHAIN_DATA_DIR));
 
 const Buffer = utils.Buffer;
 const toBuffer = utils.toBuffer;

@@ -5,52 +5,29 @@ const Block = require("../../depends/block");
 const BlockChain = require("../../depends/block_chain");
 const utils = require("../../depends/utils");
 const Consensus = require("../ripple");
-const { BLOCK_CHAIN_DATA_DIR } = require("../../constant");
 const { TRANSACTION_CACHE_MAX_NUM } = require("../constant");
 const assert = require("assert");
 const Message = require("../../depends/fly/net/message");
-const levelup = require("levelup");
-const leveldown = require("leveldown");
 const Trie = require("../../depends/trie");
-const path = require("path");
-const db = require("./db");
+const Update = require("../update");
 
 const loggerConsensus = process[Symbol.for("loggerConsensus")];
+const loggerUpdate = process[Symbol.for("loggerUpdate")];
 const p2p = process[Symbol.for("p2p")];
+const db = process[Symbol.for("db")];
 
 const BN = utils.BN;
 const bufferToInt = utils.bufferToInt;
 
 var updateInstance;
 
-function update()
-{
-	if(!updateInstance)
-	{
-		loggerConsensus.info("block chain update start");
-		updateInstance = child_process.fork("./update_server/index.js");
-
-		updateInstance.on("exit", () => {
-			loggerConsensus.info("block chain update finished");
-
-			updateInstance = undefined;
-		});
-
-		updateInstance.on("error", e => {
-			loggerConsensus.error(`block chain update failed, ${e}`);
-
-			updateInstance = undefined;
-		});
-	}
-}
+const update = new Update();
 
 class Processor
 {
 	constructor()
 	{
 		const self = this;
-
-		const db = levelup(leveldown(BLOCK_CHAIN_DATA_DIR));
 
 		this.blockChain = new BlockChain({
 			trie: new Trie(db),
@@ -65,7 +42,11 @@ class Processor
 
 	run()
 	{
-		update();
+		update.run().then(() => {
+			loggerUpdate.info("update is success");
+		}).catch(e => {
+			loggerUpdate.error(`update throw exception, ${e}`);
+		});
 
 		this.consensus.run();
 	}
@@ -166,7 +147,11 @@ class Processor
 			// block chain is out of date, need update
 			if(state === false && msg.indexOf("run block chain, getBlockByHash key not found") >= 0)
 			{
-				update();
+				update.run().then(() => {
+					loggerUpdate.info("update is success");
+				}).catch(e => {
+					loggerUpdate.error(`update throw exception, ${e}`);
+				});
 				return;
 			}
 

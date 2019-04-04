@@ -1,23 +1,21 @@
-const Block = require("../depends/block");
-const BlockChain = require("../depends/block_chain");
-const Trie = require("../depends/trie");
-const utils = require("../depends/utils");
+const Block = require("../../depends/block");
+const BlockChain = require("../../depends/block_chain");
+const Trie = require("../../depends/trie");
+const utils = require("../../depends/utils");
 const rp = require("request-promise");
-const { SUCCESS } = require("../constant");
+const { SUCCESS } = require("../../constant");
 const { unl } = require("./config.json");
 const process = require("process");
-const levelup = require("levelup")
-const leveldown = require("leveldown")
-const { BLOCK_CHAIN_DATA_DIR } = require("../constant");
 
-const db = levelup(leveldown(BLOCK_CHAIN_DATA_DIR));
-
-const log4js= require("./logConfig");
-const logger = log4js.getLogger();
+const db = process[Symbol.for("db")];
+const logger = process[Symbol.for("loggerUpdate")];
 
 const BN = utils.BN;
 const toBuffer = utils.toBuffer;
 const Buffer = utils.Buffer;
+
+const STATE_RUNNING = 1;
+const STATE_EMPTY = 0;
 
 class Update
 {
@@ -25,12 +23,20 @@ class Update
 	{
 		this.blockChainHeight = undefined;
 		this.blockChain = undefined;
+		this.state = STATE_EMPTY;
 	}
 
 	async run()
 	{
+		if(this.state = STATE_RUNNING)
+		{
+			return;
+		}
+
+		this.state = STATE_RUNNING;
 		await this.initBlockChain();
 		await this.update();
+		this.state = STATE_EMPTY;
 	}
 
 	async initBlockChain()
@@ -139,27 +145,4 @@ class Update
 	}
 }
 
-const update = new Update();
-update.run().then(() => {
-	logger.info("update success");
-
-	try
-	{
-		process.send({ state: true});
-	}
-	catch(e)
-	{
-		logger.error(`process.send({ state: true}) failed, ${e}`);
-	}
-}).catch(e => {
-	try
-	{
-		process.send({ state: false });
-	}
-	catch(e)
-	{
-		logger.error(`process.send({ state: false}) failed, ${e}`);
-	}
-
-	logger.error(`update failed, ${e}`);
-})
+module.exports = Update;
