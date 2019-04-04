@@ -5,8 +5,6 @@ const assert = require("assert");
 
 const Buffer = utils.Buffer;
 
-const KEY_BLOCK_CHAIN_HEGHIT = utils.toBuffer("KEY_BLOCK_CHAIN_HEGHIT");
-
 class BlockChain
 {
   constructor(opts)
@@ -17,7 +15,7 @@ class BlockChain
       trie: opts.trie
     });
     this.db = opts.db;
-
+    
     if(this.db === undefined)
     {
       throw new Error(`BlockChain constructor, opts.db should not be undefined`);
@@ -38,7 +36,7 @@ class BlockChain
     let hash;
     try
     {
-      hash = await this.db.get(number);
+      hash = await this.db.getBlockHashByNumber(number);
     }
     catch(e)
     {
@@ -63,7 +61,7 @@ class BlockChain
     let raw;
     try
     {
-      raw = await this.db.get(hash);
+      raw = await this.db.getBlockByHash(hash);
     }
     catch(e)
     {
@@ -101,7 +99,7 @@ class BlockChain
     let blockChainHeight;
     try
     {
-      blockChainHeight = await this.db.get(KEY_BLOCK_CHAIN_HEGHIT);
+      blockChainHeight = await this.db.getBlockChainHeight();
     }
     catch(e)
     {
@@ -123,7 +121,7 @@ class BlockChain
   async updateBlockChainHeight(number)
   {
     assert(Buffer.isBuffer(number), `BlockChain updateBlockChainHeight, number should be an Buffer, now is ${typeof number}`);
-    await this.db.put(KEY_BLOCK_CHAIN_HEGHIT, number);
+    await this.db.saveBlockChainHeight(number);
   }
 
   /**
@@ -134,8 +132,7 @@ class BlockChain
   {
     assert(block instanceof Block, `BlockChain addBlock, block should be an Block Object, now is ${typeof block}`);
     
-    await this.db.put(block.header.number, block.hash());
-    await this.db.put(block.hash(), block.serialize());
+    await this.db.saveBlock(block);
   }
 }
 

@@ -1,4 +1,4 @@
- const Transaction = require("../transaction");
+const Transaction = require("../transaction");
 const utils = require("../utils");
 const Block = require("../block");
 const BlockChain = require("../block_chain");
@@ -11,8 +11,41 @@ const {assert, expect, should} = require("chai");
 const toBuffer = utils.toBuffer;
 const bufferToInt = utils.bufferToInt;
 
-const dbDir = leveldown(path.join(__dirname, "./data"));
-const db = levelup(dbDir);
+class Db
+{
+	constructor(dbDir)
+	{
+		this.db = levelup(leveldown(dbDir));
+	}
+
+	async getBlockHashByNumber(number)
+	{
+		return await this.db.get(number);
+	}
+
+	async getBlockByHash(hash)
+	{
+		return await this.db.get(hash);
+	}
+
+	async getBlockChainHeight()
+	{
+		return await this.db.get("height");
+	}
+
+	async saveBlockChainHeight(height)
+	{
+		await this.db.put("height", height);
+	}
+
+	async saveBlock(block)
+	{
+		await this.db.put(block.header.number, block.hash());
+		await this.db.put(block.hash(), block.serialize());
+	}
+}
+
+var db = new Db(path.join(__dirname, "./data1"));
 
 const privateKey = toBuffer("0x459705e79404b3604e4eef0aa1becedef1a227865a122826106f7f511682ea86");
 const publicKey = toBuffer("0x873426d507b1ce4401a28908ce1af24b61aa0cc4187de39b812d994b656fd095120732955193857afd876066e9c481dea6968afe423ae104224b026ee5fddeca");
@@ -230,8 +263,9 @@ describe("run block chain test", function() {
 		transaction2.sign(privateKey);
 
 		// 
+		db = new Db(path.join(__dirname, "./data2"));
 		const blockChain = new BlockChain({
-			trie: new Trie(db),
+			trie: new Trie(levelup(leveldown(path.join(__dirname, "./data3")))),
 			db: db
 		});
 
@@ -257,8 +291,6 @@ describe("run block chain test", function() {
 
 		const checkRunBlockChain = async function()
 		{
-			utils.delDir(dbDir);
-
 			// init account balance
 			let fromAccount = await blockChain.stateManager.getAccount(from);
 			fromAccount.balance = 255 * 2;

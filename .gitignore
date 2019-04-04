@@ -1,5 +1,7 @@
 node_modules/
-depends/test/data/*
+depends/test/data1/*
+depends/test/data2/*
+depends/test/data3/*
 monitor_client/data/*
 monitor_client/logs/*
 transaction_client/data/*
