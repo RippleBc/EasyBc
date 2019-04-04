@@ -18,7 +18,7 @@
 		"host": "localhost",
 		"port": 9091
 	},
-	"db":
+	"mysql":
 	{
 		"host": "localhost",
 		"port": 8080,
