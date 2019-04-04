@@ -11,6 +11,10 @@ const {assert, expect, should} = require("chai");
 const toBuffer = utils.toBuffer;
 const bufferToInt = utils.bufferToInt;
 
+utils.delDir(path.join(__dirname, "./data1"));
+utils.delDir(path.join(__dirname, "./data2"));
+utils.delDir(path.join(__dirname, "./data3"));
+
 class Db
 {
 	constructor(dbDir)
@@ -25,7 +29,8 @@ class Db
 
 	async getBlockByHash(hash)
 	{
-		return await this.db.get(hash);
+		const blockRaw = await this.db.get(hash)
+		return new Block(blockRaw);
 	}
 
 	async getBlockChainHeight()

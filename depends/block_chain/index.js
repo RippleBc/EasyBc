@@ -32,23 +32,8 @@ class BlockChain
   async getBlockHashByNumber(number)
   {
     assert(Buffer.isBuffer(number), `BlockChain getBlockHashByNumber, number should be an Buffer, now is ${typeof number}`);
-
-    let hash;
-    try
-    {
-      hash = await this.db.getBlockHashByNumber(number);
-    }
-    catch(e)
-    {
-      if(e.toString().indexOf("NotFoundError: Key not found in database") >= 0)
-      {
-        return undefined;
-      }
-
-      await Promise.reject(`getBlockHashByNumber, throw exception, ${e}`);
-    }
-
-    return hash;
+    
+    return await this.db.getBlockHashByNumber(number);
   }
 
   /**
@@ -58,22 +43,7 @@ class BlockChain
   {
     assert(Buffer.isBuffer(hash), `BlockChain getBlockByHash, hash should be an Buffer, now is ${typeof hash}`);
 
-    let raw;
-    try
-    {
-      raw = await this.db.getBlockByHash(hash);
-    }
-    catch(e)
-    {
-      if(e.toString().indexOf("NotFoundError: Key not found in database") >= 0)
-      {
-        return undefined;
-      }
-
-      await Promise.reject(`getBlockByHash, throw exception, ${e}`);
-    }
-     
-    return new Block(raw)
+    return await this.db.getBlockByHash(hash);
   }
 
   /**
@@ -96,23 +66,7 @@ class BlockChain
 
   async getBlockChainHeight()
   {
-    let blockChainHeight;
-    try
-    {
-      blockChainHeight = await this.db.getBlockChainHeight();
-    }
-    catch(e)
-    {
-      if(e.toString().indexOf("NotFoundError: Key not found in database") >= 0)
-      {
-        return undefined;
-      }
-
-      await Promise.reject(`getBlockChainHeight, throw exception, ${e}`);
-    }
-    
-    
-    return blockChainHeight;
+    return await this.db.getBlockChainHeight();
   }
 
   /**
@@ -121,6 +75,7 @@ class BlockChain
   async updateBlockChainHeight(number)
   {
     assert(Buffer.isBuffer(number), `BlockChain updateBlockChainHeight, number should be an Buffer, now is ${typeof number}`);
+    
     await this.db.saveBlockChainHeight(number);
   }
 

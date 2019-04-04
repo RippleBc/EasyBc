@@ -3,6 +3,9 @@ const { mysqlConfig } = require("../config.json");
 const Account = require("../../depends/Account");
 const Block = require("../../depends/Block");
 const Transaction = require("../../depends/Transaction");
+const utils = require("../../depends/utils");
+
+const Buffer = utils.Buffer;
 
 class Mysql
 {
@@ -18,12 +21,90 @@ class Mysql
     });
   }
 
-  getBlockHashByNumber
-  
-  /*
-   *
+  /**
+   * @param {Buffer} number
+   * @param {Transaction} transaction
+   */
+  async getBlockHashByNumber(number)
+  {
+    assert(Buffer.isBuffer(number), `Mysql getBlockHashByNumber, number should be an Buffer, now is ${typeof number}`);
+
+    const promise = new Promise((resolve, reject) => {
+      this.pool.query(`SELECT hash FROM block WHERE number='${number.toString("hex")}'`, (err, results) => {
+        if(!!err)
+        {
+          reject(`Mysql saveBlock throw exception, ${err}`);
+        }
+        
+        if(results.length === 0)
+        {
+          resolve();
+        }
+
+        resolve(Buffer.from(results[0].hash, "hex"));
+      });
+    });
+    
+    return promise;
+  }
+
+  async getBlockChainHeight()
+  {
+    const promise = new Promise((resolve, reject) => {
+      this.pool.query("SELECT number FROM block ORDER BY number DESC LIMIT 1", (err, results) => {
+        if(!!err)
+        {
+          reject(`Mysql saveBlock throw exception, ${err}`);
+        }
+        
+        if(results.length === 0)
+        {
+          resolve();
+        }
+
+        resolve(Buffer.from(results[0].number), "hex");
+      });
+    });
+    
+    return promise;
+  }
+
+  /**
+   * @param {Buffer} number
+   */
+  async saveBlockChainHeight(number)
+  {
+    assert(Buffer.isBuffer(number), `Mysql saveBlockChainHeight, number should be an Buffer, now is ${typeof number}`);
+
+
+  }
+
+  /**
+   * @param {Buffer} number
    */
   async getBlockByNumber(number)
+  {
+    assert(Buffer.isBuffer(number), `Mysql getBlockByNumber, number should be an Buffer, now is ${typeof number}`);
+
+    const promise = new Promise((resolve, reject) => {
+      this.pool.query(`SELECT data FROM block WHERE number='${number.toString("hex")}'`, (err, results) => {
+        if(!!err)
+        {
+          reject(`Mysql saveBlock throw exception, ${err}`);
+        }
+        
+        if(results.length === 0)
+        {
+          resolve();
+        }
+
+        resolve(new Block(`0x${results[0].data}`));
+      });
+    });
+    
+    return promise;
+  }
+
   /**
    * @param {Block} block
    */
