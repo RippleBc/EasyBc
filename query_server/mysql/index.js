@@ -1,5 +1,5 @@
 const mysql = require("mysql");
-const { mysqlConfig } = require("../config.json");
+const mysqlConfig = require("../config.json").mysql;
 const Account = require("../../depends/Account");
 const Block = require("../../depends/Block");
 const Transaction = require("../../depends/Transaction");
@@ -11,7 +11,7 @@ class Mysql
 {
   constructor()
   {
-    this.pool  = mysqlConfig.createPool({
+    this.pool  = mysql.createPool({
       connectionLimit: 10,
       host: mysqlConfig.host,
       user: mysqlConfig.user,
@@ -27,12 +27,12 @@ class Mysql
       this.pool.query("SELECT number FROM block ORDER BY number DESC LIMIT 1", (err, results) => {
         if(!!err)
         {
-          reject(`Mysql saveBlock throw exception, ${err}`);
+          return reject(`Mysql saveBlock throw exception, ${err}`);
         }
         
-        if(results.length === 0)
+        if(!results || results.length === 0)
         {
-          resolve();
+          return resolve();
         }
 
         resolve(results[0].number);
@@ -53,12 +53,12 @@ class Mysql
       this.pool.query(`SELECT data FROM block WHERE number='${number.toString("hex")}'`, (err, results) => {
         if(!!err)
         {
-          reject(`Mysql saveBlock throw exception, ${err}`);
+          return reject(`Mysql saveBlock throw exception, ${err}`);
         }
         
-        if(results.length === 0)
+        if(!results || results.length === 0)
         {
-          resolve();
+          return resolve();
         }
 
         resolve(new Block(`0x${results[0].data}`));
@@ -83,15 +83,15 @@ class Mysql
       this.pool.query(`SELECT data FROM account WHERE stateTrie='${stateTrie}' or number<${number} LIMIT 1`, (err, results) => {
         if(!!err)
         {
-          reject(`Mysql getAccount throw exception, ${err}`);
+          return reject(`Mysql getAccount throw exception, ${err}`);
         }
         
-        if(results.length === 0)
+        if(!results || results.length === 0)
         {
-          resolve();
+          return resolve();
         }
 
-        resolve(new Transaction(`0x${results[0].data}`));
+        resolve(new Account(`0x${results[0].data}`));
       });
     });
     
@@ -109,12 +109,12 @@ class Mysql
       this.pool.query(`SELECT data FROM transaction WHERE hash='${hash}'`, (err, results) => {
         if(!!err)
         {
-          reject(`Mysql getTransaction throw exception, ${err}`);
+          return reject(`Mysql getTransaction throw exception, ${err}`);
         }
         
-        if(results.length === 0)
+        if(!results || results.length === 0)
         {
-          resolve();
+          return resolve();
         }
 
         resolve(new Transaction(`0x${results[0].data}`));
@@ -125,4 +125,4 @@ class Mysql
   }
 }
 
-
+module.exports = Mysql;

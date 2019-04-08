@@ -1,4 +1,5 @@
 const utils = require("../depends/utils");
+const Mysql = require("./mysql");
 
 const Buffer = utils.Buffer;
 const toBuffer = utils.toBuffer;
@@ -11,6 +12,7 @@ class Cache
 		this.db = new Mysql();
 		this.stateTrie = "";
 		this.number = "";
+		this.block = undefined;
 		this.blockChainHeight = "";
 	}
 
@@ -28,14 +30,14 @@ class Cache
 		}
 
 		this.blockChainHeight = newBlockChainHeight;
-		const lastestBlock = await this.blockChain.getBlockByNumber(this.blockChainHeight);
-		if(!lastestBlock)
+		this.block = await this.blockChain.getBlockByNumber(this.blockChainHeight);
+		if(!this.block)
 		{
 			throw new Error(`refresh, getBlockByNumber(${this.blockChainHeight.toString()}) should not return undefined`);
 		}
 
-		this.stateTrie = lastestBlock.header.stateTrie.toString("hex");
-		this.number = lastestBlock.header.number.toString("hex");
+		this.stateTrie = this.block.header.stateTrie.toString("hex");
+		this.number = this.block.header.number.toString("hex");
 	}
 
 	/**
@@ -78,7 +80,7 @@ class Cache
 	{
 		await this.refresh();
 
-		return this.db.getLastestBlock();
+		return this.block;
 	}
 }
 

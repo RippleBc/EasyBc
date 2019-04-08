@@ -1,5 +1,5 @@
 const mysql = require("mysql");
-const { mysqlConfig } = require("../config.json");
+const mysqlConfig = require("../config.json").mysql;
 const Account = require("../../depends/Account");
 const Block = require("../../depends/Block");
 const Transaction = require("../../depends/Transaction");
@@ -11,7 +11,7 @@ class Mysql
 {
   constructor()
   {
-    this.pool  = mysqlConfig.createPool({
+    this.pool  = mysql.createPool({
       connectionLimit: 10,
       host: mysqlConfig.host,
       user: mysqlConfig.user,
@@ -35,9 +35,9 @@ class Mysql
           reject(`Mysql saveBlock throw exception, ${err}`);
         }
         
-        if(results.length === 0)
+        if(!results || results.length === 0)
         {
-          resolve();
+          return resolve();
         }
 
         resolve(Buffer.from(results[0].hash, "hex"));
@@ -56,9 +56,9 @@ class Mysql
           reject(`Mysql saveBlock throw exception, ${err}`);
         }
         
-        if(results.length === 0)
+        if(!results || results.length === 0)
         {
-          resolve();
+          return resolve();
         }
 
         resolve(Buffer.from(results[0].number, "hex"));
@@ -90,9 +90,9 @@ class Mysql
           reject(`Mysql saveBlock throw exception, ${err}`);
         }
         
-        if(results.length === 0)
+        if(!results || results.length === 0)
         {
-          resolve();
+          return resolve();
         }
 
         resolve(new Block(`0x${results[0].data}`));
@@ -212,4 +212,4 @@ class Mysql
   }
 }
 
-
+module.exports = Mysql;
