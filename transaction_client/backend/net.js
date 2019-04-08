@@ -23,8 +23,6 @@ module.exports.sendTransaction = async function(url, tx)
 	assert(typeof url === "string", `chat sendTransaction, url should be a String, now is ${typeof url}`);
 	assert(typeof tx === "string", `chat sendTransaction, tx should be a String, now is ${typeof tx}`);
 
-	tx = `0x${utils.padToEven(tx)}`;
-
 	options.uri = `${url}/sendTransaction`;
 	options.body = {
 		tx: tx
@@ -54,8 +52,6 @@ module.exports.getTransactionState = async function(url, transactionHash)
 {
 	assert(typeof url === "string", `chat getTransactionState, url should be a String, now is ${typeof url}`);
 	assert(typeof transactionHash === "string", `chat getTransactionState, transactionHash should be a String, now is ${typeof transactionHash}`);
-
-	transactionHash = `0x${utils.padToEven(transactionHash)}`;
 
 	options.uri = `${url}/getTransactionState`;
 	options.body = {
@@ -87,8 +83,6 @@ module.exports.getAccountInfo = async function(url, address)
 	assert(typeof url === "string", `chat getAccountInfo, url should be a String, now is ${typeof url}`);
 	assert(typeof address === "string", `chat getAccountInfo, address should be a String, now is ${typeof address}`);
 
-	address = `0x${utils.padToEven(address)}`;
-
 	options.uri = `${url}/getAccountInfo`;
 	options.body = {
 		address: address
@@ -101,7 +95,7 @@ module.exports.getAccountInfo = async function(url, address)
 				reject(response.msg);
 			}
 			
-			resolve(new Account(response.data));
+			resolve(new Account(response.data ? `0x${response.data}` : undefined));
 		}).catch(e => {
 			reject(e);
 		});
@@ -126,7 +120,7 @@ module.exports.getLastestBlock = async function(url)
 				reject(response.msg);
 			}
 
-			resolve(new Block(response.data));
+			resolve(new Block(response.data ? `0x${response.data}` : undefined));
 		}).catch(e => {
 			reject(e);
 		})

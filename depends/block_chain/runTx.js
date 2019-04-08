@@ -31,8 +31,16 @@ module.exports = async function(opts)
   {
     await Promise.reject(`runTx ${tx.hash(true).toString("hex")}, transaction ${tx.hash(true).toString("hex")}'s nonce should be ${utils.bufferToInt(fromAccount.nonce)}, now is ${utils.bufferToInt(tx.nonce)}`);
   }
+  let newBalance;
   // sub coin
-  let newBalance = new BN(fromAccount.balance).sub(new BN(tx.value));
+  if(new BN(fromAccount.balance).lt(new BN(tx.value)))
+  {
+    newBalance = 0;
+  }
+  else
+  {
+    newBalance = new BN(fromAccount.balance).sub(new BN(tx.value));
+  }
   fromAccount.balance = utils.toBuffer(newBalance);
   
  

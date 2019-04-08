@@ -20,7 +20,7 @@ class Cache
 	async refresh()
 	{	
 		const newBlockChainHeight = await this.db.getBlockChainHeight();
-		if(!newBlockChainHeight)
+		if(newBlockChainHeight === undefined)
 		{
 			return;
 		}
@@ -44,7 +44,7 @@ class Cache
 	/**
 	 * @param {String} address
 	 */
-	async getAccountInfo(address)
+	async getAccount(address)
 	{
 		assert(typeof address === "string", `Cache getAccountInfo, address should be a String, now is ${typeof address}`);
 

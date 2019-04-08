@@ -81,11 +81,13 @@ class Mysql
     assert(typeof address === "string", `Mysql getAccount, address should be a String, now is ${typeof address}`);
 
     const promise = new Promise((resolve, reject) => {
-      this.pool.query(`SELECT data FROM account WHERE stateRoot='${stateRoot}' OR number<='${number}' LIMIT 1`, (err, results) => {
+      this.pool.query(`SELECT data FROM account WHERE (stateRoot='${stateRoot}' OR number<='${number}') AND address='${address}' LIMIT 1`, (err, results) => {
         if(!!err)
         {
           return reject(`Mysql getAccount throw exception, ${err}`);
         }
+
+        console.log(`SELECT data FROM account WHERE (stateRoot='${stateRoot}' OR number<='${number}') AND address='${address}' LIMIT 1`)
 
         if(results.length === 0)
         {

@@ -44,7 +44,7 @@ app.post("/getAccountInfo", function(req, res) {
             msg: "param error, need address"
         });
     }
-    cache.getAccountInfo(req.body.address).then(account => {
+    cache.getAccount(req.body.address).then(account => {
         if(account)
         {
             res.send({
@@ -60,11 +60,6 @@ app.post("/getAccountInfo", function(req, res) {
                 msg: ""
             });
         }
-    }).catch(e => {
-        res.send({
-            code: OTH_ERR,
-            msg: e.toString()
-        });
     });
 });
 
@@ -92,11 +87,6 @@ app.post("/getTransactionState", function(req, res) {
             msg: "",
             data: TRANSACTION_STATE_PACKED
         });
-    }).catch(e => {
-         res.send({
-            code: OTH_ERR,
-            msg: e
-        });
     });
 });
 
@@ -122,11 +112,6 @@ app.post("/getBlockByNumber", function(req, res) {
             code: OTH_ERR,
             msg: `getBlockByNumber, block not exist, number ${req.body.number}`
         });
-    }).catch(e => {
-        return res.send({
-            code: OTH_ERR,
-            msg: `getBlockByNumber, throw exception, number ${req.body.number}`
-        });
     });
 });
 
@@ -148,10 +133,5 @@ app.post("/getLastestBlock", function(req, res) {
             });
         }
         
-    }).catch(e => {
-        return res.send({
-            code: OTH_ERR,
-            msg: `getLastestBlock, throw exception, ${e}`
-        });
     });
 });

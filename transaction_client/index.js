@@ -27,11 +27,6 @@ app.get("/generateKeyPiar", function(req, res) {
     res.send({
         code: SUCCESS
     });
-  }).catch(e => {
-    res.send({
-        code: OTH_ERR,
-        msg: e.toString(),
-    });
   });
 });
 
@@ -48,11 +43,6 @@ app.get("/getPrivateKey", function(req, res) {
         code: SUCCESS,
         data: privateKey
     });
-  }).catch(e => {
-    res.send({
-        code: OTH_ERR,
-        msg: e.toString(),
-    });
   });
 })
 
@@ -62,11 +52,6 @@ app.get("/getFromHistory", function(req, res) {
         code: SUCCESS,
         data: fromHistory
     });
-  }).catch(e => {
-    res.send({
-        code: OTH_ERR,
-        msg: e.toString(),
-    });
   });
 });
 
@@ -75,11 +60,6 @@ app.get("/getToHistory", function(req, res) {
     res.send({
         code: SUCCESS,
         data: toHistory
-    });
-  }).catch(e => {
-    res.send({
-        code: OTH_ERR,
-        msg: e.toString(),
     });
   });
 });
@@ -122,11 +102,6 @@ app.get("/sendTransaction", function(req, res) {
         code: SUCCESS,
         data: transactionHash
     });
-  }).catch(e => {
-    res.send({
-        code: OTH_ERR,
-        msg: e.toString(),
-    });
   });
 });
 
@@ -151,11 +126,6 @@ app.get("/getTransactionState", function(req, res) {
     res.send({
         code: SUCCESS,
         data: state
-    });
-  }).catch(e => {
-    res.send({
-        code: OTH_ERR,
-        msg: e.toString(),
     });
   });
 });
@@ -186,11 +156,6 @@ app.get("/getAccountInfo", function(req, res) {
           balance: account.balance.toString("hex")
         }
     });
-  }).catch(e => {
-    res.send({
-        code: OTH_ERR,
-        msg: e.toString(),
-    });
   });
 });
 
@@ -210,11 +175,6 @@ app.get("/getLastestBlock", function(req, res) {
           hash: block.hash().toString("hex"),
           number: block.header.number.toString("hex")
         }
-    });
-  }).catch(e => {
-    res.send({
-        code: OTH_ERR,
-        msg: e.toString(),
     });
   });
 });

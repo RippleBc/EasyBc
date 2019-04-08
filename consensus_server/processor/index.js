@@ -95,7 +95,7 @@ class Processor
 			let transaction;
 			try
 			{
-				transaction = new Transaction(transactionRaw);
+				transaction = new Transaction(Buffer.from(transactionRaw), "hex");
 
 				let {state, msg} = transaction.validate();
 				if(!state)
