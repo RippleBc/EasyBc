@@ -112,7 +112,7 @@ export default {
 		this.getToHistory();
 		this.getLastestBlock();
 
-		setInterval(this.getLastestBlock, 2000);
+		// setInterval(this.getLastestBlock, 2000);
   },
 
   filters:{

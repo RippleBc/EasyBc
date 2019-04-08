@@ -78,13 +78,22 @@ module.exports.getAccountInfo = async function(url, address)
 		address: address
 	}
 
-	const reponse = await rp(options);
-	if(response.code !== SUCCESS)
-	{
-		await Promise.reject(response.msg);
-	}
+	const promise = new Promise((resolve, reject) => {
+		rp(options).then(response => {
+			if(response.code === SUCCESS)
+			{
+				resolve(new Account(response.data));
+			}
+			else
+			{
+				reject();
+			}
+		}).catch(e => {
+			reject(e)
+		});
+	});
 
-	return new Account(response.data);
+	return promise;
 }
 
 /**

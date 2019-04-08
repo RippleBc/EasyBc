@@ -45,15 +45,25 @@ app.post("/getAccountInfo", function(req, res) {
         });
     }
     cache.getAccountInfo(req.body.address).then(account => {
-        res.send({
-            code: SUCCESS,
-            msg: "",
-            data: account.serialize().toString("hex")
-        });
+        if(account)
+        {
+            res.send({
+                code: SUCCESS,
+                msg: "",
+                data: account.serialize().toString("hex")
+            });
+        }
+        else
+        {
+            res.send({
+                code: SUCCESS,
+                msg: ""
+            });
+        }
     }).catch(e => {
         res.send({
             code: OTH_ERR,
-            msg: e
+            msg: e.toString()
         });
     });
 });

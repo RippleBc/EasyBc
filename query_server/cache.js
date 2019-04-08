@@ -1,5 +1,6 @@
 const utils = require("../depends/utils");
 const Mysql = require("./mysql");
+const assert = require("assert");
 
 const Buffer = utils.Buffer;
 const toBuffer = utils.toBuffer;
@@ -55,9 +56,9 @@ class Cache
 	/**
 	 * @param {String} hash
 	 */
-	async getTransactionState(hash)
+	async getTrasaction(hash)
 	{
-		assert(typeof hash === "string", `Cache getTransactionState, hash should be a String, now is ${typeof hash}`);
+		assert(typeof hash === "string", `Cache getTrasaction, hash should be a String, now is ${typeof hash}`);
 
 		await this.refresh();
 

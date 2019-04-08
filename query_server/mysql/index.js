@@ -1,9 +1,10 @@
 const mysql = require("mysql");
 const mysqlConfig = require("../config.json").mysql;
-const Account = require("../../depends/Account");
-const Block = require("../../depends/Block");
-const Transaction = require("../../depends/Transaction");
+const Account = require("../../depends/account");
+const Block = require("../../depends/block");
+const Transaction = require("../../depends/transaction");
 const utils = require("../../depends/utils");
+const assert = require("assert");
 
 const Buffer = utils.Buffer;
 
@@ -30,7 +31,7 @@ class Mysql
           return reject(`Mysql saveBlock throw exception, ${err}`);
         }
         
-        if(!results || results.length === 0)
+        if(results.length === 0)
         {
           return resolve();
         }
@@ -56,7 +57,7 @@ class Mysql
           return reject(`Mysql saveBlock throw exception, ${err}`);
         }
         
-        if(!results || results.length === 0)
+        if(results.length === 0)
         {
           return resolve();
         }
@@ -80,13 +81,13 @@ class Mysql
     assert(typeof address === "string", `Mysql getAccount, address should be a String, now is ${typeof address}`);
 
     const promise = new Promise((resolve, reject) => {
-      this.pool.query(`SELECT data FROM account WHERE stateTrie='${stateTrie}' or number<${number} LIMIT 1`, (err, results) => {
+      this.pool.query(`SELECT data FROM account WHERE stateTrie='${stateTrie}' OR number<'${number}' LIMIT 1`, (err, results) => {
         if(!!err)
         {
           return reject(`Mysql getAccount throw exception, ${err}`);
         }
         
-        if(!results || results.length === 0)
+        if(results.length === 0)
         {
           return resolve();
         }
@@ -112,7 +113,7 @@ class Mysql
           return reject(`Mysql getTransaction throw exception, ${err}`);
         }
         
-        if(!results || results.length === 0)
+        if(results.length === 0)
         {
           return resolve();
         }
