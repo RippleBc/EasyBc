@@ -127,16 +127,20 @@ class Mysql
   }
 
   /**
+   * @param {Buffer} number
+   * @param {Buffer} stateRoot
    * @param {Buffer} address
-   * @param {Account} account
+   * @param {Buffer} account
    */
-  async saveAccount(address, account)
+  async saveAccount(number, stateRoot, address, account)
   {
+    assert(Buffer.isBuffer(number), `Mysql saveAccount, number should be an Buffer, now is ${typeof number}`);
+    assert(Buffer.isBuffer(stateRoot), `Mysql saveAccount, stateRoot should be an Buffer, now is ${typeof stateRoot}`);
     assert(Buffer.isBuffer(address), `Mysql saveAccount, address should be an Buffer, now is ${typeof address}`);
-    assert(account instanceof Account, `Mysql saveAccount, account should be an Block Object, now is ${typeof account}`);
+    assert(Buffer.isBuffer(account), `Mysql saveAccount, account should be an Buffer, now is ${typeof account}`);
 
     const promise = new Promise((resolve, reject) => {
-      this.pool.query(`INSERT IGNORE INTO account(address, data) VALUES('${address.toString("hex")}', '${account.serialize().toString("hex")}'')`, err => {
+      this.pool.query(`INSERT IGNORE INTO account(number, stateRoot, address, data) VALUES('${number.toString("hex")}, ${stateRoot.toString("hex")}, ${address.toString("hex")}', '${account.toString("hex")}'')`, err => {
         if(!!err)
         {
           reject(`Mysql saveAccount throw exception, ${err}`);
@@ -147,6 +151,23 @@ class Mysql
     });
     
     return promise;
+  }
+
+  /**
+   * @param {Buffer} number
+   * @param {Buffer} stateRoot
+   * @param {Array} accounts
+   */
+  async saveAccounts(number, stateRoot, accounts)
+  {
+    assert(Buffer.isBuffer(number), `Mysql saveAccounts, number should be an Buffer, now is ${typeof number}`);
+    assert(Buffer.isBuffer(stateRoot), `Mysql saveAccounts, stateRoot should be an Buffer, now is ${typeof stateRoot}`);
+    assert(Array.isArray(accounts), `Mysql saveAccounts, accounts should be an Array, now is ${typeof accounts}`);
+
+    for(let i = 0; i < accounts.length; i += 2)
+    {
+      await this.saveAccount(number, stateRoot, accounts[i], accounts[i + 1]);
+    }
   }
 
   /**

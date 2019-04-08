@@ -89,6 +89,20 @@ class BlockChain
     
     await this.db.saveBlock(block);
   }
+
+  /**
+   * @param {Buffer} number
+   * @param {Buffer} stateRoot
+   * @param {Array} accounts
+   */
+  async saveAccounts(number, stateRoot, accounts)
+  {
+    assert(Buffer.isBuffer(number), `BlockChain saveAccounts, number should be an Buffer, now is ${typeof number}`);
+    assert(Buffer.isBuffer(stateRoot), `BlockChain saveAccounts, stateRoot should be an Buffer, now is ${typeof stateRoot}`);
+    assert(Array.isArray(accounts), `BlockChain saveAccounts, accounts should be an Array, now is ${typeof accounts}`);
+
+    await this.db.saveAccounts(number, stateRoot, accounts);
+  }
 }
 
 module.exports = BlockChain;

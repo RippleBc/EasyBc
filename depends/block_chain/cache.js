@@ -122,10 +122,15 @@ class Cache
     this._cache = createTree();
   }
 
+  /**
+   * @return {Array}
+   */
   async flush()
   {
     var it = this._cache.begin;
     
+    const modifiedAccounts = [];
+
     // flush modified account
     while(true)
     {
@@ -133,6 +138,8 @@ class Cache
       {
         it.value.modified = false;
         await this._trie.put(it.key, it.value.val);
+
+        modifiedAccounts.push(it.key, it.value.val);
       }
 
       if(it.hasNext)
@@ -152,6 +159,8 @@ class Cache
       await this._trie.del(address);
     }
     this._deletes = [];
+
+    return modifiedAccounts;
   }
 
   /**

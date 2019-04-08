@@ -62,9 +62,12 @@ class StateManager
     await this.cache.warm(addresses);
   }
 
+  /**
+   * @return {Array}
+   */
   async flushCache()
   {
-    await this.cache.flush();
+    return await this.cache.flush();
   }
 
   clearCache()

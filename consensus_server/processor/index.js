@@ -15,6 +15,7 @@ const loggerConsensus = process[Symbol.for("loggerConsensus")];
 const loggerUpdate = process[Symbol.for("loggerUpdate")];
 const p2p = process[Symbol.for("p2p")];
 const db = process[Symbol.for("db")];
+const mysql = process[Symbol.for("mysql")];
 
 const BN = utils.BN;
 const bufferToInt = utils.bufferToInt;
@@ -31,7 +32,7 @@ class Processor
 
 		this.blockChain = new BlockChain({
 			trie: new Trie(db),
-			db: db
+			db: mysql
 		});
 
 		this.consensus = new Consensus(self);

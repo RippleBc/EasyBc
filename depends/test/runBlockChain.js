@@ -48,6 +48,11 @@ class Db
 		await this.db.put(block.header.number, block.hash());
 		await this.db.put(block.hash(), block.serialize());
 	}
+
+	async saveAccounts(number, stateTrie, accounts)
+	{
+		
+	}
 }
 
 var db = new Db(path.join(__dirname, "./data1"));

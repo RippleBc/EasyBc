@@ -17,8 +17,10 @@ const { http } = require("./config");
 const { SUCCESS, PARAM_ERR, OTH_ERR, BLOCK_CHAIN_DATA_DIR } = require("../constant");
 const levelup = require("levelup");
 const leveldown = require("leveldown");
+const Mysql = require("./mysql");
 
 process[Symbol.for("db")] = levelup(leveldown(BLOCK_CHAIN_DATA_DIR));
+process[Symbol.for("mysql")] = new Mysql();
 
 const Buffer = utils.Buffer;
 const toBuffer = utils.toBuffer;

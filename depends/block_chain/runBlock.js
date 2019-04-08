@@ -83,7 +83,9 @@ module.exports = async function(opts) {
 
   // flush state to db
   this.stateManager.checkpoint();
-  await this.stateManager.flushCache();
+
+  const modifiedAccounts = await this.stateManager.flushCache();
+
   if(ifGenerateStateRoot)
   {
     block.header.stateRoot = this.stateManager.getTrieRoot();
@@ -95,6 +97,7 @@ module.exports = async function(opts) {
   }
 
   await this.stateManager.commit();
+  await this.saveAccounts(block.header.number, block.header.stateRoot, modifiedAccounts);
   this.stateManager.clearCache();
 
   return {
