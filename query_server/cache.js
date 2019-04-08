@@ -10,6 +10,7 @@ class Cache
 	{
 		this.db = new Mysql();
 		this.stateTrie = "";
+		this.number = "";
 		this.blockChainHeight = "";
 	}
 
@@ -34,6 +35,7 @@ class Cache
 		}
 
 		this.stateTrie = lastestBlock.header.stateTrie.toString("hex");
+		this.number = lastestBlock.header.number.toString("hex");
 	}
 
 	/**
@@ -45,7 +47,7 @@ class Cache
 
 		await this.refresh();
 
-		return await this.db.getAccount(this.stateTrie, address);
+		return await this.db.getAccount(this.number, this.stateTrie, address);
 	}
 
 	/**
