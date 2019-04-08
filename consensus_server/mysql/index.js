@@ -23,7 +23,6 @@ class Mysql
 
   /**
    * @param {Buffer} number
-   * @param {Transaction} transaction
    */
   async getBlockHashByNumber(number)
   {
@@ -62,7 +61,7 @@ class Mysql
           resolve();
         }
 
-        resolve(Buffer.from(results[0].number), "hex");
+        resolve(Buffer.from(results[0].number, "hex"));
       });
     });
     
@@ -75,8 +74,6 @@ class Mysql
   async saveBlockChainHeight(number)
   {
     assert(Buffer.isBuffer(number), `Mysql saveBlockChainHeight, number should be an Buffer, now is ${typeof number}`);
-
-
   }
 
   /**
@@ -140,7 +137,7 @@ class Mysql
     assert(Buffer.isBuffer(account), `Mysql saveAccount, account should be an Buffer, now is ${typeof account}`);
 
     const promise = new Promise((resolve, reject) => {
-      this.pool.query(`INSERT IGNORE INTO account(number, stateRoot, address, data) VALUES('${number.toString("hex")}, ${stateRoot.toString("hex")}, ${address.toString("hex")}', '${account.toString("hex")}'')`, err => {
+      this.pool.query(`REPLACE INTO account(number, stateRoot, address, data) VALUES('${number.toString("hex")}, ${stateRoot.toString("hex")}, ${address.toString("hex")}', '${account.toString("hex")}'')`, err => {
         if(!!err)
         {
           reject(`Mysql saveAccount throw exception, ${err}`);
