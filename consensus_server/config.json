@@ -17,8 +17,16 @@
 	"mysql":
 	{
 		"host": "localhost",
-		"port": 33060,
+		"port": 3306,
 		"user": "root",
 		"password": "root"
-	}
+	},
+	"genesis":
+	[
+		{
+			"address": "0x21d21b68ded27ce2ef619651d382892c1f77baa4",
+			"privateKey": "0xed09a7280c5a0d3c04839ca5603fe507b4d1d4572601e62aadafd923f55f7bf9",
+			"balance": "0x8888888888"
+		}
+	]
 }

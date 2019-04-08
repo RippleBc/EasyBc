@@ -1,14 +1,17 @@
 const Block = require("../../depends/block");
 const BlockChain = require("../../depends/block_chain");
+const Transaction = require("../../depends/transaction");
 const Trie = require("../../depends/trie");
 const utils = require("../../depends/utils");
 const rp = require("request-promise");
 const { SUCCESS } = require("../../constant");
 const { unl } = require("./config.json");
+const { genesis } = require("../config.json");
 const process = require("process");
 
 const db = process[Symbol.for("db")];
 const logger = process[Symbol.for("loggerUpdate")];
+const mysql = process[Symbol.for("mysql")];
 
 const BN = utils.BN;
 const toBuffer = utils.toBuffer;
@@ -16,6 +19,9 @@ const Buffer = utils.Buffer;
 
 const STATE_RUNNING = 1;
 const STATE_EMPTY = 0;
+
+
+const GOD_PRIVATE_KEY = Buffer.from("d893eacfffa3ab4199c057a9e52587dad6cb8fc727e5678b92a2f58e7221710d", "hex");
 
 class Update
 {
@@ -28,7 +34,7 @@ class Update
 
 	async run()
 	{
-		if(this.state = STATE_RUNNING)
+		if(this.state === STATE_RUNNING)
 		{
 			return;
 		}
@@ -41,7 +47,7 @@ class Update
 
 	async initBlockChain()
 	{
-		const blockChain = new BlockChain({db: db});
+		const blockChain = new BlockChain({db: mysql});
 
 		this.blockChainHeight = await blockChain.getBlockChainHeight();
 		if(!this.blockChainHeight)
@@ -49,9 +55,35 @@ class Update
 			this.blockChainHeight = Buffer.alloc(0);
 
 			this.blockChain = new BlockChain({
-				db: db,
+				db: mysql,
 				trie: new Trie(db)
 			});
+
+
+			const transactions = [];
+			for(let i = 0; i < genesis.length; i++)
+			{
+				let tx = new Transaction({
+					to: toBuffer(genesis[i].address),
+					value: toBuffer(genesis[i].balance)
+				});
+				tx.sign(GOD_PRIVATE_KEY);
+
+				transactions.push(tx.serialize());
+			}
+			
+
+			const block = new Block({
+				transactions: transactions
+			});
+
+			await this.blockChain.runBlockChain({
+				block: block,
+				generate: true,
+				skipNonce: true,
+				skipBalance: true
+			});
+
 			return;
 		}
 
@@ -62,7 +94,7 @@ class Update
 		}
 
 		this.blockChain = new BlockChain({
-			db: db,
+			db: mysql,
 			trie: new Trie(db, lastestBlock.header.stateRoot)
 		});
 	}

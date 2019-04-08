@@ -71,22 +71,22 @@ class Mysql
 
   /**
    * @param number {String}
-   * @param stateTrie {String}
+   * @param stateRoot {String}
    * @param address {String}
    */
-  async getAccount(number, stateTrie, address)
+  async getAccount(number, stateRoot, address)
   {
     assert(typeof number === "string", `Mysql getAccount, number should be a String, now is ${typeof number}`);
-    assert(typeof stateTrie === "string", `Mysql getAccount, stateTrie should be a String, now is ${typeof stateTrie}`);
+    assert(typeof stateRoot === "string", `Mysql getAccount, stateRoot should be a String, now is ${typeof stateRoot}`);
     assert(typeof address === "string", `Mysql getAccount, address should be a String, now is ${typeof address}`);
 
     const promise = new Promise((resolve, reject) => {
-      this.pool.query(`SELECT data FROM account WHERE stateTrie='${stateTrie}' OR number<'${number}' LIMIT 1`, (err, results) => {
+      this.pool.query(`SELECT data FROM account WHERE stateRoot='${stateRoot}' OR number<='${number}' LIMIT 1`, (err, results) => {
         if(!!err)
         {
           return reject(`Mysql getAccount throw exception, ${err}`);
         }
-        
+
         if(results.length === 0)
         {
           return resolve();

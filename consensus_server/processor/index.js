@@ -45,8 +45,6 @@ class Processor
 	{
 		update.run().then(() => {
 			loggerUpdate.info("update is success");
-		}).catch(e => {
-			loggerUpdate.error(`update throw exception, ${e}`);
 		});
 
 		this.consensus.run();
@@ -150,8 +148,6 @@ class Processor
 			{
 				update.run().then(() => {
 					loggerUpdate.info("update is success");
-				}).catch(e => {
-					loggerUpdate.error(`update throw exception, ${e}`);
 				});
 				return;
 			}

@@ -86,7 +86,8 @@ class BlockChain
   async addBlock(block)
   {
     assert(block instanceof Block, `BlockChain addBlock, block should be an Block Object, now is ${typeof block}`);
-    
+
+    await this.db.saveTransactions(block.header.number, block.transactions);
     await this.db.saveBlock(block);
   }
 

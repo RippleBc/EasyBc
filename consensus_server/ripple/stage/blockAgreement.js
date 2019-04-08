@@ -92,19 +92,17 @@ class BlockAgreement extends Stage
 
 			if(!height)
 			{
-				block.header.number = 1;
+				throw new Error(`BlockAgreement run, getBlockChainHeight(${height.toString("hex")}) should not return undefined`)
 			}
-			else
+			
+			block.header.number = (new BN(height).addn(1)).toArrayLike(Buffer);
+			const parentHash = await self.ripple.processor.blockChain.getBlockHashByNumber(height);
+			if(!parentHash)
 			{
-				block.header.number = (new BN(height).addn(1)).toArrayLike(Buffer);
-				const parentHash = await self.ripple.processor.blockChain.getBlockHashByNumber(height);
-				if(!parentHash)
-				{
-					throw new Error(`BlockAgreement run, getBlockHashByNumber(${height.toString("hex")}) should not return undefined`);
-				}
-
-				block.header.parentHash = parentHash;
+				throw new Error(`BlockAgreement run, getBlockHashByNumber(${height.toString("hex")}) should not return undefined`);
 			}
+
+			block.header.parentHash = parentHash;
 
 			const rippleBlock = new RippleBlock({
 				block: block.serialize()

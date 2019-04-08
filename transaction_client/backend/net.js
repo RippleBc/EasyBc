@@ -30,11 +30,20 @@ module.exports.sendTransaction = async function(url, tx)
 		tx: tx
 	}
 	
-	const response = await rp(options);
-	if(response.code !== SUCCESS)
-	{
-		await Promise.reject(response.msg);
-	}
+	const promise = new Promise((resolve, reject) => {
+		rp(options).then(response => {
+			if(response.code !== SUCCESS)
+			{
+				reject(response.msg);
+			}
+
+			resolve();
+		}).catch(e => {
+			reject(e.toString());
+		});
+	});
+
+	return promise;
 }
 
 /**
@@ -53,13 +62,20 @@ module.exports.getTransactionState = async function(url, transactionHash)
 		hash: transactionHash
 	}
 
-	const reponse = await rp(options);
-	if(response.code !== SUCCESS)
-	{
-		await Promise.reject(response.msg);
-	}
+	const promise = new Promise((resolve, reject) => {
+		rp(options).then(response => {
+			if(response.code !== SUCCESS)
+			{
+				reject(response.msg);
+			}
 
-	return response.data;
+			resolve(response.data);
+		}).catch(e => {
+			reject(e.toString());
+		});
+	});
+
+	return promise;
 }
 
 /**
@@ -80,16 +96,14 @@ module.exports.getAccountInfo = async function(url, address)
 
 	const promise = new Promise((resolve, reject) => {
 		rp(options).then(response => {
-			if(response.code === SUCCESS)
+			if(response.code !== SUCCESS)
 			{
-				resolve(new Account(response.data));
+				reject(response.msg);
 			}
-			else
-			{
-				reject();
-			}
+			
+			resolve(new Account(response.data));
 		}).catch(e => {
-			reject(e)
+			reject(e);
 		});
 	});
 
@@ -105,16 +119,18 @@ module.exports.getLastestBlock = async function(url)
 
 	options.uri = `${url}/getLastestBlock`;
 
-	const response = await rp(options);
-	if(response.code !== SUCCESS)
-	{
-		await Promise.reject(response.msg);
-	}
+	const promise = new Promise((resolve, reject) => {
+		rp(options).then(response => {
+			if(response.code !== SUCCESS)
+			{
+				reject(response.msg);
+			}
 
-	if(response.data)
-	{
-		return new Block(response.data);
-	}
-	
-	return new Block();
+			resolve(new Block(response.data));
+		}).catch(e => {
+			reject(e);
+		})
+	});
+
+	return promise;
 }

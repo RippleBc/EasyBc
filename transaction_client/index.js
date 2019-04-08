@@ -180,7 +180,11 @@ app.get("/getAccountInfo", function(req, res) {
   getAccountInfo(req.query.url, req.query.address).then(account => {
     res.send({
         code: SUCCESS,
-        data: account.toJSON()
+        data: {
+          address: req.query.address.toString("hex"),
+          nonce: account.nonce.toString("hex"),
+          balance: account.balance.toString("hex")
+        }
     });
   }).catch(e => {
     res.send({
@@ -203,7 +207,7 @@ app.get("/getLastestBlock", function(req, res) {
     res.send({
         code: SUCCESS,
         data: {
-          hash: block.header.hash().toString("hex"),
+          hash: block.hash().toString("hex"),
           number: block.header.number.toString("hex")
         }
     });

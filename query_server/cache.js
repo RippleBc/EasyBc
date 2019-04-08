@@ -11,7 +11,7 @@ class Cache
 	constructor()
 	{
 		this.db = new Mysql();
-		this.stateTrie = "";
+		this.stateRoot = "";
 		this.number = "";
 		this.block = undefined;
 		this.blockChainHeight = "";
@@ -37,7 +37,7 @@ class Cache
 			throw new Error(`refresh, getBlockByNumber(${this.blockChainHeight.toString()}) should not return undefined`);
 		}
 
-		this.stateTrie = this.block.header.stateTrie.toString("hex");
+		this.stateRoot = this.block.header.stateRoot.toString("hex");
 		this.number = this.block.header.number.toString("hex");
 	}
 
@@ -50,7 +50,7 @@ class Cache
 
 		await this.refresh();
 
-		return await this.db.getAccount(this.number, this.stateTrie, address);
+		return await this.db.getAccount(this.number, this.stateRoot, address);
 	}
 
 	/**

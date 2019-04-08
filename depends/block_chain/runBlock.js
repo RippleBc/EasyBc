@@ -93,7 +93,7 @@ module.exports = async function(opts) {
   // check state trie
   if(validateStateRoot && this.stateManager.getTrieRoot().toString("hex") !== block.header.stateRoot.toString("hex"))
   {
-    await Promise.reject(`runBlock, stateTrie should be ${this.stateManager.getTrieRoot().toString("hex")}, now is ${block.header.stateRoot.toString("hex")}`);
+    await Promise.reject(`runBlock, stateRoot should be ${this.stateManager.getTrieRoot().toString("hex")}, now is ${block.header.stateRoot.toString("hex")}`);
   }
 
   await this.stateManager.commit();

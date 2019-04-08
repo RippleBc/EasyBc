@@ -49,7 +49,7 @@ class Db
 		await this.db.put(block.hash(), block.serialize());
 	}
 
-	async saveAccounts(number, stateTrie, accounts)
+	async saveAccounts(number, stateRoot, accounts)
 	{
 		
 	}

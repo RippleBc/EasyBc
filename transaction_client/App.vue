@@ -11,15 +11,9 @@
 					<p style="cursor:pointer;" @dblclick="chooseNode(nodeInfo)">{{nodeInfo.consensus.url}}</p>
 					<ul class="chain">
 						<li><div class="chain_text">开始生成</div></li>
-						<li><div class="chain_text">{{nodeInfo.detail | filterXx}}</div></li>
-						<li><div class="chain_text">{{nodeInfo.detail | filterXxx}}</div></li>
-						<li>
-							<div class="chain_text">
-								<span>{{nodeInfo.detail | filterHash}}</span>
-								<span>{{nodeInfo.detail | filterNum}}</span>
-							</div>
-						</li>
-						<div class='generation'>
+						<li><div class="chain_text">{{nodeInfo.detail.number}}</div></li>
+						<li><div class="chain_text">{{nodeInfo.detail.hash}}</div></li>
+						<div class="generation">
 							<i></i>
 							<i></i>
 							<i></i>
@@ -113,37 +107,6 @@ export default {
 		this.getLastestBlock();
 
 		// setInterval(this.getLastestBlock, 2000);
-  },
-
-  filters:{
-    filterHash (value) {
-      if (!value) return ''
-      if (value.length > 50) {
-        return value = value.slice(1,15) 
-      }
-      return value
-    },
-    filterNum (value) {
-      if (!value) return ''
-      if (value.length > 50) {
-        return value = "\"" + value.slice(78,92)
-      }
-      return value
-    },
-    filterXx (value) {
-      if (!value) return ''
-      if (value.length > 50) {
-        return value = "\"" + value.slice(15,23) + "\""
-      }
-      return value
-    },
-    filterXxx (value) {
-      if (!value) return ''
-      if (value.length > 50) {
-        return value = "\"" + value.slice(24,32) + "\""
-      }
-      return value
-    }
   },
 
   methods:

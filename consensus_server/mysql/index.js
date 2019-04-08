@@ -1,9 +1,10 @@
 const mysql = require("mysql");
 const mysqlConfig = require("../config.json").mysql;
-const Account = require("../../depends/Account");
-const Block = require("../../depends/Block");
-const Transaction = require("../../depends/Transaction");
+const Account = require("../../depends/account");
+const Block = require("../../depends/block");
+const Transaction = require("../../depends/transaction");
 const utils = require("../../depends/utils");
+const assert = require("assert");
 
 const Buffer = utils.Buffer;
 
@@ -77,6 +78,32 @@ class Mysql
   }
 
   /**
+   * @param {Buffer} hash
+   */
+  async getBlockByHash(hash)
+  {
+    assert(Buffer.isBuffer(hash), `Mysql getBlockByHash, hash should be an Buffer, now is ${typeof hash}`);
+
+    const promise = new Promise((resolve, reject) => {
+      this.pool.query(`SELECT data FROM block WHERE hash='${hash.toString("hex")}'`, (err, results) => {
+        if(!!err)
+        {
+          reject(`Mysql saveBlock throw exception, ${err}`);
+        }
+        
+        if(!results || results.length === 0)
+        {
+          return resolve();
+        }
+
+        resolve(new Block(`0x${results[0].data}`));
+      });
+    });
+    
+    return promise;
+  }
+
+  /**
    * @param {Buffer} number
    */
   async getBlockByNumber(number)
@@ -110,7 +137,7 @@ class Mysql
     assert(block instanceof Block, `Mysql saveBlock, block should be an Block Object, now is ${typeof block}`);
 
     const promise = new Promise((resolve, reject) => {
-      this.pool.query(`INSERT IGNORE INTO block(number, hash, data) VALUES('${block.header.number.toString("hex")}', '${block.hash().toString("hex")}', '${block.serialize().toString("hex")}'')`, err => {
+      this.pool.query(`INSERT IGNORE INTO block(number, hash, data) VALUES('${block.header.number.toString("hex")}', '${block.hash().toString("hex")}', '${block.serialize().toString("hex")}')`, err => {
         if(!!err)
         {
           reject(`Mysql saveBlock throw exception, ${err}`);
@@ -137,7 +164,7 @@ class Mysql
     assert(Buffer.isBuffer(account), `Mysql saveAccount, account should be an Buffer, now is ${typeof account}`);
 
     const promise = new Promise((resolve, reject) => {
-      this.pool.query(`REPLACE INTO account(number, stateRoot, address, data) VALUES('${number.toString("hex")}, ${stateRoot.toString("hex")}, ${address.toString("hex")}', '${account.toString("hex")}'')`, err => {
+      this.pool.query(`REPLACE INTO account(number, stateRoot, address, data) VALUES('${number.toString("hex")}', '${stateRoot.toString("hex")}', '${address.toString("hex")}', '${account.toString("hex")}')`, err => {
         if(!!err)
         {
           reject(`Mysql saveAccount throw exception, ${err}`);
@@ -195,10 +222,10 @@ class Mysql
   async saveTransaction(number, transaction)
   {
     assert(Buffer.isBuffer(number), `Mysql saveTransaction, number should be an Buffer, now is ${typeof number}`);
-    assert(transaction instanceof Transaction, `Mysql saveTransaction, transaction should be an Block Object, now is ${typeof transaction}`);
+    assert(transaction instanceof Transaction, `Mysql saveTransaction, transaction should be an Transaction Object, now is ${typeof transaction}`);
 
     const promise = new Promise((resolve, reject) => {
-      this.pool.query(`INSERT IGNORE INTO transaction(hash, number, data) VALUES('${transaction.hash().toString("hex")}', '${number.toString("hex")}', '${transaction.serialize().toString("hex")}'')`, err => {
+      this.pool.query(`INSERT IGNORE INTO transaction(hash, number, data) VALUES('${transaction.hash().toString("hex")}', '${number.toString("hex")}', '${transaction.serialize().toString("hex")}')`, err => {
         if(!!err)
         {
           reject(`Mysql saveTransaction throw exception, ${err}`);
@@ -209,6 +236,21 @@ class Mysql
     });
     
     return promise;
+  }
+
+  /**
+   * @param {Buffer} number
+   * @param {Array/Transaction} transactions
+   */
+  async saveTransactions(number, transactions)
+  {
+    assert(Buffer.isBuffer(number), `Mysql saveTransactions, number should be an Buffer, now is ${typeof number}`);
+    assert(Array.isArray(transactions), `Mysql saveTransactions, transactions should be an Array, now is ${typeof transactions}`);
+
+    for(let i = 0; i < transactions.length; i++)
+    {
+      await this.saveTransaction(number, transactions[i]);
+    }
   }
 }
 
