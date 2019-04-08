@@ -81,11 +81,5 @@ app.post("/sendTransaction", function(req, res) {
             code: SUCCESS,
             msg: ""
         });
-    })
-    .catch(e => {
-        res.send({
-            code: OTH_ERR,
-            msg: err
-        });
-    })
+    });
 });

@@ -36,20 +36,26 @@ class CandidateAgreement extends Stage
 		const transactionCollsHash = new Map();
 		this.candidates.forEach(candidate => {
 			const key = sha256(candidate.transactions);
-
+			console.log("key: " + key.toString("hex"));
 			if(transactionCollsHash.has(key))
 			{
-				transactionCollsHash[key].count += 1;
+				const count = transactionCollsHash.get(key).count;
+
+				transactionCollsHash.set(key, {
+					count: count + 1,
+					data: candidate.transactions
+				});
 			}
 			else
 			{
-				transactionCollsHash[key] = {
+				transactionCollsHash.set(key, {
 					count: 1,
 					data: candidate.transactions
-				};
+				});
 			}
 		});
 
+		
 		const sortedTransactionColls = [...transactionCollsHash].sort(transactionColl => {
 			return -transactionColl[1].count;
 		});
@@ -86,6 +92,13 @@ class CandidateAgreement extends Stage
 		assert(Array.isArray(transactions), `CandidateAgreement run, transactions should be an Array, now is ${typeof transactions}`);
 
 		this.init();
+
+		logger.info("Candidate agreement begin, transactions: ");
+		for(let i = 0; i < transactions; i++)
+		{
+			let transaction = new Transaction(`0x${transactions[i]}`)
+			logger.info(`hash: ${transaction.hash.toString("hex")}, from: ${transaction.from.toString("hex")}, to: ${transaction.to.toString("hex")}, value: ${transaction.value.toString("hex")}, nonce: ${transaction.nonce.toString("hex")}`);
+		}
 
 		// init candidate
 		const candidate = new Candidate({
@@ -157,7 +170,7 @@ class CandidateAgreement extends Stage
 
 	reset()
 	{
-		super.reset();
+		super.innerReset();
 		this.candidates = [];
 	}
 }

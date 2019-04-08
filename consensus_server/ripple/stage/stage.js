@@ -56,16 +56,16 @@ class Stage
 				{
 					logger.warn("finish stage is over because of timeout");
 
-					self.reset();
 					self.handler(false);
+					self.reset();
 				}
 			}
 			else
 			{
 				logger.info("finish stage is over success");
 
-				self.reset();
 				self.handler(true);
+				self.reset();
 			}
 		}, STAGE_FINISH_TIMEOUT);
 	}
@@ -166,7 +166,7 @@ class Stage
 		}
 	}
 
-	reset()
+	innerReset()
 	{
 		this.state = STATE_EMPTY;
 		this.primary.reset();

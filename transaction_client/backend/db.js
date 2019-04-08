@@ -138,21 +138,20 @@ exports.getToHistory = async function()
 }
 
 /**
- * @param {String} url
+ * @param {String} queryUrl
+ * @param {String} consensusUrl
  * @param {Buffer} from
  * @param {Buffer} to
  * @param {Buffer} value
  * @return {String}
  */
-exports.sendTransaction = async function(url, from, to, value)
+exports.sendTransaction = async function(queryUrl, consensusUrl, from, to, value)
 {
-	assert(typeof url === "string", `sendTransaction, url should be a String, now is ${typeof url}`);
+	assert(typeof queryUrl === "string", `sendTransaction, queryUrl should be a String, now is ${typeof queryUrl}`);
+	assert(typeof consensusUrl === "string", `sendTransaction, consensusUrl should be a String, now is ${typeof consensusUrl}`);
 	assert(Buffer.isBuffer(from), `sendTransaction, from should be an Buffer, now is ${typeof from}`);
 	assert(Buffer.isBuffer(to), `sendTransaction, to should be an Buffer, now is ${typeof to}`);
 	assert(Buffer.isBuffer(value), `sendTransaction, value should be an Buffer, now is ${typeof value}`);
-
-	let privateKey;
-	let tx;
 
 	if(from.length !== 20)
 	{
@@ -199,10 +198,10 @@ exports.sendTransaction = async function(url, from, to, value)
 	const address = keyPair[2];
 
 	// get account
-	const accountInfo =  await getAccountInfo(url, address);
+	const accountInfo =  await getAccountInfo(queryUrl, address.toString("hex"));
 	
 	// send tx
-	tx = new Transaction();
+	const tx = new Transaction();
 	tx.nonce = (new BN(accountInfo.nonce).addn(1)).toArrayLike(Buffer);
 	tx.value = value;
 	tx.data = "";
@@ -210,7 +209,7 @@ exports.sendTransaction = async function(url, from, to, value)
 	tx.sign(privateKey);
 
 	await saveTo(to);
-	await sendTransaction(url, tx.serialize().toString("hex"));
+	await sendTransaction(consensusUrl, tx.serialize().toString("hex"));
 
 	return tx.hash().toString("hex");
 }

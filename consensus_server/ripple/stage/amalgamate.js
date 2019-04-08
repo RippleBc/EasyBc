@@ -48,6 +48,13 @@ class Amalgamate extends Stage
 	{
 		assert(Array.isArray(transactions), `Amalgamate run, transactions should be an Array, now is ${typeof transactions}`);
 
+		logger.info("amalgamate begin, transactions: ");
+		for(let i = 0; i < transactions; i++)
+		{
+			let transaction = new Transaction(`0x${transactions[i]}`)
+			logger.info(`hash: ${transaction.hash.toString("hex")}, from: ${transaction.from.toString("hex")}, to: ${transaction.to.toString("hex")}, value: ${transaction.value.toString("hex")}, nonce: ${transaction.nonce.toString("hex")}`);
+		}
+
 		this.init();
 		
 		// init candidate
@@ -120,7 +127,7 @@ class Amalgamate extends Stage
 
 	reset()
 	{
-		super.reset();
+		super.innerReset();
 		this.candidates = [];
 	}
 }

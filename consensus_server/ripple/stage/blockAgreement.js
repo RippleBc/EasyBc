@@ -34,7 +34,7 @@ class BlockAgreement extends Stage
 
 	handler()
 	{
-		const blocksHash = new Hash();
+		const blocksHash = new Map();
 		this.rippleBlocks.forEach(rippleBlock => {
 			const key = sha256(rippleBlock.block);
 
@@ -76,7 +76,7 @@ class BlockAgreement extends Stage
 	 */
  	run(transactions)
  	{
- 		assert(Buffer.isArray(transactions), `BlockAgreement run, transactions should be an Buffer, now is ${typeof transactions}`);
+ 		assert(Buffer.isBuffer(transactions), `BlockAgreement run, transactions should be an Buffer, now is ${typeof transactions}`);
 
  		this.init();
  		
@@ -170,7 +170,7 @@ class BlockAgreement extends Stage
 
 	reset()
 	{
-		super.reset();
+		super.innerReset();
 		this.rippleBlocks = [];
 	}
 }

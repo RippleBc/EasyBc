@@ -65,13 +65,20 @@ app.get("/getToHistory", function(req, res) {
 });
 
 app.get("/sendTransaction", function(req, res) {
-  if(!req.query.url) {
+  if(!req.query.queryUrl) {
     return res.send({
         code: PARAM_ERR,
-        msg: "param error, need url"
+        msg: "param error, need queryUrl"
     });
   }
 
+  if(!req.query.consensusUrl) {
+    return res.send({
+        code: PARAM_ERR,
+        msg: "param error, need consensusUrl"
+    });
+  }
+  
 	if(!req.query.from) {
     return res.send({
         code: PARAM_ERR,
@@ -97,7 +104,7 @@ app.get("/sendTransaction", function(req, res) {
   const to = Buffer.from(req.query.to, "hex");
   const value = Buffer.from(req.query.value, "hex");
 
-  db.sendTransaction(req.query.url, from, to, value).then(transactionHash => {
+  db.sendTransaction(req.query.queryUrl, req.query.consensusUrl, from, to, value).then(transactionHash => {
     res.send({
         code: SUCCESS,
         data: transactionHash

@@ -34,6 +34,8 @@ class Ripple
 			this.processingTransactions = this.processor.getTransactions(MAX_PROCESS_TRANSACTIONS_SIZE);
 		}
 		
+		logger.info(`new ripple round begin, transactions: ${this.processingTransactions}`);
+
 		this.amalgamate.run(this.processingTransactions);
 	}
 

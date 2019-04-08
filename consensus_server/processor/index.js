@@ -82,7 +82,7 @@ class Processor
 	 */
 	async processTransaction(transactionRaw)
 	{
-		assert(typeof transactionRaw !== "string", `Processor processTransaction, transactionRaw should be a String, now is ${typeof transactionRaw}`);
+		assert(typeof transactionRaw === "string", `Processor processTransaction, transactionRaw should be a String, now is ${typeof transactionRaw}`);
 
 		const self = this;
 
@@ -95,7 +95,7 @@ class Processor
 			let transaction;
 			try
 			{
-				transaction = new Transaction(Buffer.from(transactionRaw), "hex");
+				transaction = new Transaction(Buffer.from(transactionRaw, "hex"));
 
 				let {state, msg} = transaction.validate();
 				if(!state)
