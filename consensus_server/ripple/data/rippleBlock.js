@@ -16,8 +16,7 @@ class RippleBlock extends Base
 		data = data || {};
 
     const fields = [{
-      name: "block",
-      default: Buffer.alloc(0)
+      name: "block"
     }, {
       name: "v",
       length: 1,

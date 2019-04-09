@@ -36,7 +36,7 @@ class CandidateAgreement extends Stage
 		const transactionCollsHash = new Map();
 		this.candidates.forEach(candidate => {
 			const key = sha256(candidate.transactions);
-			console.log("key: " + key.toString("hex"));
+
 			if(transactionCollsHash.has(key))
 			{
 				const count = transactionCollsHash.get(key).count;
@@ -62,14 +62,14 @@ class CandidateAgreement extends Stage
 
 		if(sortedTransactionColls[0] && sortedTransactionColls[0][1].count / unl.length >= THRESHOULD)
 		{
-			logger.info("candidate agreement success, go to next stage");
+			logger.warn("candidate agreement success, go to next stage");
 
 			this.ripple.blockAgreement.run(sortedTransactionColls[0][1].data);
 			return;
 		}
 		
 		// return to amalgamate stage
-		logger.info("candidate agreement failed, go to stage amalgamate");
+		logger.warn("candidate agreement failed, go to stage amalgamate");
 
 		const transactions = new Set();
 		this.candidates.forEach(candidate => {
@@ -93,11 +93,11 @@ class CandidateAgreement extends Stage
 
 		this.init();
 
-		logger.info("Candidate agreement begin, transactions: ");
+		logger.warn("Candidate agreement begin, transactions: ");
 		for(let i = 0; i < transactions; i++)
 		{
 			let transaction = new Transaction(`0x${transactions[i]}`)
-			logger.info(`hash: ${transaction.hash.toString("hex")}, from: ${transaction.from.toString("hex")}, to: ${transaction.to.toString("hex")}, value: ${transaction.value.toString("hex")}, nonce: ${transaction.nonce.toString("hex")}`);
+			logger.warn(`hash: ${transaction.hash.toString("hex")}, from: ${transaction.from.toString("hex")}, to: ${transaction.to.toString("hex")}, value: ${transaction.value.toString("hex")}, nonce: ${transaction.nonce.toString("hex")}`);
 		}
 
 		// init candidate

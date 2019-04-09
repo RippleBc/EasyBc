@@ -5,9 +5,11 @@ const Stage = require("./stage");
 const process = require("process");
 const async = require("async");
 const assert = require("assert");
+const { unl } = require("../../config.json");
 
 const sha256 = utils.sha256;
 const Buffer = utils.Buffer;
+const BN = utils.BN;
 
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
@@ -40,14 +42,19 @@ class BlockAgreement extends Stage
 
 			if(blocksHash.has(key))
 			{
-				blocksHash[key].count += 1;
+				const count = blocksHash.get(key).count;
+
+				blocksHash.set(key, {
+					count: count + 1,
+					data: rippleBlock.block
+				})
 			}
 			else
 			{
-				blocksHash[key] = {
+				blocksHash.set(key, {
 					count: 1,
 					data: rippleBlock.block
-				};
+				});
 			}
 		});
 
@@ -55,8 +62,12 @@ class BlockAgreement extends Stage
 			return -block[1].count;
 		});
 
-		if(sortedBlocks[0] && sortedBlocks[0][1] / unl.length >= THRESHOULD)
+		console.log("ortedBlocks[0]: " + sortedBlocks[0])
+		console.log("sortedBlocks[0][1]: " + sortedBlocks[0][1])
+		if(sortedBlocks[0] && sortedBlocks[0][1].count / unl.length >= THRESHOULD)
 		{
+			logger.warn("block agreement success, go to next stage");
+
 			this.ripple.processor.processBlock({
 				block: new Block(sortedBlocks[0][1].data)
 			}).then(() => {
@@ -85,8 +96,15 @@ class BlockAgreement extends Stage
 			transactions: transactions
 		});
 
+		logger.warn("Block agreement begin, transactions: ");
+		for(let i = 0; i < block.transactions; i++)
+		{
+			let transaction = block.transactions[i];
+			logger.warn(`hash: ${transaction.hash.toString("hex")}, from: ${transaction.from.toString("hex")}, to: ${transaction.to.toString("hex")}, value: ${transaction.value.toString("hex")}, nonce: ${transaction.nonce.toString("hex")}`);
+		}
+
 		const self = this;
-		const run  = async function()
+		const run = async function()
 		{
 			const height = await self.ripple.processor.blockChain.getBlockChainHeight();
 
@@ -111,7 +129,12 @@ class BlockAgreement extends Stage
 
 			// broadcast block
 			p2p.sendAll(PROTOCOL_CMD_BLOCK_AGREEMENT, rippleBlock.serialize());
-		} 
+
+			//
+			self.rippleBlocks.push(rippleBlock);
+		}
+
+		run();
  	}
 
  	/**
