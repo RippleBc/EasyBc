@@ -83,6 +83,9 @@ import axios from "./front/axios.js";
 import nodesInfo from "./nodes.json";
 import css from "./style/index.css";
 
+const TRANSACTION_STATE_PACKED = 1;
+const TRANSACTION_STATE_NOT_EXISTS = 2;
+
 export default {
   name: "App",
 
@@ -254,7 +257,18 @@ export default {
 				{
 					if(response.data.code === 0)
 					{
-						alert(response.data.data);
+						if(response.data.data === TRANSACTION_STATE_PACKED)
+            {
+              alert("transaction has packed");
+            }
+            else if(response.data.data === TRANSACTION_STATE_NOT_EXISTS)
+            {
+              alert("transaction not packet for now");
+            }
+            else
+            {
+              alert("getTransactionState failed");
+            }
 					}
 					else
 					{
@@ -280,7 +294,7 @@ export default {
 				{
 					if(response.data.code === 0)
 					{
-						alert(response.data.data);
+						alert(`address: ${response.data.data.address}\nnonce: ${response.data.data.nonce}\nbalance: ${response.data.data.balance}`);
 					}
 					else
 					{
