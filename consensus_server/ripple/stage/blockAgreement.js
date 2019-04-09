@@ -10,6 +10,7 @@ const { unl } = require("../../config.json");
 const sha256 = utils.sha256;
 const Buffer = utils.Buffer;
 const BN = utils.BN;
+const rlp = utils.rlp;
 
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
@@ -62,18 +63,17 @@ class BlockAgreement extends Stage
 			return -block[1].count;
 		});
 
-		console.log("ortedBlocks[0]: " + sortedBlocks[0])
-		console.log("sortedBlocks[0][1]: " + sortedBlocks[0][1])
 		if(sortedBlocks[0] && sortedBlocks[0][1].count / unl.length >= THRESHOULD)
 		{
-			logger.warn("block agreement success, go to next stage");
+			logger.warn("block agreement success");
 
+			const self = this;
 			this.ripple.processor.processBlock({
 				block: new Block(sortedBlocks[0][1].data)
 			}).then(() => {
-				this.ripple.run();
-			}).catch(e => {
-				throw new Error(`BlockAgreement handle, processBlock failed, ${e}`);
+				logger.warn("run block chain success, go to next stage");
+
+				self.ripple.run();
 			});
 
 			return;
@@ -90,17 +90,17 @@ class BlockAgreement extends Stage
  		assert(Buffer.isBuffer(transactions), `BlockAgreement run, transactions should be an Buffer, now is ${typeof transactions}`);
 
  		this.init();
- 		
+
  		// init block
 		const block = new Block({
 			transactions: transactions
 		});
 
 		logger.warn("Block agreement begin, transactions: ");
-		for(let i = 0; i < block.transactions; i++)
+		for(let i = 0; i < block.transactions.length; i++)
 		{
 			let transaction = block.transactions[i];
-			logger.warn(`hash: ${transaction.hash.toString("hex")}, from: ${transaction.from.toString("hex")}, to: ${transaction.to.toString("hex")}, value: ${transaction.value.toString("hex")}, nonce: ${transaction.nonce.toString("hex")}`);
+			logger.warn(`hash: ${transaction.hash().toString("hex")}, from: ${transaction.from.toString("hex")}, to: ${transaction.to.toString("hex")}, value: ${transaction.value.toString("hex")}, nonce: ${transaction.nonce.toString("hex")}`);
 		}
 
 		const self = this;

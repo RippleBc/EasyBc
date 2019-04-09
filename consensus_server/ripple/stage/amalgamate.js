@@ -3,6 +3,7 @@ const utils = require("../../../depends/utils");
 const Stage = require("./stage");
 const process = require("process");
 const assert = require("assert");
+const Transaction = require("../../../depends/transaction");
 
 const rlp = utils.rlp;
 
@@ -29,37 +30,37 @@ class Amalgamate extends Stage
 
 	handler()
 	{
-		const transactions = new Set();
+		const transactionRawsMap = new Map();
 		this.candidates.forEach(candidate => {
 			const rawTransactions = rlp.decode(candidate.transactions);
 
 			rawTransactions.forEach(rawTransaction => {
-				transactions.add(rawTransaction);
-			})
+				transactionRawsMap.set(rawTransaction.toString("hex"), rawTransaction);
+			});
 		});
 
-		this.ripple.candidateAgreement.run([...transactions]);
+		this.ripple.candidateAgreement.run([...transactionRawsMap.values()]);
 	}
 
 	/**
-	 * @param {Array} transactions
+	 * @param {Array} transactionRaws
 	 */
-	run(transactions)
+	run(transactionRaws)
 	{
-		assert(Array.isArray(transactions), `Amalgamate run, transactions should be an Array, now is ${typeof transactions}`);
+		assert(Array.isArray(transactionRaws), `Amalgamate run, transactionRaws should be an Array, now is ${typeof transactionRaws}`);
 
 		logger.warn("amalgamate begin, transactions: ");
-		for(let i = 0; i < transactions; i++)
+		for(let i = 0; i < transactionRaws.length; i++)
 		{
-			let transaction = new Transaction(`0x${transactions[i]}`)
-			logger.warn(`hash: ${transaction.hash.toString("hex")}, from: ${transaction.from.toString("hex")}, to: ${transaction.to.toString("hex")}, value: ${transaction.value.toString("hex")}, nonce: ${transaction.nonce.toString("hex")}`);
+			let transaction = new Transaction(transactionRaws[i])
+			logger.warn(`hash: ${transaction.hash().toString("hex")}, from: ${transaction.from.toString("hex")}, to: ${transaction.to.toString("hex")}, value: ${transaction.value.toString("hex")}, nonce: ${transaction.nonce.toString("hex")}`);
 		}
 
 		this.init();
 		
 		// init candidate
 		const candidate = new Candidate({
-			transactions: rlp.encode(transactions)
+			transactions: rlp.encode(transactionRaws)
 		});
 		candidate.sign(privateKey);
 

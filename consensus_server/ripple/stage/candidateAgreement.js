@@ -4,6 +4,7 @@ const Stage = require("./stage");
 const process = require("process");
 const { unl } = require("../../config.json");
 const assert = require("assert");
+const Transaction = require("../../../depends/transaction");
 
 const sha256 = utils.sha256;
 const rlp = utils.rlp;
@@ -71,17 +72,16 @@ class CandidateAgreement extends Stage
 		// return to amalgamate stage
 		logger.warn("candidate agreement failed, go to stage amalgamate");
 
-		const transactions = new Set();
+		const transactionRawsMap = new Map();
 		this.candidates.forEach(candidate => {
 			const rawTransactions = rlp.decode(candidate.transactions);
 
 			rawTransactions.forEach(rawTransaction => {
-				transactions.add(rawTransaction);
+				transactionRawsMap.set(rawTransaction.toString("hex"), rawTransaction);
 			});
 		});
 
-		this.ripple.amalgamate.reset();
-		this.ripple.amalgamate.run([...transactions]);
+		this.ripple.amalgamate.run([...transactionRawsMap.values()]);
 	}
 
 	/**
@@ -94,10 +94,10 @@ class CandidateAgreement extends Stage
 		this.init();
 
 		logger.warn("Candidate agreement begin, transactions: ");
-		for(let i = 0; i < transactions; i++)
+		for(let i = 0; i < transactions.length; i++)
 		{
-			let transaction = new Transaction(`0x${transactions[i]}`)
-			logger.warn(`hash: ${transaction.hash.toString("hex")}, from: ${transaction.from.toString("hex")}, to: ${transaction.to.toString("hex")}, value: ${transaction.value.toString("hex")}, nonce: ${transaction.nonce.toString("hex")}`);
+			let transaction = new Transaction(transactions[i])
+			logger.warn(`hash: ${transaction.hash().toString("hex")}, from: ${transaction.from.toString("hex")}, to: ${transaction.to.toString("hex")}, value: ${transaction.value.toString("hex")}, nonce: ${transaction.nonce.toString("hex")}`);
 		}
 
 		// init candidate

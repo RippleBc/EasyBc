@@ -19,6 +19,7 @@ const mysql = process[Symbol.for("mysql")];
 
 const BN = utils.BN;
 const bufferToInt = utils.bufferToInt;
+const Buffer = utils.Buffer;
 
 var updateInstance;
 
@@ -38,7 +39,7 @@ class Processor
 		this.consensus = new Consensus(self);
 
 		// transactions cache
-		this.transactionRawsCache = new Set();
+		this.transactionRawsCache = [];
 	}
 
 	run()
@@ -57,9 +58,9 @@ class Processor
 	{
 		assert(typeof size === "number", `Processor getTransactions, size should be a Number, now is ${typeof size}`);
 
-		size = size > this.transactionRawsCache.size ? this.transactionRawsCache.size : size;
+		size = size > this.transactionRawsCache.length ? this.transactionRawsCache.length : size;
 
-		return [...this.transactionRawsCache].splice(0, size);
+		return this.transactionRawsCache.splice(0, size);
 	}
 
 	/**
@@ -87,7 +88,7 @@ class Processor
 		const self = this;
 
 		const promise = new Promise((resolve, reject) => {
-			if(self.transactionRawsCache.size > TRANSACTION_CACHE_MAX_NUM)
+			if(self.transactionRawsCache.length > TRANSACTION_CACHE_MAX_NUM)
 			{
 				reject(`Processor processTransaction, this.transactionRawsCache length should be litter than ${TRANSACTION_CACHE_MAX_NUM}`);
 			}
@@ -110,7 +111,7 @@ class Processor
 
 			loggerConsensus.info(`Processor processTransaction, transaction ${transaction.hash().toString("hex")}: ${JSON.stringify(transaction.toJSON())}`);
 
-			self.transactionRawsCache.add(transactionRaw);
+			self.transactionRawsCache.push(Buffer.from(transactionRaw, "hex"));
 
 			resolve();
 		});
@@ -130,36 +131,46 @@ class Processor
 
 		assert(block instanceof Block, `Processor processBlock, block should be an Block Object, now is ${typeof block}`);
 
-		if(block.transactions.length === 0)
-		{
-			loggerConsensus.info(`Processor processBlock, block ${block.hash().toString("hex")} has no transaction`);
-			return;
-		}
-
 		do
 		{
-			const { state, msg, failedTransactions } = await this.blockChain.runBlockChain({
+			if(block.transactions.length === 0)
+			{
+				loggerConsensus.error(`Processor processBlock, block ${block.hash().toString("hex")} has no transaction`);
+				break;
+			}
+
+			const { state, msg, transactions } = await this.blockChain.runBlockChain({
 				block: block, 
 				generate: generate
 			});
 
 			// block chain is out of date, need update
-			if(state === false && msg.indexOf("run block chain, getBlockByHash key not found") >= 0)
+			if(state === false)
 			{
-				update.run().then(() => {
-					loggerUpdate.info("update is success");
-				});
-				return;
+				if(msg.indexOf("run block chain, getBlockByHash key not found") >= 0)
+				{
+					update.run().then(() => {
+						loggerUpdate.info("update is success");
+					});
+					break;
+				}
+
+				loggerConsensus.error(`Processor processBlock, some transactions are invalid: `)
+				for(let i = 0; i < transactions.length; i++)
+				{
+					const transaction = transactions[i];
+					loggerConsensus.error(`hash: ${transaction.hash().toString("hex")}, from: ${transaction.from.toString("hex")}, to: ${transaction.to.toString("hex")}, value: ${transaction.value.toString("hex")}, nonce: ${transaction.nonce.toString("hex")}`);
+				}
+
+				// del invalid transactions
+				block.delInvalidTransactions(transactions);
 			}
-
-			// del invalid transactions
-			block.delInvalidTransactions(failedTransactions);
+			else
+			{
+				break;
+			}
 		}
-		while(state === false);
-
-		// record
-		db.recordBlock(block);
-		db.recordAccount(accounts);
+		while(true);
 	}
 }
 

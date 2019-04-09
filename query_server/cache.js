@@ -31,7 +31,7 @@ class Cache
 		}
 
 		this.blockChainHeight = newBlockChainHeight;
-		this.block = await this.blockChain.getBlockByNumber(this.blockChainHeight);
+		this.block = await this.db.getBlockByNumber(this.blockChainHeight);
 		if(!this.block)
 		{
 			throw new Error(`refresh, getBlockByNumber(${this.blockChainHeight.toString()}) should not return undefined`);
