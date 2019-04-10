@@ -3,9 +3,9 @@ const utils = require("../../depends/utils");
 const { createClient, createServer, connectionsManager } = require("../../depends/fly");
 const assert = require("assert");
 
-const toBuffer = utils.toBuffer;
+const Buffer = utils.Buffer;
 
-process[Symbol.for("privateKey")] = toBuffer(privateKey);
+process[Symbol.for("privateKey")] = Buffer.from(privateKey, "hex");
 
 const loggerP2p = process[Symbol.for("loggerP2p")];
 const loggerNet = process[Symbol.for("loggerNet")];
@@ -42,7 +42,7 @@ class P2p
 					port: node.port,
 					dispatcher: dispatcher,
 					logger: loggerNet,
-					address: toBuffer(node.address)
+					address: Buffer.from(node.address, "hex")
 				});
 
 				loggerP2p.info(`P2p init, connect to address: ${node.address}, host: ${node.host}, port: ${node.port} is successed`);
@@ -59,7 +59,7 @@ class P2p
 			for(let i = 0; i < unl.length; i++)
 			{
 				const node = unl[i];
-				const connection = connectionsManager.get(toBuffer(node.address));
+				const connection = connectionsManager.get(Buffer.from(node.address, "hex"));
 
 				if(!connection || connection.closed)
 				{
@@ -68,7 +68,7 @@ class P2p
 						port: node.port,
 						dispatcher: dispatcher,
 						logger: loggerNet,
-						address: toBuffer(node.address)
+						address: Buffer.from(node.address, "hex")
 					}).then(connection => {
 						loggerP2p.info(`P2p, reconnect to address: ${node.address}, host: ${node.host}, port: ${node.port} is successed`);
 					}).catch(e => {
@@ -105,7 +105,7 @@ class P2p
 
 		for(let i = 0; i < unl.length; i++)
 		{
-			const connection = connectionsManager.get(toBuffer(unl[i].address));
+			const connection = connectionsManager.get(Buffer.from(unl[i].address, "hex"));
 			if(connection && !connection.closed)
 			{
 				try
