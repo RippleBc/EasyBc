@@ -4,7 +4,7 @@
   "description": "a tiny block chain client",
   "main": "index.js",
   "bin": {
-    "toolkit": "./toolkit/index.js"
+      "toolkit": "./toolkit/index.js"
   },
   "dependencies": {
     "async": "^2.6.1",

@@ -1,7 +1,7 @@
+#!/usr/bin/env node
+
 const program = require("commander");
 const utils = require("../depends/utils");
-
-#!/usr/bin/env node
 
 const createPrivateKey = utils.createPrivateKey;
 const publicToAddress = utils.publicToAddress;
