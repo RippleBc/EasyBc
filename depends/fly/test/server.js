@@ -5,8 +5,9 @@ const Message = require("../net/message");
 
 const toBuffer = utils.toBuffer;
 const bufferToInt = utils.bufferToInt;
+const Buffer = utils.Buffer;
 
-process[Symbol.for("privateKey")] = toBuffer("0x459705e79404b3604e4eef0aa1becedef1a227865a122826106f7f511682ea86");
+process[Symbol.for("privateKey")] = Buffer.from("7a82f175255e14747eb2eb6442da96d11b60147a5e1f1c864ae333105b7be6f6", "hex");
 
 let testJSON = {
 	"cmd": 1,

@@ -5,8 +5,9 @@ const Message = require("../net/message");
 
 const toBuffer = utils.toBuffer;
 const bufferToInt = utils.bufferToInt;
+const Buffer = utils.Buffer;
 
-process[Symbol.for("privateKey")] = toBuffer("0x459705e79404b3604e4eef0aa1becedef1a227865a122826106f7f511682ea86");
+process[Symbol.for("privateKey")] = Buffer.from("7a82f175255e14747eb2eb6442da96d11b60147a5e1f1c864ae333105b7be6f6", "hex");
 
 let testJSON = {
 	"cmd": 1,
@@ -21,7 +22,7 @@ testData = toBuffer(JSON.stringify(testJSON));
 createClient({
 	host: "localhost",
 	port: 8080,
-	address: toBuffer("0x6ea3ba30a7e81d92ad8aa2e359c5d8f297fc0fb1"),
+	address: Buffer.from("5e3d6df0d0981e49250ec2538c29846900259356", "hex"),
 	dispatcher: function(message) {
 		console.log(`client receive message: ${message.data.toString()}`);
 
