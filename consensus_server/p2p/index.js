@@ -31,9 +31,7 @@ class P2p
 		const server = await createServer({
 	    host: tcp.host,
 	    port: tcp.port,
-	    dispatcher: message => {
-	    	dispatcher.call(this, message);
-	    },
+	    dispatcher: dispatcher,
 	    logger: loggerNet
 	  });
 
@@ -47,10 +45,7 @@ class P2p
 				await createClient({
 					host: node.host,
 					port: node.port,
-					dispatcher: message => {
-						loggerNet.error("this a: " + this.write);
-			    	dispatcher.call(this, message);
-			    },
+					dispatcher: dispatcher,
 					logger: loggerNet,
 					address: Buffer.from(node.address, "hex")
 				});
@@ -74,9 +69,7 @@ class P2p
 					createClient({
 						host: node.host,
 						port: node.port,
-						dispatcher: message => {
-				    	dispatcher.call(this, message);
-				    },
+						dispatcher: dispatcher,
 						logger: loggerNet,
 						address: Buffer.from(node.address, "hex")
 					}).then(connection => {

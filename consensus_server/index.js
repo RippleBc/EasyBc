@@ -40,8 +40,8 @@ const Processor = require("./processor");
 const processor = new Processor();
 
 /************************************** init p2p and consensus **************************************/
-p2p.init((message) => {
-    processor.handleMessage(this.address, message);
+p2p.init((address, message) => {
+    processor.handleMessage(address, message);
 });
 
 processor.run();
