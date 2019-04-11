@@ -20,13 +20,20 @@ class P2p
 		assert(typeof tcp.port === "number", `P2p constructor, tcp.port should be a Number, now is ${typeof tcp.port}`);
 	}
 
+	/**
+	 * @param {Function} dispatcher
+	 */
 	async init(dispatcher)
 	{
+		assert(typeof dispatcher === "function", `P2p init, dispatcher should be a Function, now is ${typeof dispatcher}`);
+
 		// init server
 		const server = await createServer({
 	    host: tcp.host,
 	    port: tcp.port,
-	    dispatcher: dispatcher,
+	    dispatcher: message => {
+	    	dispatcher.call(this, message);
+	    },
 	    logger: loggerNet
 	  });
 
@@ -40,7 +47,10 @@ class P2p
 				await createClient({
 					host: node.host,
 					port: node.port,
-					dispatcher: dispatcher,
+					dispatcher: message => {
+						loggerNet.error("this a: " + this.write);
+			    	dispatcher.call(this, message);
+			    },
 					logger: loggerNet,
 					address: Buffer.from(node.address, "hex")
 				});
@@ -64,7 +74,9 @@ class P2p
 					createClient({
 						host: node.host,
 						port: node.port,
-						dispatcher: dispatcher,
+						dispatcher: message => {
+				    	dispatcher.call(this, message);
+				    },
 						logger: loggerNet,
 						address: Buffer.from(node.address, "hex")
 					}).then(connection => {

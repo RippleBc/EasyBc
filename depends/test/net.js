@@ -96,9 +96,7 @@ describe("net test", function() {
 			host: "localhost",
 			port: 8080,
 			dispatcher: function(message) {
-				assert.equal(bufferToInt(message.cmd), 10, `cmd should be 10, now is ${bufferToInt(message.cmd)}`);
-				assert.equal(message.data.toString(), "walker", `data.name should be walker, now is ${message.data.toString()}`);
-				this.write(10, "walker");
+				
 			}
 		});
 
@@ -111,7 +109,6 @@ describe("net test", function() {
 					assert.equal(message.data.toString(), "walker", `data.name should be walker, now is ${message.data.toString()}`);
 
 					server.close();
-
 					done();
 				},
 				address: toBuffer("0x6ea3ba30a7e81d92ad8aa2e359c5d8f297fc0fb1")

@@ -41,8 +41,7 @@ const processor = new Processor();
 
 /************************************** init p2p and consensus **************************************/
 p2p.init((message) => {
-    const self = this; // note this reprent a fly Connection Object
-    processor.handleMessage(self.address, message);
+    processor.handleMessage(this.address, message);
 });
 
 processor.run();
