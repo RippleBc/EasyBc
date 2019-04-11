@@ -55,10 +55,9 @@ class Ripple
 			{
 				this.blockAgreement.handler();
 				this.blockAgreement.reset();
-
-				this.amalgamate.handleMessage(address, cmd, data);
 			}
-			else if(this.amalgamate.checkProcessingState() || this.amalgamate.checkFinishState())
+			
+			if(this.amalgamate.checkProcessingState() || this.amalgamate.checkFinishState())
 			{
 				this.amalgamate.handleMessage(address, cmd, data);
 			}
@@ -75,10 +74,9 @@ class Ripple
 			{
 				this.amalgamate.handler();
 				this.amalgamate.reset();
-
-				this.candidateAgreement.handleMessage(address, cmd, data);
 			}
-			else if(this.candidateAgreement.checkProcessingState() || this.candidateAgreement.checkFinishState())
+
+			if(this.candidateAgreement.checkProcessingState() || this.candidateAgreement.checkFinishState())
 			{
 				this.candidateAgreement.handleMessage(address, cmd, data);
 			}
@@ -95,10 +93,9 @@ class Ripple
 			{
 				this.candidateAgreement.handler();
 				this.candidateAgreement.reset();
-
-				this.blockAgreement.handleMessage(address, cmd, data);
 			}
-			else if(this.blockAgreement.checkProcessingState() || this.blockAgreement.checkFinishState())
+			
+			if(this.blockAgreement.checkProcessingState() || this.blockAgreement.checkFinishState())
 			{
 				this.blockAgreement.handleMessage(address, cmd, data);
 			}
