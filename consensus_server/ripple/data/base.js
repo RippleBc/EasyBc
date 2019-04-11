@@ -109,7 +109,7 @@ class Base
     {
       const node = unl[i];
 
-      if(address.toString("hex") === uitls.stripHexPrefix(node.address))
+      if(address.toString("hex") === utils.stripHexPrefix(node.address))
       {
         return true;
       }
