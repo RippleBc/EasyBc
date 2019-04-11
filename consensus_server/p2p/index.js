@@ -44,8 +44,6 @@ class P2p
 					logger: loggerNet,
 					address: Buffer.from(node.address, "hex")
 				});
-
-				loggerP2p.info(`P2p init, connect to address: ${node.address}, host: ${node.host}, port: ${node.port} is successed`);
 			}
 			catch(e)
 			{
