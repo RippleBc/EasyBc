@@ -100,6 +100,8 @@ class Stage
 		assert(typeof cmd === "number", `Stage handleMessage, cmd should be a Number, now is ${typeof cmd}`);
 		assert(Buffer.isBuffer(data), `Stage handleMessage, data should be an Buffer, now is ${typeof data}`);
 
+		assert(state !== STATE_EMPTY, `Stage handleMessage, address ${address.toString("hex")}, message should not enter an emtpy stage`);
+		
 		switch(cmd)
 		{
 			case this.finish_state_request_cmd:
@@ -125,8 +127,6 @@ class Stage
 			{
 				const nodeInfo = rlp.decode(data);
 				const state = bufferToInt(nodeInfo[0]);
-				
-				assert(state !== STATE_EMPTY, `Stage handleMessage, address ${address.toString("hex")}, message should not enter an emtpy stage`);
 
 				if(state === STATE_PROCESSING)
 				{
