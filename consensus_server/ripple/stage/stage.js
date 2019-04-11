@@ -100,8 +100,8 @@ class Stage
 		assert(typeof cmd === "number", `Stage handleMessage, cmd should be a Number, now is ${typeof cmd}`);
 		assert(Buffer.isBuffer(data), `Stage handleMessage, data should be an Buffer, now is ${typeof data}`);
 
-		assert(state !== STATE_EMPTY, `Stage handleMessage, address ${address.toString("hex")}, message should not enter an emtpy stage`);
-		
+		assert(this.state !== STATE_EMPTY, `Stage handleMessage, address ${address.toString("hex")}, message should not enter an emtpy stage`);
+
 		switch(cmd)
 		{
 			case this.finish_state_request_cmd:
@@ -156,12 +156,18 @@ class Stage
 					});
 
 					this.finish.recordFinishNode(address.toString("hex"));
+
+					logger.warn(`Stage handleMessage, address ${address.toString("hex")} consensus timeout`);
 				}
-				else
+				else if(state === STATE_SUCCESS_FINISH)
 				{
 					this.finish.recordFinishNode(address.toString("hex"));
 
-					logger.warn(`Stage handleMessage, address ${address.toString("hex")}, can success handle all stage`);
+					logger.warn(`Stage handleMessage, address ${address.toString("hex")} have consensus all nondes`);
+				}
+				else
+				{
+					logger.error(`Stage handleMessage, address ${address.toString("hex")} is not consensus`);
 				}
 			}
 		}

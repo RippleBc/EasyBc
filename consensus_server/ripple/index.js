@@ -18,6 +18,9 @@ class Ripple
 	{
 		this.processor = processor;
 
+		this.round = 0;
+		this.stage = 0;
+
 		this.amalgamate = new Amalgamate(this);
 		this.candidateAgreement = new CandidateAgreement(this);
 		this.blockAgreement = new BlockAgreement(this);
@@ -35,6 +38,9 @@ class Ripple
 			this.processingTransactions = this.processor.getTransactions(MAX_PROCESS_TRANSACTIONS_SIZE);
 		}
 		
+		this.round += 1;
+		this.stage = 0;
+
 		this.amalgamate.run(this.processingTransactions);
 	}
 
@@ -82,7 +88,7 @@ class Ripple
 			}
 			else
 			{
-				logger.error(`Ripple handleMessage, address ${address.toString("hex")} is not consensus, amalgamate stage is not over`);
+				logger.error(`Ripple handleMessage, address ${ .toString("hex")} is not consensus, amalgamate stage is not over`);
 
 				p2p.send(address, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE);
 			}
@@ -116,7 +122,7 @@ class Ripple
 					setTimeout(() => {
 						logger.error("amalgamate stage is invalid, waiting for amalgamate stage");
 
-						self.run(true);
+						// self.run(true);
 					}, INVALID_STAGE_RETRY_TIME)
 				}
 				break;
@@ -124,16 +130,16 @@ class Ripple
 				{
 					logger.error("candidate agreement stage is invalid, jump to amalgamate stage");
 
-					this.reset();
-					this.run();
+					// this.reset();
+					// this.run();
 				}
 				break;
 				case PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE:
 				{
 					logger.error("block agreement stage is invalid, jump to amalgamate stage");
 
-					this.reset();
-					this.run();
+					// this.reset();
+					// this.run();
 				}
 				break;
 			}
