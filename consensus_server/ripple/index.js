@@ -88,7 +88,7 @@ class Ripple
 			}
 			else
 			{
-				logger.error(`Ripple handleMessage, address ${ .toString("hex")} is not consensus, amalgamate stage is not over`);
+				logger.error(`Ripple handleMessage, address ${address.toString("hex")} is not consensus, amalgamate stage is not over`);
 
 				p2p.send(address, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE);
 			}
