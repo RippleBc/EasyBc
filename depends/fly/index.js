@@ -53,6 +53,8 @@ exports.createClient = async function(opts)
 
 	const connection = await onConnect(client, dispatcher, address, host, port);
 
+	logger.info(`create an connection on address: ${address.toString("hex")} host: ${host} port: ${port} successed`);
+
 	try
 	{
 		await connection.authorize();
@@ -91,6 +93,9 @@ exports.createServer = function(opts)
 			socket: socket,
 			dispatcher: dispatcher
 		});
+
+		const address = socket.address();
+		logger.info(`receive an connection on port: ${address.port}, family: ${address.family}, host: ${address.address} successed`);
 
 		connection.authorize().then(() => {
 			exports.connectionsManager.push(connection);
