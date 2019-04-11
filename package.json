@@ -36,9 +36,10 @@
     "mysql": "^2.16.0"
   },
   "scripts": {
-    "consensus_server": "node consensus_server/index.js",
-    "query_server": "node query_server/index.js",
-    "transaction_client": "node transaction_client/index.js",
+    "consensus_server": "pm2 start consensus_server/index.js --name=consensus",
+    "query_server": "pm2 start query_server/index.js --name=query",
+    "transaction_client": "pm2 start transaction_client/index.js --name=transaction",
+    "all": "pm2 start query_server/index.js --name=query && pm2 start consensus_server/index.js --name=consensus",
     "test": "mocha depends/test/account.js && mocha depends/test/transaction.js && mocha depends/test/block.js && mocha depends/test/cache.js && mocha depends/test/stateManager.js && mocha depends/test/runBlockChain.js && mocha depends/test/net.js"
   },
   "keywords": [
