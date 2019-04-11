@@ -23,7 +23,7 @@ class P2p
 	async init(dispatcher)
 	{
 		// init server
-		const server = createServer({
+		const server = await createServer({
 	    host: tcp.host,
 	    port: tcp.port,
 	    dispatcher: dispatcher,

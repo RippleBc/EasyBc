@@ -53,6 +53,11 @@ class Db
 	{
 		
 	}
+
+	async saveTransactions()
+	{
+		
+	}
 }
 
 var db = new Db(path.join(__dirname, "./data1"));
