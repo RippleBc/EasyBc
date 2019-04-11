@@ -2,6 +2,7 @@ const Amalgamate = require("./stage/amalgamate");
 const CandidateAgreement = require("./stage/candidateAgreement");
 const BlockAgreement = require("./stage/blockAgreement");
 const { MAX_PROCESS_TRANSACTIONS_SIZE, STATE_EMPTY, STATE_SUCCESS_FINISH, STATE_TIMEOUT_FINISH, INVALID_STAGE_RETRY_TIME } = require("../constant");
+const assert = require("assert");
 
 const p2p = process[Symbol.for("p2p")];
 
