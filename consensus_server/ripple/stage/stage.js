@@ -2,6 +2,7 @@ const { unl } = require("../../config.json");
 const { STAGE_PRIMARY_TIMEOUT, STAGE_FINISH_TIMEOUT, STAGE_MAX_FINISH_TIMES, STATE_EMPTY, STATE_PROCESSING, STATE_SUCCESS_FINISH, STATE_TIMEOUT_FINISH } = require("../../constant");
 const process = require("process");
 const utils = require("../../../depends/utils");
+const assert = require("assert");
 
 const stripHexPrefix = utils.stripHexPrefix;
 const rlp = utils.rlp;
