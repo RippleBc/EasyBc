@@ -4,13 +4,13 @@ const Base = require("./base");
 const Buffer = utils.Buffer;
 
 /**
- * Creates a new Time object
+ * Creates a new Counter object
  *
  * @class
  * @constructor
  * @prop 
  */
-class Time extends Base
+class Counter extends Base
 {
 	constructor(data)
 	{
@@ -20,7 +20,16 @@ class Time extends Base
 
 		// Define Properties
     const fields = [{
-      name: "time",
+      name: "round",
+      length: 32,
+      allowZero: true,
+      allowLess: true,
+      default: Buffer.alloc(0)
+    }, {
+      name: "stage",
+      length: 32,
+      allowZero: true,
+      allowLess: true,
       default: Buffer.alloc(0)
     }, {
       name: "v",
@@ -46,4 +55,4 @@ class Time extends Base
 	}
 }
 
-module.exports = Time;
+module.exports = Counter;

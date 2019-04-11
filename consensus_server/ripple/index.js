@@ -8,9 +8,9 @@ const p2p = process[Symbol.for("p2p")];
 
 const logger = process[Symbol.for("loggerConsensus")];
 
-const PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE = 500;
-const PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE = 501;
-const PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE = 502;
+const STAGE_AMALGAMATE = 0;
+const STAGE_CANDIDATE_AGREEMENT = 1;
+const STAGE_BLOCK_AGREEMENT = 2;
 
 class Ripple
 {
@@ -42,6 +42,15 @@ class Ripple
 		this.stage = 0;
 
 		this.amalgamate.run(this.processingTransactions);
+	}
+
+	/**
+	 * @param {Buffer} round
+	 * @param {Buffer} stage
+	 */
+	handleCounter(round, stage)
+	{
+
 	}
 
 	/**
@@ -93,6 +102,10 @@ class Ripple
 				p2p.send(address, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE);
 			}
 		}
+		else if(cmd >= 300 && cmd < 400)
+		{
+			this.counter.handleMessage(address, cmd, data);
+		}
 		else if(cmd >= 400 && cmd < 500)
 		{
 			if(this.candidateAgreement.checkFinishState())
@@ -114,35 +127,7 @@ class Ripple
 		}
 		else
 		{
-			switch(cmd)
-			{
-				case PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE:
-				{
-					const self = this;
-					setTimeout(() => {
-						logger.error("amalgamate stage is invalid, waiting for amalgamate stage");
-
-						// self.run(true);
-					}, INVALID_STAGE_RETRY_TIME)
-				}
-				break;
-				case PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE:
-				{
-					logger.error("candidate agreement stage is invalid, jump to amalgamate stage");
-
-					// this.reset();
-					// this.run();
-				}
-				break;
-				case PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE:
-				{
-					logger.error("block agreement stage is invalid, jump to amalgamate stage");
-
-					// this.reset();
-					// this.run();
-				}
-				break;
-			}
+			
 		}
 	}
 
