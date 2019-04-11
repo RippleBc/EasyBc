@@ -21,7 +21,7 @@ class Ripple
 		this.candidateAgreement = new CandidateAgreement(this);
 		this.blockAgreement = new BlockAgreement(this);
 
-		this.processingTransactions = undefined;
+		this.processingTransactions = [];
 	}
 
 	/*
@@ -63,7 +63,7 @@ class Ripple
 			}
 			else
 			{
-				logger.warn(`Ripple handleMessage, address ${address.toString("hex")} is too quick, block agreement stage is not over`);
+				logger.error(`Ripple handleMessage, address ${address.toString("hex")} is not consensus, block agreement stage is not over`);
 
 				p2p.send(address, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE);
 			}
@@ -83,7 +83,7 @@ class Ripple
 			}
 			else
 			{
-				logger.warn(`Ripple handleMessage, address ${address.toString("hex")} is too quick, amalgamate stage is not over`);
+				logger.error(`Ripple handleMessage, address ${address.toString("hex")} is not consensus, amalgamate stage is not over`);
 
 				p2p.send(address, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE);
 			}
@@ -103,7 +103,7 @@ class Ripple
 			}
 			else
 			{
-				logger.warn(`Ripple handleMessage, address ${address.toString("hex")} is too quick, candidate agreement stage is not over`);
+				logger.error(`Ripple handleMessage, address ${address.toString("hex")} is not consensus, candidate agreement stage is not over`);
 
 				p2p.send(address, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE);
 			}
@@ -116,22 +116,37 @@ class Ripple
 				{
 					const self = this;
 					setTimeout(() => {
-						self.run(true)
+						logger.error("amalgamate stage is invalid, waiting for amalgamate stage");
+
+						self.run(true);
 					}, INVALID_STAGE_RETRY_TIME)
 				}
 				break;
 				case PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE:
 				{
+					logger.error("candidate agreement stage is invalid, jump to amalgamate stage");
+
+					this.reset();
 					this.run();
 				}
 				break;
 				case PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE:
 				{
+					logger.error("block agreement stage is invalid, jump to amalgamate stage");
+
+					this.reset();
 					this.run();
 				}
 				break;
 			}
 		}
+	}
+
+	reset()
+	{
+		this.amalgamate.reset();
+		this.candidateAgreement.reset();
+		this.blockAgreement.reset();
 	}
 }
 
