@@ -128,7 +128,7 @@ class CandidateAgreement extends Stage
 		{
 			case PROTOCOL_CMD_CANDIDATE_AGREEMENT:
 			{
-				this.handleCandidateAgreement(data);
+				this.handleCandidateAgreement(address, data);
 			}
 			break;
 			default:

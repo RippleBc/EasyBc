@@ -86,7 +86,7 @@ class Amalgamate extends Stage
 		{
 			case PROTOCOL_CMD_CANDIDATE_AMALGAMATE:
 			{
-				this.handleAmalgamate(data);
+				this.handleAmalgamate(address, data);
 			}
 			break;
 			default:

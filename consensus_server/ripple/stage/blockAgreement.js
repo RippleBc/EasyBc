@@ -152,7 +152,7 @@ class BlockAgreement extends Stage
 		{
 			case PROTOCOL_CMD_BLOCK_AGREEMENT:
 			{
-				this.handleBlockAgreement(data);
+				this.handleBlockAgreement(address, data);
 			}
 			break;
 			default:
