@@ -24,19 +24,19 @@ class Stage
 		
 		const self = this;
 		this.primary = new Sender(result => {
-			self.finish.initFinishTimeout();
-			p2p.sendAll(self.finish_state_request_cmd);
-
 			if(result)
 			{
 				logger.warn("primary stage is over because of timeout");
-				self.state = STATE_SUCCESS_FINISH;
+				self.state = STATE_TIMEOUT_FINISH;
 			}
 			else
 			{
 				logger.info("primary stage is over success");
-				self.state = STATE_TIMEOUT_FINISH;
+				self.state = STATE_SUCCESS_FINISH;
 			}
+
+			self.finish.initFinishTimeout();
+			p2p.sendAll(self.finish_state_request_cmd);
 		}, STAGE_PRIMARY_TIMEOUT);
 
 		let finishTimes = STAGE_MAX_FINISH_TIMES;
