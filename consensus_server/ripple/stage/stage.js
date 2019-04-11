@@ -212,7 +212,8 @@ class Sender
 		this.finishAddresses.add(address);
 
 		// check if all nodes is active
-		for(let i = 0; i < unl.length; i++)
+		let i;
+		for(i = 0; i < unl.length; i++)
 		{
 			if(!this.finishAddresses.has(stripHexPrefix(unl[i])))
 			{
