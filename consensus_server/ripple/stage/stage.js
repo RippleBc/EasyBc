@@ -155,11 +155,11 @@ class Stage
 						}
 					});
 
-					this.finish.recordFinishNode(address);
+					this.finish.recordFinishNode(address.toString("hex"));
 				}
 				else
 				{
-					this.finish.recordFinishNode(address);
+					this.finish.recordFinishNode(address.toString("hex"));
 
 					logger.warn(`Stage handleMessage, address ${address.toString("hex")}, can success handle all stage`);
 				}
