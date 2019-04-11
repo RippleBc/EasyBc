@@ -64,10 +64,10 @@ exports.createClient = async function(opts)
 		return Promise.reject(`authorize is failed, client connected on port: ${client.address().port}, family: ${client.address().family}, host: ${client.address().address}, ${e}`);
 	}
 
-	exports.connectionsManager.push(connection);
-
 	// info
 	logger.info(`authorize successed, client connected on port: ${client.address().port}, family: ${client.address().family}, host: ${client.address().address}`);
+
+	exports.connectionsManager.push(connection);
 
 	return connection;
 }
@@ -98,11 +98,11 @@ exports.createServer = function(opts)
 		logger.info(`receive an connection on port: ${address.port}, family: ${address.family}, host: ${address.address} successed`);
 
 		connection.authorize().then(() => {
-			exports.connectionsManager.push(connection);
-
 			// info
 			const address = socket.address();
 			logger.info(`authorize successed, receive an connection port: ${address.port}, family: ${address.family}, host: ${address.address}`);
+			
+			exports.connectionsManager.push(connection);
 		}).catch(e => {
 			logger.error(`authorize failed, receive an connection port: ${address.port}, family: ${address.family}, host: ${address.address}, ${e}`)
 		});
