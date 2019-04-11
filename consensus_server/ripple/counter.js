@@ -23,8 +23,9 @@ class Counter
 	{
 		this.ripple = ripple;
 		this.counters = [];
+		this.lastStage = 0;
 		this.stageValidTimes = 0;
-		
+
 		// should store in database
 		this.threshould = 0.5;
 	}

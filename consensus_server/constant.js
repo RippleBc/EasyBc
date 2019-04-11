@@ -18,3 +18,7 @@ module.exports.STATE_TIMEOUT_FINISH = 3;
 
 //
 module.exports.INVALID_STAGE_RETRY_TIME = 1000;
+
+//
+module.exports.STAGE_CONSENSUS = 0;
+module.exports.STAGE_UNCONSENSUS = 1;
