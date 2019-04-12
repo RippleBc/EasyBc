@@ -7,6 +7,7 @@ const Counter = require("./counter");
 const utils = require("../../depends/utils");
 
 const bufferToInt = utils.bufferToInt;
+const rlp = utils.rlp;
 
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
@@ -100,7 +101,7 @@ class Ripple
 		else if(stage === RIPPLE_STAGE_CANDIDATE_AGREEMENT)
 		{
 			setTimeout(() => {
-				self.blockAgreement.run([]);
+				self.blockAgreement.run(rlp.encode([]));
 				self.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
 			}, delayTime);
 		}
