@@ -19,6 +19,8 @@ class Ripple
 
 		this.round = 0;
 		this.stage = 0;
+
+		// this should store in database
 		this.pursueTime = 0;
 
 		this.counter = new Counter(this);
@@ -73,7 +75,7 @@ class Ripple
 
 		// compute new round and stage
 		const self = this;
-		const delayTime = primaryConsensusTime +  finishConsensusTime - pastTime + pursueTime;
+		const delayTime = primaryConsensusTime +  finishConsensusTime - pastTime + this.pursueTime;
 		if(stage === RIPPLE_STAGE_AMALGAMATE)
 		{
 			setTimeout(() => {
