@@ -97,7 +97,7 @@ class Counter
 			case PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE:
 			case PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE:
 			{
-				logger.error(`******************************\nstage is invalid, my round: ${this.ripple.round}, my stage: ${this.ripple.stage}******************************\n\n\n\n`);
+				logger.error(`******************************\nstage may be invalid, my round: ${this.ripple.round}, my stage: ${this.ripple.stage}******************************\n\n\n\n`);
 
 				const now = Date.now();
 
@@ -106,6 +106,9 @@ class Counter
 				const stageValidTimesInSpecifiedTimeSection = this.stageValidStatistics.filter(ele => { 
 					ele + COUNTER_INVALID_STAGE_TIME_SECTION > now;
 				}).length;
+
+				logger.info(`handle stage consensus, stageValidTimesInSpecifiedTimeSection: ${stageValidTimesInSpecifiedTimeSection}, this.threshould * unl.length: ${this.threshould * unl.length}`)
+				logger.info(`handle stage consensus, this.threshould: ${this.threshould}, unl.length: ${unl.length}`);
 
 				if(stageValidTimesInSpecifiedTimeSection >= this.threshould * unl.length)
 				{

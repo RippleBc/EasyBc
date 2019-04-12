@@ -58,7 +58,7 @@ class Ripple
 		logger.warn(`**************************************\nRipple, begin to handle consensus, unl's round: ${round}, stage: ${stage}, primaryConsensusTime: ${primaryConsensusTime}, finishConsensusTime: ${finishConsensusTime}, pastTime: ${pastTime}`);
 		logger.warn(`Ripple, begin to handle consensus, my round: ${this.round}, stage: ${this.stage}**************************************\n\n\n\n\n`);
 
-		if(this.round >= round)
+		if(this.round >= round  && this.stage >= stage)
 		{
 			logger.info("************************************ I'm fast ************************************");
 
