@@ -150,11 +150,15 @@ class Counter
 					counterData.finishConsensusTime = this.ripple.candidateAgreement.averageFinishTime;
 					counterData.pastTime = Date.now() - this.ripple.candidateAgreement.primary.consensusBeginTime;
 				}
-				else
+				else if(this.ripple.state === RIPPLE_STAGE_BLOCK_AGREEMENT)
 				{
 					counterData.primaryConsensusTime = this.ripple.blockAgreement.averagePrimaryTime;
 					counterData.finishConsensusTime = this.ripple.blockAgreement.averageFinishTime;
 					counterData.pastTime = Date.now() - this.ripple.blockAgreement.primary.consensusBeginTime;
+				}
+				else
+				{
+					throw new Error("Counter, invalid ripple stage");
 				}
 				counterData.sign(privateKey);
 

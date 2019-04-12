@@ -90,7 +90,7 @@ class Ripple
 
 		// compute new round and stage
 		const self = this;
-		const delayTime = primaryConsensusTime +  finishConsensusTime - pastTime + this.pursueTime;
+		const delayTime = ( primaryConsensusTime +  finishConsensusTime - pastTime > 0 ? primaryConsensusTime +  finishConsensusTime - pastTime : 0 ) + this.pursueTime;
 		if(stage === RIPPLE_STAGE_AMALGAMATE)
 		{
 			setTimeout(() => {
