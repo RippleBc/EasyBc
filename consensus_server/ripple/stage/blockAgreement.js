@@ -6,7 +6,7 @@ const process = require("process");
 const async = require("async");
 const assert = require("assert");
 const { unl } = require("../../config.json");
-const { STAGE_BLOCK_AGREEMENT } = require("../../constant");
+const { TRANSACTIONS_CONSENSUS_THRESHOULD, RIPPLE_STAGE_BLOCK_AGREEMENT, PROTOCOL_CMD_BLOCK_AGREEMENT, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_REQUEST, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE } = require("../../constant");
 
 const sha256 = utils.sha256;
 const Buffer = utils.Buffer;
@@ -16,12 +16,6 @@ const rlp = utils.rlp;
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
 const privateKey = process[Symbol.for("privateKey")];
-
-const PROTOCOL_CMD_BLOCK_AGREEMENT = 400;
-const PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_REQUEST = 401;
-const PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE = 402;
-
-const THRESHOULD = 0.8;
 
 class BlockAgreement extends Stage
 {
@@ -64,7 +58,7 @@ class BlockAgreement extends Stage
 			return -block[1].count;
 		});
 
-		if(sortedBlocks[0] && sortedBlocks[0][1].count / unl.length >= THRESHOULD)
+		if(sortedBlocks[0] && sortedBlocks[0][1].count / unl.length >= TRANSACTIONS_CONSENSUS_THRESHOULD)
 		{
 			logger.warn("block agreement success");
 
@@ -90,7 +84,7 @@ class BlockAgreement extends Stage
  	{
  		assert(Buffer.isBuffer(transactions), `BlockAgreement run, transactions should be an Buffer, now is ${typeof transactions}`);
 
- 		this.ripple.stage = STAGE_BLOCK_AGREEMENT;
+ 		this.ripple.stage = RIPPLE_STAGE_BLOCK_AGREEMENT;
 		this.init();
 
  		// init block

@@ -4,17 +4,13 @@ const Stage = require("./stage");
 const process = require("process");
 const assert = require("assert");
 const Transaction = require("../../../depends/transaction");
-const { STAGE_AMALGAMATE } = require("../../constant");
+const { RIPPLE_STAGE_AMALGAMATE, PROTOCOL_CMD_CANDIDATE_AMALGAMATE, PROTOCOL_CMD_CANDIDATE_AMALGAMATE_FINISH_STATE_REQUEST, PROTOCOL_CMD_CANDIDATE_AMALGAMATE_FINISH_STATE_RESPONSE } = require("../../constant");
 
 const rlp = utils.rlp;
 
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
 const privateKey = process[Symbol.for("privateKey")];
-
-const PROTOCOL_CMD_CANDIDATE_AMALGAMATE = 100;
-const PROTOCOL_CMD_CANDIDATE_AMALGAMATE_FINISH_STATE_REQUEST = 101;
-const PROTOCOL_CMD_CANDIDATE_AMALGAMATE_FINISH_STATE_RESPONSE = 102;
 
 class Amalgamate extends Stage
 {
@@ -50,7 +46,7 @@ class Amalgamate extends Stage
 	{
 		assert(Array.isArray(transactionRaws), `Amalgamate run, transactionRaws should be an Array, now is ${typeof transactionRaws}`);
 
-		this.ripple.stage = STAGE_AMALGAMATE;
+		this.ripple.stage = RIPPLE_STAGE_AMALGAMATE;
 		this.init();
 
 		logger.warn("amalgamate begin, transactions: ");

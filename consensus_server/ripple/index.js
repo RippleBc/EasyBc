@@ -1,7 +1,7 @@
 const Amalgamate = require("./stage/amalgamate");
 const CandidateAgreement = require("./stage/candidateAgreement");
 const BlockAgreement = require("./stage/blockAgreement");
-const { MAX_PROCESS_TRANSACTIONS_SIZE, STAGE_AMALGAMATE, STAGE_CANDIDATE_AGREEMENT, STAGE_BLOCK_AGREEMENT } = require("../constant");
+const { MAX_PROCESS_TRANSACTIONS_SIZE, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT } = require("../constant");
 const assert = require("assert");
 
 const p2p = process[Symbol.for("p2p")];
@@ -73,14 +73,14 @@ class Ripple
 		// compute new round and stage
 		const self = this;
 		const delayTime = primaryConsensusTime +  finishConsensusTime - pastTime + pursueTime;
-		if(stage === STAGE_AMALGAMATE)
+		if(stage === RIPPLE_STAGE_AMALGAMATE)
 		{
 			setTimeout(() => {
 				self.candidateAgreement.run([]);
 				this.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
 			}, delayTime);
 		}
-		else if(stage === STAGE_CANDIDATE_AGREEMENT)
+		else if(stage === RIPPLE_STAGE_CANDIDATE_AGREEMENT)
 		{
 			setTimeout(() => {
 				self.blockAgreement.run([]);

@@ -5,7 +5,7 @@ const process = require("process");
 const { unl } = require("../../config.json");
 const assert = require("assert");
 const Transaction = require("../../../depends/transaction");
-const { STAGE_CANDIDATE_AGREEMENT } = require("../../constant");
+const { TRANSACTIONS_CONSENSUS_THRESHOULD, RIPPLE_STAGE_CANDIDATE_AGREEMENT, PROTOCOL_CMD_CANDIDATE_AGREEMENT, PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_REQUEST, PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_RESPONSE } = require("../../constant");
 
 const sha256 = utils.sha256;
 const rlp = utils.rlp;
@@ -13,12 +13,6 @@ const rlp = utils.rlp;
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
 const privateKey = process[Symbol.for("privateKey")];
-
-const PROTOCOL_CMD_CANDIDATE_AGREEMENT = 200;
-const PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_REQUEST = 201;
-const PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_RESPONSE = 202;
-
-const THRESHOULD = 0.8;
 
 class CandidateAgreement extends Stage
 {
@@ -62,7 +56,7 @@ class CandidateAgreement extends Stage
 			return -transactionColl[1].count;
 		});
 
-		if(sortedTransactionColls[0] && sortedTransactionColls[0][1].count / unl.length >= THRESHOULD)
+		if(sortedTransactionColls[0] && sortedTransactionColls[0][1].count / unl.length >= TRANSACTIONS_CONSENSUS_THRESHOULD)
 		{
 			logger.warn("candidate agreement success, go to next stage");
 
@@ -92,7 +86,7 @@ class CandidateAgreement extends Stage
 	{
 		assert(Array.isArray(transactions), `CandidateAgreement run, transactions should be an Array, now is ${typeof transactions}`);
 
-		this.ripple.stage = STAGE_CANDIDATE_AGREEMENT;
+		this.ripple.stage = RIPPLE_STAGE_CANDIDATE_AGREEMENT;
 		this.init();
 
 		logger.warn("Candidate agreement begin, transactions: ");

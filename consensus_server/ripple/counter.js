@@ -2,25 +2,13 @@ const CounterData = require("./data/counter");
 const { unl } = require("../config.json");
 const utils = require("../../depends");
 const process = require("process");
-const { STAGE_AMALGAMATE, STAGE_CANDIDATE_AGREEMENT, STAGE_BLOCK_AGREEMENT } = require("../constant");
+const { COUNTER_HANDLER_TIME_DETAY, COUNTER_INVALID_STAGE_TIME_SECTION, COUNTER_STATE_IDLE, COUNTER_STATE_PROCESSING, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_ACOUNTER_REQUEST, PROTOCOL_CMD_ACOUNTER_RESPONSE } = require("../constant");
 
 const rlp = utils.rlp;
 
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
 const privateKey = process[Symbol.for("privateKey")];
-
-const PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE = 300;
-const PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE = 301;
-const PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE = 302;
-const PROTOCOL_CMD_ACOUNTER_REQUEST = 303;
-const PROTOCOL_CMD_ACOUNTER_RESPONSE = 304;
-
-const COUNTER_HANDLER_TIME_DETAY = 2000;
-const COUNTER_INVALID_STAGE_TIME_SECTION = 2000;
-
-const COUNTER_STATE_IDLE = 0;
-const COUNTER_STATE_PROCESSING = 1;
 
 class Counter
 {
@@ -139,13 +127,13 @@ class Counter
 
 				counterData.round = this.ripple.round;
 				counterData.stage = this.ripple.stage;
-				if(this.ripple.state === STAGE_AMALGAMATE)
+				if(this.ripple.state === RIPPLE_STAGE_AMALGAMATE)
 				{
 					counterData.primaryConsensusTime = this.ripple.amalgamate.averagePrimaryTime;
 					counterData.finishConsensusTime = this.ripple.amalgamate.averageFinishTime;
 					counterData.pastTime = Date.now() - this.ripple.amalgamate.primary.consensusBeginTime;
 				}
-				else if(this.ripple.state === STAGE_CANDIDATE_AGREEMENT)
+				else if(this.ripple.state === RIPPLE_STAGE_CANDIDATE_AGREEMENT)
 				{
 					counterData.primaryConsensusTime = this.ripple.candidateAgreement.averagePrimaryTime;
 					counterData.finishConsensusTime = this.ripple.candidateAgreement.averageFinishTime;
