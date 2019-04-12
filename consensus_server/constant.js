@@ -7,10 +7,10 @@ module.exports.STAGE_STATE_FINISH_TIMEOUT = 1000;
 
 module.exports.STAGE_MAX_FINISH_RETRY_TIMES = 3;
 
-module.exports.STATE_EMPTY = 1;
-module.exports.STATE_PROCESSING = 2;
-module.exports.STATE_SUCCESS_FINISH = 3;
-module.exports.STATE_TIMEOUT_FINISH = 4;
+module.exports.STAGE_STATE_EMPTY = 1;
+module.exports.STAGE_STATE_PROCESSING = 2;
+module.exports.STAGE_STATE_SUCCESS_FINISH = 3;
+module.exports.STAGE_STATE_TIMEOUT_FINISH = 4;
 
 // ripple
 module.exports.RIPPLE_STAGE_AMALGAMATE = 1;

@@ -1,5 +1,5 @@
 const { unl } = require("../../config.json");
-const { STAGE_STATE_PRIMARY_TIMEOUT, STAGE_STATE_FINISH_TIMEOUT, STAGE_MAX_FINISH_RETRY_TIMES, STATE_EMPTY, STATE_PROCESSING, STATE_SUCCESS_FINISH, STATE_TIMEOUT_FINISH } = require("../../constant");
+const { STAGE_STATE_PRIMARY_TIMEOUT, STAGE_STATE_FINISH_TIMEOUT, STAGE_MAX_FINISH_RETRY_TIMES, STAGE_STATE_EMPTY, STAGE_STATE_PROCESSING, STAGE_STATE_SUCCESS_FINISH, STAGE_STATE_TIMEOUT_FINISH } = require("../../constant");
 const process = require("process");
 const utils = require("../../../depends/utils");
 const assert = require("assert");
@@ -16,7 +16,7 @@ class Stage
 {
 	constructor(opts)
 	{
-		this.state = STATE_EMPTY;
+		this.state = STAGE_STATE_EMPTY;
 		this.timeoutNodes = new Set();
 
 		this.averageTimes = 0;
@@ -42,12 +42,12 @@ class Stage
 			if(result)
 			{
 				logger.warn("primary stage is over because of timeout");
-				self.state = STATE_TIMEOUT_FINISH;
+				self.state = STAGE_STATE_TIMEOUT_FINISH;
 			}
 			else
 			{
 				logger.info("primary stage is over success");
-				self.state = STATE_SUCCESS_FINISH;
+				self.state = STAGE_STATE_SUCCESS_FINISH;
 			}
 
 			self.finish.initFinishTimeout();
@@ -98,7 +98,7 @@ class Stage
 	init()
 	{
 		// init state
-		this.state = STATE_PROCESSING;
+		this.state = STAGE_STATE_PROCESSING;
 
 		this.primary.initFinishTimeout();
 	}
@@ -124,7 +124,7 @@ class Stage
 		assert(typeof cmd === "number", `Stage handleMessage, cmd should be a Number, now is ${typeof cmd}`);
 		assert(Buffer.isBuffer(data), `Stage handleMessage, data should be an Buffer, now is ${typeof data}`);
 
-		assert(this.state !== STATE_EMPTY, `Stage handleMessage, address ${address.toString("hex")}, message should not enter an emtpy stage`);
+		assert(this.state !== STAGE_STATE_EMPTY, `Stage handleMessage, address ${address.toString("hex")}, message should not enter an emtpy stage`);
 
 		switch(cmd)
 		{
@@ -152,7 +152,7 @@ class Stage
 				const nodeInfo = rlp.decode(data);
 				const state = bufferToInt(nodeInfo[0]);
 
-				if(state === STATE_PROCESSING)
+				if(state === STAGE_STATE_PROCESSING)
 				{
 					const addressHex = address.toString("hex");
 					if(this.timeoutNodes.has(addressHex))
@@ -164,7 +164,7 @@ class Stage
 						this.timeoutNodes[addressHex] = 1;
 					}
 				}
-				else if(state === STATE_TIMEOUT_FINISH)
+				else if(state === STAGE_STATE_TIMEOUT_FINISH)
 				{
 					const addresses = nodeInfo[1];
 					addresses.forEach(address => {
@@ -183,7 +183,7 @@ class Stage
 
 					logger.warn(`Stage handleMessage, address ${address.toString("hex")} consensus timeout`);
 				}
-				else if(state === STATE_SUCCESS_FINISH)
+				else if(state === STAGE_STATE_SUCCESS_FINISH)
 				{
 					this.finish.recordFinishNode(address.toString("hex"));
 
@@ -199,7 +199,7 @@ class Stage
 
 	innerReset()
 	{
-		this.state = STATE_EMPTY;
+		this.state = STAGE_STATE_EMPTY;
 		this.leftFinishTimes = STAGE_MAX_FINISH_RETRY_TIMES;
 		
 		this.primary.reset();
@@ -208,12 +208,12 @@ class Stage
 
 	checkFinishState()
 	{
-		return this.state === STATE_TIMEOUT_FINISH || this.state === STATE_SUCCESS_FINISH;
+		return this.state === STAGE_STATE_TIMEOUT_FINISH || this.state === STAGE_STATE_SUCCESS_FINISH;
 	}
 
 	checkProcessingState()
 	{
-		return this.state === STATE_PROCESSING;
+		return this.state === STAGE_STATE_PROCESSING;
 	}
 }
 

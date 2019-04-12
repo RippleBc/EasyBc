@@ -18,7 +18,7 @@ const toBuffer = utils.toBuffer;
 const Buffer = utils.Buffer;
 
 const STATE_RUNNING = 1;
-const STATE_EMPTY = 0;
+const STAGE_STATE_EMPTY = 0;
 
 
 const GOD_PRIVATE_KEY = Buffer.from("d893eacfffa3ab4199c057a9e52587dad6cb8fc727e5678b92a2f58e7221710d", "hex");
@@ -29,7 +29,7 @@ class Update
 	{
 		this.blockChainHeight = undefined;
 		this.blockChain = undefined;
-		this.state = STATE_EMPTY;
+		this.state = STAGE_STATE_EMPTY;
 	}
 
 	async run()
@@ -42,7 +42,7 @@ class Update
 		this.state = STATE_RUNNING;
 		await this.initBlockChain();
 		await this.update();
-		this.state = STATE_EMPTY;
+		this.state = STAGE_STATE_EMPTY;
 	}
 
 	async initBlockChain()
