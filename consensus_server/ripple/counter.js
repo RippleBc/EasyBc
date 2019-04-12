@@ -107,9 +107,6 @@ class Counter
 					return ele + COUNTER_INVALID_STAGE_TIME_SECTION > now;
 				}).length;
 
-				logger.info(`handle stage consensus, stageValidTimesInSpecifiedTimeSection: ${stageValidTimesInSpecifiedTimeSection}, this.threshould * unl.length: ${this.threshould * unl.length}`)
-				logger.info(`handle stage consensus, this.threshould: ${this.threshould}, unl.length: ${unl.length}`);
-
 				if(stageValidTimesInSpecifiedTimeSection >= this.threshould * unl.length)
 				{
 					if(this.state === COUNTER_STATE_IDLE)
@@ -118,7 +115,12 @@ class Counter
 
 						p2p.sendAll(PROTOCOL_CMD_ACOUNTER_REQUEST);
 
-						this.timeout = setTimeout(this.handler, COUNTER_HANDLER_TIME_DETAY);
+						this.timeout = setTimeout(() => {
+
+							logger.warn("Counter, get stage infomation finish because of timeout");
+
+							this.handler(false);
+						}, COUNTER_HANDLER_TIME_DETAY);
 					}
 				}
 			}
@@ -181,7 +183,9 @@ class Counter
 				{
 					clearTimeout(this.timeout);
 
-					this.handler();
+					logger.warn("Counter, get stage infomation finish success");
+
+					this.handler(true);
 				}
 			}
 			break;
