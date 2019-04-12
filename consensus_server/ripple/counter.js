@@ -40,7 +40,7 @@ class Counter
 		const countersMap = new Set();
 
 		this.counters.forEach(counter => {
-			const key = rlp([counter.round, counter.stage]).toString("hex");
+			const key = counter.hash(false).toString("hex");
 
 			if(countersMap.hash(key))
 			{
@@ -163,11 +163,12 @@ class Counter
 			break;
 			case PROTOCOL_CMD_ACOUNTER_RESPONSE:
 			{
+				logger.error("1111111111111222222222233333333333333333")
 				if(this.state === COUNTER_STATE_IDLE)
 				{
 					return;
 				}
-
+				logger.error("aaaaaaaaaaaaaaaabbbbbbbbbbbbbbcccccccccc")
 				const counterData = new CounterData(data);
 
 				if(counterData.validate())
