@@ -4,9 +4,11 @@ const BlockAgreement = require("./stage/blockAgreement");
 const { PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, RIPPLE_STATE_IDLE, RIPPLE_STATE_STAGE_CONSENSUS, RIPPLE_STATE_TRANSACTIONS_CONSENSUS, MAX_PROCESS_TRANSACTIONS_SIZE, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT } = require("../constant");
 const assert = require("assert");
 const Counter = require("./counter");
+const utils = require("../../depends/utils");
+
+const bufferToInt = utils.bufferToInt;
 
 const p2p = process[Symbol.for("p2p")];
-
 const logger = process[Symbol.for("loggerConsensus")];
 
 class Ripple
@@ -63,7 +65,13 @@ class Ripple
 		assert(Buffer.isBuffer(finishConsensusTime), `Ripple handleCounter, finishConsensusTime should be an Buffer, now is ${typeof finishConsensusTime}`);
 		assert(Buffer.isBuffer(pastTime), `Ripple handleCounter, pastTime should be an Buffer, now is ${typeof pastTime}`);
 
-		logger.warn(`**************************************\nRipple, begin to handle consensus, unl's round: ${round.toString("hex")}, stage: ${stage.toString("hex")}, primaryConsensusTime: ${primaryConsensusTime}, finishConsensusTime: ${finishConsensusTime}, pastTime: ${pastTime}`);
+		round = bufferToInt(round);
+		stage = bufferToInt(stage);
+		primaryConsensusTime = bufferToInt(primaryConsensusTime);
+		finishConsensusTime = bufferToInt(finishConsensusTime);
+		pastTime = bufferToInt(pastTime);
+
+		logger.warn(`**************************************\nRipple, begin to handle consensus, unl's round: ${round}, stage: ${stage}, primaryConsensusTime: ${primaryConsensusTime}, finishConsensusTime: ${finishConsensusTime}, pastTime: ${pastTime}`);
 		logger.warn(`Ripple, begin to handle consensus, my round: ${this.round}, stage: ${this.stage}**************************************\n\n\n\n\n`);
 
 		if(this.round >= round && this.stage >= stage)
