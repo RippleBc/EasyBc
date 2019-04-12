@@ -97,7 +97,7 @@ class Counter
 			case PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE:
 			case PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE:
 			{
-				logger.error("stage is invalid");
+				logger.error(`******************************\nstage is invalid, my round: ${this.ripple.round}, my stage: ${this.ripple.stage}******************************\n\n\n\n`);
 
 				const now = Date.now();
 
