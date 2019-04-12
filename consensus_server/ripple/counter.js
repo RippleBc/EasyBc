@@ -42,7 +42,7 @@ class Counter
 		this.counters.forEach(counter => {
 			const key = counter.hash(false).toString("hex");
 
-			if(countersMap.hash(key))
+			if(countersMap.has(key))
 			{
 				const count = rlpcountersMap.get(key).count;
 
@@ -163,12 +163,10 @@ class Counter
 			break;
 			case PROTOCOL_CMD_ACOUNTER_RESPONSE:
 			{
-				logger.error("1111111111111222222222233333333333333333")
 				if(this.state === COUNTER_STATE_IDLE)
 				{
 					return;
 				}
-				logger.error("aaaaaaaaaaaaaaaabbbbbbbbbbbbbbcccccccccc")
 				const counterData = new CounterData(data);
 
 				if(counterData.validate())
@@ -187,7 +185,7 @@ class Counter
 					logger.error(`Counter handlerMessage, address ${address.toString("hex")}, send an invalid message`);
 				}
 
-				if(counterData.length === unl.length)
+				if(this.counters.length === unl.length)
 				{
 					clearTimeout(this.timeout);
 
