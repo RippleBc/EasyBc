@@ -2,8 +2,9 @@ module.exports.TRANSACTION_CACHE_MAX_NUM = 500;
 module.exports.MAX_PROCESS_TRANSACTIONS_SIZE = 100;
 
 // stage 
-module.exports.STAGE_PRIMARY_TIMEOUT = 2000;
-module.exports.STAGE_FINISH_TIMEOUT = 1000;
+module.exports.STAGE_STATE_PRIMARY_TIMEOUT = 2000;
+module.exports.STAGE_STATE_FINISH_TIMEOUT = 1000;
+
 module.exports.STAGE_MAX_FINISH_RETRY_TIMES = 3;
 
 module.exports.STATE_EMPTY = 1;
@@ -11,10 +12,14 @@ module.exports.STATE_PROCESSING = 2;
 module.exports.STATE_SUCCESS_FINISH = 3;
 module.exports.STATE_TIMEOUT_FINISH = 4;
 
-//
+// ripple
 module.exports.RIPPLE_STAGE_AMALGAMATE = 1;
 module.exports.RIPPLE_STAGE_CANDIDATE_AGREEMENT = 2;
 module.exports.RIPPLE_STAGE_BLOCK_AGREEMENT = 3;
+
+module.exports.RIPPLE_STATE_IDLE = 1;
+module.exports.RIPPLE_STATE_STAGE_CONSENSUS = 2;
+module.exports.RIPPLE_STATE_TRANSACTIONS_CONSENSUS = 3;
 
 // amalgamate
 module.exports.PROTOCOL_CMD_CANDIDATE_AMALGAMATE = 100;

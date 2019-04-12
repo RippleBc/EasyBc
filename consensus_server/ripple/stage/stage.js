@@ -1,5 +1,5 @@
 const { unl } = require("../../config.json");
-const { STAGE_PRIMARY_TIMEOUT, STAGE_FINISH_TIMEOUT, STAGE_MAX_FINISH_RETRY_TIMES, STATE_EMPTY, STATE_PROCESSING, STATE_SUCCESS_FINISH, STATE_TIMEOUT_FINISH } = require("../../constant");
+const { STAGE_STATE_PRIMARY_TIMEOUT, STAGE_STATE_FINISH_TIMEOUT, STAGE_MAX_FINISH_RETRY_TIMES, STATE_EMPTY, STATE_PROCESSING, STATE_SUCCESS_FINISH, STATE_TIMEOUT_FINISH } = require("../../constant");
 const process = require("process");
 const utils = require("../../../depends/utils");
 const assert = require("assert");
@@ -51,7 +51,7 @@ class Stage
 
 			self.finish.initFinishTimeout();
 			p2p.sendAll(self.finish_state_request_cmd);
-		}, STAGE_PRIMARY_TIMEOUT);
+		}, STAGE_STATE_PRIMARY_TIMEOUT);
 
 		let finishTimes = STAGE_MAX_FINISH_RETRY_TIMES;
 		this.finish = new Sender(result => {
@@ -92,7 +92,7 @@ class Stage
 				self.handler(true);
 				self.reset();
 			}
-		}, STAGE_FINISH_TIMEOUT);
+		}, STAGE_STATE_FINISH_TIMEOUT);
 	}
 
 	init()

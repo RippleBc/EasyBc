@@ -1,16 +1,13 @@
 const Amalgamate = require("./stage/amalgamate");
 const CandidateAgreement = require("./stage/candidateAgreement");
 const BlockAgreement = require("./stage/blockAgreement");
-const { MAX_PROCESS_TRANSACTIONS_SIZE, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT } = require("../constant");
+const { RIPPLE_STATE_IDLE, RIPPLE_STATE_STAGE_CONSENSUS, RIPPLE_STATE_TRANSACTIONS_CONSENSUS, MAX_PROCESS_TRANSACTIONS_SIZE, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT } = require("../constant");
 const assert = require("assert");
+const Counter = require("./counter");
 
 const p2p = process[Symbol.for("p2p")];
 
 const logger = process[Symbol.for("loggerConsensus")];
-
-const RIPPLE_STATE_IDLE = 0;
-const RIPPLE_STATE_STAGE_CONSENSUS = 1;
-const RIPPLE_STATE_TRANSACTIONS_CONSENSUS = 2;
 
 class Ripple
 {
@@ -24,6 +21,7 @@ class Ripple
 		this.stage = 0;
 		this.pursueTime = 0;
 
+		this.counter = new Counter(this);
 		this.amalgamate = new Amalgamate(this);
 		this.candidateAgreement = new CandidateAgreement(this);
 		this.blockAgreement = new BlockAgreement(this);
@@ -151,10 +149,6 @@ class Ripple
 		}
 		else if(cmd >= 300 && cmd < 400)
 		{
-			this.counter.handleMessage(address, cmd, data);
-		}
-		else if(cmd >= 400 && cmd < 500)
-		{
 			if(this.candidateAgreement.checkFinishState())
 			{
 				this.candidateAgreement.handler();
@@ -172,9 +166,13 @@ class Ripple
 				p2p.send(address, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE);
 			}
 		}
+		else if(cmd >= 400 && cmd < 500)
+		{
+			this.counter.handleMessage(address, cmd, data);
+		}
 		else
 		{
-			
+			throw new Error(`invalid cmd: ${cmd}`);
 		}
 	}
 

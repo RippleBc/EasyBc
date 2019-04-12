@@ -1,6 +1,6 @@
 const CounterData = require("./data/counter");
 const { unl } = require("../config.json");
-const utils = require("../../depends");
+const utils = require("../../depends/utils");
 const process = require("process");
 const { COUNTER_HANDLER_TIME_DETAY, COUNTER_INVALID_STAGE_TIME_SECTION, COUNTER_STATE_IDLE, COUNTER_STATE_PROCESSING, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_ACOUNTER_REQUEST, PROTOCOL_CMD_ACOUNTER_RESPONSE } = require("../constant");
 
@@ -186,3 +186,5 @@ class Counter
 		}
 	}
 }
+
+module.exports = Counter;
