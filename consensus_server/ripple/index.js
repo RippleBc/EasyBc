@@ -57,10 +57,16 @@ class Ripple
 	 */
 	handleCounter(round, stage, primaryConsensusTime, finishConsensusTime, pastTime)
 	{
-		logger.warn(`**************************************\nRipple, begin to handle consensus, unl's round: ${round}, stage: ${stage}, primaryConsensusTime: ${primaryConsensusTime}, finishConsensusTime: ${finishConsensusTime}, pastTime: ${pastTime}`);
+		assert(Buffer.isBuffer(round), `Ripple handleCounter, round should be an Buffer, now is ${typeof round}`);
+		assert(Buffer.isBuffer(stage), `Ripple handleCounter, stage should be an Buffer, now is ${typeof stage}`);
+		assert(Buffer.isBuffer(primaryConsensusTime), `Ripple handleCounter, primaryConsensusTime should be an Buffer, now is ${typeof primaryConsensusTime}`);
+		assert(Buffer.isBuffer(finishConsensusTime), `Ripple handleCounter, finishConsensusTime should be an Buffer, now is ${typeof finishConsensusTime}`);
+		assert(Buffer.isBuffer(pastTime), `Ripple handleCounter, pastTime should be an Buffer, now is ${typeof pastTime}`);
+
+		logger.warn(`**************************************\nRipple, begin to handle consensus, unl's round: ${round.toString("hex")}, stage: ${stage.toString("hex")}, primaryConsensusTime: ${primaryConsensusTime}, finishConsensusTime: ${finishConsensusTime}, pastTime: ${pastTime}`);
 		logger.warn(`Ripple, begin to handle consensus, my round: ${this.round}, stage: ${this.stage}**************************************\n\n\n\n\n`);
 
-		if(this.round >= round  && this.stage >= stage)
+		if(this.round >= round && this.stage >= stage)
 		{
 			logger.info("************************************ I'm fast ************************************");
 
