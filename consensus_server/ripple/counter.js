@@ -104,7 +104,7 @@ class Counter
 				this.stageValidStatistics.push(now);
 
 				const stageValidTimesInSpecifiedTimeSection = this.stageValidStatistics.filter(ele => { 
-					ele + COUNTER_INVALID_STAGE_TIME_SECTION > now;
+					return ele + COUNTER_INVALID_STAGE_TIME_SECTION > now;
 				}).length;
 
 				logger.info(`handle stage consensus, stageValidTimesInSpecifiedTimeSection: ${stageValidTimesInSpecifiedTimeSection}, this.threshould * unl.length: ${this.threshould * unl.length}`)
