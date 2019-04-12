@@ -37,7 +37,7 @@ class Counter
 
 	handler()
 	{
-		const countersMap = new Set();
+		const countersMap = new Map();
 
 		this.counters.forEach(counter => {
 			const key = counter.hash(false).toString("hex");
