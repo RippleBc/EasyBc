@@ -22,6 +22,7 @@ class Stage
 		this.averageTimes = 0;
 		this.averagePrimaryTime = 0;
 		this.averageFinishTime = 0;
+		this.leftFinishTimes = STAGE_MAX_FINISH_RETRY_TIMES;
 
 		this.finish_state_request_cmd = opts.finish_state_request_cmd;
 		this.finish_state_response_cmd = opts.finish_state_response_cmd;
@@ -53,7 +54,6 @@ class Stage
 			p2p.sendAll(self.finish_state_request_cmd);
 		}, STAGE_STATE_PRIMARY_TIMEOUT);
 
-		let finishTimes = STAGE_MAX_FINISH_RETRY_TIMES;
 		this.finish = new Sender(result => {
 			if(self.averageTimes === 0)
 			{
@@ -67,7 +67,7 @@ class Stage
 
 			if(!result)
 			{
-				if(finishTimes > 0)
+				if(leftFinishTimes > 0)
 				{
 					logger.warn("finish stage retry");
 
@@ -75,7 +75,7 @@ class Stage
 					self.finish.initFinishTimeout();
 					p2p.sendAll(self.finish_state_request_cmd);
 
-					finishTimes -= 1;
+					leftFinishTimes -= 1;
 				}
 				else
 				{
@@ -200,6 +200,8 @@ class Stage
 	innerReset()
 	{
 		this.state = STATE_EMPTY;
+		this.leftFinishTimes = STAGE_MAX_FINISH_RETRY_TIMES;
+		
 		this.primary.reset();
 		this.finish.reset();
 	}
