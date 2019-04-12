@@ -62,9 +62,9 @@ class Ripple
 			return;
 		}
 
-		this.state = RIPPLE_STATE_STAGE_CONSENSUS;
-
 		this.reset();
+
+		this.state = RIPPLE_STATE_STAGE_CONSENSUS;
 
 		this.round = round;
 
@@ -75,14 +75,14 @@ class Ripple
 		{
 			setTimeout(() => {
 				self.candidateAgreement.run([]);
-				this.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
+				self.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
 			}, delayTime);
 		}
 		else if(stage === RIPPLE_STAGE_CANDIDATE_AGREEMENT)
 		{
 			setTimeout(() => {
 				self.blockAgreement.run([]);
-				this.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
+				self.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
 			}, delayTime);
 		}
 		else
@@ -106,6 +106,7 @@ class Ripple
 
 		if(this.state !== RIPPLE_STATE_TRANSACTIONS_CONSENSUS)
 		{
+			logger.warn(`***********************************************\nRipple handleMessage, ripple state should be RIPPLE_STATE_TRANSACTIONS_CONSENSUS, now is ${this.state === RIPPLE_STATE_IDLE ? "RIPPLE_STATE_IDLE" : "RIPPLE_STATE_STAGE_CONSENSUS"}***********************************************\n\n\n`);
 			return;
 		}
 
@@ -178,6 +179,8 @@ class Ripple
 
 	reset()
 	{
+		this.state = RIPPLE_STATE_IDLE;
+
 		this.amalgamate.reset();
 		this.candidateAgreement.reset();
 		this.blockAgreement.reset();

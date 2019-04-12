@@ -12,6 +12,8 @@ module.exports.STAGE_STATE_PROCESSING = 2;
 module.exports.STAGE_STATE_SUCCESS_FINISH = 3;
 module.exports.STAGE_STATE_TIMEOUT_FINISH = 4;
 
+module.exports.AVERAGE_TIME_STATISTIC_MAX_TIMES = 200;
+
 // ripple
 module.exports.RIPPLE_STAGE_AMALGAMATE = 1;
 module.exports.RIPPLE_STAGE_CANDIDATE_AGREEMENT = 2;

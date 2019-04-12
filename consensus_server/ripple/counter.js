@@ -20,7 +20,6 @@ class Counter
 
 		this.counters = [];
 
-		this.lastStage = 0;
 		this.stageValidStatistics = [];
 
 		// should store in database

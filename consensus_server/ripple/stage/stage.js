@@ -1,5 +1,5 @@
 const { unl } = require("../../config.json");
-const { STAGE_STATE_PRIMARY_TIMEOUT, STAGE_STATE_FINISH_TIMEOUT, STAGE_MAX_FINISH_RETRY_TIMES, STAGE_STATE_EMPTY, STAGE_STATE_PROCESSING, STAGE_STATE_SUCCESS_FINISH, STAGE_STATE_TIMEOUT_FINISH } = require("../../constant");
+const { STAGE_STATE_PRIMARY_TIMEOUT, STAGE_STATE_FINISH_TIMEOUT, STAGE_MAX_FINISH_RETRY_TIMES, AVERAGE_TIME_STATISTIC_MAX_TIMES, STAGE_STATE_EMPTY, STAGE_STATE_PROCESSING, STAGE_STATE_SUCCESS_FINISH, STAGE_STATE_TIMEOUT_FINISH } = require("../../constant");
 const process = require("process");
 const utils = require("../../../depends/utils");
 const assert = require("assert");
@@ -17,11 +17,12 @@ class Stage
 	constructor(opts)
 	{
 		this.state = STAGE_STATE_EMPTY;
-		this.timeoutNodes = new Set();
+		this.timeoutNodes = new Map();
 
-		this.averageTimes = 0;
+		this.averageTimeStatisticTimes = 0;
 		this.averagePrimaryTime = 0;
 		this.averageFinishTime = 0;
+
 		this.leftFinishTimes = STAGE_MAX_FINISH_RETRY_TIMES;
 
 		this.finish_state_request_cmd = opts.finish_state_request_cmd;
@@ -29,45 +30,62 @@ class Stage
 		
 		const self = this;
 		this.primary = new Sender(result => {
-			if(self.averageTimes === 0)
+			// compute primary stage consensus time consume
+			if(self.averageTimeStatisticTimes === 0)
 			{
 				self.averagePrimaryTime = self.primary.consensusTimeConsume;
 			}
 			else
 			{
-				self.averagePrimaryTime = (self.averagePrimaryTime * self.averageTimes + self.primary.consensusTimeConsume) / 2
+				self.averagePrimaryTime = (self.averagePrimaryTime * self.averageTimeStatisticTimes + self.primary.consensusTimeConsume) / (self.averageTimeStatisticTimes + 1)
 			}
-			
 
 			if(result)
 			{
-				logger.warn("primary stage is over because of timeout");
-				self.state = STAGE_STATE_TIMEOUT_FINISH;
+				logger.info("primary stage is over success");
+
+				self.state = STAGE_STATE_SUCCESS_FINISH;
+				
 			}
 			else
 			{
-				logger.info("primary stage is over success");
-				self.state = STAGE_STATE_SUCCESS_FINISH;
+				logger.warn("primary stage is over because of timeout");
+
+				self.state = STAGE_STATE_TIMEOUT_FINISH;
 			}
 
 			self.finish.initFinishTimeout();
+
 			p2p.sendAll(self.finish_state_request_cmd);
+
 		}, STAGE_STATE_PRIMARY_TIMEOUT);
 
 		this.finish = new Sender(result => {
-			if(self.averageTimes === 0)
+			// compute finish stage consensus time consume
+			if(self.averageTimeStatisticTimes === 0)
 			{
 				self.averageFinishTime = self.primary.consensusTimeConsume;
 			}
 			else
 			{
-				self.averageFinishTime = (self.averageFinishTime * self.averageTimes + self.primary.consensusTimeConsume) / 2
-				self.averageTimes += 1;
+				self.averageFinishTime = (self.averageFinishTime * self.averageTimeStatisticTimes + self.primary.consensusTimeConsume) / (self.averageTimeStatisticTimes + 1);
+
+				if(self.averageTimeStatisticTimes < AVERAGE_TIME_STATISTIC_MAX_TIMES)
+				{
+					self.averageTimeStatisticTimes += 1;
+				}
 			}
 
-			if(!result)
+			if(result)
 			{
-				if(leftFinishTimes > 0)
+				logger.info("finish stage is over success");
+
+				self.handler(true);
+				self.reset();
+			}
+			else
+			{
+				if(this.leftFinishTimes > 0)
 				{
 					logger.warn("finish stage retry");
 
@@ -75,7 +93,7 @@ class Stage
 					self.finish.initFinishTimeout();
 					p2p.sendAll(self.finish_state_request_cmd);
 
-					leftFinishTimes -= 1;
+					this.leftFinishTimes -= 1;
 				}
 				else
 				{
@@ -84,13 +102,6 @@ class Stage
 					self.handler(false);
 					self.reset();
 				}
-			}
-			else
-			{
-				logger.info("finish stage is over success");
-
-				self.handler(true);
-				self.reset();
 			}
 		}, STAGE_STATE_FINISH_TIMEOUT);
 	}
@@ -157,11 +168,12 @@ class Stage
 					const addressHex = address.toString("hex");
 					if(this.timeoutNodes.has(addressHex))
 					{
-						this.timeoutNodes[addressHex] += 1;
+						const count = this.timeoutNodes.get(addressHex);
+						this.timeoutNodes.set(addressHex, count + 1);
 					}
 					else
 					{
-						this.timeoutNodes[addressHex] = 1;
+						this.timeoutNodes.set(addressHex, 1);
 					}
 				}
 				else if(state === STAGE_STATE_TIMEOUT_FINISH)
@@ -171,11 +183,12 @@ class Stage
 						const addressHex = address.toString("hex");
 						if(this.timeoutNodes.has(addressHex))
 						{
-							this.timeoutNodes[addressHex] += 1;
+							const count = this.timeoutNodes.get(addressHex);
+							this.timeoutNodes.set(addressHex, count + 1);
 						}
 						else
 						{
-							this.timeoutNodes[addressHex] = 1;
+							this.timeoutNodes.set(addressHex, 1);
 						}
 					});
 
@@ -201,7 +214,7 @@ class Stage
 	{
 		this.state = STAGE_STATE_EMPTY;
 		this.leftFinishTimes = STAGE_MAX_FINISH_RETRY_TIMES;
-		
+
 		this.primary.reset();
 		this.finish.reset();
 	}
@@ -217,6 +230,10 @@ class Stage
 	}
 }
 
+const SENDER_STATE_IDLE = 1;
+const SENDER_STATE_PROCESSING = 2;
+const SENDER_STATE_FINISH = 3;
+
 class Sender
 {
 	constructor(handler, expiration)
@@ -226,6 +243,8 @@ class Sender
 
 		this.consensusBeginTime = 0;
 		this.consensusTimeConsume = 0;
+
+		this.state = SENDER_STATE_IDLE;
 
 		this.finishAddresses = new Set()
 		this.timeoutAddresses = new Set();
@@ -237,6 +256,11 @@ class Sender
 	recordFinishNode(address)
 	{
 		assert(typeof address === "string", `Sender recordFinishNode, address should be a String, now is ${typeof address}`);
+
+		if(this.state !== SENDER_STATE_PROCESSING)
+		{
+			return;
+		}
 
 		if(this.finishAddresses.has(address))
 		{
@@ -257,7 +281,11 @@ class Sender
 		}
 		if(i === unl.length)
 		{
+			this.consensusTimeConsume = Date.now() - this.consensusBeginTime;
+			this.state = SENDER_STATE_FINISH;
+
 			clearTimeout(this.timeout);
+
 			this.handler(true);
 		}
 	}
@@ -265,6 +293,8 @@ class Sender
 	initFinishTimeout()
 	{
 		this.consensusBeginTime = Date.now();
+
+		this.state = SENDER_STATE_PROCESSING;
 
 		this.timeout = setTimeout(() => {
 			// record timeout nodes
@@ -277,6 +307,7 @@ class Sender
 			}
 
 			this.consensusTimeConsume = Date.now() - this.consensusBeginTime;
+			this.state = SENDER_STATE_FINISH;
 
 			this.handler(false);
 		}, this.expiration);
@@ -286,8 +317,10 @@ class Sender
 	{
 		clearTimeout(this.timeout);
 
+		this.state = SENDER_STATE_IDLE;
+
 		this.consensusBeginTime = 0;
-		this.consensusTimeConsume= 0;
+		this.consensusTimeConsume = 0;
 
 		this.finishAddresses = new Set();
 		this.timeoutAddresses = new Set();
