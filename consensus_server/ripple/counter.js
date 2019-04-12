@@ -26,6 +26,15 @@ class Counter
 		this.threshould = 0.5;
 	}
 
+	reset()
+	{
+		this.state = COUNTER_STATE_IDLE;
+		this.counters = [];
+		this.stageValidStatistics = [];
+		
+		clearTimeout(this.timeout);
+	}
+
 	handler()
 	{
 		const countersMap = new Set();
@@ -79,9 +88,7 @@ class Counter
 		}
 
 		// reset
-		this.stageValidStatistics = [];
-		this.state = COUNTER_STATE_IDLE;
-		clearTimeout(this.timeout);
+		this.reset();
 	}
 
 	/**
