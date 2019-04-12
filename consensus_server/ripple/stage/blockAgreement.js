@@ -6,6 +6,7 @@ const process = require("process");
 const async = require("async");
 const assert = require("assert");
 const { unl } = require("../../config.json");
+const { STAGE_BLOCK_AGREEMENT } = require("../../constant");
 
 const sha256 = utils.sha256;
 const Buffer = utils.Buffer;
@@ -89,7 +90,8 @@ class BlockAgreement extends Stage
  	{
  		assert(Buffer.isBuffer(transactions), `BlockAgreement run, transactions should be an Buffer, now is ${typeof transactions}`);
 
- 		this.init();
+ 		this.ripple.stage = STAGE_BLOCK_AGREEMENT;
+		this.init();
 
  		// init block
 		const block = new Block({

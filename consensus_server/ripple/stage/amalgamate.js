@@ -4,6 +4,7 @@ const Stage = require("./stage");
 const process = require("process");
 const assert = require("assert");
 const Transaction = require("../../../depends/transaction");
+const { STAGE_AMALGAMATE } = require("../../constant");
 
 const rlp = utils.rlp;
 
@@ -49,14 +50,15 @@ class Amalgamate extends Stage
 	{
 		assert(Array.isArray(transactionRaws), `Amalgamate run, transactionRaws should be an Array, now is ${typeof transactionRaws}`);
 
+		this.ripple.stage = STAGE_AMALGAMATE;
+		this.init();
+
 		logger.warn("amalgamate begin, transactions: ");
 		for(let i = 0; i < transactionRaws.length; i++)
 		{
 			let transaction = new Transaction(transactionRaws[i])
 			logger.warn(`hash: ${transaction.hash().toString("hex")}, from: ${transaction.from.toString("hex")}, to: ${transaction.to.toString("hex")}, value: ${transaction.value.toString("hex")}, nonce: ${transaction.nonce.toString("hex")}`);
 		}
-
-		this.init();
 		
 		// init candidate
 		const candidate = new Candidate({

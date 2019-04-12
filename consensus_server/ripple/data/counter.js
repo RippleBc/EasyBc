@@ -32,6 +32,24 @@ class Counter extends Base
       allowLess: true,
       default: Buffer.alloc(0)
     }, {
+      name: "primaryConsensusTime",
+      length: 32,
+      allowZero: true,
+      allowLess: true,
+      default: Buffer.alloc(0)
+    }, {
+      name: "finishConsensusTime",
+      length: 32,
+      allowZero: true,
+      allowLess: true,
+      default: Buffer.alloc(0)
+    }, {
+      name: "pastTime",
+      length: 32,
+      allowZero: true,
+      allowLess: true,
+      default: Buffer.alloc(0)
+    }, {
       name: "v",
       length: 1,
       allowZero: true,

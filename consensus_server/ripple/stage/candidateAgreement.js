@@ -5,6 +5,7 @@ const process = require("process");
 const { unl } = require("../../config.json");
 const assert = require("assert");
 const Transaction = require("../../../depends/transaction");
+const { STAGE_CANDIDATE_AGREEMENT } = require("../../constant");
 
 const sha256 = utils.sha256;
 const rlp = utils.rlp;
@@ -91,6 +92,7 @@ class CandidateAgreement extends Stage
 	{
 		assert(Array.isArray(transactions), `CandidateAgreement run, transactions should be an Array, now is ${typeof transactions}`);
 
+		this.ripple.stage = STAGE_CANDIDATE_AGREEMENT;
 		this.init();
 
 		logger.warn("Candidate agreement begin, transactions: ");

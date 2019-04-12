@@ -1,16 +1,16 @@
 const Amalgamate = require("./stage/amalgamate");
 const CandidateAgreement = require("./stage/candidateAgreement");
 const BlockAgreement = require("./stage/blockAgreement");
-const { MAX_PROCESS_TRANSACTIONS_SIZE, STATE_EMPTY, STATE_SUCCESS_FINISH, STATE_TIMEOUT_FINISH, INVALID_STAGE_RETRY_TIME } = require("../constant");
+const { MAX_PROCESS_TRANSACTIONS_SIZE, STAGE_AMALGAMATE, STAGE_CANDIDATE_AGREEMENT, STAGE_BLOCK_AGREEMENT } = require("../constant");
 const assert = require("assert");
 
 const p2p = process[Symbol.for("p2p")];
 
 const logger = process[Symbol.for("loggerConsensus")];
 
-const STAGE_AMALGAMATE = 0;
-const STAGE_CANDIDATE_AGREEMENT = 1;
-const STAGE_BLOCK_AGREEMENT = 2;
+const RIPPLE_STATE_IDLE = 0;
+const RIPPLE_STATE_STAGE_CONSENSUS = 1;
+const RIPPLE_STATE_TRANSACTIONS_CONSENSUS = 2;
 
 class Ripple
 {
@@ -18,8 +18,11 @@ class Ripple
 	{
 		this.processor = processor;
 
+		this.state = RIPPLE_STATE_IDLE;
+
 		this.round = 0;
 		this.stage = 0;
+		this.pursueTime = 0;
 
 		this.amalgamate = new Amalgamate(this);
 		this.candidateAgreement = new CandidateAgreement(this);
@@ -42,15 +45,54 @@ class Ripple
 		this.stage = 0;
 
 		this.amalgamate.run(this.processingTransactions);
+		this.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
 	}
 
 	/**
 	 * @param {Buffer} round
 	 * @param {Buffer} stage
+	 * @param {Buffer} primaryConsensusTime
+	 * @param {Buffer} finishConsensusTime
+	 * @param {Buffer} pastTime
 	 */
-	handleCounter(round, stage)
+	handleCounter(round, stage, primaryConsensusTime, finishConsensusTime, pastTime)
 	{
+		if(this.round >= round)
+		{
+			logger.info("************************************ I'm fast ************************************");
 
+			return;
+		}
+
+		this.state = RIPPLE_STATE_STAGE_CONSENSUS;
+
+		this.reset();
+
+		this.round = round;
+
+		// compute new round and stage
+		const self = this;
+		const delayTime = primaryConsensusTime +  finishConsensusTime - pastTime + pursueTime;
+		if(stage === STAGE_AMALGAMATE)
+		{
+			setTimeout(() => {
+				self.candidateAgreement.run([]);
+				this.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
+			}, delayTime);
+		}
+		else if(stage === STAGE_CANDIDATE_AGREEMENT)
+		{
+			setTimeout(() => {
+				self.blockAgreement.run([]);
+				this.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
+			}, delayTime);
+		}
+		else
+		{
+			setTimeout(() => {
+				self.run();
+			}, delayTime);
+		}
 	}
 
 	/**
@@ -63,6 +105,11 @@ class Ripple
 		assert(Buffer.isBuffer(address), `Ripple handleMessage, address should be an Buffer, now is ${typeof address}`);
 		assert(typeof cmd === "number", `Ripple handleMessage, cmd should be a Number, now is ${typeof cmd}`);
 		assert(Buffer.isBuffer(data), `Ripple handleMessage, data should be an Buffer, now is ${typeof data}`);
+
+		if(this.state !== RIPPLE_STATE_TRANSACTIONS_CONSENSUS)
+		{
+			return;
+		}
 
 		if(cmd >= 100 && cmd < 200)
 		{

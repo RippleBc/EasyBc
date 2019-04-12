@@ -2,6 +2,7 @@ const CounterData = require("./data/counter");
 const { unl } = require("../config.json");
 const utils = require("../../depends");
 const process = require("process");
+const { STAGE_AMALGAMATE, STAGE_CANDIDATE_AGREEMENT, STAGE_BLOCK_AGREEMENT } = require("../constant");
 
 const rlp = utils.rlp;
 
@@ -15,16 +16,24 @@ const PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE = 302;
 const PROTOCOL_CMD_ACOUNTER_REQUEST = 303;
 const PROTOCOL_CMD_ACOUNTER_RESPONSE = 304;
 
-const COUNTER_TIME_DETAY = 2000;
+const COUNTER_HANDLER_TIME_DETAY = 2000;
+const COUNTER_INVALID_STAGE_TIME_SECTION = 2000;
+
+const COUNTER_STATE_IDLE = 0;
+const COUNTER_STATE_PROCESSING = 1;
 
 class Counter
 {
 	constructor(ripple)
 	{
+		this.state = COUNTER_STATE_IDLE;
+
 		this.ripple = ripple;
+
 		this.counters = [];
+
 		this.lastStage = 0;
-		this.stageValidTimes = 0;
+		this.stageValidStatistics = [];
 
 		// should store in database
 		this.threshould = 0.5;
@@ -44,7 +53,10 @@ class Counter
 				countersMap.set(key, {
 					count: count + 1,
 					round: counter.round,
-					stage: counter.stage
+					stage: counter.stage,
+					primaryConsensusTime: counter.primaryConsensusTime,
+					finishConsensusTime: counter.finishConsensusTime,
+					pastTime: counter.pastTime
 				});
 			}
 			else
@@ -52,7 +64,10 @@ class Counter
 				countersMap.set(key, {
 					count: 1,
 					round: counter.round,
-					stage: counter.stage
+					stage: counter.stage,
+					primaryConsensusTime: counter.primaryConsensusTime,
+					finishConsensusTime: counter.finishConsensusTime,
+					pastTime: counter.pastTime
 				});
 			}
 		});
@@ -65,20 +80,21 @@ class Counter
 		{
 			const round = sortedCounters[0][1].round;
 			const stage = sortedCounters[0][1].stage;
+			const primaryConsensusTime = sortedCounters[0][1].primaryConsensusTime;
+			const finishConsensusTime = sortedCounters[0][1].finishConsensusTime;
+			const pastTime = sortedCounters[0][1].pastTime;
 
-			this.ripple.handleCounter(round, stage);
+			this.ripple.handleCounter(round, stage, primaryConsensusTime, finishConsensusTime, pastTime);
 		}
 		else
 		{
-			this.ripple.handleCounter(0, 0);
+			this.ripple.handleCounter(0, 0, 0, 0, 0);
 		}
-	}
 
-	run()
-	{
-		p2p.sensAll(PROTOCOL_CMD_ACOUNTER_REQUEST);
-
-		this.timeout = setTimeout(this.handler, COUNTER_TIME_DETAY);
+		// reset
+		this.stageValidStatistics = [];
+		this.state = COUNTER_STATE_IDLE;
+		clearTimeout(this.timeout);
 	}
 
 	/**
@@ -86,55 +102,34 @@ class Counter
 	 * @param {Number} cmd
 	 * @param {Buffer} data
 	 */
-	handlerMessage(address, cmd, data)
+	handleMessage(address, cmd, data)
 	{
 		switch(cmd)
 		{
 			case PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE:
-			{
-				logger.error("amalgamate stage is invalid, waiting for amalgamate stage");
-
-				this.stageValidTimes += 1;
-
-				if(this.stageValidTimes >= this.threshould * unl.length)
-				{
-					this.stageValidTimes = 0;
-
-					this.ripple.reset();
-
-					p2p.sendAll(PROTOCOL_CMD_ACOUNTER_REQUEST);
-				}
-			}
-			break;
 			case PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE:
-			{
-				logger.error("candidate agreement stage is invalid, jump to amalgamate stage");
-
-				this.stageValidTimes += 1;
-
-				if(this.stageValidTimes >= this.threshould * unl.length)
-				{
-					this.stageValidTimes = 0;
-
-					this.ripple.reset();
-
-					p2p.sendAll(PROTOCOL_CMD_ACOUNTER_REQUEST);
-				}
-			}
-			break;
 			case PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE:
 			{
-				logger.error("block agreement stage is invalid, jump to amalgamate stage");
+				logger.error("stage is invalid");
 
-				this.stageValidTimes += 1;
+				const now = Date.now();
 
-				if(this.stageValidTimes >= this.threshould * unl.length)
+				this.stageValidStatistics.push(now);
+
+				const stageValidTimesInSpecifiedTimeSection = this.stageValidStatistics.filter(ele => { 
+					ele + COUNTER_INVALID_STAGE_TIME_SECTION > now;
+				}).length;
+
+				if(stageValidTimesInSpecifiedTimeSection >= this.threshould * unl.length)
 				{
-					this.stageValidTimes = 0;
+					if(this.state === COUNTER_STATE_IDLE)
+					{
+						this.state = COUNTER_STATE_PROCESSING;
 
-					this.ripple.reset();
+						p2p.sendAll(PROTOCOL_CMD_ACOUNTER_REQUEST);
 
-					p2p.sendAll(PROTOCOL_CMD_ACOUNTER_REQUEST);
+						this.timeout = setTimeout(this.handler, COUNTER_HANDLER_TIME_DETAY);
+					}
 				}
 			}
 			break;
@@ -144,7 +139,24 @@ class Counter
 
 				counterData.round = this.ripple.round;
 				counterData.stage = this.ripple.stage;
-
+				if(this.ripple.state === STAGE_AMALGAMATE)
+				{
+					counterData.primaryConsensusTime = this.ripple.amalgamate.averagePrimaryTime;
+					counterData.finishConsensusTime = this.ripple.amalgamate.averageFinishTime;
+					counterData.pastTime = Date.now() - this.ripple.amalgamate.primary.consensusBeginTime;
+				}
+				else if(this.ripple.state === STAGE_CANDIDATE_AGREEMENT)
+				{
+					counterData.primaryConsensusTime = this.ripple.candidateAgreement.averagePrimaryTime;
+					counterData.finishConsensusTime = this.ripple.candidateAgreement.averageFinishTime;
+					counterData.pastTime = Date.now() - this.ripple.candidateAgreement.primary.consensusBeginTime;
+				}
+				else
+				{
+					counterData.primaryConsensusTime = this.ripple.blockAgreement.averagePrimaryTime;
+					counterData.finishConsensusTime = this.ripple.blockAgreement.averageFinishTime;
+					counterData.pastTime = Date.now() - this.ripple.blockAgreement.primary.consensusBeginTime;
+				}
 				counterData.sign(privateKey);
 
 				p2p.send(address, PROTOCOL_CMD_ACOUNTER_RESPONSE, counterData.serialize())
@@ -152,6 +164,11 @@ class Counter
 			break;
 			case PROTOCOL_CMD_ACOUNTER_RESPONSE:
 			{
+				if(this.state === COUNTER_STATE_IDLE)
+				{
+					return;
+				}
+
 				const counterData = new CounterData(data);
 
 				if(counterData.validate())

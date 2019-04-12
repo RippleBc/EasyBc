@@ -22,3 +22,8 @@ module.exports.INVALID_STAGE_RETRY_TIME = 1000;
 //
 module.exports.STAGE_CONSENSUS = 0;
 module.exports.STAGE_UNCONSENSUS = 1;
+
+//
+module.exports.STAGE_AMALGAMATE = 1;
+module.exports.STAGE_CANDIDATE_AGREEMENT = 2;
+module.exports.STAGE_BLOCK_AGREEMENT = 3;

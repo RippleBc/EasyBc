@@ -19,11 +19,25 @@ class Stage
 		this.state = STATE_EMPTY;
 		this.timeoutNodes = new Set();
 
+		this.averageTimes = 0;
+		this.averagePrimaryTime = 0;
+		this.averageFinishTime = 0;
+
 		this.finish_state_request_cmd = opts.finish_state_request_cmd;
 		this.finish_state_response_cmd = opts.finish_state_response_cmd;
 		
 		const self = this;
 		this.primary = new Sender(result => {
+			if(self.averageTimes === 0)
+			{
+				self.averagePrimaryTime = self.primary.consensusTimeConsume;
+			}
+			else
+			{
+				self.averagePrimaryTime = (self.averagePrimaryTime * self.averageTimes + self.primary.consensusTimeConsume) / 2
+			}
+			
+
 			if(result)
 			{
 				logger.warn("primary stage is over because of timeout");
@@ -41,6 +55,16 @@ class Stage
 
 		let finishTimes = STAGE_MAX_FINISH_TIMES;
 		this.finish = new Sender(result => {
+			if(self.averageTimes === 0)
+			{
+				self.averageFinishTime = self.primary.consensusTimeConsume;
+			}
+			else
+			{
+				self.averageFinishTime = (self.averageFinishTime * self.averageTimes + self.primary.consensusTimeConsume) / 2
+				self.averageTimes += 1;
+			}
+
 			if(!result)
 			{
 				if(finishTimes > 0)
@@ -198,6 +222,9 @@ class Sender
 		this.handler = handler;
 		this.expiration = expiration;
 
+		this.consensusBeginTime = 0;
+		this.consensusTimeConsume = 0;
+
 		this.finishAddresses = new Set()
 		this.timeoutAddresses = new Set();
 	}
@@ -235,6 +262,8 @@ class Sender
 
 	initFinishTimeout()
 	{
+		this.consensusBeginTime = Date.now();
+
 		this.timeout = setTimeout(() => {
 			// record timeout nodes
 			for(let i = 0; i < unl.length; i++)
@@ -245,6 +274,8 @@ class Sender
 				}
 			}
 
+			this.consensusTimeConsume = Date.now() - this.consensusBeginTime;
+
 			this.handler(false);
 		}, this.expiration);
 	}
@@ -252,6 +283,9 @@ class Sender
 	reset()
 	{
 		clearTimeout(this.timeout);
+
+		this.consensusBeginTime = 0;
+		this.consensusTimeConsume= 0;
 
 		this.finishAddresses = new Set();
 		this.timeoutAddresses = new Set();
