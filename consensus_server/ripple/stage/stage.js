@@ -286,15 +286,17 @@ class Sender
 		logger.warn(`state: ${this.state}, address: ${address}`);
 		if(this.state !== SENDER_STATE_PROCESSING)
 		{
+			logger.warn("dddddddddddddddddddddddddddddddddd")
 			return;
 		}
-
+		logger.warn("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
 		if(this.finishAddresses.has(address))
 		{
+			logger.warn("ffffffffffffffffffffffffffffffffff")
 			logger.error(`Sender recordFinishNode, address ${address} send the same consensus request`);
 			return;
 		}
-
+		logger.warn("ggggggggggggggggggggggggggggggggggg")
 		this.finishAddresses.add(address);
 
 		// check if all nodes is active
@@ -303,11 +305,14 @@ class Sender
 		{
 			if(!this.finishAddresses.has(stripHexPrefix(unl[i])))
 			{
+				logger.warn("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh")
 				break;
 			}
 		}
+		logger.warn("iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii")
 		if(i === unl.length)
 		{
+			logger.warn("jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj")
 			this.consensusTimeConsume = Date.now() - this.consensusBeginTime;
 			this.state = SENDER_STATE_FINISH;
 
