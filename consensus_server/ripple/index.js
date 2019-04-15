@@ -5,6 +5,7 @@ const { PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AG
 const assert = require("assert");
 const Counter = require("./counter");
 const utils = require("../../depends/utils");
+const AsyncEventemitter = require("async-eventemitter");
 
 const bufferToInt = utils.bufferToInt;
 const rlp = utils.rlp;
@@ -12,7 +13,7 @@ const rlp = utils.rlp;
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
 
-class Ripple
+class Ripple extends AsyncEventemitter
 {
 	constructor(processor)
 	{
@@ -32,6 +33,18 @@ class Ripple
 		this.blockAgreement = new BlockAgreement(this);
 
 		this.processingTransactions = [];
+
+		this.amalgamateMessagesCache = [];
+		const self = this;
+		this.on("blockProcessOver", () => {
+			for(let i = 0; i < self.amalgamateMessagesCache.length; i++)
+			{
+				let {address, cmd, data} = self.amalgamateMessagesCache[i];
+				self.amalgamate.handleMessage(address, cmd, data);
+			}
+
+			self.amalgamateMessagesCache = [];
+		});
 	}
 
 	/*
@@ -137,10 +150,18 @@ class Ripple
 				this.blockAgreement.handler();
 				this.blockAgreement.reset();
 			}
-			
+
 			if(this.amalgamate.checkProcessingState() || this.amalgamate.checkFinishState())
 			{
 				this.amalgamate.handleMessage(address, cmd, data);
+			}
+			else if(this.blockAgreement.checkProcessBlockState())
+			{
+				this.amalgamateMessagesCache.push({
+					address: address,
+					cmd: cmd,
+					data: data
+				})
 			}
 			else
 			{

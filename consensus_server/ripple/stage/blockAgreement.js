@@ -6,7 +6,7 @@ const process = require("process");
 const async = require("async");
 const assert = require("assert");
 const { unl } = require("../../config.json");
-const { TRANSACTIONS_CONSENSUS_THRESHOULD, RIPPLE_STAGE_BLOCK_AGREEMENT, PROTOCOL_CMD_BLOCK_AGREEMENT, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_REQUEST, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE } = require("../../constant");
+const { TRANSACTIONS_CONSENSUS_THRESHOULD, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_BLOCK_AGREEMENT, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_REQUEST, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE } = require("../../constant");
 
 const sha256 = utils.sha256;
 const Buffer = utils.Buffer;
@@ -63,12 +63,18 @@ class BlockAgreement extends Stage
 			logger.warn("block agreement success");
 
 			const self = this;
+
+			this.ripple.state = RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK;
+
 			this.ripple.processor.processBlock({
 				block: new Block(sortedBlocks[0][1].data)
 			}).then(() => {
-				logger.warn("run block chain success, go to next stage");
 
 				self.ripple.run();
+
+				self.ripple.emit("blockProcessOver");
+
+				logger.warn("run block chain success, go to next stage");			
 			});
 
 			return;
@@ -191,6 +197,11 @@ class BlockAgreement extends Stage
 	{
 		super.innerReset();
 		this.rippleBlocks = [];
+	}
+
+	checkProcessBlockState()
+	{
+		return this.state === RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK;
 	}
 }
 

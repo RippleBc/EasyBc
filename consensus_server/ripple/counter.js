@@ -2,7 +2,7 @@ const CounterData = require("./data/counter");
 const { unl } = require("../config.json");
 const utils = require("../../depends/utils");
 const process = require("process");
-const { COUNTER_HANDLER_TIME_DETAY, COUNTER_INVALID_STAGE_TIME_SECTION, COUNTER_STATE_IDLE, COUNTER_STATE_PROCESSING, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_ACOUNTER_REQUEST, PROTOCOL_CMD_ACOUNTER_RESPONSE } = require("../constant");
+const { COUNTER_HANDLER_TIME_DETAY, COUNTER_INVALID_STAGE_TIME_SECTION, COUNTER_STATE_IDLE, COUNTER_STATE_PROCESSING, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_ACOUNTER_REQUEST, PROTOCOL_CMD_ACOUNTER_RESPONSE } = require("../constant");
 
 const rlp = utils.rlp;
 
@@ -146,7 +146,7 @@ class Counter
 					counterData.finishConsensusTime = this.ripple.candidateAgreement.averageFinishTime;
 					counterData.pastTime = Date.now() - this.ripple.candidateAgreement.primary.consensusBeginTime;
 				}
-				else if(this.ripple.state === RIPPLE_STAGE_BLOCK_AGREEMENT)
+				else if(this.ripple.state === RIPPLE_STAGE_BLOCK_AGREEMENT || this.ripple.state === RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK)
 				{
 					counterData.primaryConsensusTime = this.ripple.blockAgreement.averagePrimaryTime;
 					counterData.finishConsensusTime = this.ripple.blockAgreement.averageFinishTime;
