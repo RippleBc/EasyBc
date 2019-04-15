@@ -60,26 +60,34 @@ class Stage
 
 		}, STAGE_STATE_PRIMARY_TIMEOUT);
 
+		let totalFinishTime = 0;
 		this.finish = new Sender(result => {
-			// compute finish stage consensus time consume
-			if(self.averageTimeStatisticTimes === 0)
+			if(this.leftFinishTimes === STAGE_MAX_FINISH_RETRY_TIMES)
 			{
-				self.averageFinishTime = self.primary.consensusTimeConsume;
+				totalFinishTime = 0;
 			}
-			else
-			{
-				self.averageFinishTime = (self.averageFinishTime * self.averageTimeStatisticTimes + self.primary.consensusTimeConsume) / (self.averageTimeStatisticTimes + 1);
-
-				if(self.averageTimeStatisticTimes < AVERAGE_TIME_STATISTIC_MAX_TIMES)
-				{
-					self.averageTimeStatisticTimes += 1;
-				}
-			}
+			
+			totalFinishTime += self.finish.consensusTimeConsume;
 
 			if(result)
 			{
 				logger.info("finish stage is over success");
 
+				// compute finish stage consensus time consume
+				if(self.averageTimeStatisticTimes === 0)
+				{
+					self.averageFinishTime = totalFinishTime;
+				}
+				else
+				{
+					self.averageFinishTime = (self.averageFinishTime * self.averageTimeStatisticTimes + totalFinishTime) / (self.averageTimeStatisticTimes + 1);
+				}
+				if(self.averageTimeStatisticTimes < AVERAGE_TIME_STATISTIC_MAX_TIMES)
+				{
+					self.averageTimeStatisticTimes += 1;
+				}
+
+				//
 				self.handler(true);
 				self.reset();
 			}
@@ -99,6 +107,21 @@ class Stage
 				{
 					logger.warn("finish stage is over because of timeout");
 
+					// compute finish stage consensus time consume
+					if(self.averageTimeStatisticTimes === 0)
+					{
+						self.averageFinishTime = totalFinishTime;
+					}
+					else
+					{
+						self.averageFinishTime = (self.averageFinishTime * self.averageTimeStatisticTimes + totalFinishTime) / (self.averageTimeStatisticTimes + 1);
+					}
+					if(self.averageTimeStatisticTimes < AVERAGE_TIME_STATISTIC_MAX_TIMES)
+					{
+						self.averageTimeStatisticTimes += 1;
+					}
+
+					//
 					self.handler(false);
 					self.reset();
 				}
