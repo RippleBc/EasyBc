@@ -153,17 +153,17 @@ class Ripple extends AsyncEventemitter
 				this.blockAgreement.reset();
 			}
 
-			if(this.amalgamate.checkProcessingState() || this.amalgamate.checkFinishState())
-			{
-				this.amalgamate.handleMessage(address, cmd, data);
-			}
-			else if(this.blockAgreement.checkProcessBlockState())
+			if(this.blockAgreement.checkProcessBlockState())
 			{
 				this.amalgamateMessagesCache.push({
 					address: address,
 					cmd: cmd,
 					data: data
-				})
+				});
+			}
+			else if(this.amalgamate.checkProcessingState() || this.amalgamate.checkFinishState())
+			{
+				this.amalgamate.handleMessage(address, cmd, data);
 			}
 			else
 			{
