@@ -201,7 +201,7 @@ class BlockAgreement extends Stage
 
 	checkProcessBlockState()
 	{
-		return this.state === RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK;
+		return this.ripple.state === RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK;
 	}
 }
 
