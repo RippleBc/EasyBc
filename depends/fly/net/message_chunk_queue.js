@@ -7,7 +7,7 @@ const Buffer = utils.Buffer;
 const bufferToInt = utils.bufferToInt;
 
 const CMD_DATA_SIZE = 4;
-const MAX_MSG_LENGTH = 1024 * 1024 * 10;
+const MAX_MSG_LENGTH = 1024 * 1024 * 1024 * 1024;
 
 class MessageChunkQueue
 {
