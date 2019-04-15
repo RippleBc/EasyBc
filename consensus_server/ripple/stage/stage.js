@@ -280,6 +280,10 @@ class Sender
 	{
 		assert(typeof address === "string", `Sender recordFinishNode, address should be a String, now is ${typeof address}`);
 
+		logger.warn("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+		logger.warn("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
+		logger.warn("cccccccccccccccccccccccccccccc")
+		logger.warn(`state: ${this.state}, address: ${address}`);
 		if(this.state !== SENDER_STATE_PROCESSING)
 		{
 			return;
