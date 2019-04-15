@@ -2,11 +2,22 @@
 	{
 		"query":
 		{
-			"url": "http://localhost:8081"
+			"url": "http://123.157.68.243:8081"
 		},
 		"consensus":
 		{
-			"url": "http://localhost:8080"
+			"url": "http://123.157.68.243:9090"
+		},
+		"detail": ""
+	},
+	{
+		"query":
+		{
+			"url": "http://123.157.68.243:8081"
+		},
+		"consensus":
+		{
+			"url": "http://123.157.68.243:9090"
 		},
 		"detail": ""
 	}
