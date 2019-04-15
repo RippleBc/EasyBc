@@ -82,10 +82,6 @@ class Counter
 
 			this.ripple.handleCounter(round, stage, primaryConsensusTime, finishConsensusTime, pastTime);
 		}
-		else
-		{
-			this.ripple.handleCounter(0, 0, 0, 0, 0);
-		}
 
 		// reset
 		this.reset();
