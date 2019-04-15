@@ -319,7 +319,7 @@ class Sender
 
 		this.state = SENDER_STATE_IDLE;
 
-		// this.consensusBeginTime = 0;
+		this.consensusBeginTime = 0;
 		this.consensusTimeConsume = 0;
 
 		this.finishAddresses = new Set();

@@ -72,8 +72,8 @@ class Ripple
 		finishConsensusTime = bufferToInt(finishConsensusTime);
 		pastTime = bufferToInt(pastTime);
 
-		logger.warn(`**************************************\nRipple, begin to handle consensus, unl's round: ${round}, stage: ${stage}, primaryConsensusTime: ${primaryConsensusTime}, finishConsensusTime: ${finishConsensusTime}, pastTime: ${pastTime}`);
-		logger.warn(`Ripple, begin to handle consensus, my round: ${this.round}, stage: ${this.stage}**************************************\n\n\n\n\n`);
+		logger.warn(`**************************************\nRipple, begin to handle consensus, unl's round: ${round}, stage: ${stage}, primaryConsensusTime: ${primaryConsensusTime}, finishConsensusTime: ${finishConsensusTime}, pastTime: ${pastTime}**************************************`);
+		logger.warn(`**************************************\nRipple, begin to handle consensus, my round: ${this.round}, stage: ${this.stage}\n**************************************\n\n\n\n\n`);
 
 		if(this.round >= round && this.stage >= stage)
 		{
@@ -90,7 +90,7 @@ class Ripple
 
 		// compute new round and stage
 		const self = this;
-		const delayTime = ( primaryConsensusTime +  finishConsensusTime - pastTime > 0 ? primaryConsensusTime +  finishConsensusTime - pastTime : 0 ) + this.pursueTime;
+		const delayTime = (primaryConsensusTime +  finishConsensusTime - pastTime > 0 ? primaryConsensusTime +  finishConsensusTime - pastTime : 0) + this.pursueTime;
 		if(stage === RIPPLE_STAGE_AMALGAMATE)
 		{
 			setTimeout(() => {
@@ -126,7 +126,7 @@ class Ripple
 
 		if(this.state !== RIPPLE_STATE_TRANSACTIONS_CONSENSUS)
 		{
-			logger.warn(`***********************************************\nRipple handleMessage, ripple state should be RIPPLE_STATE_TRANSACTIONS_CONSENSUS, now is ${this.state === RIPPLE_STATE_IDLE ? "RIPPLE_STATE_IDLE" : "RIPPLE_STATE_STAGE_CONSENSUS"}***********************************************\n\n\n`);
+			logger.warn(`***********************************************\nRipple handleMessage, ripple state should be RIPPLE_STATE_TRANSACTIONS_CONSENSUS, now is ${this.state === RIPPLE_STATE_IDLE ? "RIPPLE_STATE_IDLE" : "RIPPLE_STATE_STAGE_CONSENSUS"}\n***********************************************\n\n\n`);
 			return;
 		}
 
