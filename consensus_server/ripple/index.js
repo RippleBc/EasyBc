@@ -17,6 +17,8 @@ class Ripple extends AsyncEventemitter
 {
 	constructor(processor)
 	{
+		super();
+
 		this.processor = processor;
 
 		this.state = RIPPLE_STATE_IDLE;
