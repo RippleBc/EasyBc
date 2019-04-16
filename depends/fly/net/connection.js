@@ -82,13 +82,13 @@ class Connection extends AsyncEventEmitter
 
 		this.socket.on("close", () => {
 			const address = self.socket.address();
-			self.logger.info(`socket ${self.address.toString("hex")} close success`);
+			self.logger.info(`socket ${self.address ? self.address.toString("hex") : ""} close success`);
 
 			self.closed = true;
 		});
 
 		this.socket.on("error", e => {
-			self.logger.error(`socket ${self.address.toString("hex")} throw error, ${e}`);
+			self.logger.error(`socket ${self.address ? self.address.toString("hex") : ""} throw error, ${e}`);
 		});
 	}
 
