@@ -157,16 +157,16 @@ exports.getToHistory = async function()
 
 /**
  * @param {String} queryUrl
- * @param {String} consensusUrl
+ * @param {String} transactionUrl
  * @param {Buffer} from
  * @param {Buffer} to
  * @param {Buffer} value
  * @return {String}
  */
-exports.sendTransaction = async function(queryUrl, consensusUrl, from, to, value)
+exports.sendTransaction = async function(queryUrl, transactionUrl, from, to, value)
 {
 	assert(typeof queryUrl === "string", `sendTransaction, queryUrl should be a String, now is ${typeof queryUrl}`);
-	assert(typeof consensusUrl === "string", `sendTransaction, consensusUrl should be a String, now is ${typeof consensusUrl}`);
+	assert(typeof transactionUrl === "string", `sendTransaction, transactionUrl should be a String, now is ${typeof transactionUrl}`);
 	assert(Buffer.isBuffer(from), `sendTransaction, from should be an Buffer, now is ${typeof from}`);
 	assert(Buffer.isBuffer(to), `sendTransaction, to should be an Buffer, now is ${typeof to}`);
 	assert(Buffer.isBuffer(value), `sendTransaction, value should be an Buffer, now is ${typeof value}`);
@@ -227,7 +227,7 @@ exports.sendTransaction = async function(queryUrl, consensusUrl, from, to, value
 	tx.sign(privateKey);
 
 	await saveTo(to);
-	await sendTransaction(consensusUrl, tx.serialize().toString("hex"));
+	await sendTransaction(transactionUrl, tx.serialize().toString("hex"));
 
 	return tx.hash().toString("hex");
 }

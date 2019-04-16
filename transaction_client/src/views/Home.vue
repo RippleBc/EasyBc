@@ -250,8 +250,8 @@ export default {
     	const self = this;
 
       axios.get("sendTransaction", {
-        queryUrl: self.currentNode.query.url,
-      	consensusUrl: self.currentNode.consensus.url,
+      	queryUrl: self.currentNode.query.url,
+        transactionUrl: self.currentNode.transaction.url,
       	from: self.from,
       	to: self.to,
       	value: self.value
