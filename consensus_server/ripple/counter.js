@@ -173,6 +173,8 @@ class Counter
 				{
 					if(address.toString("hex") !== counterData.from.toString("hex"))
 					{
+						this.ripple.handleCheatedNodes([address.toString("hex")]);
+
 						logger.error(`Counter handlerMessage, address is invalid, address should be ${address.toString("hex")}, now is ${counterData.from.toString("hex")}`);
 					}
 					else
@@ -182,6 +184,8 @@ class Counter
 				}
 				else
 				{
+					this.ripple.handleCheatedNodes([address.toString("hex")]);
+					
 					logger.error(`Counter handlerMessage, address ${address.toString("hex")}, send an invalid message`);
 				}
 

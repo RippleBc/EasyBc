@@ -288,6 +288,10 @@ class Ripple extends AsyncEventemitter
 		{
 			this.counter.handleMessage(address, cmd, data);
 		}
+		else if(cmd >= 500 && cmd < 600)
+		{
+			this.perish.handleMessage(address, cmd, data);
+		}
 		else
 		{
 			throw new Error(`invalid cmd: ${cmd}`);

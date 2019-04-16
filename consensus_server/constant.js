@@ -52,5 +52,9 @@ module.exports.COUNTER_INVALID_STAGE_TIME_SECTION = 2000;
 module.exports.COUNTER_STATE_IDLE = 1;
 module.exports.COUNTER_STATE_PROCESSING = 2;
 
+// Perish
+module.exports.PROTOCOL_CMD_KILL_NODE_REQUEST = 500;
+module.exports.PROTOCOL_CMD_KILL_NODE_RESPONSE = 501;
+
 //
 module.exports.TRANSACTIONS_CONSENSUS_THRESHOULD = 0.8;

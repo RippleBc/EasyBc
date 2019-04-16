@@ -2,7 +2,7 @@ const PerishData = require("./data/perish");
 const { unl } = require("../config.json");
 const utils = require("../../depends/utils");
 const process = require("process");
-const {  } = require("../constant");
+const { PROTOCOL_CMD_KILL_NODE_REQUEST, PROTOCOL_CMD_KILL_NODE_RESPONSE } = require("../constant");
 
 const rlp = utils.rlp;
 
@@ -19,6 +19,14 @@ class Perish
 
 	/**
 	 * @param {Buffer} address
+	 */
+	kill(address)
+	{
+
+	}
+
+	/**
+	 * @param {Buffer} address
 	 * @param {Number} cmd
 	 * @param {Buffer} data
 	 */
@@ -26,6 +34,17 @@ class Perish
 	{
 		switch(cmd)
 		{
+			case PROTOCOL_CMD_KILL_NODE_REQUEST:
+			{
+				
+			}
+			break;
+
+			case PROTOCOL_CMD_KILL_NODE_RESPONSE:
+			{
+
+			}
+			break;
 		}
 	}
 }
