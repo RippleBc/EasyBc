@@ -48,6 +48,24 @@ class Db
 
 const db = new Db();
 
+/**
+ * @param {String} privateKey
+ * @return {String}
+ */
+exports.importAccount = async function(privateKey)
+{
+	assert(typeof privateKey === "string", `importAccount privateKey should be a String, now is ${typeof privateKey}`);
+
+	privateKey = Buffer.from(privateKey, "hex");
+
+	if(!utils.isValidPrivate(privateKey))
+	{
+		await Promise.reject("invalid privateKey");
+	}
+
+	await saveFrom(privateKey);
+}
+
 exports.generateKeyPiar = async function()
 {
 	let privateKey = utils.createPrivateKey();

@@ -29,8 +29,8 @@
 				</li>
 			</ul>
 		</div>
-		<div style="display:flex;">
-			<input v-model="privateKey" placeholder="privateKey"></input><button @click="importAccount">import account</button>
+		<div style="display:flex;justify-content:center;align-items:center;margin:10px 0px 10px 0px;">
+			<input v-model="privateKey" placeholder="privateKey" style="width:100%"></input><button @click="importAccount">import account</button>
 		</div>
 		<div class="main_left">
 			<div class="senderRecord">
@@ -82,7 +82,7 @@
 </template>
 
 <script>
-import axios from "../front/axios.js";
+import axios from "../net/axios.js";
 import nodesInfo from "../nodes.json";
 import css from "../style/index.css";
 
@@ -140,6 +140,32 @@ export default {
 				});
   		});
   	},
+
+  	importAccount()
+    {
+    	const self = this;
+
+			axios.get("importAccount", {
+				privateKey: this.privateKey
+			}, response => {
+				if (response.status >= 200 && response.status < 300)
+				{
+					if(response.data.code === 0)
+					{
+						self.getFromHistory();
+						alert("import success");
+					}
+					else
+					{
+						alert(response.data.msg);
+					}
+				}
+				else
+				{
+					alert(response);
+				}
+			});
+    },
 
   	chooseFrom: function(value)
   	{
@@ -206,29 +232,6 @@ export default {
 					if(response.data.code === 0)
 					{
 						self.tos = response.data.data;
-					}
-					else
-					{
-						alert(response.data.msg);
-					}
-				}
-				else
-				{
-					alert(response);
-				}
-			});
-    },
-
-    importAccount()
-    {
-			axios.get("importAccount", {
-				privateKey: this.privateKey
-			}, response => {
-				if (response.status >= 200 && response.status < 300)
-				{
-					if(response.data.code === 0)
-					{
-						alert(response.data.data);
 					}
 					else
 					{

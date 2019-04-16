@@ -15,11 +15,42 @@ const Buffer = utils.Buffer;
 const BN = utils.BN;
 
 const app = express();
-log4js.useLogger(app, logger);
+
 app.use("/", express.static(path.join(__dirname + "/dist")));
+
+app.all('*', function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    res.header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
+    res.header("X-Powered-By", '3.2.1')
+    res.header("Content-Type", "application/json;charset=utf-8");
+    next();
+});
 
 const server = app.listen(port, host, function() {
     logger.info(`server listening at http://${host}:${port}`);
+});
+
+log4js.useLogger(app, logger);
+
+app.get("/importAccount", function(req, res) {
+  if(!req.query.privateKey) {
+    return res.send({
+        code: PARAM_ERR,
+        msg: "param error, need privateKey"
+    });
+  }
+
+  db.importAccount(req.query.privateKey).then(() => {
+    res.send({
+        code: SUCCESS
+    });
+  }).catch(e => {
+    res.send({
+        code: OTH_ERR,
+        msg: e.toString()
+    });
+  });
 });
 
 app.get("/generateKeyPiar", function(req, res) {

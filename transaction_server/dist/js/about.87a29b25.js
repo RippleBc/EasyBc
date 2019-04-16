@@ -1,0 +1,2 @@
+(window["webpackJsonp"]=window["webpackJsonp"]||[]).push([["about"],{f820:function(t,n,e){"use strict";e.r(n);var s=function(){var t=this,n=t.$createElement;t._self._c;return t._m(0)},a=[function(){var t=this,n=t.$createElement,e=t._self._c||n;return e("div",{staticClass:"about"},[e("h1",[t._v("This is an point to point transaction system, contact with me 565828928@qq.com")])])}],c=e("2877"),i={},o=Object(c["a"])(i,s,a,!1,null,null,null);n["default"]=o.exports}}]);
+//# sourceMappingURL=about.87a29b25.js.map
