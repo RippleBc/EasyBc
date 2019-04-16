@@ -29,6 +29,9 @@
 				</li>
 			</ul>
 		</div>
+		<div style="display:flex;">
+			<input v-model="privateKey" placeholder="privateKey"></input><button @click="importAccount">import account</button>
+		</div>
 		<div class="main_left">
 			<div class="senderRecord">
 				<span>发送者记录:</span>
@@ -79,9 +82,9 @@
 </template>
 
 <script>
-import axios from "./front/axios.js";
-import nodesInfo from "./nodes.json";
-import css from "./style/index.css";
+import axios from "../front/axios.js";
+import nodesInfo from "../nodes.json";
+import css from "../style/index.css";
 
 const TRANSACTION_STATE_PACKED = 1;
 const TRANSACTION_STATE_NOT_EXISTS = 2;
@@ -99,7 +102,8 @@ export default {
     	value: 0,
     	transactionHash: "",
     	currentNode: nodesInfo[0],
-    	nodesInfo: nodesInfo
+    	nodesInfo: nodesInfo,
+    	privateKey: ""
     }
   },
 
@@ -202,6 +206,29 @@ export default {
 					if(response.data.code === 0)
 					{
 						self.tos = response.data.data;
+					}
+					else
+					{
+						alert(response.data.msg);
+					}
+				}
+				else
+				{
+					alert(response);
+				}
+			});
+    },
+
+    importAccount()
+    {
+			axios.get("importAccount", {
+				privateKey: this.privateKey
+			}, response => {
+				if (response.status >= 200 && response.status < 300)
+				{
+					if(response.data.code === 0)
+					{
+						alert(response.data.data);
 					}
 					else
 					{
