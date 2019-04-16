@@ -17,7 +17,9 @@ class Stage
 	constructor(opts)
 	{
 		this.state = STAGE_STATE_EMPTY;
-		this.timeoutNodes = new Map();
+
+		this.friendNodesTimeoutNodes = [];
+		this.ownTimeoutNodes = [];
 
 		this.averageTimeStatisticTimes = 0;
 		this.averagePrimaryTime = 0;
@@ -49,6 +51,16 @@ class Stage
 			}
 			else
 			{
+				// record the timeout node
+				for(let i = 0; i < unl.length; i++)
+				{
+					if(!this.primary.finishAddresses.has(stripHexPrefix(unl[i].address)))
+					{
+						this.ownTimeoutNodes.push(toBuffer(unl[i].address));
+					}
+				}
+
+				//
 				logger.warn("primary stage is over because of timeout");
 
 				self.state = STAGE_STATE_TIMEOUT_FINISH;
@@ -89,10 +101,20 @@ class Stage
 
 				//
 				self.handler(true);
+				self.ripple.handleTimeoutNodes(this.ownTimeoutNodes, this.friendNodesTimeoutNodes);
 				self.reset();
 			}
 			else
 			{
+				// record the timeout node
+				for(let i = 0; i < unl.length; i++)
+				{
+					if(!this.finish.finishAddresses.has(stripHexPrefix(unl[i].address)))
+					{
+						this.ownTimeoutNodes.push(toBuffer(unl[i].address));
+					}
+				}
+
 				if(this.leftFinishTimes > 0)
 				{
 					logger.warn("finish stage retry");
@@ -123,6 +145,7 @@ class Stage
 
 					//
 					self.handler(false);
+					self.ripple.handleTimeoutNodes(this.ownTimeoutNodes, this.friendNodesTimeoutNodes);
 					self.reset();
 				}
 			}
@@ -164,55 +187,48 @@ class Stage
 		{
 			case this.finish_state_request_cmd:
 			{
-				const addresses = [];
-				for(let i = 0; i < unl.length; i++)
+				let timeoutAddresses = [];
+				if(this.state === STAGE_STATE_TIMEOUT_FINISH || this.state === STAGE_STATE_SUCCESS_FINISH)
 				{
-					if(!this.primary.finishAddresses.has(stripHexPrefix(unl[i].address)))
+					for(let i = 0; i < unl.length; i++)
 					{
-						addresses.push(toBuffer(unl[i].address));
-					}
+						if(!this.primary.finishAddresses.has(stripHexPrefix(unl[i].address)))
+						{
+							timeoutAddresses.push(toBuffer(unl[i].address));
+						}
 
-					if(!this.finish.finishAddresses.has(stripHexPrefix(unl[i].address)))
-					{
-						addresses.push(toBuffer(unl[i].address));
+						if(!this.finish.finishAddresses.has(stripHexPrefix(unl[i].address)))
+						{
+							timeoutAddresses.push(toBuffer(unl[i].address));
+						}
 					}
+					
+					// filter the same timeoutAddresses
+					timeoutAddresses = [...new Set(timeoutAddresses)];
 				}
 				
-				p2p.send(address, this.finish_state_response_cmd, rlp.encode([toBuffer(this.state), addresses]));
+				//
+				p2p.send(address, this.finish_state_response_cmd, rlp.encode([toBuffer(this.state), timeoutAddresses]));
 			}
 			break;
 			case this.finish_state_response_cmd:
 			{
 				const nodeInfo = rlp.decode(data);
 				const state = bufferToInt(nodeInfo[0]);
+				const timeoutAddresses = [...new Set(nodeInfo[1])];
 
 				if(state === STAGE_STATE_PROCESSING)
 				{
 					const addressHex = address.toString("hex");
-					if(this.timeoutNodes.has(addressHex))
-					{
-						const count = this.timeoutNodes.get(addressHex);
-						this.timeoutNodes.set(addressHex, count + 1);
-					}
-					else
-					{
-						this.timeoutNodes.set(addressHex, 1);
-					}
+
+					this.friendNodesTimeoutNodes.push(addressHex)
 				}
 				else if(state === STAGE_STATE_TIMEOUT_FINISH)
 				{
-					const addresses = nodeInfo[1];
-					addresses.forEach(address => {
+					timeoutAddresses.forEach(address => {
 						const addressHex = address.toString("hex");
-						if(this.timeoutNodes.has(addressHex))
-						{
-							const count = this.timeoutNodes.get(addressHex);
-							this.timeoutNodes.set(addressHex, count + 1);
-						}
-						else
-						{
-							this.timeoutNodes.set(addressHex, 1);
-						}
+						
+						this.friendNodesTimeoutNodes.push(addressHex);
 					});
 
 					this.finish.recordFinishNode(address.toString("hex"));
@@ -235,6 +251,9 @@ class Stage
 
 	innerReset()
 	{
+		this.ownTimeoutNodes = [];
+		this.friendNodesTimeoutNodes = [];
+
 		this.state = STAGE_STATE_EMPTY;
 		this.leftFinishTimes = STAGE_MAX_FINISH_RETRY_TIMES;
 

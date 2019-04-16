@@ -127,12 +127,16 @@ class Base
     if(!this.verifySignature())
     {
       logger.error("Base validate, invalid signature");
+
+      return false;
     }
 
     // check node address
     if(!this.checkAddress(this.from))
     {
       logger.error("Base validate, invalid address");
+
+      return false;
     }
 
     return true;

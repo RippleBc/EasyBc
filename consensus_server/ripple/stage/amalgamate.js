@@ -109,6 +109,8 @@ class Amalgamate extends Stage
 		{
 			if(address.toString("hex") !== candidate.from.toString("hex"))
 			{
+				this.ripple.handleCheatedNodes([address.toString("hex")]);
+				
 				logger.error(`Amalgamate handleAmalgamate, address is invalid, address should be ${address.toString("hex")}, now is ${candidate.from.toString("hex")}`);
 			}
 			else
@@ -118,6 +120,8 @@ class Amalgamate extends Stage
 		}
 		else
 		{
+			this.ripple.handleCheatedNodes([address.toString("hex")]);
+
 			logger.error(`Amalgamate handleAmalgamate, address ${address.toString("hex")}, send an invalid message`);
 		}
 

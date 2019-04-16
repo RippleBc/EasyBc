@@ -149,6 +149,8 @@ class CandidateAgreement extends Stage
 		{
 			if(address.toString("hex") !== candidate.from.toString("hex"))
 			{
+				this.ripple.handleCheatedNodes([address.toString("hex")]);
+
 				logger.error(`CandidateAgreement handleCandidateAgreement, address is invalid, address should be ${address.toString("hex")}, now is ${candidate.from.toString("hex")}`);
 			}
 			else
@@ -158,6 +160,8 @@ class CandidateAgreement extends Stage
 		}
 		else
 		{
+			this.ripple.handleCheatedNodes([address.toString("hex")]);
+			
 			logger.error(`CandidateAgreement handleCandidateAgreement, address ${address.toString("hex")}, send an invalid message`);
 		}
 

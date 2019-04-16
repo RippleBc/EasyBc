@@ -1,9 +1,10 @@
 const Amalgamate = require("./stage/amalgamate");
 const CandidateAgreement = require("./stage/candidateAgreement");
 const BlockAgreement = require("./stage/blockAgreement");
-const { PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, RIPPLE_STATE_IDLE, RIPPLE_STATE_STAGE_CONSENSUS, RIPPLE_STATE_TRANSACTIONS_CONSENSUS, MAX_PROCESS_TRANSACTIONS_SIZE, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT } = require("../constant");
+const { STAGE_MAX_FINISH_RETRY_TIMES, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, RIPPLE_STATE_IDLE, RIPPLE_STATE_STAGE_CONSENSUS, RIPPLE_STATE_TRANSACTIONS_CONSENSUS, MAX_PROCESS_TRANSACTIONS_SIZE, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT } = require("../constant");
 const assert = require("assert");
 const Counter = require("./counter");
+const Perish = require("./perish");
 const utils = require("../../depends/utils");
 const AsyncEventemitter = require("async-eventemitter");
 
@@ -21,6 +22,13 @@ class Ripple extends AsyncEventemitter
 
 		this.processor = processor;
 
+		this.maxTimeoutTimes = 0;
+		this.ownTimeoutNodesUserdForStatistic = new Set();
+		this.friendNodesTimeoutNodesUserdForStatistic = new Set();
+
+		this.maxCheatedTimes = 0;
+		this.cheatedNodesForStatistic = new Set();
+
 		this.state = RIPPLE_STATE_IDLE;
 
 		this.round = 0;
@@ -30,6 +38,7 @@ class Ripple extends AsyncEventemitter
 		this.pursueTime = 0;
 
 		this.counter = new Counter(this);
+		this.perish = new Perish(this);
 		this.amalgamate = new Amalgamate(this);
 		this.candidateAgreement = new CandidateAgreement(this);
 		this.blockAgreement = new BlockAgreement(this);
@@ -64,6 +73,71 @@ class Ripple extends AsyncEventemitter
 
 		this.amalgamate.run(this.processingTransactions);
 		this.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
+	}
+
+	/**
+	 * @param {Array} cheatedNodes
+	 */
+	async handleCheatedNodes(cheatedNodes)
+	{
+		assert(Array.isArray(cheatedNodes), `Ripple handleCheatedNodes, cheatedNodes should be an Array, now is ${typeof cheatedNodes}`);
+
+		cheatedNodes.forEach(cheatedNode => {
+			if(self.cheatedNodesForStatistic.has(cheatedNode))
+			{
+				const count = self.cheatedNodesForStatistic.get(cheatedNode);
+				self.cheatedNodesForStatistic.set(cheatedNode, count + 1);
+			}
+			else
+			{
+				self.cheatedNodesForStatistic.set(cheatedNode, 1);
+			}
+		});
+
+		this.maxCheatedTimes += 1;
+
+		// find the cheated nodes
+
+	}
+
+	/**
+	 * @param {Array} ownTimeoutNodes
+	 * @param {Array} friendNodesTimeoutNodes
+	 */
+	async handleTimeoutNodes(ownTimeoutNodes, friendNodesTimeoutNodes)
+	{
+		assert(Array.isArray(ownTimeoutNodes), `Ripple handleTimeoutNodes, ownTimeoutNodes should be an Array, now is ${typeof ownTimeoutNodes}`);
+		assert(Array.isArray(friendNodesTimeoutNodes), `Ripple friendNodesTimeoutNodes, friendNodesTimeoutNodes should be an Array, now is ${typeof friendNodesTimeoutNodes}`);
+		
+		const self = this;
+		ownTimeoutNodes.forEach(ownTimeoutNode => {
+			if(self.ownTimeoutNodesUserdForStatistic.has(ownTimeoutNode))
+			{
+				const count = self.ownTimeoutNodesUserdForStatistic.get(ownTimeoutNode);
+				self.ownTimeoutNodesUserdForStatistic.set(ownTimeoutNode, count + 1);
+			}
+			else
+			{
+				self.ownTimeoutNodesUserdForStatistic.set(ownTimeoutNode, 1);
+			}
+		});
+
+		friendNodesTimeoutNodes.forEach(friendNodesTimeoutNode => {
+			if(self.friendNodesTimeoutNodesUserdForStatistic.has(friendNodesTimeoutNode))
+			{
+				const count = self.friendNodesTimeoutNodesUserdForStatistic.get(friendNodesTimeoutNode);
+				self.friendNodesTimeoutNodesUserdForStatistic.set(friendNodesTimeoutNode, count + 1);
+			}
+			else
+			{
+				self.friendNodesTimeoutNodesUserdForStatistic.set(friendNodesTimeoutNode, 1);
+			}
+		});
+
+		this.maxTimeoutTimes += (STAGE_MAX_FINISH_RETRY_TIMES + 1);
+
+		// find the timeout nodes
+
 	}
 
 	/**
