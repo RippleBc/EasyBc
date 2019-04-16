@@ -82,291 +82,218 @@
 </template>
 
 <script>
-import axios from "../net/axios.js";
-import nodesInfo from "../nodes.json";
-import css from "../style/index.css";
+import axios from '../net/axios.js'
+import nodesInfo from '../nodes.json'
+import css from '../style/index.css'
 
-const TRANSACTION_STATE_PACKED = 1;
-const TRANSACTION_STATE_NOT_EXISTS = 2;
+const TRANSACTION_STATE_PACKED = 1
+const TRANSACTION_STATE_NOT_EXISTS = 2
 
 export default {
-  name: "App",
+  name: 'App',
 
-  data()
-  {
+  data () {
     return {
     	froms: [],
     	tos: [],
-    	from: "",
-    	to: "",
+    	from: '',
+    	to: '',
     	value: 0,
-    	transactionHash: "",
+    	transactionHash: '',
     	currentNode: nodesInfo[0],
     	nodesInfo: nodesInfo,
-    	privateKey: ""
+    	privateKey: ''
     }
   },
 
-  created()
-  {
-		this.getFromHistory();
-		this.getToHistory();
-		this.getLastestBlock();
+  created () {
+    this.getFromHistory()
+    this.getToHistory()
+    this.getLastestBlock()
 
-		// setInterval(this.getLastestBlock, 2000);
+    // setInterval(this.getLastestBlock, 2000);
   },
 
   methods:
   {
-  	getLastestBlock: function()
-  	{
-  		this.nodesInfo.forEach(function(nodeInfo) {
-  			axios.get("getLastestBlock", {url: nodeInfo.query.url}, response => {
-					if(response.status >= 200 && response.status < 300)
-					{
-						if(response.data.code === 0)
-						{
-							nodeInfo.detail = response.data.data;
-						}
-						else
-						{
-							alert(response.data.msg);
-						}
-					}
-					else
-					{
-						alert(response);
-					}
-				});
-  		});
+  	getLastestBlock: function () {
+  		this.nodesInfo.forEach(function (nodeInfo) {
+  			axios.get('getLastestBlock', { url: nodeInfo.query.url }, response => {
+          if (response.status >= 200 && response.status < 300) {
+            if (response.data.code === 0) {
+              nodeInfo.detail = response.data.data
+            } else {
+              alert(response.data.msg)
+            }
+          } else {
+            alert(response)
+          }
+        })
+  		})
   	},
 
-  	importAccount()
-    {
-    	const self = this;
+  	importAccount () {
+    	const self = this
 
-			axios.get("importAccount", {
-				privateKey: this.privateKey
-			}, response => {
-				if (response.status >= 200 && response.status < 300)
-				{
-					if(response.data.code === 0)
-					{
-						self.getFromHistory();
-						alert("import success");
-					}
-					else
-					{
-						alert(response.data.msg);
-					}
-				}
-				else
-				{
-					alert(response);
-				}
-			});
+      axios.get('importAccount', {
+        privateKey: this.privateKey
+      }, response => {
+        if (response.status >= 200 && response.status < 300) {
+          if (response.data.code === 0) {
+            self.getFromHistory()
+            alert('import success')
+          } else {
+            alert(response.data.msg)
+          }
+        } else {
+          alert(response)
+        }
+      })
     },
 
-  	chooseFrom: function(value)
-  	{
-			this.from = value;
+  	chooseFrom: function (value) {
+      this.from = value
   	},
 
-  	chooseTo: function(value)
-  	{
-			this.to = value;
+  	chooseTo: function (value) {
+      this.to = value
   	},
 
-  	generateKeyPiar: function()
-  	{
-  		const self = this;
-  		axios.get("generateKeyPiar", {}, response => {
-				if(response.status >= 200 && response.status < 300)
-				{
-					if(response.data.code === 0)
-					{
-						self.getFromHistory();
-					}
-					else
-					{
-						alert(response.data.msg);
-					}
-				}
-				else
-				{
-					alert(response);
-				}
-			});
+  	generateKeyPiar: function () {
+  		const self = this
+  		axios.get('generateKeyPiar', {}, response => {
+        if (response.status >= 200 && response.status < 300) {
+          if (response.data.code === 0) {
+            self.getFromHistory()
+          } else {
+            alert(response.data.msg)
+          }
+        } else {
+          alert(response)
+        }
+      })
   	},
 
-    getFromHistory: function()
-    {
-    	const self = this;
+    getFromHistory: function () {
+    	const self = this
 
-    	axios.get("getFromHistory", {}, response => {
-				if (response.status >= 200 && response.status < 300)
-				{
-					if(response.data.code === 0)
-					{
-						self.froms = response.data.data;
-					}
-					else
-					{
-						alert(response.data.msg);
-					}
-				}
-				else
-				{
-					alert(response);
-				}
-			});
+    	axios.get('getFromHistory', {}, response => {
+        if (response.status >= 200 && response.status < 300) {
+          if (response.data.code === 0) {
+            self.froms = response.data.data
+          } else {
+            alert(response.data.msg)
+          }
+        } else {
+          alert(response)
+        }
+      })
     },
 
-    getToHistory: function()
-    {
-    	const self = this;
+    getToHistory: function () {
+    	const self = this
 
-    	axios.get("getToHistory", {}, response => {
-				if (response.status >= 200 && response.status < 300)
-				{
-					if(response.data.code === 0)
-					{
-						self.tos = response.data.data;
-					}
-					else
-					{
-						alert(response.data.msg);
-					}
-				}
-				else
-				{
-					alert(response);
-				}
-			});
+    	axios.get('getToHistory', {}, response => {
+        if (response.status >= 200 && response.status < 300) {
+          if (response.data.code === 0) {
+            self.tos = response.data.data
+          } else {
+            alert(response.data.msg)
+          }
+        } else {
+          alert(response)
+        }
+      })
     },
 
-    sendTransaction: function()
-    {
-    	const self = this;
+    sendTransaction: function () {
+    	const self = this
 
-      axios.get("sendTransaction", {
+      axios.get('sendTransaction', {
       	queryUrl: self.currentNode.query.url,
         transactionUrl: self.currentNode.transaction.url,
       	from: self.from,
       	to: self.to,
       	value: self.value
       }, response => {
-				if (response.status >= 200 && response.status < 300)
-				{
-					if(response.data.code === 0)
-					{
-						alert("transaction hash: " + response.data.data);
-						self.getToHistory();
-					}
-					else
-					{
-						alert(response.data.msg);
-					}
-				}
-				else
-				{
-					alert(response);
-				}
-			});
+        if (response.status >= 200 && response.status < 300) {
+          if (response.data.code === 0) {
+            alert('transaction hash: ' + response.data.data)
+            self.getToHistory()
+          } else {
+            alert(response.data.msg)
+          }
+        } else {
+          alert(response)
+        }
+      })
     },
 
-    getTransactionState: function()
-    {
-    	const self = this;
+    getTransactionState: function () {
+    	const self = this
 
-      axios.get("getTransactionState", {
+      axios.get('getTransactionState', {
       	url: self.currentNode.query.url,
       	hash: self.transactionHash
       }, response => {
-				if (response.status >= 200 && response.status < 300)
-				{
-					if(response.data.code === 0)
-					{
-						if(response.data.data === TRANSACTION_STATE_PACKED)
-            {
-              alert("transaction has packed");
+        if (response.status >= 200 && response.status < 300) {
+          if (response.data.code === 0) {
+            if (response.data.data === TRANSACTION_STATE_PACKED) {
+              alert('transaction has packed')
+            } else if (response.data.data === TRANSACTION_STATE_NOT_EXISTS) {
+              alert('transaction not packet for now')
+            } else {
+              alert('getTransactionState failed')
             }
-            else if(response.data.data === TRANSACTION_STATE_NOT_EXISTS)
-            {
-              alert("transaction not packet for now");
-            }
-            else
-            {
-              alert("getTransactionState failed");
-            }
-					}
-					else
-					{
-						alert(response.data.msg);
-					}
-				}
-				else
-				{
-					alert(response);
-				}
-			});
+          } else {
+            alert(response.data.msg)
+          }
+        } else {
+          alert(response)
+        }
+      })
     },
 
-    getAccountInfo: function(address)
-    {
-    	const self = this;
+    getAccountInfo: function (address) {
+    	const self = this
 
-      axios.get("getAccountInfo", {
+      axios.get('getAccountInfo', {
       	url: self.currentNode.query.url,
       	address: address
       }, response => {
-				if (response.status >= 200 && response.status < 300)
-				{
-					if(response.data.code === 0)
-					{
-						alert(`address: ${response.data.data.address}\nnonce: ${response.data.data.nonce}\nbalance: ${response.data.data.balance}`);
-					}
-					else
-					{
-						alert(response.data.msg);
-					}
-				}
-				else
-				{
-					alert(response);
-				}
-			});
+        if (response.status >= 200 && response.status < 300) {
+          if (response.data.code === 0) {
+            alert(`address: ${response.data.data.address}\nnonce: ${response.data.data.nonce}\nbalance: ${response.data.data.balance}`)
+          } else {
+            alert(response.data.msg)
+          }
+        } else {
+          alert(response)
+        }
+      })
     },
 
-    getPrivateKey: function(address)
-    {
-    	const self = this;
+    getPrivateKey: function (address) {
+    	const self = this
 
-      axios.get("getPrivateKey", {
+      axios.get('getPrivateKey', {
       	url: self.currentNode.query.url,
       	address: address
       }, response => {
-				if (response.status >= 200 && response.status < 300)
-				{
-					if(response.data.code === 0)
-					{
-						alert(response.data.data);
-					}
-					else
-					{
-						alert(response.data.msg);
-					}
-				}
-				else
-				{
-					alert(response);
-				}
-			});
+        if (response.status >= 200 && response.status < 300) {
+          if (response.data.code === 0) {
+            alert(response.data.data)
+          } else {
+            alert(response.data.msg)
+          }
+        } else {
+          alert(response)
+        }
+      })
     },
 
-    chooseNode: function(node)
-    {
-    	this.currentNode = node;
+    chooseNode: function (node) {
+    	this.currentNode = node
     }
   }
 }
