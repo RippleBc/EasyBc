@@ -22,10 +22,13 @@ class Stage
 		this.friendNodesTimeoutNodes = [];
 		this.ownTimeoutNodes = [];
 
+		this.cheatedNodes = [];
+
 		this.averageTimeStatisticTimes = 0;
 		this.averagePrimaryTime = 0;
 		this.averageFinishTime = 0;
 
+		this.totalFinishTime = 0;
 		this.leftFinishTimes = STAGE_MAX_FINISH_RETRY_TIMES;
 
 		this.finish_state_request_cmd = opts.finish_state_request_cmd;
@@ -73,14 +76,8 @@ class Stage
 
 		}, STAGE_STATE_PRIMARY_TIMEOUT);
 
-		let totalFinishTime = 0;
 		this.finish = new Sender(result => {
-			if(this.leftFinishTimes === STAGE_MAX_FINISH_RETRY_TIMES)
-			{
-				totalFinishTime = 0;
-			}
-			
-			totalFinishTime += self.finish.consensusTimeConsume;
+			self.totalFinishTime += self.finish.consensusTimeConsume;
 
 			if(result)
 			{
@@ -89,12 +86,13 @@ class Stage
 				// compute finish stage consensus time consume
 				if(self.averageTimeStatisticTimes === 0)
 				{
-					self.averageFinishTime = totalFinishTime;
+					self.averageFinishTime = self.totalFinishTime;
 				}
 				else
 				{
-					self.averageFinishTime = (self.averageFinishTime * self.averageTimeStatisticTimes + totalFinishTime) / (self.averageTimeStatisticTimes + 1);
+					self.averageFinishTime = (self.averageFinishTime * self.averageTimeStatisticTimes + self.totalFinishTime) / (self.averageTimeStatisticTimes + 1);
 				}
+				//
 				if(self.averageTimeStatisticTimes < AVERAGE_TIME_STATISTIC_MAX_TIMES)
 				{
 					self.averageTimeStatisticTimes += 1;
@@ -133,11 +131,11 @@ class Stage
 					// compute finish stage consensus time consume
 					if(self.averageTimeStatisticTimes === 0)
 					{
-						self.averageFinishTime = totalFinishTime;
+						self.averageFinishTime = self.totalFinishTime;
 					}
 					else
 					{
-						self.averageFinishTime = (self.averageFinishTime * self.averageTimeStatisticTimes + totalFinishTime) / (self.averageTimeStatisticTimes + 1);
+						self.averageFinishTime = (self.averageFinishTime * self.averageTimeStatisticTimes + self.totalFinishTime) / (self.averageTimeStatisticTimes + 1);
 					}
 					if(self.averageTimeStatisticTimes < AVERAGE_TIME_STATISTIC_MAX_TIMES)
 					{

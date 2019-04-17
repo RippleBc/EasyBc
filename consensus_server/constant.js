@@ -68,7 +68,8 @@ module.exports.PERISH_DATA_STATE_KILLED = 3;
 module.exports.PERISH_MAX_FINISH_RETRY_TIMES = 3;
 module.exports.PERISH_FINISH_TIMEOUT = 2000;
 
-module.exports.PERISH_THRESHOULD = 0.8;
+module.exports.PERISH_VALID_THRESHOULD = 0.8;
+module.exports.PERISH_CHEATED_THRESHOULD = 0.5;
 
 //
 module.exports.TRANSACTIONS_CONSENSUS_THRESHOULD = 0.8;

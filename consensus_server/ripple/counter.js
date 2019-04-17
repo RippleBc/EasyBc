@@ -22,6 +22,8 @@ class Counter
 
 		this.stageValidStatistics = [];
 
+		this.cheatedNodes = [];
+
 		// should store in database
 		this.threshould = 0.5;
 	}
@@ -83,8 +85,7 @@ class Counter
 			this.ripple.handleCounter(round, stage, primaryConsensusTime, finishConsensusTime, pastTime);
 		}
 
-		// reset
-		this.reset();
+		this.ripple.handleCheatedNodes(this.cheatedNodes);
 	}
 
 	/**
@@ -123,6 +124,7 @@ class Counter
 							logger.warn("Counter, get stage infomation finish because of timeout");
 
 							this.handler(false);
+							this.reset();
 						}, COUNTER_HANDLER_TIME_DETAY);
 					}
 				}
@@ -173,9 +175,9 @@ class Counter
 				{
 					if(address.toString("hex") !== counterData.from.toString("hex"))
 					{
-						this.ripple.handleCheatedNodes([address.toString("hex")]);
+						this.cheatedNodes.push(address);
 
-						logger.error(`Counter handlerMessage, address is invalid, address should be ${address.toString("hex")}, now is ${counterData.from.toString("hex")}`);
+						logger.error(`Counter handleMessage, address is invalid, address should be ${address.toString("hex")}, now is ${counterData.from.toString("hex")}`);
 					}
 					else
 					{
@@ -184,9 +186,9 @@ class Counter
 				}
 				else
 				{
-					this.ripple.handleCheatedNodes([address.toString("hex")]);
+					this.cheatedNodes.push(address);
 					
-					logger.error(`Counter handlerMessage, address ${address.toString("hex")}, send an invalid message`);
+					logger.error(`Counter handleMessage, address ${address.toString("hex")}, send an invalid message`);
 				}
 
 				if(this.counters.length === unl.length)
@@ -196,6 +198,7 @@ class Counter
 					logger.warn("Counter, get stage infomation finish success");
 
 					this.handler(true);
+					this.reset();
 				}
 			}
 			break;

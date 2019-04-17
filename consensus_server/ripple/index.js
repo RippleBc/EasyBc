@@ -105,35 +105,37 @@ class Ripple extends AsyncEventemitter
 	}
 
 	/**
-	 * @param {Array/String} cheatedNodes
+	 * @param {Array/Buffer} addresses
 	 */
-	async handleCheatedNodes(cheatedNodes)
+	handleCheatedNodes(addresses)
 	{
-		assert(Array.isArray(cheatedNodes), `Ripple handleCheatedNodes, cheatedNodes should be an Array, now is ${typeof cheatedNodes}`);
+		assert(Array.isArray(addresses), `Ripple handleCheatedNodes, addresses should be an Buffer, now is ${typeof addresses}`);
 
-		cheatedNodes.forEach(cheatedNode => {
-			if(self.cheatedNodesForStatistic.has(cheatedNode))
+		addresses.forEach(address => {
+			address = address.toString("hex");
+
+			if(self.cheatedNodesForStatistic.has(address))
 			{
-				const count = self.cheatedNodesForStatistic.get(cheatedNode);
-				self.cheatedNodesForStatistic.set(cheatedNode, count + 1);
+				const count = self.cheatedNodesForStatistic.get(address);
+				self.cheatedNodesForStatistic.set(address, count + 1);
 			}
 			else
 			{
-				self.cheatedNodesForStatistic.set(cheatedNode, 1);
+				self.cheatedNodesForStatistic.set(address, 1);
 			}
 		});
-
+			
 		this.maxCheatedTimes += 1;
 
 		// find the cheated nodes
-
+		
 	}
 
 	/**
 	 * @param {Array/String} ownTimeoutNodes
 	 * @param {Array/String} friendNodesTimeoutNodes
 	 */
-	async handleTimeoutNodes(ownTimeoutNodes, friendNodesTimeoutNodes)
+	handleTimeoutNodes(ownTimeoutNodes, friendNodesTimeoutNodes)
 	{
 		assert(Array.isArray(ownTimeoutNodes), `Ripple handleTimeoutNodes, ownTimeoutNodes should be an Array, now is ${typeof ownTimeoutNodes}`);
 		assert(Array.isArray(friendNodesTimeoutNodes), `Ripple friendNodesTimeoutNodes, friendNodesTimeoutNodes should be an Array, now is ${typeof friendNodesTimeoutNodes}`);

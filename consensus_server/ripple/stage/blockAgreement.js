@@ -81,6 +81,7 @@ class BlockAgreement extends Stage
 		}
 
 		this.ripple.run();
+		this.ripple.handleCheatedNodes(this.cheatedNodes);
 	}
 
 	/**
@@ -178,7 +179,7 @@ class BlockAgreement extends Stage
 		{
 			if(address.toString("hex") !== rippleBlock.from.toString("hex"))
 			{
-				this.ripple.handleCheatedNodes([address.toString("hex")]);
+				this.cheatedNodes.push(address);
 
 				logger.error(`BlockAgreement handleBlockAgreement, address is invalid, address should be ${address.toString("hex")}, now is ${rippleBlock.from.toString("hex")}`);
 			}
@@ -189,7 +190,7 @@ class BlockAgreement extends Stage
 		}
 		else
 		{
-			this.ripple.handleCheatedNodes([address.toString("hex")]);
+			this.cheatedNodes.push(address);
 			
 			logger.error(`BlockAgreement handleBlockAgreement, address ${address.toString("hex")}, send an invalid message`);
 		}

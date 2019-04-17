@@ -4,7 +4,7 @@ const utils = require("../../depends/utils");
 const process = require("process");
 const AsyncEventemitter = require("async-eventemitter");
 const Sender = require("./sender");
-const { PERISH_THRESHOULD, PERISH_MAX_FINISH_RETRY_TIMES, PERISH_FINISH_TIMEOUT, PERISH_DATA_STATE_NOT_KILLED, PERISH_DATA_STATE_KILLING, PERISH_DATA_STATE_KILLED, PROTOCOL_CMD_KILL_NODE_REQUEST, PROTOCOL_CMD_KILL_NODE_RESPONSE, PROTOCOL_CMD_KILL_NODE_STATUS_REQUEST, PROTOCOL_CMD_KILL_NODE_STATUS_RESPONSE, PERISH_STATUS_IDLE, PERISH_STATUS_PROCESSING, PERISH_STATUS_FINISH } = require("../constant");
+const { PERISH_VALID_THRESHOULD, PERISH_CHEATED_THRESHOULD, PERISH_MAX_FINISH_RETRY_TIMES, PERISH_FINISH_TIMEOUT, PERISH_DATA_STATE_NOT_KILLED, PERISH_DATA_STATE_KILLING, PERISH_DATA_STATE_KILLED, PROTOCOL_CMD_KILL_NODE_REQUEST, PROTOCOL_CMD_KILL_NODE_STATUS_REQUEST, PROTOCOL_CMD_KILL_NODE_STATUS_RESPONSE, PERISH_STATUS_IDLE, PERISH_STATUS_PROCESSING, PERISH_STATUS_FINISH } = require("../constant");
 
 const rlp = utils.rlp;
 const bufferToInt = utils.bufferToInt;
@@ -25,6 +25,8 @@ class Perish extends AsyncEventemitter
 
 		this.perishData = undefined;
 
+		this.cheatedNodes = [];
+
 		this.leftFinishTimes = PERISH_MAX_FINISH_RETRY_TIMES;
 		this.finish = new Sender(result => {
 
@@ -44,7 +46,7 @@ class Perish extends AsyncEventemitter
 
 					self.finish.reset();
 					self.finish.initFinishTimeout();
-					p2p.sendAll(self.finish_state_request_cmd);
+					p2p.sendAll(PROTOCOL_CMD_KILL_NODE_STATUS_REQUEST);
 
 					this.leftFinishTimes -= 1;
 				}
@@ -66,6 +68,8 @@ class Perish extends AsyncEventemitter
 
 		this.perishData = undefined;
 
+		this.cheatedNodes = [];
+
 		this.leftFinishTimes = PERISH_MAX_FINISH_RETRY_TIMES;
 		this.finish.reset();
 	}
@@ -75,12 +79,20 @@ class Perish extends AsyncEventemitter
 		this.state = PERISH_STATUS_FINISH;
 
 		//
-		if(this.finish.finishAddresses.size() / unl.length > PERISH_THRESHOULD)
+		if(this.finish.finishAddresses.size() / unl.length > PERISH_VALID_THRESHOULD)
 		{
 			this.ripple.recordKilledNode(this.perishData.address);
 		}
-
-		this.reset();
+		else if(this.finish.finishAddresses.size() / unl.length > PERISH_CHEATED_THRESHOULD)
+		{
+			this.cheatedNodes.push(this.perishData.from);
+			this.ripple.handleCheatedNodes(this.cheatedNodes);
+		}
+		else
+		{
+			this.cheatedNodes.push(this.perishData.from);
+			this.ripple.handleCheatedNodes(this.cheatedNodes);
+		}
 	}
 
 	/**
@@ -129,14 +141,23 @@ class Perish extends AsyncEventemitter
 				this.perishData = new PerishData(data);
 				if(perishData.validate())
 				{
-					p2p.send(address, PROTOCOL_CMD_KILL_NODE_RESPONSE);
+					if(address.toString("hex") !== perishData.from.toString("hex"))
+					{
+						this.cheatedNodes.push(address);
 
-					this.finish.initFinishTimeout();
-					p2p.sendAll(PROTOCOL_CMD_KILL_NODE_STATUS_REQUEST, perishData.address);
+						logger.error(`Perish handleMessage, address is invalid, address should be ${address.toString("hex")}, now is ${counterData.from.toString("hex")}`);
+					}
+					else
+					{
+						this.finish.initFinishTimeout();
+						p2p.sendAll(PROTOCOL_CMD_KILL_NODE_STATUS_REQUEST, perishData.address);
+					}
 				}
 				else
 				{
-					this.ripple.handleCheatedNodes([address.toString("hex")]);
+					this.cheatedNodes.push(address);
+
+					logger.error(`Perish handleMessage, address ${address.toString("hex")}, send an invalid message`);
 				}
 			}
 			break;
