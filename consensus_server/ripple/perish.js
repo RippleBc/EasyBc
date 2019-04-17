@@ -18,7 +18,7 @@ class Perish extends AsyncEventemitter
 	constructor(ripple)
 	{
 		super();
-		
+
 		this.ripple = ripple;
 
 		this.state = PERISH_STATUS_IDLE;
@@ -60,6 +60,16 @@ class Perish extends AsyncEventemitter
 		}, PERISH_FINISH_TIMEOUT);
 	}
 
+	reset()
+	{
+		this.state = PERISH_STATUS_IDLE;
+
+		this.perishData = undefined;
+
+		this.leftFinishTimes = PERISH_MAX_FINISH_RETRY_TIMES;
+		this.finish.reset();
+	}
+
 	handler()
 	{
 		this.state = PERISH_STATUS_FINISH;
@@ -69,6 +79,8 @@ class Perish extends AsyncEventemitter
 		{
 			this.ripple.recordKilledNode(this.perishData.address);
 		}
+
+		this.reset();
 	}
 
 	/**
