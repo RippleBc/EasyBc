@@ -26,6 +26,12 @@ class Black extends Base
       allowLess: true,
       default: Buffer.alloc(0)
     }, {
+      name: "timestamp",
+      length: 32,
+      allowZero: true,
+      allowLess: true,
+      default: Buffer.alloc(0)
+    }, {
       name: "v",
       length: 1,
       allowZero: true,

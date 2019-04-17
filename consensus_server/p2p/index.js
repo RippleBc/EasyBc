@@ -57,28 +57,10 @@ class P2p
 		}
 
 		// check connections
+		const self = this;
 		setTimeout(() => {
 			// init conn
-			for(let i = 0; i < unl.length; i++)
-			{
-				const node = unl[i];
-				const connection = connectionsManager.get(Buffer.from(node.address, "hex"));
-
-				if(!connection || connection.closed)
-				{
-					createClient({
-						host: node.host,
-						port: node.port,
-						dispatcher: dispatcher,
-						logger: loggerNet,
-						address: Buffer.from(node.address, "hex")
-					}).then(connection => {
-						loggerP2p.info(`P2p, reconnect to address: ${node.address}, host: ${node.host}, port: ${node.port} is successed`);
-					}).catch(e => {
-						loggerP2p.error(`P2p, reconnect to address: ${node.address}, host: ${node.host}, port: ${node.port} is failed, ${e}`);
-					});
-				}	
-			}
+			self.reconnectAll();
 		}, CHECK_CONNECT_INTERVAL);
 	}
 
@@ -121,6 +103,91 @@ class P2p
 					loggerP2p.error(`P2p sendAll failed, address: ${connection.address}, host: ${address.address}, port: ${address.port}, family: ${address.family}, ${e}`);
 				}
 			}
+		}
+	}
+
+	/**
+	 * @param {Buffer} address
+	 */
+	checkIfConnectionIsOpen(address)
+	{
+		assert(Buffer.isBuffer(address), `P2p reconnect, address should be an Buffer, now is ${typeof address}`);
+
+		const connection = connectionsManager.get(address);
+
+		if(!connection || connection.closed)
+		{
+			return false;
+		}
+
+		return true;
+	}	
+
+	/**
+	 * @param {Buffer} address
+	 */
+	async reconnect(address)
+	{
+		assert(Buffer.isBuffer(address), `P2p reconnect, address should be an Buffer, now is ${typeof address}`);
+
+		const connection = connectionsManager.get(address);
+
+		if(connection && !connection.closed)
+		{
+			return;
+		}
+
+		for(let i = 0; i < unl.length; i++)
+		{
+			const node = unl[i];
+			if(node.address.toString("hex") === address.toString("hex"))
+			{
+				try
+				{
+					const connection = await createClient({
+						host: node.host,
+						port: node.port,
+						dispatcher: dispatcher,
+						logger: loggerNet,
+						address: Buffer.from(node.address, "hex")
+					});
+
+					loggerP2p.info(`P2p, reconnect to address: ${node.address}, host: ${node.host}, port: ${node.port} is successed`);
+				}
+				catch(e)
+				{
+					loggerP2p.error(`P2p, reconnect to address: ${node.address}, host: ${node.host}, port: ${node.port} is failed, ${e}`);
+				}
+			}
+		}
+	}
+
+	async reconnectAll()
+	{
+		for(let i = 0; i < unl.length; i++)
+		{
+			const node = unl[i];
+			const connection = connectionsManager.get(Buffer.from(node.address, "hex"));
+
+			if(!connection || connection.closed)
+			{
+				try
+				{
+					const connection = await createClient({
+						host: node.host,
+						port: node.port,
+						dispatcher: dispatcher,
+						logger: loggerNet,
+						address: Buffer.from(node.address, "hex")
+					});
+
+					loggerP2p.info(`P2p, reconnect to address: ${node.address}, host: ${node.host}, port: ${node.port} is successed`);
+				}
+				catch(e)
+				{
+					loggerP2p.error(`P2p, reconnect to address: ${node.address}, host: ${node.host}, port: ${node.port} is failed, ${e}`);
+				}
+			}	
 		}
 	}
 }

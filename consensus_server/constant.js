@@ -54,7 +54,21 @@ module.exports.COUNTER_STATE_PROCESSING = 2;
 
 // Perish
 module.exports.PROTOCOL_CMD_KILL_NODE_REQUEST = 500;
-module.exports.PROTOCOL_CMD_KILL_NODE_RESPONSE = 501;
+module.exports.PROTOCOL_CMD_KILL_NODE_STATUS_REQUEST = 501;
+module.exports.PROTOCOL_CMD_KILL_NODE_STATUS_RESPONSE = 502;
+
+module.exports.PERISH_STATUS_IDLE = 1;
+module.exports.PERISH_STATUS_PROCESSING = 2;
+module.exports.PERISH_STATUS_FINISH = 3;
+
+module.exports.PERISH_DATA_STATE_NOT_KILLED = 1;
+module.exports.PERISH_DATA_STATE_KILLING = 2;
+module.exports.PERISH_DATA_STATE_KILLED = 3;
+
+module.exports.PERISH_MAX_FINISH_RETRY_TIMES = 3;
+module.exports.PERISH_FINISH_TIMEOUT = 2000;
+
+module.exports.PERISH_THRESHOULD = 0.8;
 
 //
 module.exports.TRANSACTIONS_CONSENSUS_THRESHOULD = 0.8;

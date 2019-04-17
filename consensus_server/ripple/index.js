@@ -22,12 +22,17 @@ class Ripple extends AsyncEventemitter
 
 		this.processor = processor;
 
+		//
 		this.maxTimeoutTimes = 0;
 		this.ownTimeoutNodesUserdForStatistic = new Set();
 		this.friendNodesTimeoutNodesUserdForStatistic = new Set();
 
+		//
 		this.maxCheatedTimes = 0;
 		this.cheatedNodesForStatistic = new Set();
+
+		//
+		this.killedNodes = new Set();
 
 		this.state = RIPPLE_STATE_IDLE;
 
@@ -43,9 +48,12 @@ class Ripple extends AsyncEventemitter
 		this.candidateAgreement = new CandidateAgreement(this);
 		this.blockAgreement = new BlockAgreement(this);
 
+		//
 		this.processingTransactions = [];
 
+		// used for cache amalgamate message
 		this.amalgamateMessagesCache = [];
+
 		const self = this;
 		this.on("blockProcessOver", () => {
 			for(let i = 0; i < self.amalgamateMessagesCache.length; i++)
@@ -76,7 +84,28 @@ class Ripple extends AsyncEventemitter
 	}
 
 	/**
-	 * @param {Array} cheatedNodes
+	 * @param {Buffer} address
+	 */
+	recordKilledNode(address)
+	{
+		assert(Buffer.isBuffer(address), `Ripple recordKilledNode, address should be an Buffer, now is ${typeof address}`);
+
+		this.killedNodes.add(address.toString("hex"));
+	}
+
+	/**
+	 * @param {Buffer} address
+	 * @return {Boolean}
+	 */
+	checkIfNodeIsKilled(address)
+	{
+		assert(Buffer.isBuffer(address), `Ripple checkIfNodeIsKilled, address should be an Buffer, now is ${typeof address}`);
+
+		return this.killedNodes.has(address.toString("hex"));
+	}
+
+	/**
+	 * @param {Array/String} cheatedNodes
 	 */
 	async handleCheatedNodes(cheatedNodes)
 	{
@@ -101,8 +130,8 @@ class Ripple extends AsyncEventemitter
 	}
 
 	/**
-	 * @param {Array} ownTimeoutNodes
-	 * @param {Array} friendNodesTimeoutNodes
+	 * @param {Array/String} ownTimeoutNodes
+	 * @param {Array/String} friendNodesTimeoutNodes
 	 */
 	async handleTimeoutNodes(ownTimeoutNodes, friendNodesTimeoutNodes)
 	{
