@@ -24,12 +24,12 @@ class Ripple extends AsyncEventemitter
 
 		//
 		this.maxTimeoutTimes = 0;
-		this.ownTimeoutNodesUserdForStatistic = new Set();
-		this.friendNodesTimeoutNodesUserdForStatistic = new Set();
+		this.ownTimeoutNodesUserdForStatistic = new Map();
+		this.friendNodesTimeoutNodesUserdForStatistic = new Map();
 
 		//
 		this.maxCheatedTimes = 0;
-		this.cheatedNodesForStatistic = new Set();
+		this.cheatedNodesForStatistic = new Map();
 
 		//
 		this.killedNodes = new Set();
