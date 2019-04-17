@@ -2,7 +2,7 @@ const CounterData = require("./data/counter");
 const { unl } = require("../config.json");
 const utils = require("../../depends/utils");
 const process = require("process");
-const { COUNTER_HANDLER_TIME_DETAY, COUNTER_INVALID_STAGE_TIME_SECTION, COUNTER_STATE_IDLE, COUNTER_STATE_PROCESSING, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_ACOUNTER_REQUEST, PROTOCOL_CMD_ACOUNTER_RESPONSE } = require("../constant");
+const { COUNTER_CONSENSUS_STAGE_THRESHOULD, COUNTER_HANDLER_TIME_DETAY, COUNTER_INVALID_STAGE_TIME_SECTION, COUNTER_STATE_IDLE, COUNTER_STATE_PROCESSING, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_ACOUNTER_REQUEST, PROTOCOL_CMD_ACOUNTER_RESPONSE } = require("../constant");
 
 const rlp = utils.rlp;
 
@@ -14,25 +14,29 @@ class Counter
 {
 	constructor(ripple)
 	{
-		this.state = COUNTER_STATE_IDLE;
 
 		this.ripple = ripple;
 
+		this.state = COUNTER_STATE_IDLE;
+
+		// 
 		this.counters = [];
 
-		this.stageValidStatistics = [];
+		// statistic the frequency of fall behind
+		this.invalidStageTimeStatistics = [];
 
+		//
 		this.cheatedNodes = [];
 
 		// should store in database
-		this.threshould = 0.5;
+		this.threshould = COUNTER_CONSENSUS_STAGE_THRESHOULD;
 	}
 
 	reset()
 	{
 		this.state = COUNTER_STATE_IDLE;
 		this.counters = [];
-		this.stageValidStatistics = [];
+		this.invalidStageTimeStatistics = [];
 		
 		clearTimeout(this.timeout);
 	}
@@ -105,9 +109,9 @@ class Counter
 
 				const now = Date.now();
 
-				this.stageValidStatistics.push(now);
+				this.invalidStageTimeStatistics.push(now);
 
-				const stageValidTimesInSpecifiedTimeSection = this.stageValidStatistics.filter(ele => { 
+				const stageValidTimesInSpecifiedTimeSection = this.invalidStageTimeStatistics.filter(ele => { 
 					return ele + COUNTER_INVALID_STAGE_TIME_SECTION > now;
 				}).length;
 

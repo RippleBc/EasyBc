@@ -19,15 +19,19 @@ class Stage
 	{
 		this.state = STAGE_STATE_EMPTY;
 
+		// timeout nodes
 		this.friendNodesTimeoutNodes = [];
 		this.ownTimeoutNodes = [];
 
+		// cheated nodes
 		this.cheatedNodes = [];
 
+		// stage consensus time consume
 		this.averageTimeStatisticTimes = 0;
 		this.averagePrimaryTime = 0;
 		this.averageFinishTime = 0;
 
+		//
 		this.totalFinishTime = 0;
 		this.leftFinishTimes = STAGE_MAX_FINISH_RETRY_TIMES;
 
