@@ -1,36 +1,26 @@
 <template>
 	<div class="container">
 		<h1>欢迎进入区块链交易系统</h1>
-		<div class="current_node">
-			<p>当前选择节点: {{currentNode.consensus.url}}</p>
-		</div>
-		<div class="node_list">
-			<span>节点列表:</span>
-			<ul id="nodesInfo">
-				<li v-for="nodeInfo in nodesInfo">
-					<p style="cursor:pointer;" @dblclick="chooseNode(nodeInfo)">{{nodeInfo.consensus.url}}</p>
-					<ul class="chain">
-						<li><div class="chain_text">开始生成</div></li>
-						<li><div class="chain_text">{{nodeInfo.detail.number}}</div></li>
-						<li><div class="chain_text">{{nodeInfo.detail.hash}}</div></li>
-						<div class="generation">
-							<i></i>
-							<i></i>
-							<i></i>
-							<i></i>
-							<i></i>
-							<i></i>
-							<i></i>
-							<i></i>
-							<span>正在生成中</span>
-						</div>
-					</ul>
-					<p></p>
-				</li>
-			</ul>
-		</div>
+    <div class="common">
+      <p style="width:100%;text-align:left;">当前选择节点: {{currentNode.consensus.url}}</p>
+      <div class="node_list">
+        <span>节点列表:</span>
+        <ul id="nodesInfo">
+          <li v-for="nodeInfo in nodesInfo">
+            <p style="cursor:pointer;" @dblclick="chooseNode(nodeInfo)">{{nodeInfo.consensus.url}}</p>
+            
+            <span class="chain_text">开始生成</span>
+            <span class="chain_text">{{nodeInfo.detail.number}}</span>
+            <span class="chain_text">{{nodeInfo.detail.hash}}</span>
+              
+            <p></p>
+          </li>
+        </ul>
+      </div>
+    </div>
+		
 		<div style="display:flex;justify-content:center;align-items:center;margin:10px 0px 10px 0px;">
-			<input v-model="privateKey" placeholder="privateKey" style="width:100%"></input><button @click="importAccount">import account</button>
+			<el-input v-model="privateKey" placeholder="privateKey" style="width:100%"></el-input><el-button @click="importAccount">import account</el-button>
 		</div>
 		<div class="main_left">
 			<div class="senderRecord">
@@ -84,7 +74,6 @@
 <script>
 import axios from '../net/axios.js'
 import nodesInfo from '../nodes.json'
-import css from '../style/index.css'
 
 const TRANSACTION_STATE_PACKED = 1
 const TRANSACTION_STATE_NOT_EXISTS = 2
@@ -298,3 +287,23 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.container
+{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.common
+{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+</style>

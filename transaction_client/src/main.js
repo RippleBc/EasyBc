@@ -3,6 +3,11 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 import './registerServiceWorker'
+import { Button, Select, Input } from 'element-ui';
+
+Vue.use(Button);
+Vue.use(Select);
+Vue.use(Input);
 
 Vue.config.productionTip = false
 
