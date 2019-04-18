@@ -3,9 +3,10 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 import './registerServiceWorker'
-import { Alert, Card, Button, Select, Input, Notification, Menu, Submenu, MenuItemGroup, MenuItem } from 'element-ui';
+import { Dialog, MessageBox, Card, Button, Select, Input, Notification, Menu, Submenu, MenuItemGroup, MenuItem } from 'element-ui';
 
-Vue.use(Alert);
+Vue.use(Dialog);
+Vue.use(MessageBox);
 Vue.use(Card);
 Vue.use(Button);
 Vue.use(Select);
@@ -28,8 +29,12 @@ Vue.prototype.$notify = {
 	},
 
 	warn: opts => {
-		Notification.warn(opts);
+		Notification.warning(opts);
 	}
+}
+
+Vue.prototype.$alert = opts => {
+	MessageBox(opts);
 }
 
 new Vue({

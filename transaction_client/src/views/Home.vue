@@ -1,11 +1,12 @@
 <template>
 	<div class="container">
     <div style="max-width:1280px;flex-direction:row;">
-      <p style="width:120px;">当前节点地址</p>
-      <el-card shadow="always">{{currentNode.consensus.url}}</el-card>
+      <el-card shadow="always">
+        <h2>{{currentNode.consensus.url}}</h2>
+      </el-card>
     </div>
     
-    <div class="border" style="max-width:1280px;height:500px;overflow:scroll;margin:20px 0px 20px 0px;padding-top:20px;">
+    <div class="border" style="max-width:1280px;height:500px;overflow:auto;margin:20px 0px 20px 0px;padding-top:20px;">
       <div style="justify-content:left;" v-for="nodeInfo in nodesInfo">
         <div style="flex-direction:row;justify-content:start;cursor:pointer;" @dblclick="chooseNode(nodeInfo)">
           <span style="width:100px;">节点地址</span>
@@ -56,23 +57,50 @@
 		<div style="flex-direction:row;max-width:1280px;">
 			<div class="border" style="height:500px;justify-content:start;align-items:start;padding:20px;margin:20px 20px 20px 0px;">
         <span>发送者记录</span>
-        <div v-for="from in froms">
-          <div style="flex-direction:row;justify-content:end">
-            <p style="cursor:pointer;width:100%" @dblclick="chooseFrom(from)">{{from}}</p>
-            <el-button type="primary" @click="getAccountInfo(from)">获取账户信息</el-button>
-            <el-button type="primary" @click="getPrivateKey(from)">获取私钥</el-button>
-          </div>
-          <HR style="FILTER: alpha(opacity=100,finishopacity=0,style=3)" width="99%" color=#C0C4CC SIZE=1></HR>
-        </div>	
+        <div style="overflow:auto;">
+          <div v-for="from in froms">
+            <div>
+              <p style="cursor:pointer;width:100%;text-align:left;" @dblclick="chooseFrom(from)">{{from}}</p>
+              <div style="flex-direction:row;justify-content:end;">
+                <el-button type="primary" @click="getAccountInfo(from)">获取账户信息</el-button>
+                <el-button type="primary" @click="getPrivateKey(from)">获取私钥</el-button>
+              </div>
+            </div>
+            <HR style="FILTER: alpha(opacity=100,finishopacity=0,style=3)" width="99%" color=#C0C4CC SIZE=1></HR>
+          </div>  
+        </div>
 			</div>
 			<div class="border" style="height:500px;justify-content:start;align-items:start;padding:20px;margin:20px 0px 20px 0px;">
 				<span>接收者记录</span>
-				<div v-for="to in tos">
-					<p style="cursor:pointer;width:100%;" @dblclick="chooseTo(to)">{{to}}</p>
-          <HR style="FILTER: alpha(opacity=100,finishopacity=0,style=3)" width="99%" color=#C0C4CC SIZE=1></HR>
-				</div>
+        <div style="overflow:auto;">
+          <div v-for="to in tos">
+            <div>
+              <p style="cursor:pointer;width:100%;text-align:left;" @dblclick="chooseTo(to)">{{to}}</p>
+              <div style="flex-direction:row;justify-content:end;">
+                <el-button type="primary" @click="getAccountInfo(to)">获取账户信息</el-button>
+                <el-button type="primary" @click="getPrivateKey(to)">获取私钥</el-button>
+              </div>
+            </div>
+            <HR style="FILTER: alpha(opacity=100,finishopacity=0,style=3)" width="99%" color=#C0C4CC SIZE=1></HR>
+          </div>  
+        </div>
 			</div>
 		</div>
+
+    <el-dialog title="账户详细信息" :visible.sync="accontInfoVisisble">
+      <div style="flex-direction:row;justify-content:start;">
+        <span style="width:100px">地址</span><p style="width:100%;">{{address}}</p>
+      </div>
+      <div style="flex-direction:row;justify-content:start;">
+        <span style="width:100px">临时数</span><p style="width:100%;">{{nonce}}</p>
+      </div>
+      <div style="flex-direction:row;justify-content:start;">
+        <span style="width:100px">余额</span><p style="width:100%;">{{balance}}</p>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="accontInfoVisisble = false">确 定</el-button>
+      </span>
+    </el-dialog>
 	</div>
 </template>
 
@@ -96,7 +124,11 @@ export default {
     	transactionHash: '',
     	currentNode: nodesInfo[0],
     	nodesInfo: nodesInfo,
-    	privateKey: ''
+    	privateKey: '',
+      accontInfoVisisble: false,
+      address: "",
+      nonce: "",
+      balance: ""
     }
   },
 
@@ -113,19 +145,12 @@ export default {
 
   		this.nodesInfo.forEach(function (nodeInfo) {
   			axios.get('getLastestBlock', { url: nodeInfo.query.url }, response => {
-          if (response.status >= 200 && response.status < 300) {
-            if (response.data.code === 0) {
-              nodeInfo.detail = response.data.data
-            } else {
-              self.$notify.error({
-                title: 'getLastestBlock',
-                message: response.data.msg
-              });
-            }
+          if (response.code === 0) {
+            nodeInfo.detail = response.data
           } else {
             self.$notify.error({
               title: 'getLastestBlock',
-              message: response
+              message: response.msg
             });
           }
         })
@@ -138,24 +163,17 @@ export default {
       axios.get('importAccount', {
         privateKey: this.privateKey
       }, response => {
-        if (response.status >= 200 && response.status < 300) {
-          if (response.data.code === 0) {
-            self.getFromHistory();
+        if (response.code === 0) {
+          self.getFromHistory();
 
-            self.$notify.success({
-              title: 'importAccount',
-              message: "import success"
-            });
-          } else {
-            self.$notify.error({
-              title: 'importAccount',
-              message: response.data.msg
-            });
-          }
+          self.$notify.success({
+            title: 'importAccount',
+            message: "import success"
+          });
         } else {
           self.$notify.error({
             title: 'importAccount',
-            message: response
+            message: response.msg
           });
         }
       })
@@ -173,19 +191,12 @@ export default {
   		const self = this;
 
   		axios.get('generateKeyPiar', {}, response => {
-        if (response.status >= 200 && response.status < 300) {
-          if (response.data.code === 0) {
-            self.getFromHistory();
-          } else {
-            self.$notify.error({
-              title: 'generateKeyPiar',
-              message: response.data.msg
-            });
-          }
+        if (response.code === 0) {
+          self.getFromHistory();
         } else {
           self.$notify.error({
             title: 'generateKeyPiar',
-            message: response
+            message: response.msg
           });
         }
       })
@@ -195,19 +206,12 @@ export default {
     	const self = this
 
     	axios.get('getFromHistory', {}, response => {
-        if (response.status >= 200 && response.status < 300) {
-          if (response.data.code === 0) {
-            self.froms = response.data.data
-          } else {
-            self.$notify.error({
-              title: 'getFromHistory',
-              message: response.data.msg
-            });
-          }
+        if (response.code === 0) {
+          self.froms = response.data
         } else {
           self.$notify.error({
             title: 'getFromHistory',
-            message: response
+            message: response.msg
           });
         }
       })
@@ -217,19 +221,12 @@ export default {
     	const self = this
 
     	axios.get('getToHistory', {}, response => {
-        if (response.status >= 200 && response.status < 300) {
-          if (response.data.code === 0) {
-            self.tos = response.data.data
-          } else {
-            self.$notify.error({
-              title: 'getToHistory',
-              message: response.data.msg
-            });
-          }
+        if (response.code === 0) {
+          self.tos = response.data
         } else {
           self.$notify.error({
             title: 'getToHistory',
-            message: response
+            message: response.msg
           });
         }
       })
@@ -245,23 +242,17 @@ export default {
       	to: self.to,
       	value: self.value
       }, response => {
-        if (response.status >= 200 && response.status < 300) {
-          if (response.data.code === 0) {
-            self.$alert('交易哈希值', response.data.data, {
-              confirmButtonText: '确定'
-            });
-            self.getToHistory();
-          } else {
-            self.$notify.error({
-              title: 'sendTransaction',
-              message: response.data.msg
-            });
-          }
+        if (response.code === 0) {
+          self.$alert({
+            title: '交易哈希值',
+            message: response.data,
+            confirmButtonText: '确定'
+          });
+          self.getToHistory();
         } else {
           self.$notify.error({
             title: 'sendTransaction',
-            type: "",
-            message: response
+            message: response.msg
           });
         }
       })
@@ -274,28 +265,21 @@ export default {
       	url: self.currentNode.query.url,
       	hash: self.transactionHash
       }, response => {
-        if (response.status >= 200 && response.status < 300) {
-          if (response.data.code === 0) {
-            if (response.data.data === TRANSACTION_STATE_PACKED) {
-              self.$notify.warn({
-                title: 'getTransactionState',
-                message: 'transaction has packed'
-              });
-            } else if (response.data.data === TRANSACTION_STATE_NOT_EXISTS) {
-              self.$notify.warn({
-                title: 'getTransactionState',
-                message: 'transaction not packet for now'
-              });
-            } else {
-              self.$notify.error({
-                title: 'getTransactionState',
-                message: 'getTransactionState failed, get a invalid code'
-              });
-            }
+        if (response.code === 0) {
+          if (response.data === TRANSACTION_STATE_PACKED) {
+            self.$notify.warn({
+              title: 'getTransactionState',
+              message: 'transaction has packed'
+            });
+          } else if (response.data === TRANSACTION_STATE_NOT_EXISTS) {
+            self.$notify.warn({
+              title: 'getTransactionState',
+              message: 'transaction not packet for now'
+            });
           } else {
             self.$notify.error({
               title: 'getTransactionState',
-              message: response.data.msg
+              message: 'getTransactionState failed, get a invalid code'
             });
           }
         } else {
@@ -314,21 +298,15 @@ export default {
       	url: self.currentNode.query.url,
       	address: address
       }, response => {
-        if (response.status >= 200 && response.status < 300) {
-          if (response.data.code === 0) {
-            self.$alert('账户信息', `地址: ${response.data.data.address}\nnonce: ${response.data.data.nonce}\n余额: ${response.data.data.balance}`, {
-              confirmButtonText: '确定'
-            });
-          } else {
-            self.$notify.error({
-              title: 'getAccountInfo',
-              message: response.data.msg
-            });
-          }
+        if (response.code === 0) {
+          self.address = address;
+          self.nonce = response.data.nonce;
+          self.balance = response.data.balance;
+          self.accontInfoVisisble = true;
         } else {
           self.$notify.error({
             title: 'getAccountInfo',
-            message: response
+            message: response.msg
           });
         }
       })
@@ -341,21 +319,16 @@ export default {
       	url: self.currentNode.query.url,
       	address: address
       }, response => {
-        if (response.status >= 200 && response.status < 300) {
-          if (response.data.code === 0) {
-            self.$alert('私钥', response.data.data, {
-              confirmButtonText: '确定'
-            });
-          } else {
-            self.$notify.error({
-              title: 'getPrivateKey',
-              message: response.data.msg
-            });
-          }
+        if (response.code === 0) {
+          self.$alert({
+            title: '私钥',
+            message: response.data,
+            confirmButtonText: '确定'
+          });
         } else {
           self.$notify.error({
             title: 'getPrivateKey',
-            message: response
+            message: response.msg
           });
         }
       })

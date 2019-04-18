@@ -7,12 +7,7 @@ let http = axios.create({
   headers: {
     'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
   },
-  // transformRequest allows changes to the request data before it is sent to the server
-  // This is only applicable for request methods PUT, POST, and PATCH
-  // The last function in the array must return a string or an instance of Buffer, ArrayBuffer,
-  // FormData or Stream
-  // You may modify the headers object.
-  transformRequest: [function (data) {
+  transformRequest: [data => {
     let newData = ''
     for (let k in data) {
       if (data.hasOwnProperty(k) === true) {
@@ -23,15 +18,24 @@ let http = axios.create({
   }]
 })
 
-function apiAxios (method, url, params, response) {
+function apiAxios(method, url, params, response)
+{
   http({
     method: method,
     url: url,
     data: method === 'POST' || method === 'PUT' ? params : null,
     params: method === 'GET' || method === 'DELETE' ? params : null
-  }).then(function (res) {
-    response(res)
-  }).catch(function (err) {
+  }).then(res => {
+    if(res.status < 200 || res.status >= 300)
+    {
+      self.$notify.error({
+        title: 'apiAxios',
+        message: response
+      });
+      return;
+    }
+    response(res.data)
+  }).catch(err => {
     response(err)
   })
 }

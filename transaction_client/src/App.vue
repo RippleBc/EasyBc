@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <el-menu
-      style="width:200px;"
+      style="width:200px;height:100%;position:fixed;"
       default-active="1"
       :router="true">
       <el-menu-item index="1" route="/">
@@ -17,9 +17,11 @@
         <span>关于</span>
       </el-menu-item>
     </el-menu>
-    <div style="display:flex;flex-direction:column;width:100%;">
-      <h1>区块链交易系统</h1>
-      <router-view/>
+    <div style="margin-left:200px;display:flex;flex-direction:column;width:100%;">
+      <h1 style="position:fixed;width:calc(100% - 200px);height:100px;background-color:#ffff;z-index:1;">区块链交易系统</h1>
+      <div style="margin-top:100px;">
+        <router-view/>
+      </div>
     </div>
     
   </div>

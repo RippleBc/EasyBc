@@ -5,6 +5,7 @@ const { SUCCESS, PARAM_ERR, OTH_ERR } = require("../constant");
 const { getTransactionState, getAccountInfo, getLastestBlock } = require("./backend/net");
 const utils = require("../depends/utils");
 const { port, host } = require("./config.json");
+const cors = require("cors");
 
 const log4js= require("./logConfig");
 const logger = log4js.getLogger();
@@ -16,16 +17,11 @@ const BN = utils.BN;
 
 const app = express();
 
+app.use(cors({
+  credentials: true, 
+  origin: 'http://localhost:8080', // web前端服务器地址
+}));
 app.use("/", express.static(path.join(__dirname + "/dist")));
-
-app.all('*', function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    res.header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
-    res.header("X-Powered-By", '3.2.1')
-    res.header("Content-Type", "application/json;charset=utf-8");
-    next();
-});
 
 const server = app.listen(port, host, function() {
     logger.info(`server listening at http://${host}:${port}`);
