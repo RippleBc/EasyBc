@@ -1,20 +1,38 @@
 <template>
   <div id="app">
-    <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
+    <el-menu
+      style="width:200px;"
+      default-active="1"
+      :router="true">
+      <el-menu-item index="1" route="/">
+        <i class="el-icon-location"></i>
+        <span>首页</span>
+      </el-menu-item>
+      <el-menu-item index="2" route="/transactions">
+        <i class="el-icon-date"></i>
+        <span>交易记录</span>
+      </el-menu-item>
+      <el-menu-item index="3" route="/about" disabled>
+        <i class="el-icon-document"></i>
+        <span>关于</span>
+      </el-menu-item>
+    </el-menu>
+    <div style="display:flex;flex-direction:column;width:100%;">
+      <h1>区块链交易系统</h1>
+      <router-view/>
     </div>
-    <router-view/>
+    
   </div>
 </template>
 
 <style lang="scss">
 #app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  display: flex;
+  font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
+  color: #606266;
 }
 #nav {
   padding: 30px;

@@ -1,71 +1,77 @@
 <template>
 	<div class="container">
-		<h1>欢迎进入区块链交易系统</h1>
-    <div class="common">
-      <p style="width:100%;text-align:left;">当前选择节点: {{currentNode.consensus.url}}</p>
-      <div class="node_list">
-        <span>节点列表:</span>
-        <ul id="nodesInfo">
-          <li v-for="nodeInfo in nodesInfo">
-            <p style="cursor:pointer;" @dblclick="chooseNode(nodeInfo)">{{nodeInfo.consensus.url}}</p>
-            
-            <span class="chain_text">开始生成</span>
-            <span class="chain_text">{{nodeInfo.detail.number}}</span>
-            <span class="chain_text">{{nodeInfo.detail.hash}}</span>
-              
-            <p></p>
-          </li>
-        </ul>
+    <div style="max-width:1280px;flex-direction:row;">
+      <el-card shadow="always" style="width:200px;margin-right:20px;">当前节点地址</el-card>
+      <el-card shadow="always">{{currentNode.consensus.url}}</el-card>
+    </div>
+    
+    <div class="border" style="max-width:1280px;height:500px;overflow:scroll;margin:20px 0px 20px 0px;padding-top:20px;">
+      <div style="line-height:50px;justify-content:left;" v-for="nodeInfo in nodesInfo">
+        <div style="flex-direction:row;justify-content:start;cursor:pointer;" @dblclick="chooseNode(nodeInfo)">
+          <span style="width:100px;">节点地址</span>
+          <p style="width:100%;">{{nodeInfo.consensus.url}}</p>
+        </div>
+        <div style="flex-direction:row;justify-content:start;">
+          <span style="width:100px;">区块哈希值</span>
+          <p style="width:100%;">{{nodeInfo.consensus.hash ? nodeInfo.consensus.hash : "未知"}}</p>
+        </div>
+        <div style="flex-direction:row;justify-content:start;">
+          <span style="width:100px;">区块链高度</span>
+          <p style="width:100%;">{{nodeInfo.consensus.number ? nodeInfo.consensus.number : "未知"}}</p>
+        </div>
+        <HR style="FILTER: alpha(opacity=100,finishopacity=0,style=3)" width="99%" color=#C0C4CC SIZE=3></HR>
       </div>
     </div>
 		
-		<div style="display:flex;justify-content:center;align-items:center;margin:10px 0px 10px 0px;">
-			<el-input v-model="privateKey" placeholder="privateKey" style="width:100%"></el-input><el-button @click="importAccount">import account</el-button>
+		<div class="border" style="max-width:1280px;margin:20px 0px 20px 0px;">
+      <div style="flex-direction:row;">
+        <el-input style="margin:20px;" v-model="privateKey" placeholder="privateKey"></el-input>
+        <el-button type="primary" style="margin:20px;" @click="importAccount">账号导入</el-button>
+        <el-button type="primary" style="margin-right:20px;" @click="generateKeyPiar">生成密匙对</el-button>
+      </div>
+      <div style="flex-direction:row;justify-content:end;">
+        <el-input style="margin:20px;" v-model="transactionHash"/>
+        <el-button type="info" style="margin:20px;" @click="getTransactionState">获取交易状态</el-button>
+      </div>
 		</div>
-		<div class="main_left">
-			<div class="senderRecord">
-				<span>发送者记录:</span>
-				<ul id="fromHistory">
+    <div style="max-width:1280px;margin:20px 0px 20px 0px;">
+      <div class="border">
+        <div style="flex-direction:row;margin:20px 20px 20px 0px;">
+          <span style="width:100px;">发送者</span>
+          <el-input v-model="from" placeholder="请输入发送者id"/>
+        </div>
+        <div style="flex-direction:row;margin:20px 20px 20px 0px;">
+          <span  style="width:100px;">接收者</span>
+          <el-input v-model="to" placeholder="请输入接收者id"/>
+        </div>
+        <div style="flex-direction:row;margin:20px 20px 20px 0px;">
+          <span  style="width:100px;">值</span>
+          <el-input v-model="value" placeholder="请输入值"/>
+        </div>
+        <div style="flex-direction:row;justify-content:end;margin:20px 20px 20px 0px;">
+          <el-button type="primary" @click="sendTransaction">发送交易</el-button>
+        </div>
+      </div>
+    </div>
+		<div style="flex-direction:row;max-width:1280px;">
+			<div class="border" style="height:500px;justify-content:start;align-items:start;padding:20px;margin:20px 20px 20px 0px;">
+        <span>发送者记录</span>
+				<ul>
 					<li v-for="from in froms">
 						<p style="cursor:pointer;" @dblclick="chooseFrom(from)">{{from}}
 						</p>
-						<button @click="getAccountInfo(from)" class="obtain1">获取账户信息</button>
-						<button @click="getPrivateKey(from)" class="obtain2">获取私钥</button>
+						<el-button @click="getAccountInfo(from)" class="obtain1">获取账户信息</el-button>
+						<el-button @click="getPrivateKey(from)" class="obtain2">获取私钥</el-button>
 					</li>
 				</ul>
 			</div>
-			<div class="recipientRecord">
-				<span>接收者记录:</span>
-				<ul id="toHistory">
+			<div class="border" style="height:500px;justify-content:start;align-items:start;padding:20px;margin:20px 0px 20px 0px;">
+				<span>接收者记录</span>
+				<ul>
 					<li v-for="to in tos">
 						<p style="cursor:pointer;" @dblclick="chooseTo(to)">{{to}}</p>
 					</li>
 				</ul>
-			</div>
-		</div>
-		<div class="main_right">
-			<div class="input_list">
-				<div class="from">
-					<span>发送者: </span>
-					<input v-model="from" placeholder="请输入发送者id"/>
-				</div>
-				<div class="to">
-					<span>接收者: </span>
-					<input v-model="to" placeholder="请输入接收者id"/>
-				</div>
-				<div class="value">
-					<span>值: </span>
-					<input v-model="value" placeholder="请输入值"/>
-				</div>
-				<button type="primary" @click="generateKeyPiar">生成密匙piar</button>
-			  <button type="primary" @click="sendTransaction">发送交易</button>
-			</div>
-			<div class="transactionHash">
-				<div class="tHash">
-					<span>交易哈希值: </span>
-				<input v-model="transactionHash"/>
-				</div>
-				<button @click="getTransactionState">获取交易状态</button>
 			</div>
 		</div>
 	</div>
@@ -99,23 +105,31 @@ export default {
     this.getFromHistory()
     this.getToHistory()
     this.getLastestBlock()
-
-    // setInterval(this.getLastestBlock, 2000);
   },
 
   methods:
   {
   	getLastestBlock: function () {
+      const self = this;
+
   		this.nodesInfo.forEach(function (nodeInfo) {
   			axios.get('getLastestBlock', { url: nodeInfo.query.url }, response => {
           if (response.status >= 200 && response.status < 300) {
             if (response.data.code === 0) {
               nodeInfo.detail = response.data.data
             } else {
-              alert(response.data.msg)
+              self.$notify({
+                title: 'getLastestBlock',
+                type: "error",
+                message: response.data.msg
+              });
             }
           } else {
-            alert(response)
+            self.$notify({
+              title: 'getLastestBlock',
+              type: "error",
+              message: response
+            });
           }
         })
   		})
@@ -129,13 +143,26 @@ export default {
       }, response => {
         if (response.status >= 200 && response.status < 300) {
           if (response.data.code === 0) {
-            self.getFromHistory()
-            alert('import success')
+            self.getFromHistory();
+
+            self.$notify({
+              title: 'importAccount',
+              type: "success",
+              message: "import success"
+            });
           } else {
-            alert(response.data.msg)
+            self.$notify({
+              title: 'importAccount',
+              type: "error",
+              message: response.data.msg
+            });
           }
         } else {
-          alert(response)
+          self.$notify({
+            title: 'importAccount',
+            type: "error",
+            message: response
+          });
         }
       })
     },
@@ -149,16 +176,25 @@ export default {
   	},
 
   	generateKeyPiar: function () {
-  		const self = this
+  		const self = this;
+
   		axios.get('generateKeyPiar', {}, response => {
         if (response.status >= 200 && response.status < 300) {
           if (response.data.code === 0) {
-            self.getFromHistory()
+            self.getFromHistory();
           } else {
-            alert(response.data.msg)
+            self.$notify({
+              title: 'generateKeyPiar',
+              type: "error",
+              message: response.data.msg
+            });
           }
         } else {
-          alert(response)
+          self.$notify({
+            title: 'generateKeyPiar',
+            type: "error",
+            message: response
+          });
         }
       })
   	},
@@ -171,10 +207,18 @@ export default {
           if (response.data.code === 0) {
             self.froms = response.data.data
           } else {
-            alert(response.data.msg)
+            self.$notify({
+              title: 'getFromHistory',
+              type: "error",
+              message: response.data.msg
+            });
           }
         } else {
-          alert(response)
+          self.$notify({
+            title: 'getFromHistory',
+            type: "error",
+            message: response
+          });
         }
       })
     },
@@ -187,10 +231,18 @@ export default {
           if (response.data.code === 0) {
             self.tos = response.data.data
           } else {
-            alert(response.data.msg)
+            self.$notify({
+              title: 'getToHistory',
+              type: "error",
+              message: response.data.msg
+            });
           }
         } else {
-          alert(response)
+          self.$notify({
+            title: 'getToHistory',
+            type: "error",
+            message: response
+          });
         }
       })
     },
@@ -207,13 +259,26 @@ export default {
       }, response => {
         if (response.status >= 200 && response.status < 300) {
           if (response.data.code === 0) {
-            alert('transaction hash: ' + response.data.data)
-            self.getToHistory()
+            self.$notify({
+              title: 'sendTransaction',
+              type: "success",
+              duration: 0,
+              message: `transaction hash: ${response.data.data}`
+            });
+            self.getToHistory();
           } else {
-            alert(response.data.msg)
+            self.$notify({
+              title: 'sendTransaction',
+              type: "error",
+              message: response.data.msg
+            });
           }
         } else {
-          alert(response)
+          self.$notify({
+            title: 'sendTransaction',
+            type: "error",
+            message: response
+          });
         }
       })
     },
@@ -228,17 +293,37 @@ export default {
         if (response.status >= 200 && response.status < 300) {
           if (response.data.code === 0) {
             if (response.data.data === TRANSACTION_STATE_PACKED) {
-              alert('transaction has packed')
+              self.$notify({
+                title: 'getTransactionState',
+                type: "warn",
+                message: 'transaction has packed'
+              });
             } else if (response.data.data === TRANSACTION_STATE_NOT_EXISTS) {
-              alert('transaction not packet for now')
+              self.$notify({
+                title: 'getTransactionState',
+                type: "warn",
+                message: 'transaction not packet for now'
+              });
             } else {
-              alert('getTransactionState failed')
+              self.$notify({
+                title: 'getTransactionState',
+                type: "error",
+                message: 'getTransactionState failed, get a invalid code'
+              });
             }
           } else {
-            alert(response.data.msg)
+            self.$notify({
+              title: 'getTransactionState',
+              type: "error",
+              message: response.data.msg
+            });
           }
         } else {
-          alert(response)
+          self.$notify({
+            title: 'getTransactionState',
+            type: "error",
+            message: response
+          });
         }
       })
     },
@@ -254,10 +339,18 @@ export default {
           if (response.data.code === 0) {
             alert(`address: ${response.data.data.address}\nnonce: ${response.data.data.nonce}\nbalance: ${response.data.data.balance}`)
           } else {
-            alert(response.data.msg)
+            self.$notify({
+              title: 'getAccountInfo',
+              type: "error",
+              message: response.data.msg
+            });
           }
         } else {
-          alert(response)
+          self.$notify({
+            title: 'getAccountInfo',
+            type: "error",
+            message: response
+          });
         }
       })
     },
@@ -273,10 +366,18 @@ export default {
           if (response.data.code === 0) {
             alert(response.data.data)
           } else {
-            alert(response.data.msg)
+            self.$notify({
+              title: 'getPrivateKey',
+              type: "error",
+              message: response.data.msg
+            });
           }
         } else {
-          alert(response)
+          self.$notify({
+            title: 'getPrivateKey',
+            type: "error",
+            message: response
+          });
         }
       })
     },
@@ -298,7 +399,13 @@ export default {
   width: 100%;
 }
 
-.common
+.border
+{
+  box-shadow: 0 2px 4px rgba(0, 0, 0, .12), 0 0 6px rgba(0, 0, 0, .04);
+  border-radius: 4px;
+}
+
+div
 {
   display: flex;
   flex-direction: column;
