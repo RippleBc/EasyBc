@@ -1,25 +1,25 @@
 <template>
 	<div class="container">
     <div style="max-width:1280px;flex-direction:row;">
-      <el-card shadow="always" style="width:200px;margin-right:20px;">当前节点地址</el-card>
+      <p style="width:120px;">当前节点地址</p>
       <el-card shadow="always">{{currentNode.consensus.url}}</el-card>
     </div>
     
     <div class="border" style="max-width:1280px;height:500px;overflow:scroll;margin:20px 0px 20px 0px;padding-top:20px;">
-      <div style="line-height:50px;justify-content:left;" v-for="nodeInfo in nodesInfo">
+      <div style="justify-content:left;" v-for="nodeInfo in nodesInfo">
         <div style="flex-direction:row;justify-content:start;cursor:pointer;" @dblclick="chooseNode(nodeInfo)">
           <span style="width:100px;">节点地址</span>
           <p style="width:100%;">{{nodeInfo.consensus.url}}</p>
         </div>
         <div style="flex-direction:row;justify-content:start;">
           <span style="width:100px;">区块哈希值</span>
-          <p style="width:100%;">{{nodeInfo.consensus.hash ? nodeInfo.consensus.hash : "未知"}}</p>
+          <p style="width:100%;">{{nodeInfo.detail.hash ? nodeInfo.detail.hash : "未知"}}</p>
         </div>
         <div style="flex-direction:row;justify-content:start;">
           <span style="width:100px;">区块链高度</span>
-          <p style="width:100%;">{{nodeInfo.consensus.number ? nodeInfo.consensus.number : "未知"}}</p>
+          <p style="width:100%;">{{nodeInfo.detail.number ? nodeInfo.detail.number : "未知"}}</p>
         </div>
-        <HR style="FILTER: alpha(opacity=100,finishopacity=0,style=3)" width="99%" color=#C0C4CC SIZE=3></HR>
+        <HR style="FILTER: alpha(opacity=100,finishopacity=0,style=3)" width="99%" color=#C0C4CC SIZE=1></HR>
       </div>
     </div>
 		
@@ -56,22 +56,21 @@
 		<div style="flex-direction:row;max-width:1280px;">
 			<div class="border" style="height:500px;justify-content:start;align-items:start;padding:20px;margin:20px 20px 20px 0px;">
         <span>发送者记录</span>
-				<ul>
-					<li v-for="from in froms">
-						<p style="cursor:pointer;" @dblclick="chooseFrom(from)">{{from}}
-						</p>
-						<el-button @click="getAccountInfo(from)" class="obtain1">获取账户信息</el-button>
-						<el-button @click="getPrivateKey(from)" class="obtain2">获取私钥</el-button>
-					</li>
-				</ul>
+        <div v-for="from in froms">
+          <div style="flex-direction:row;justify-content:end">
+            <p style="cursor:pointer;width:100%" @dblclick="chooseFrom(from)">{{from}}</p>
+            <el-button type="primary" @click="getAccountInfo(from)">获取账户信息</el-button>
+            <el-button type="primary" @click="getPrivateKey(from)">获取私钥</el-button>
+          </div>
+          <HR style="FILTER: alpha(opacity=100,finishopacity=0,style=3)" width="99%" color=#C0C4CC SIZE=1></HR>
+        </div>	
 			</div>
 			<div class="border" style="height:500px;justify-content:start;align-items:start;padding:20px;margin:20px 0px 20px 0px;">
 				<span>接收者记录</span>
-				<ul>
-					<li v-for="to in tos">
-						<p style="cursor:pointer;" @dblclick="chooseTo(to)">{{to}}</p>
-					</li>
-				</ul>
+				<div v-for="to in tos">
+					<p style="cursor:pointer;width:100%;" @dblclick="chooseTo(to)">{{to}}</p>
+          <HR style="FILTER: alpha(opacity=100,finishopacity=0,style=3)" width="99%" color=#C0C4CC SIZE=1></HR>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -89,8 +88,8 @@ export default {
 
   data () {
     return {
-    	froms: [],
-    	tos: [],
+    	froms: ["test", "test"],
+    	tos: ["test", "test"],
     	from: '',
     	to: '',
     	value: 0,
@@ -397,6 +396,7 @@ export default {
   justify-content: center;
   align-items: center;
   width: 100%;
+  line-height: 50px;
 }
 
 .border
