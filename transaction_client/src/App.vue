@@ -18,8 +18,8 @@
       </el-menu-item>
     </el-menu>
     <div style="margin-left:200px;display:flex;flex-direction:column;width:100%;">
-      <h1 style="position:fixed;width:calc(100% - 200px);height:100px;background-color:#ffff;z-index:1;">区块链交易系统</h1>
-      <div style="margin-top:100px;">
+      <h1 style="position:fixed;width:calc(100% - 200px);height:80px;background-color:#ffff;z-index:1;">区块链交易系统</h1>
+      <div style="margin-top:120px;">
         <router-view/>
       </div>
     </div>
