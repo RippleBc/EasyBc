@@ -117,16 +117,14 @@ export default {
             if (response.data.code === 0) {
               nodeInfo.detail = response.data.data
             } else {
-              self.$notify({
+              self.$notify.error({
                 title: 'getLastestBlock',
-                type: "error",
                 message: response.data.msg
               });
             }
           } else {
-            self.$notify({
+            self.$notify.error({
               title: 'getLastestBlock',
-              type: "error",
               message: response
             });
           }
@@ -144,22 +142,19 @@ export default {
           if (response.data.code === 0) {
             self.getFromHistory();
 
-            self.$notify({
+            self.$notify.success({
               title: 'importAccount',
-              type: "success",
               message: "import success"
             });
           } else {
-            self.$notify({
+            self.$notify.error({
               title: 'importAccount',
-              type: "error",
               message: response.data.msg
             });
           }
         } else {
-          self.$notify({
+          self.$notify.error({
             title: 'importAccount',
-            type: "error",
             message: response
           });
         }
@@ -182,16 +177,14 @@ export default {
           if (response.data.code === 0) {
             self.getFromHistory();
           } else {
-            self.$notify({
+            self.$notify.error({
               title: 'generateKeyPiar',
-              type: "error",
               message: response.data.msg
             });
           }
         } else {
-          self.$notify({
+          self.$notify.error({
             title: 'generateKeyPiar',
-            type: "error",
             message: response
           });
         }
@@ -206,16 +199,14 @@ export default {
           if (response.data.code === 0) {
             self.froms = response.data.data
           } else {
-            self.$notify({
+            self.$notify.error({
               title: 'getFromHistory',
-              type: "error",
               message: response.data.msg
             });
           }
         } else {
-          self.$notify({
+          self.$notify.error({
             title: 'getFromHistory',
-            type: "error",
             message: response
           });
         }
@@ -230,16 +221,14 @@ export default {
           if (response.data.code === 0) {
             self.tos = response.data.data
           } else {
-            self.$notify({
+            self.$notify.error({
               title: 'getToHistory',
-              type: "error",
               message: response.data.msg
             });
           }
         } else {
-          self.$notify({
+          self.$notify.error({
             title: 'getToHistory',
-            type: "error",
             message: response
           });
         }
@@ -258,24 +247,20 @@ export default {
       }, response => {
         if (response.status >= 200 && response.status < 300) {
           if (response.data.code === 0) {
-            self.$notify({
-              title: 'sendTransaction',
-              type: "success",
-              duration: 0,
-              message: `transaction hash: ${response.data.data}`
+            self.$alert('交易哈希值', response.data.data, {
+              confirmButtonText: '确定'
             });
             self.getToHistory();
           } else {
-            self.$notify({
+            self.$notify.error({
               title: 'sendTransaction',
-              type: "error",
               message: response.data.msg
             });
           }
         } else {
-          self.$notify({
+          self.$notify.error({
             title: 'sendTransaction',
-            type: "error",
+            type: "",
             message: response
           });
         }
@@ -292,35 +277,30 @@ export default {
         if (response.status >= 200 && response.status < 300) {
           if (response.data.code === 0) {
             if (response.data.data === TRANSACTION_STATE_PACKED) {
-              self.$notify({
+              self.$notify.warn({
                 title: 'getTransactionState',
-                type: "warn",
                 message: 'transaction has packed'
               });
             } else if (response.data.data === TRANSACTION_STATE_NOT_EXISTS) {
-              self.$notify({
+              self.$notify.warn({
                 title: 'getTransactionState',
-                type: "warn",
                 message: 'transaction not packet for now'
               });
             } else {
-              self.$notify({
+              self.$notify.error({
                 title: 'getTransactionState',
-                type: "error",
                 message: 'getTransactionState failed, get a invalid code'
               });
             }
           } else {
-            self.$notify({
+            self.$notify.error({
               title: 'getTransactionState',
-              type: "error",
               message: response.data.msg
             });
           }
         } else {
-          self.$notify({
+          self.$notify.error({
             title: 'getTransactionState',
-            type: "error",
             message: response
           });
         }
@@ -336,18 +316,18 @@ export default {
       }, response => {
         if (response.status >= 200 && response.status < 300) {
           if (response.data.code === 0) {
-            alert(`address: ${response.data.data.address}\nnonce: ${response.data.data.nonce}\nbalance: ${response.data.data.balance}`)
+            self.$alert('账户信息', `地址: ${response.data.data.address}\nnonce: ${response.data.data.nonce}\n余额: ${response.data.data.balance}`, {
+              confirmButtonText: '确定'
+            });
           } else {
-            self.$notify({
+            self.$notify.error({
               title: 'getAccountInfo',
-              type: "error",
               message: response.data.msg
             });
           }
         } else {
-          self.$notify({
+          self.$notify.error({
             title: 'getAccountInfo',
-            type: "error",
             message: response
           });
         }
@@ -363,18 +343,18 @@ export default {
       }, response => {
         if (response.status >= 200 && response.status < 300) {
           if (response.data.code === 0) {
-            alert(response.data.data)
+            self.$alert('私钥', response.data.data, {
+              confirmButtonText: '确定'
+            });
           } else {
-            self.$notify({
+            self.$notify.error({
               title: 'getPrivateKey',
-              type: "error",
               message: response.data.msg
             });
           }
         } else {
-          self.$notify({
+          self.$notify.error({
             title: 'getPrivateKey',
-            type: "error",
             message: response
           });
         }
