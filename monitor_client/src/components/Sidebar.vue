@@ -5,24 +5,20 @@
                 <template v-if="item.subs">
                     <el-submenu :index="item.index" :key="item.index">
                         <template slot="title">
-                            <i :class="item.icon"></i><span slot="title">{{ item.title }}</span>
+                            <i :class="item.icon"></i>
+                            <span>{{ item.title }}</span>
                         </template>
                         <template v-for="subItem in item.subs">
-                            <el-submenu v-if="subItem.subs" :index="subItem.index" :key="subItem.index">
-                                <template slot="title">{{ subItem.title }}</template>
-                                <el-menu-item v-for="(threeItem,i) in subItem.subs" :key="i" :index="threeItem.index">
-                                    {{ threeItem.title }}
-                                </el-menu-item>
-                            </el-submenu>
-                            <el-menu-item v-else :index="subItem.index" :key="subItem.index">
-                                {{ subItem.title }}
+                            <el-menu-item :index="subItem.index" :key="subItem.index">
+                                <span>{{ subItem.title }}</span>
                             </el-menu-item>
                         </template>
                     </el-submenu>
                 </template>
                 <template v-else>
                     <el-menu-item :index="item.index" :key="item.index">
-                        <i :class="item.icon"></i><span slot="title">{{ item.title }}</span>
+                        <i :class="item.icon"></i>
+                        <span slot="title">{{ item.title }}</span>
                     </el-menu-item>
                 </template>
             </template>
@@ -52,11 +48,11 @@
                         index: 'tabs',
                         title: '警告消息'
                     },
-                    // {
-                    //     icon: 'el-icon-lx-emoji',
-                    //     index: 'icon',
-                    //     title: '自定义图标'
-                    // },
+                    {
+                        icon: 'el-icon-lx-emoji',
+                        index: 'icon',
+                        title: '自定义图标'
+                    },
                     {
                         icon: 'el-icon-lx-rank',
                         index: 'charts',
@@ -64,16 +60,16 @@
                     },
                     {
                         icon: 'el-icon-lx-warn',
-                        index: '7',
+                        index: '',
                         title: '错误处理',
                         subs: [
                             {
                                 index: 'permission',
-                                title: '权限测试'
+                                title: '权限控制'
                             },
                             {
-                                index: '404',
-                                title: '404页面'
+                                index: '403',
+                                title: '403'
                             }
                         ]
                     }
@@ -82,7 +78,7 @@
         },
         computed:{
             onRoutes(){
-                return this.$route.path.replace('/','');
+                return this.$route.path.replace('/', '');
             }
         },
         created(){

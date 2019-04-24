@@ -1,20 +1,20 @@
 <template>
     <div class="login-wrap">
         <div class="ms-login">
-            <div class="ms-title">欢迎进入服务器监控系统</div>
-            <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="0px" class="ms-content">
+            <div class="ms-title">欢迎进入点对点交易平台节点监控系统</div>
+            <el-form :model="userInfo" :rules="rules" ref="loginForm" label-width="auto" class="ms-content">
                 <el-form-item prop="username">
-                    <el-input v-model="ruleForm.username" placeholder="username">
+                    <el-input v-model="userInfo.username" placeholder="username">
                         <el-button slot="prepend" icon="el-icon-lx-people"></el-button>
                     </el-input>
                 </el-form-item>
                 <el-form-item prop="password">
-                    <el-input type="password" placeholder="password" v-model="ruleForm.password" @keyup.enter.native="submitForm('ruleForm')">
+                    <el-input type="password" placeholder="password" v-model="userInfo.password" @keyup.enter.native="submitForm()">
                         <el-button slot="prepend" icon="el-icon-lx-lock"></el-button>
                     </el-input>
                 </el-form-item>
                 <div class="login-btn">
-                    <el-button type="primary" @click="submitForm('ruleForm')">登录</el-button>
+                    <el-button type="primary" @click="submitForm()">登录</el-button>
                 </div>
                 <p class="login-tips">Tips : 用户名和密码随便填。</p>
             </el-form>
@@ -26,9 +26,9 @@
     export default {
         data: function(){
             return {
-                ruleForm: {
-                    username: 'admin',
-                    password: '123123'
+                userInfo: {
+                    username: '',
+                    password: ''
                 },
                 rules: {
                     username: [
@@ -41,14 +41,17 @@
             }
         },
         methods: {
-            submitForm(formName) {
-                this.$refs[formName].validate((valid) => {
+            submitForm() {
+                this.$refs.loginForm.validate(valid => {
                     if (valid) {
-                        localStorage.setItem('ms_username',this.ruleForm.username);
-                        this.$router.push('/');
-                    } else {
-                        console.log('error submit!!');
-                        return false;
+                        localStorage.setItem('ms_username', this.userInfo.username);
+
+                        this.$axios.post("login", {
+                            username: this.userInfo.username,
+                            password: this.userInfo.password
+                        }, response => {
+                            this.$router.push('/');
+                        });
                     }
                 });
             }

@@ -1,21 +1,24 @@
 <template>
     <div class="tags" v-if="showTags">
         <ul>
-            <li class="tags-li" v-for="(item,index) in tagsList" :class="{'active': isActive(item.path)}" :key="index">
+            <li class="tags-li" v-for="(item, index) in tagsList" :class="{'active': isActive(item.path)}" :key="index">
                 <router-link :to="item.path" class="tags-li-title">
                     {{item.title}}
                 </router-link>
-                <span class="tags-li-icon" @click="closeTags(index)"><i class="el-icon-close"></i></span>
+                <span class="tags-li-icon" @click="closeTags(index)">
+                    <i class="el-icon-close"></i>
+                </span>
             </li>
         </ul>
         <div class="tags-close-box">
             <el-dropdown @command="handleTags">
-                <el-button size="mini" type="primary">
-                    标签选项<i class="el-icon-arrow-down el-icon--right"></i>
+                <el-button type="primary" class="tagsMenu">
+                    <span>标签选项</span>
+                    <i class="el-icon-arrow-down el-icon--right"></i>
                 </el-button>
                 <el-dropdown-menu size="small" slot="dropdown">
-                    <el-dropdown-item command="other">关闭其他</el-dropdown-item>
                     <el-dropdown-item command="all">关闭所有</el-dropdown-item>
+                    <el-dropdown-item command="other">关闭其他</el-dropdown-item>
                 </el-dropdown-menu>
             </el-dropdown>
         </div>
@@ -24,6 +27,9 @@
 
 <script>
     import bus from './bus';
+
+    const MAX_TAGS_NUM = 8;
+
     export default {
         data() {
             return {
@@ -40,7 +46,8 @@
                 const item = this.tagsList[index] ? this.tagsList[index] : this.tagsList[index - 1];
                 if (item) {
                     delItem.path === this.$route.fullPath && this.$router.push(item.path);
-                }else{
+                }
+                else {
                     this.$router.push('/');
                 }
             },
@@ -62,9 +69,10 @@
                     return item.path === route.fullPath;
                 })
                 if(!isExist){
-                    if(this.tagsList.length >= 8){
+                    if(this.tagsList.length >= MAX_TAGS_NUM){
                         this.tagsList.shift();
                     }
+                    
                     this.tagsList.push({
                         title: route.meta.title,
                         path: route.fullPath,
@@ -82,29 +90,13 @@
                 return this.tagsList.length > 0;
             }
         },
-        watch:{
+        watch: {
             $route(newValue, oldValue){
                 this.setTags(newValue);
             }
         },
         created(){
             this.setTags(this.$route);
-            // 监听关闭当前页面的标签页
-            bus.$on('close_current_tags', () => {
-                for (let i = 0, len = this.tagsList.length; i < len; i++) {
-                    const item = this.tagsList[i];
-                    if(item.path === this.$route.fullPath){
-                        if(i < len - 1){
-                            this.$router.push(this.tagsList[i+1].path);
-                        }else if(i > 0){
-                            this.$router.push(this.tagsList[i-1].path);
-                        }else{
-                            this.$router.push('/');
-                        }
-                        this.tagsList.splice(i, 1);
-                    }
-                }
-            })
         }
     }
 
@@ -114,14 +106,17 @@
 <style>
     .tags {
         position: relative;
-        height: 30px;
+        height: 40px;
         overflow: hidden;
         background: #fff;
+        margin: 3px 0px 0px 3px;
         padding-right: 120px;
-        box-shadow: 0 5px 10px #ddd;
+        box-shadow: 10px 10px 10px 2px #ddd;
     }
 
     .tags ul {
+        display: flex;
+        align-items: center;
         box-sizing: border-box;
         width: 100%;
         height: 100%;
@@ -129,16 +124,17 @@
 
     .tags-li {
         float: left;
-        margin: 3px 5px 2px 3px;
+        margin: 0px 5px 0px 3px;
+        box-sizing: border-box;
         border-radius: 3px;
         font-size: 12px;
         overflow: hidden;
         cursor: pointer;
-        height: 23px;
-        line-height: 23px;
+        height: 35px;
+        line-height: 35px;
         border: 1px solid #e9eaec;
         background: #fff;
-        padding: 0 5px 0 12px;
+        padding: 0 10px 0 20px;
         vertical-align: middle;
         color: #666;
         -webkit-transition: all .3s ease-in;
@@ -170,16 +166,22 @@
 
     .tags-close-box {
         position: absolute;
+        display: flex;
+        align-items: center;
         right: 0;
         top: 0;
         box-sizing: border-box;
-        padding-top: 1px;
-        text-align: center;
-        width: 110px;
-        height: 30px;
+        height: 100%;
         background: #fff;
-        box-shadow: -3px 0 15px 3px rgba(0, 0, 0, .1);
         z-index: 10;
     }
 
+    .tagsMenu {
+        display: flex;
+        align-items: center;
+        box-sizing: border-box;
+        margin-right: 3px;
+        height: 35px;  
+        line-height: 30px
+    }
 </style>
