@@ -4,7 +4,6 @@ import App from './App.vue'
 import router from './router'
 import axios from 'axios';
 import ElementUI from 'element-ui';
-import './assets/css/theme-green/index.css';       // 浅绿色主题
 import './assets/css/icon.css';
 import "babel-polyfill";
 

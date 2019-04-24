@@ -152,7 +152,7 @@ a {
     font-style: normal;
 }
 
-/*VueEditor*/
+/* vue-quill-editor */
 
 .ql-container {
     min-height: 400px;
@@ -166,7 +166,7 @@ a {
     margin-top: 20px;
 }
 
-/*markdown*/
+/* mavon-editor */
 
 .v-note-wrapper .v-note-panel {
     min-height: 500px;
