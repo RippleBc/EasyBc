@@ -15,12 +15,12 @@
                 </div>
                 <!-- 消息中心 -->
                 <div class="btn-bell">
-                    <el-tooltip effect="dark" :content="message?`有${message}条未读警告`:`消息中心`" placement="bottom">
+                    <el-tooltip effect="dark" :content="messageSize?`有${messageSize}条未读警告`:`消息中心`" placement="bottom">
                         <router-link to="/tabs">
                             <i class="el-icon-bell"></i>
                         </router-link>
                     </el-tooltip>
-                    <span class="btn-bell-badge" v-if="message"></span>
+                    <span class="btn-bell-badge" v-if="messageSize"></span>
                 </div>
                 <!-- 用户头像 -->
                 <div class="user-avator"><img src="../assets/img/img.jpg"></div>
@@ -43,11 +43,14 @@
 <script>
     import bus from './bus';
     export default {
+        props: {
+            messageSize: 0
+        },
         data() {
             return {
                 collapse: false,
                 fullscreen: false,
-                message: 2
+                
             }
         },
         computed:{

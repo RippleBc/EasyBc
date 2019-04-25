@@ -40,39 +40,15 @@
                     },
                     {
                         icon: 'el-icon-lx-sort',
-                        index: 'table',
-                        title: '服务器列表'
+                        index: 'nodeList',
+                        title: '节点列表'
                     },
                     {
-                        icon: 'el-icon-lx-notice',
-                        index: 'tabs',
-                        title: '警告消息'
-                    },
-                    {
-                        icon: 'el-icon-lx-emoji',
-                        index: 'icon',
-                        title: '自定义图标'
-                    },
-                    {
-                        icon: 'el-icon-lx-rank',
-                        index: 'charts',
-                        title: '可视化图表'
-                    },
-                    {
-                        icon: 'el-icon-lx-warn',
-                        index: '',
-                        title: '错误处理',
-                        subs: [
-                            {
-                                index: 'permission',
-                                title: '权限控制'
-                            },
-                            {
-                                index: '403',
-                                title: '403'
-                            }
-                        ]
+                        icon: 'el-icon-edit-outline',
+                        index: 'permission',
+                        title: '权限控制'
                     }
+                    
                 ]
             }
         },

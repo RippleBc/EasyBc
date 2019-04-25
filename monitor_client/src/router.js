@@ -20,25 +20,15 @@ export default new Router({
                     meta: { title: '系统首页' }
                 },
                 {
-                    path: '/icon',
-                    component: resolve => require(['./views/Icon.vue'], resolve),
-                    meta: { title: '自定义图标' }
-                },
-                {
-                    path: '/table',
-                    component: resolve => require(['./views/BaseTable.vue'], resolve),
+                    path: '/nodeList',
+                    component: resolve => require(['./views/NodeList.vue'], resolve),
                     meta: { title: '服务器列表' }
                 },
                 {
-                    path: '/tabs',
-                    component: resolve => require(['./views/Tabs.vue'], resolve),
-                    meta: { title: '警告消息' }
-                },
-                {
                     // vue-schart组件
-                    path: '/charts',
-                    component: resolve => require(['./views/BaseCharts.vue'], resolve),
-                    meta: { title: '可视化图表' }
+                    path: '/nodeDetail',
+                    component: resolve => require(['./views/NodeDetail.vue'], resolve),
+                    meta: { title: '节点详细信息' }
                 },
                 {
                     // 权限页面

@@ -1,28 +1,15 @@
 <template>
     <div>
         <el-row :gutter="20">
-            <el-col :span="8">
-                <el-card shadow="hover" class="mgb20" style="height:530px;">
-                    <div class="user-info">
-                        <img src="../assets/img/img.jpg" class="user-avator" alt="">
-                        <div class="user-info-cont">
-                            <div class="user-info-name">{{name}}</div>
-                            <div>{{role}}</div>
-                        </div>
-                    </div>
-                    <div class="user-info-list">上次登录时间：<span>2018-01-01</span></div>
-                    <div class="user-info-list">上次登录地点：<span>东莞</span></div>
-                </el-card>
-            </el-col>
-            <el-col :span="16">
+            <el-col>
                 <el-row :gutter="20" class="mgb20">
                     <el-col :span="8">
                         <el-card shadow="hover" :body-style="{padding: '0px'}">
                             <div class="grid-content grid-con-1">
                                 <i class="el-icon-lx-people grid-con-icon"></i>
-                                <div class="grid-cont-right">
+                                <div class="grid-cont-right" @click="$router.push()">
                                     <div class="grid-num">12</div>
-                                    <div>服务器数量</div>
+                                    <div>节点数量</div>
                                 </div>
                             </div>
                         </el-card>
@@ -50,133 +37,25 @@
                         </el-card>
                     </el-col>
                 </el-row>
-                <el-card shadow="hover" style="height:403px;">
-                    <div slot="header" class="clearfix">
-                        <span>警告消息</span>
-                        <el-button style="float: right;" type="primary" @click="deleteSelectedWarningMessage()">清除所有记录</el-button>
-                        <el-button style="float: right;margin:0px 10px 0px 0px;" type="primary" @click="deleteAllWarningMessage()">清除勾选的记录</el-button>
-                    </div>
-                    <el-table :data="warningMessages" :show-header="false" height="304" style="width: 100%;font-size:14px;">
-                        <el-table-column width="40">
-                            <template slot-scope="scope">
-                                <el-checkbox v-model="scope.row.status"></el-checkbox>
-                            </template>
-                        </el-table-column>
-                        <el-table-column>
-                            <template slot-scope="scope">
-                                <div class="todo-item" :class="{'todo-item-del': scope.row.status}">{{scope.row.title}}</div>
-                            </template>
-                        </el-table-column>
-                        <el-table-column width="60">
-                            <template slot-scope="scope">
-                                <i class="el-icon-delete" style="cursor:pointer;" @click="deleteWarningMessage(scope.row)"></i>
-                            </template>
-                        </el-table-column>
-                    </el-table>
-                </el-card>
-            </el-col>
-        </el-row>
-        <el-row :gutter="20">
-            <el-col :span="12">
-                <el-card shadow="hover">
-                    <schart ref="bar" class="schart" canvasId="bar" :data="pieChartData" type="pie" :options="pieChartOptions"></schart>
-                </el-card>
-            </el-col>
-            <el-col :span="12">
-                <el-card shadow="hover">
-                    <schart ref="line" class="schart" canvasId="line" :data="lineChartData" type="line" :options="lineChartOptions"></schart>
-                </el-card>
+                <v-messages></v-messages>
             </el-col>
         </el-row>
     </div>
 </template>
 
 <script>
-    import Schart from 'vue-schart';
+    import vMessages from '../components/Messages.vue'
     import bus from '../components/bus';
+
     export default {
         name: 'dashboard',
         data() {
             return {
-                name: localStorage.getItem('ms_username'),
-                warningMessages: [{
-                        id: 1,
-                        title: '内存达到禁告值1',
-                        status: false,
-                    },
-                    {
-                        id: 2,
-                        title: '内存达到禁告值2',
-                        status: false,
-                    },
-                    {
-                        id: 3,
-                        title: '内存达到禁告值3',
-                        status: false,
-                    }, 
-                    {
-                        id: 4,
-                        title: '内存达到禁告值4',
-                        status: false,
-                    },
-                    {
-                        id: 4,
-                        title: '内存达到禁告值5',
-                        status: true,
-                    },
-                    {
-                        id: 6,
-                        title: '内存达到禁告值6',
-                        status: true,
-                    }
-                ],
-                pieChartData : [
-                    {name:'CPU',value:1200},
-                    {name:'内存',value:1222},
-                    {name:'磁盘',value:1283}
-                ],
-                lineChartData : [
-                    {name: '09:08',value: 40 },
-                    {name: '09:09',value: 55 },
-                    {name: '09:10',value: 35 },
-                    {name: '09:11',value: 45 },
-                    {name: '09:12',value: 50 }
-                ],
-                pieChartOptions: {
-                    title: '服务器使用量',
-                    fillColor: 'rgb(45, 140, 240)',
-                    bottomPadding: 30,
-                    topPadding: 30
-                },
-                lineChartOptions: {
-                    title: '实时服务器监控',
-                    fillColor: '#FC6FA1',
-                    axisColor: '#008ACD',
-                    contentColor: '#EEEEEE',
-                    bgColor: '#F5F8FD',
-                    bottomPadding: 30,
-                    topPadding: 30
-                }
+                
             }
         },
-        components: {
-            Schart
-        },
-        computed: {
-            role() {
-                return this.name === 'admin' ? '超级管理员' : '普通用户';
-            }
-        },
-        created(){
-            this.handleListener();
-            // this.changeDate();
-        },
-        activated(){
-            this.handleListener();
-        },
-        deactivated(){
-            window.removeEventListener('resize', this.renderChart);
-            bus.$off('collapse', this.handleBus);
+        components:{
+            vMessages
         },
         methods: {
             deleteSelectedWarningMessage(){
@@ -187,27 +66,6 @@
             },
             deleteWarningMessage(warningMessage){
                 
-            },
-            // changeDate(){
-            //     const now = new Date().getTime();
-            //     this.data.forEach((item, index) => {
-            //         const date = new Date(now - (6 - index) * 86400000);
-            //         item.name = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`
-            //     })
-            // },
-            handleListener(){
-                bus.$on('collapse', this.handleBus);
-                // 调用renderChart方法对图表进行重新渲染
-                window.addEventListener('resize', this.renderChart)
-            },
-            handleBus(msg){
-                setTimeout(() => {
-                    this.renderChart()
-                }, 300);
-            },
-            renderChart(){
-                this.$refs.bar.renderChart();
-                this.$refs.line.renderChart();
             }
         }
     }

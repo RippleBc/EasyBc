@@ -106,12 +106,13 @@
 <style>
     .tags {
         position: relative;
-        height: 40px;
+        margin: 0px 0px 10px 10px;
+        height: 45px;
         overflow: hidden;
         background: #fff;
-        margin: 3px 0px 0px 3px;
         padding-right: 120px;
         box-shadow: 10px 10px 10px 2px #ddd;
+        box-sizing: border-box;
     }
 
     .tags ul {

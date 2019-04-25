@@ -2,7 +2,7 @@
     <div class="">
         <div class="crumbs">
             <el-breadcrumb separator="/">
-                <el-breadcrumb-item><i class="el-icon-lx-notice"></i> 警告消息</el-breadcrumb-item>
+                <el-breadcrumb-item><i class="el-icon-lx-notice"></i>警告消息</el-breadcrumb-item>
             </el-breadcrumb>
         </div>
         <div class="container">
@@ -105,12 +105,10 @@
 
 <script>
     export default {
-        name: 'tabs',
+        name: 'messages',
         data() {
             return {
-                url: '../vuetable.json',
                 message: 'first',
-                showHeader: false,
                 unread: [{
                     date: '201-03-19 20:00:00',
                     title: '【系统通知】内网服务器内存达到阀值',
@@ -138,7 +136,7 @@
             }
         },
         created() {
-            this.getData();
+            
         },
         methods: {
             handleRead(index) {
@@ -154,12 +152,7 @@
                 const item = this.recycle.splice(index, 1);
                 this.read = item.concat(this.read);
             },
-            getData(){
-                this.$axios.get(this.url)
-                .then(data => {
-                    this.selectName = data.data.list;
-                })
-            },
+            
             onSubmit() {
                 this.$message.success('提交成功！');
             }
