@@ -1,5 +1,18 @@
 <template>
     <div>
+        <div class="crumbs">
+            <el-breadcrumb separator="/">
+                <el-breadcrumb-item>
+                    <span>{{`索引 ${currentNode.index}`}}</span>
+                </el-breadcrumb-item>
+                <el-breadcrumb-item>
+                    <span>{{`名称 ${currentNode.name}`}}</span>
+                </el-breadcrumb-item>
+                <el-breadcrumb-item>
+                    <span>{{`${currentNode.host}:${currentNode.port}`}}</span>
+                </el-breadcrumb-item>
+            </el-breadcrumb>
+        </div>
         <el-row :gutter="20" style="margin-bottom: 20px;">
             <el-col :span="24">
                 <el-card shadow="hover">
@@ -8,7 +21,7 @@
                             <el-input v-model="form.name"></el-input>
                         </el-form-item>
                         <el-form-item label="规则开关">
-                            <el-switch v-model="form.delivery"></el-switch>
+                            <el-switch v-model="form.switch"></el-switch>
                         </el-form-item>
                         <el-form-item label="监控项目">
                             <el-checkbox-group v-model="form.type">
@@ -45,11 +58,9 @@
                 currentNode: undefined,
                 form: {
                     name: '',
-                    region: '',
-                    delivery: true,
+                    switch: true,
                     type: ['CPU'],
-                    options: [],
-                    select: ''
+                    threshold: 0,
                 }
             }
         },
@@ -66,7 +77,7 @@
                 this.currentNode = nodeInfo;
             },
             onSubmit(){
-                
+
             }
         }
     }

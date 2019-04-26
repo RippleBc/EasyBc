@@ -3,10 +3,6 @@
         <div class="crumbs">
             <el-breadcrumb separator="/">
                 <el-breadcrumb-item>
-                    <i class="el-icon-lx-rank"></i>
-                    <span>节点详细信息</span>
-                </el-breadcrumb-item>
-                <el-breadcrumb-item>
                     <span>{{`索引 ${currentNode.index}`}}</span>
                 </el-breadcrumb-item>
                 <el-breadcrumb-item>

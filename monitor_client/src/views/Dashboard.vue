@@ -1,5 +1,18 @@
 <template>
     <div>
+        <div class="crumbs">
+            <el-breadcrumb separator="/">
+                <el-breadcrumb-item>
+                    <span>{{`索引 ${currentNode.index}`}}</span>
+                </el-breadcrumb-item>
+                <el-breadcrumb-item>
+                    <span>{{`名称 ${currentNode.name}`}}</span>
+                </el-breadcrumb-item>
+                <el-breadcrumb-item>
+                    <span>{{`${currentNode.host}:${currentNode.port}`}}</span>
+                </el-breadcrumb-item>
+            </el-breadcrumb>
+        </div>
         <el-row :gutter="20">
             <el-col>
                 <el-row :gutter="20" class="mgb20">
