@@ -42,7 +42,7 @@ export default new Router({
                     meta: { title: '节点详细信息' }
                 },
                 {
-                    path: '/warnRule/:index:',
+                    path: '/warnRule/:index',
                     component: resolve => require(['./views/WarnRule.vue'], resolve),
                     meta: { title: '制定警报规则' }
                 },

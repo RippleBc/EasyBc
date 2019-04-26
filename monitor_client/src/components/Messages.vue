@@ -45,8 +45,8 @@
                         </div>
                     </template>
                 </el-tab-pane>
-                <el-tab-pane :label="`回收站(${recycle.length})`" name="third">
-                    <template v-if="message === 'third'">
+                <el-tab-pane :label="`回收站(${recycle.length})`" name="last">
+                    <template v-if="message === 'last'">
                         <el-table :data="recycle" :show-header="false" style="width: 100%">
                             <el-table-column>
                                 <template slot-scope="scope">
@@ -65,39 +65,7 @@
                         </div>
                     </template>
                 </el-tab-pane>
-                <el-tab-pane :label="`制定规则`" name="last">
-                    <template v-if="message === 'last'">
-                        <el-form ref="form" :model="form" label-width="80px">
-                            <el-form-item label="规则名">
-                                <el-input v-model="form.name"></el-input>
-                            </el-form-item>
-                            <el-form-item label="服务器名">
-                                <el-select v-model="form.select" placeholder="请选择">
-                                    <el-option v-for="(item,index) in selectName" :key="index" :value="item.name">{{item.name}}</el-option>
-                                </el-select>
-                            </el-form-item>
-                            <el-form-item label="规则开关">
-                                <el-switch v-model="form.delivery"></el-switch>
-                            </el-form-item>
-                            <el-form-item label="监控项目">
-                                <el-checkbox-group v-model="form.type">
-                                    <el-checkbox label="CPU" name="type"></el-checkbox>
-                                    <el-checkbox label="内存" name="type"></el-checkbox>
-                                    <el-checkbox label="磁盘" name="type"></el-checkbox>
-                                </el-checkbox-group>
-                            </el-form-item>
-                            <el-form-item label="设置阀值">
-                                <el-input v-model="form.threshold" style="width:120px">
-                                    <template slot="append">%</template>
-                                </el-input>
-                            </el-form-item>
-                            <el-form-item>
-                                <el-button type="primary" @click="onSubmit">提交规则</el-button>
-                                <el-button>取消</el-button>
-                            </el-form-item>
-                        </el-form>
-                    </template>
-                </el-tab-pane>
+                
             </el-tabs>
         </div>
     </div>
@@ -123,16 +91,7 @@
                 recycle: [{
                     date: '2019-03-19 20:00:00',
                     title: '【系统通知】蟠桃会服务器CPU使用达到阀值'
-                }],
-                selectName: [],
-                form: {
-                    name: '',
-                    region: '',
-                    delivery: true,
-                    type: ['CPU'],
-                    options: [],
-                    select: ''
-                }
+                }]
             }
         },
         created() {

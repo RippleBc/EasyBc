@@ -47,10 +47,12 @@
     import Schart from 'vue-schart';
     import bus from '../components/bus';
     import { mapState } from 'vuex';
+    import {unls} from '../config.json';
 
     export default {
         name: 'nodeDetail',
         data: () => ({
+            currentNode: undefined,
             timeoutNodesData:{
                 columns: ['节点', '超时次数', '超时频率'],
                 rows: [
@@ -96,11 +98,13 @@
             }
         }),
         created(){
-            this.currentNode = {...this.$store.state.currentNode};
+            this.getCurrentNode();
 
             this.handleListener();
         },
         activated(){
+            this.getCurrentNode();
+
             this.handleListener();
         },
         deactivated(){
@@ -114,6 +118,11 @@
 
             renderCharts(){
                 
+            },
+            getCurrentNode(){
+                const nodeIndex = this.$route.path.split('/')[2];
+                const nodeInfo = unls.find(n => nodeIndex == n.index)
+                this.currentNode = nodeInfo;
             }
         }
     }

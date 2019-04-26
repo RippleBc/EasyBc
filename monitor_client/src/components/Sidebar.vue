@@ -30,12 +30,16 @@
     import bus from './bus';
     export default {
         props: {
-            items: [],
-            onRoutes: ''
+            items: {
+                type: Array,
+                required: true,
+                default: []
+            }
         },
         data() {
             return {
-                collapse: false
+                collapse: false,
+                onRoutes: ''
             }
         },
         watch:{

@@ -35,21 +35,18 @@
 <script>
     import vMessages from '../components/Messages.vue'
     import bus from '../components/bus';
+    import {unls} from '../config.json';
     import { mapState } from 'vuex';
-    let index = 1;
 
     export default {
         name: 'dashboard',
         data() {
             return {
-                
+                currentNode: undefined
             }
         },
         components:{
             vMessages
-        },
-        computed: {
-            ...mapState(['currentNode'])
         },
         methods: {
             deleteSelectedWarningMessage(){
@@ -60,13 +57,23 @@
             },
             deleteWarningMessage(warningMessage){
                 
+            },
+            getCurrentNode(){
+                const nodeIndex = this.$route.path.split('/')[2];
+                const nodeInfo = unls.find(n => nodeIndex == n.index)
+                this.currentNode = nodeInfo;
             }
         },
+
         created() {
-             this.$store.commit('switchNavType', 'node');
+            this.getCurrentNode();
+
+            this.$store.commit('switchNavType', 'node');
         },
 
         activated(){
+            this.getCurrentNode();
+
             this.$store.commit('switchNavType', 'node');
         }
     }

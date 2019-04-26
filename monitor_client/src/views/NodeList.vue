@@ -96,7 +96,6 @@
 </template>
 
 <script>
-
     import {unls} from "../config.json"
 
     export default {

@@ -1,18 +1,72 @@
 <template>
-    <div class="wrapper">
-        
+    <div>
+        <el-row :gutter="20" style="margin-bottom: 20px;">
+            <el-col :span="24">
+                <el-card shadow="hover">
+                    <el-form ref="form" :model="form" label-width="80px">
+                        <el-form-item label="规则名">
+                            <el-input v-model="form.name"></el-input>
+                        </el-form-item>
+                        <el-form-item label="规则开关">
+                            <el-switch v-model="form.delivery"></el-switch>
+                        </el-form-item>
+                        <el-form-item label="监控项目">
+                            <el-checkbox-group v-model="form.type">
+                                <el-checkbox label="CPU" name="type"></el-checkbox>
+                                <el-checkbox label="内存" name="type"></el-checkbox>
+                                <el-checkbox label="磁盘" name="type"></el-checkbox>
+                            </el-checkbox-group>
+                        </el-form-item>
+                        <el-form-item label="设置阀值">
+                            <el-input v-model="form.threshold" style="width:120px">
+                                <template slot="append">%</template>
+                            </el-input>
+                        </el-form-item>
+                        <el-form-item>
+                            <el-button type="primary" @click="onSubmit">提交规则</el-button>
+                            <el-button>取消</el-button>
+                        </el-form-item>
+                    </el-form>
+                </el-card>
+            </el-col>
+        </el-row>
     </div>
 </template>
 
 <script>
     import bus from '../components/bus';
     import { mapState } from 'vuex'
+    import {unls} from '../config.json';
 
     export default {
         name: 'warnRule',
         data(){
             return {
-               
+                currentNode: undefined,
+                form: {
+                    name: '',
+                    region: '',
+                    delivery: true,
+                    type: ['CPU'],
+                    options: [],
+                    select: ''
+                }
+            }
+        },
+        created(){
+            this.getCurrentNode();
+        },
+        activated(){
+            this.getCurrentNode();
+        },
+        methods: {
+            getCurrentNode(){
+                const nodeIndex = this.$route.path.split('/')[2];
+                const nodeInfo = unls.find(n => nodeIndex == n.index)
+                this.currentNode = nodeInfo;
+            },
+            onSubmit(){
+                
             }
         }
     }
