@@ -3,20 +3,20 @@
         <el-menu class="sidebar-el-menu" :default-active="onRoutes" :collapse="collapse" unique-opened router>
             <template v-for="item in items">
                 <template v-if="item.subs">
-                    <el-submenu :index="item.index" :key="item.index">
+                    <el-submenu :index="item.originIndex">
                         <template slot="title">
                             <i :class="item.icon"></i>
                             <span>{{ item.title }}</span>
                         </template>
                         <template v-for="subItem in item.subs">
-                            <el-menu-item :index="subItem.index" :key="subItem.index">
+                            <el-menu-item :route="subItem.index" :index="subItem.originIndex">
                                 <span>{{ subItem.title }}</span>
                             </el-menu-item>
                         </template>
                     </el-submenu>
                 </template>
                 <template v-else>
-                    <el-menu-item :index="item.index" :key="item.index">
+                    <el-menu-item :route="item.index" :index="item.originIndex">
                         <i :class="item.icon"></i>
                         <span slot="title">{{ item.title }}</span>
                     </el-menu-item>
@@ -29,32 +29,37 @@
 <script>
     import bus from './bus';
     export default {
+        props: {
+            items: [],
+            onRoutes: ''
+        },
         data() {
             return {
-                collapse: false,
-                items: [
-                    {
-                        icon: 'el-icon-lx-home',
-                        index: 'dashboard',
-                        title: '系统首页'
-                    },
-                    {
-                        icon: 'el-icon-lx-sort',
-                        index: 'nodeList',
-                        title: '节点列表'
-                    },
-                    {
-                        icon: 'el-icon-edit-outline',
-                        index: 'permission',
-                        title: '权限控制'
-                    }
-                    
-                ]
+                collapse: false
             }
         },
-        computed:{
-            onRoutes(){
-                return this.$route.path.replace('/', '');
+        watch:{
+            $route: function(){
+                const items = this.$route.path.split('/');
+                const mainItem = items[1];
+
+                const item = this.items.flat().find(n => {
+                    return n.originIndex === `/${mainItem}`
+                })
+
+                if(item === undefined)
+                {
+                    return;
+                }
+
+                if(mainItem)
+                {
+                    this.onRoutes =  `/${mainItem}`;
+                }
+                else
+                {
+                    this.onRoutes = '/';
+                }
             }
         },
         created(){

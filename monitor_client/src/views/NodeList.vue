@@ -100,7 +100,7 @@
     import {unls} from "../config.json"
 
     export default {
-        name: 'basetable',
+        name: 'nodeList',
         data() {
             return {
                 nodesInfo: unls,
@@ -186,10 +186,8 @@
             },
             checkNodeDetail(row)
             {
-                this.$router.push({
-                    path: "nodeDetail",
-                    query: row
-                })
+                this.$store.commit('switchCurrentNode', row)
+                this.$router.push(`dashboard/${row.index}`);
             },
             // 保存编辑
             saveEdit() {

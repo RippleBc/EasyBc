@@ -3,18 +3,7 @@
         <el-row :gutter="20">
             <el-col>
                 <el-row :gutter="20" class="mgb20">
-                    <el-col :span="8">
-                        <el-card shadow="hover" :body-style="{padding: '0px'}">
-                            <div class="grid-content grid-con-1">
-                                <i class="el-icon-lx-people grid-con-icon"></i>
-                                <div class="grid-cont-right" @click="$router.push()">
-                                    <div class="grid-num">12</div>
-                                    <div>节点数量</div>
-                                </div>
-                            </div>
-                        </el-card>
-                    </el-col>
-                    <el-col :span="8">
+                    <el-col :span="12">
                         <el-card shadow="hover" :body-style="{padding: '0px'}">
                             <div class="grid-content grid-con-2">
                                 <i class="el-icon-lx-notice grid-con-icon"></i>
@@ -25,7 +14,7 @@
                             </div>
                         </el-card>
                     </el-col>
-                    <el-col :span="8">
+                    <el-col :span="12">
                         <el-card shadow="hover" :body-style="{padding: '0px'}">
                             <div class="grid-content grid-con-3">
                                 <i class="el-icon-lx-notice grid-con-icon"></i>
@@ -46,6 +35,8 @@
 <script>
     import vMessages from '../components/Messages.vue'
     import bus from '../components/bus';
+    import { mapState } from 'vuex';
+    let index = 1;
 
     export default {
         name: 'dashboard',
@@ -57,6 +48,9 @@
         components:{
             vMessages
         },
+        computed: {
+            ...mapState(['currentNode'])
+        },
         methods: {
             deleteSelectedWarningMessage(){
                 
@@ -67,6 +61,13 @@
             deleteWarningMessage(warningMessage){
                 
             }
+        },
+        created() {
+             this.$store.commit('switchNavType', 'node');
+        },
+
+        activated(){
+            this.$store.commit('switchNavType', 'node');
         }
     }
 

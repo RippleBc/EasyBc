@@ -7,13 +7,13 @@
                     <span>节点详细信息</span>
                 </el-breadcrumb-item>
                 <el-breadcrumb-item>
-                    <span>{{`索引 ${nodeInfo.index}`}}</span>
+                    <span>{{`索引 ${currentNode.index}`}}</span>
                 </el-breadcrumb-item>
                 <el-breadcrumb-item>
-                    <span>{{`名称 ${nodeInfo.name}`}}</span>
+                    <span>{{`名称 ${currentNode.name}`}}</span>
                 </el-breadcrumb-item>
                 <el-breadcrumb-item>
-                    <span>{{`${nodeInfo.host}:${nodeInfo.port}`}}</span>
+                    <span>{{`${currentNode.host}:${currentNode.port}`}}</span>
                 </el-breadcrumb-item>
             </el-breadcrumb>
         </div>
@@ -46,11 +46,11 @@
 <script>
     import Schart from 'vue-schart';
     import bus from '../components/bus';
+    import { mapState } from 'vuex';
 
     export default {
         name: 'nodeDetail',
         data: () => ({
-            nodeInfo: {},
             timeoutNodesData:{
                 columns: ['节点', '超时次数', '超时频率'],
                 rows: [
@@ -96,7 +96,8 @@
             }
         }),
         created(){
-            this.nodeInfo = this.$route.query;
+            this.currentNode = {...this.$store.state.currentNode};
+
             this.handleListener();
         },
         activated(){

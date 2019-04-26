@@ -4,10 +4,11 @@ import Router from 'vue-router';
 Vue.use(Router);
 
 export default new Router({
+    mode: 'history',
     routes: [
         {
             path: '/',
-            redirect: '/dashboard'
+            redirect: '/overview'
         },
         {
             path: '/',
@@ -15,9 +16,9 @@ export default new Router({
             meta: { title: '自述文件' },
             children:[
                 {
-                    path: '/dashboard',
-                    component: resolve => require(['./views/Dashboard.vue'], resolve),
-                    meta: { title: '系统首页' }
+                    path: '/overview',
+                    component: resolve => require(['./views/Overview.vue'], resolve),
+                    meta: { title: '总览' }
                 },
                 {
                     path: '/nodeList',
@@ -25,16 +26,25 @@ export default new Router({
                     meta: { title: '服务器列表' }
                 },
                 {
-                    // vue-schart组件
-                    path: '/nodeDetail',
-                    component: resolve => require(['./views/NodeDetail.vue'], resolve),
-                    meta: { title: '节点详细信息' }
-                },
-                {
                     // 权限页面
                     path: '/permission',
                     component: resolve => require(['./views/Permission.vue'], resolve),
                     meta: { title: '权限测试', permission: true }
+                },
+                {
+                    path: '/dashboard/:index',
+                    component: resolve => require(['./views/Dashboard.vue'], resolve),
+                    meta: { title: '节点概况' }
+                },
+                {
+                    path: '/nodeDetail/:index',
+                    component: resolve => require(['./views/NodeDetail.vue'], resolve),
+                    meta: { title: '节点详细信息' }
+                },
+                {
+                    path: '/warnRule/:index:',
+                    component: resolve => require(['./views/WarnRule.vue'], resolve),
+                    meta: { title: '制定警报规则' }
                 },
                 {
                     path: '/404',
