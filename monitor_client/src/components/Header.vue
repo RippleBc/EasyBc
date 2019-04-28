@@ -4,7 +4,7 @@
         <div class="collapse-btn" @click="collapseChage">
             <i class="el-icon-menu"></i>
         </div>
-        <div class="logo" @click="$router.push('/')" style="cursor:pointer;">服务器监控系统</div>
+        <div class="logo" @click="$router.push('/')" style="cursor:pointer;">区块链节点监控系统</div>
         <div class="header-right">
             <div class="header-user-con">
                 <!-- 全屏显示 -->

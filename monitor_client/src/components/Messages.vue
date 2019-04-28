@@ -1,5 +1,5 @@
 <template>
-    <div class="">
+    <div>
         <div class="crumbs">
             <el-breadcrumb separator="/">
                 <el-breadcrumb-item><i class="el-icon-lx-notice"></i>警告消息</el-breadcrumb-item>

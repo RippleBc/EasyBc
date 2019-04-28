@@ -53,6 +53,10 @@ a {
 
 .crumbs {
     margin: 10px 0;
+    font-size: 30px;
+    line-height: 30px;
+    display: flex;
+    align-items: center;
 }
 
 .pagination {

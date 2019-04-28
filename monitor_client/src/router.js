@@ -29,7 +29,7 @@ export default new Router({
                     // 权限页面
                     path: '/permission',
                     component: resolve => require(['./views/Permission.vue'], resolve),
-                    meta: { title: '权限测试', permission: true }
+                    meta: { title: '权限控制', permission: true }
                 },
                 {
                     path: '/dashboard/:index',

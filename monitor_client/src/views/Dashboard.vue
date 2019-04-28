@@ -1,7 +1,8 @@
 <template>
     <div>
         <div class="crumbs">
-            <el-breadcrumb separator="/">
+            <i class="el-icon-share"></i>
+            <el-breadcrumb separator="/" style="font-size: 18px;line-height: 18px;margin-left: 20px;">
                 <el-breadcrumb-item>
                     <span>{{`索引 ${currentNode.index}`}}</span>
                 </el-breadcrumb-item>
