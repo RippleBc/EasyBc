@@ -4,6 +4,7 @@ const bodyParser = require('body-parser')
 const path = require('path')
 const passport = require('passport')
 const cookieParser = require('cookie-parser')
+const cors = require('cors')
 const { host, port } = require('./config.json')
 
 const log4js = require('./logConfig')
@@ -33,6 +34,8 @@ process[Symbol.for('cookieSet')] = new Set()
 process[Symbol.for('app')] = app;
 
 require('./user');
+require('./block');
+require('./unl');
 
 //
 process.on('uncaughtException', function (err) {

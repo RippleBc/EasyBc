@@ -44,7 +44,6 @@
     import Schart from 'vue-schart';
     import bus from '../components/bus';
     import { mapState } from 'vuex';
-    import {unls} from '../config.json';
 
     export default {
         name: 'nodeDetail',
@@ -94,6 +93,9 @@
                 ]
             }
         }),
+        computed: {
+            ...mapState(['unl'])
+        },
         created(){
             this.getCurrentNode();
 
@@ -118,7 +120,7 @@
             },
             getCurrentNode(){
                 const nodeIndex = this.$route.path.split('/')[2];
-                const nodeInfo = unls.find(n => nodeIndex == n.index)
+                const nodeInfo = this.unl.find(n => nodeIndex == n.index)
                 this.currentNode = nodeInfo;
             }
         }

@@ -18,39 +18,37 @@ let http = axios.create({
   }]
 })
 
-function apiAxios(method, url, params, response)
+async function apiAxios(method, url, params)
 {
-  http({
+  const res = await http({
     method: method,
     url: url,
     data: method === 'POST' || method === 'PUT' ? params : null,
     params: method === 'GET' || method === 'DELETE' ? params : null
-  }).then(res => {
-    if(res.status < 200 || res.status >= 300)
-    {
-      Vue.prototype.$notify.error({
-        title: 'apiAxios',
-        message: response
-      });
-      return;
-    }
-    response(res.data)
-  }).catch(err => {
-    response(err)
-  })
+  });
+
+  if(res.status < 200 || res.status >= 300)
+  {
+    Vue.prototype.$notify.error({
+      title: 'apiAxios',
+      message: res
+    });
+    await Promise.reject('invalid status code');
+  }
+  return res.data
 }
 
 export default {
-  get: function (url, params, response) {
+  get: async function (url, params, response) {
     return apiAxios('GET', url, params, response)
   },
-  post: function (url, params, response) {
+  post: async function (url, params, response) {
     return apiAxios('POST', url, params, response)
   },
-  put: function (url, params, response) {
+  put: async function (url, params, response) {
     return apiAxios('PUT', url, params, response)
   },
-  delete: function (url, params, response) {
+  delete: async function (url, params, response) {
     return apiAxios('DELETE', url, params, response)
   }
 }

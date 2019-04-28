@@ -4,7 +4,7 @@ const { ERR_COOKIE_INVALID } = require('../constant')
 
 const cookieSet = process[Symbol.for('cookieSet')];
 
-module.exports.checkCookie = function (req, res, next) {
+module.exports = function (req, res, next) {
   // Parse the cookieData on the request
   var cookieData = cookie.parse(req.headers.cookie || '');
 

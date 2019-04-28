@@ -29,7 +29,12 @@
     "safe-buffer": "^5.1.2",
     "secp256k1": "^3.6.1",
     "semaphore": "^1.1.0",
-    "strip-hex-prefix": "^1.0.0"
+    "strip-hex-prefix": "^1.0.0",
+    "cookie": "^0.3.1",
+    "cookie-parser": "^1.4.4",
+    "multiparty": "^4.2.1",
+    "passport": "^0.4.0",
+    "passport-local": "^1.0.0"
   },
   "devDependencies": {
     "chai": "^4.2.0",
@@ -40,6 +45,7 @@
     "consensus_server": "pm2 start consensus_server/index.js --name=consensus",
     "query_server": "pm2 start query_server/index.js --name=query",
     "transaction_client": "pm2 start transaction_server/index.js --name=transaction",
+    "monitor_server": "pm2 start monitor_server/index --name=monitor_server",
     "all": "pm2 start query_server/index.js --name=query && pm2 start consensus_server/index.js --name=consensus",
     "test": "mocha depends/test/account.js && mocha depends/test/transaction.js && mocha depends/test/block.js && mocha depends/test/cache.js && mocha depends/test/stateManager.js && mocha depends/test/runBlockChain.js && mocha depends/test/net.js"
   },

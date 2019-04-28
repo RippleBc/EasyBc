@@ -88,14 +88,12 @@
 </template>
 
 <script>
-    import {unls} from "../config.json"
+    import { mapState } from 'vuex'
 
     export default {
         name: 'nodeList',
         data() {
             return {
-                nodesInfo: unls,
-                tableData: unls,
                 pageSize: 6,
                 cur_page: 1,
                 multipleSelection: [],
@@ -120,7 +118,7 @@
             {
                 if(oldVal !== '' && val === '')
                 {
-                    this.tableData = unls;
+                    this.tableData = this.nodesInfo;
                 }
             }
         },
@@ -128,7 +126,14 @@
         {
             pageData() {
                 return this.tableData.slice(this.pageSize * (this.cur_page - 1), this.pageSize * this.cur_page)
-            }
+            },
+
+            ...mapState({
+                nodesInfo: state => state.unl,
+
+                tableData: state => state.unl
+            })
+
         },
         methods: {
             handleCurrentChange(page) {

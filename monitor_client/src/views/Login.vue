@@ -49,8 +49,15 @@
                         this.$axios.post("login", {
                             username: this.userInfo.username,
                             password: this.userInfo.password
-                        }, response => {
-                            this.$router.push('/');
+                        }).then(res => {
+                            if(res.code !== 0)
+                            {
+                                this.$message.error(res.msg);
+                            }
+                            else
+                            {
+                                this.$router.push('/');
+                            }
                         });
                     }
                 });

@@ -9,9 +9,9 @@
             </div>
             <el-table :data="pageData" border class="table" @selection-change="handleSelectionChange">
                 <el-table-column type="selection" width="55" align="center"></el-table-column>
-                <el-table-column prop="name" label="名称" sortable width="120">
+                <el-table-column prop="username" label="名称" sortable width="120">
                 </el-table-column>
-                <el-table-column prop="Privilege" label="权限" width="200">
+                <el-table-column prop="privilege" label="权限" width="200">
                 </el-table-column>
                 <el-table-column prop="remarks" label="备注信息">
                 </el-table-column>
@@ -32,7 +32,7 @@
         <el-dialog title="编辑" :visible.sync="addVisible" width="30%">
             <el-form :model="currentHandleUser" label-width="90px">
                 <el-form-item label="用户名">
-                    <el-input v-model="currentHandleUser.name"></el-input>
+                    <el-input v-model="currentHandleUser.username"></el-input>
                 </el-form-item>
                 <el-form-item label="权限">
                     <el-input v-model="currentHandleUser.privilege"></el-input>
@@ -43,7 +43,7 @@
             </el-form>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="addVisible = false">取 消</el-button>
-                <el-button type="primary" @click="saveEdit">确 定</el-button>
+                <el-button type="primary" @click="addUser">确 定</el-button>
             </span>
         </el-dialog>
 
@@ -59,7 +59,7 @@
             </el-form>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="editVisible=false">取 消</el-button>
-                <el-button type="primary" @click="saveEdit">确 定</el-button>
+                <el-button type="primary" @click="modifyUser">确 定</el-button>
             </span>
         </el-dialog>
 
@@ -68,25 +68,23 @@
             <div class="del-dialog-cnt">删除不可恢复，是否确定删除？</div>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="delVisible=false">取 消</el-button>
-                <el-button type="primary" @click="deleteRow">确 定</el-button>
+                <el-button type="primary" @click="deleteUser">确 定</el-button>
             </span>
         </el-dialog>
     </div>
 </template>
 
 <script>
-    import {unls} from "../config.json"
-
     export default {
         name: 'permission',
         data() {
             return {
                 usersData: [{
-                    name: 'admin',
+                    username: 'admin',
                     privilege: 'admin',
                     remarks: 'admin'
                 }, {
-                    name: 'test',
+                    username: 'test',
                     privilege: 'test',
                     remarks: 'test'
                 }],
@@ -99,22 +97,21 @@
                 editVisible: false,
                 delVisible: false,
                 currentHandleUser: {
-                    index: -1,
-                    name: '',
+                    username: '',
                     privilege: '',
                     remarks: ''
                 }
             }
         },
         created() {
-            this.tableData = this.usersData
+            this.getData();
         },
         watch: {
             select_word: function(val, oldVal)
             {
                 if(oldVal !== '' && val === '')
                 {
-                    this.tableData = unls;
+                    this.tableData = this.usersData;
                 }
             }
         },
@@ -130,15 +127,11 @@
             },
             search() {
                 this.tableData = this.usersData.filter(data => {
-                    if(data.name.includes(this.select_word))
+                    if(data.username.includes(this.select_word))
                     {
                         return true;
                     }
-                    else if(data.host.includes(this.select_word))
-                    {
-                        return true;
-                    }
-                    else if(data.port.toString().includes(this.select_word))
+                    else if(data.privilege.includes(this.select_word))
                     {
                         return true;
                     }
@@ -150,36 +143,109 @@
                     return false;
                 })
             },
-            handleEdit(row) {
-                this.currentHandleUser = row;
-                this.editVisible = true;
-            },
-            handleDelete(index, row) {
-                
-                this.delVisible = true;
-            },
             delAll() {
-                let str = '';
-                for (let ele of this.multipleSelection) {
-                    str += ele.name + ' ';
-                }
-                this.$message.success(`删除成功 ${str}`);
-                this.multipleSelection = [];
+                const errMsgs = [];
+
+                (async () => {
+                    for(let user of this.multipleSelection)
+                    {
+                        let res = await this.$axios.post('/deleteUser', user)
+                        if(res.code !== 0)
+                        {
+                            errMsgs.push(res.msg)
+                        }
+                        else
+                        {
+                            this.$message.success(`删除成功, ${user.username}`);
+                        }
+                    }
+                })().then(() => {
+                    if(errMsgs.length > 0)
+                    {
+                        this.$message.error(errMsgs.join(', '));
+                    }
+                }).catch(err => {
+                    this.$message.error(err);
+                }).finally(() => {
+                    this.getData()
+                    this.multipleSelection = [];
+                });
             },
             handleSelectionChange(val) {
                 this.multipleSelection = val;
             },
-            // 保存编辑
-            saveEdit() {
-                this.$set(this.tableData, this.currentHandleUser.index, this.form);
-                this.editVisible = false;
-                this.$message.success(`修改成功`);
+            //
+            handleEdit(row) {
+                this.currentHandleUser = {...row};
+                this.editVisible = true;
             },
-            // 确定删除
-            deleteRow(){
+            handleDelete(row) {
+                this.currentHandleUser =  {...row};
+                this.delVisible = true;
+            },
+            //
+            addUser(){
+                this.addVisible = false;
+
+                this.$axios.post('/addUser', this.currentHandleUser).then(res => {
+                    if(res.code !== 0)
+                    {
+                        this.$message.error(res.msg);
+                    }
+                    else
+                    {
+                        this.$message.success(`新增成功`);
+                        this.getData();
+                    }
+                }).catch(err => {
+                    this.$message.error(err);
+                });
+            },
+            modifyUser() {
+                this.editVisible = false;
                 
-                this.$message.success('删除成功');
+                this.$axios.post('/modifyUser', this.currentHandleUser).then(res => {
+                    if(res.code !== 0)
+                    {
+                        this.$message.error(res.msg);
+                    }
+                    else
+                    {
+                        this.$message.success(`修改成功`);
+                        this.getData();
+                    }
+                }).catch(err => {
+                    this.$message.error(err);
+                });
+            },
+            deleteUser(){
                 this.delVisible = false;
+
+                this.$axios.post('/deleteUser', this.currentHandleUser).then(res => {
+                    if(res.code !== 0)
+                    {
+                        this.$message.error(res.msg);
+                    }
+                    else
+                    {
+                        this.$message.success(`删除成功`);
+                        this.getData();
+                    }
+                }).catch(err => {
+                    this.$message.error(err);
+                });
+            },
+            getData(){
+                this.$axios.get('/users', {}).then(res => {
+                    if(res.code !== 0)
+                    {
+                        this.$message.error(res.msg);
+                    }
+                    else
+                    {
+                        this.tableData = this.usersData = res.data;
+                    }
+                })
             }
         }
     }

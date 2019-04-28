@@ -49,7 +49,6 @@
 <script>
     import vMessages from '../components/Messages.vue'
     import bus from '../components/bus';
-    import {unls} from '../config.json';
     import { mapState } from 'vuex';
 
     export default {
@@ -58,6 +57,9 @@
             return {
                 currentNode: undefined
             }
+        },
+        computed: {
+            ...mapState(['unl'])
         },
         components:{
             vMessages
@@ -74,7 +76,7 @@
             },
             getCurrentNode(){
                 const nodeIndex = this.$route.path.split('/')[2];
-                const nodeInfo = unls.find(n => nodeIndex == n.index)
+                const nodeInfo = this.unl.find(n => nodeIndex == n.index)
                 this.currentNode = nodeInfo;
             }
         },
