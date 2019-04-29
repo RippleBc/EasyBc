@@ -1,4 +1,11 @@
 {
 	"host": "localhost",
-	"port": 8083
+	"port": 8083,
+	"mysql":
+	{
+		"host": "localhost",
+		"port": 33060,
+		"user": "root",
+		"password": "root"
+	}
 }

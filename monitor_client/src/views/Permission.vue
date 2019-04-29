@@ -9,11 +9,17 @@
             </div>
             <el-table :data="pageData" border class="table" @selection-change="handleSelectionChange">
                 <el-table-column type="selection" width="55" align="center"></el-table-column>
-                <el-table-column prop="username" label="名称" sortable width="120">
+                <el-table-column prop="id" label="id" sortable width="120">
+                </el-table-column>
+                <el-table-column prop="username" label="用户名" sortable width="120">
                 </el-table-column>
                 <el-table-column prop="privilege" label="权限" width="200">
                 </el-table-column>
                 <el-table-column prop="remarks" label="备注信息">
+                </el-table-column>
+                <el-table-column prop="createdAt" label="创建日期">
+                </el-table-column>
+                <el-table-column prop="updatedAt" label="更新日期">
                 </el-table-column>
                 <el-table-column label="操作" width="180" align="center">
                     <template slot-scope="scope">
@@ -34,6 +40,9 @@
                 <el-form-item label="用户名">
                     <el-input v-model="currentHandleUser.username"></el-input>
                 </el-form-item>
+                <el-form-item label="密码">
+                    <el-input v-model="currentHandleUser.password"></el-input>
+                </el-form-item>
                 <el-form-item label="权限">
                     <el-input v-model="currentHandleUser.privilege"></el-input>
                 </el-form-item>
@@ -50,6 +59,9 @@
         <!-- 编辑弹出框 -->
         <el-dialog title="编辑" :visible.sync="editVisible" width="30%">
             <el-form :model="currentHandleUser" label-width="90px">
+                <el-form-item label="密码">
+                    <el-input v-model="currentHandleUser.password"></el-input>
+                </el-form-item>
                 <el-form-item label="权限">
                     <el-input v-model="currentHandleUser.privilege"></el-input>
                 </el-form-item>
@@ -79,15 +91,7 @@
         name: 'permission',
         data() {
             return {
-                usersData: [{
-                    username: 'admin',
-                    privilege: 'admin',
-                    remarks: 'admin'
-                }, {
-                    username: 'test',
-                    privilege: 'test',
-                    remarks: 'test'
-                }],
+                usersData: [],
                 tableData: [],
                 pageSize: 6,
                 cur_page: 1,
@@ -97,9 +101,19 @@
                 editVisible: false,
                 delVisible: false,
                 currentHandleUser: {
+                    id: 0,
                     username: '',
+                    _password: '',
+                    get password(){
+                        return this._password;
+                    },
+                    set password(val){
+                        this._password = val || ''
+                    },
                     privilege: '',
-                    remarks: ''
+                    remarks: '',
+                    createdAt: '',
+                    updatedAt: ''
                 }
             }
         },
@@ -113,6 +127,13 @@
                 {
                     this.tableData = this.usersData;
                 }
+            },
+
+            usersData: function(val, oldVal)
+            {
+                this.tableData = val;
+
+                this.search();
             }
         },
         computed:
@@ -176,11 +197,13 @@
             },
             //
             handleEdit(row) {
-                this.currentHandleUser = {...row};
+                Object.assign(this.currentHandleUser, row)
+
                 this.editVisible = true;
             },
             handleDelete(row) {
-                this.currentHandleUser =  {...row};
+                Object.assign(this.currentHandleUser, row)
+                
                 this.delVisible = true;
             },
             //
@@ -243,7 +266,7 @@
                     }
                     else
                     {
-                        this.tableData = this.usersData = res.data;
+                        this.usersData = res.data;
                     }
                 })
             }

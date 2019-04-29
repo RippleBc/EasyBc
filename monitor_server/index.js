@@ -6,11 +6,11 @@ const passport = require('passport')
 const cookieParser = require('cookie-parser')
 const cors = require('cors')
 const { host, port } = require('./config.json')
+const Models = require('./models');
 
 const log4js = require('./logConfig')
 const logger = log4js.getLogger()
-const errlogger = log4js.getLogger('err')
-const othlogger = log4js.getLogger('oth')
+const dbLogger = log4js.getLogger('db')
 
 // express
 const app = express()
@@ -30,12 +30,24 @@ app.use("/", express.static(path.join(__dirname + "/dist")));
 // logger
 log4js.useLogger(app, logger)
 
+process[Symbol.for('logger')] = logger;
+process[Symbol.for('dbLogger')] = dbLogger;
 process[Symbol.for('cookieSet')] = new Set()
 process[Symbol.for('app')] = app;
+process[Symbol.for('models')] = new Models();
 
-require('./user');
-require('./block');
-require('./unl');
+process[Symbol.for('models')].init().then(() => {
+	logger.info('begin to user module')
+	require('./user');
+
+	logger.info('begin to block module')
+	require('./block');
+
+	logger.info('begin to unl module')
+	require('./unl');
+});
+
+
 
 //
 process.on('uncaughtException', function (err) {

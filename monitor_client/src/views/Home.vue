@@ -102,7 +102,7 @@
         watch:{
             currentNode: function(){
                 for(let [index, value] of this.nodeNavItems.entries()){
-                    this.nodeNavItems[index].index = `${this.nodeNavItems[index].originIndex}/${this.currentNode.index}`
+                    this.nodeNavItems[index].index = `${this.nodeNavItems[index].originIndex}/${this.currentNode.id}`
                 }
             }
         },

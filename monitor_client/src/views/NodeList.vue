@@ -9,6 +9,8 @@
             </div>
             <el-table :data="pageData" border class="table" @selection-change="handleSelectionChange">
                 <el-table-column type="selection" width="55" align="center"></el-table-column>
+                <el-table-column prop="id" label="id" sortable width="120">
+                </el-table-column>
                 <el-table-column prop="name" label="名称" sortable width="120">
                 </el-table-column>
                 <el-table-column prop="host" label="地址" width="200">
@@ -16,6 +18,10 @@
                 <el-table-column prop="port" label="端口">
                 </el-table-column>
                 <el-table-column prop="remarks" label="备注信息">
+                </el-table-column>
+                <el-table-column prop="createdAt" label="创建日期">
+                </el-table-column>
+                <el-table-column prop="updatedAt" label="更新日期">
                 </el-table-column>
                 <el-table-column label="操作" width="180" align="center">
                     <template slot-scope="scope">
@@ -33,7 +39,7 @@
         </div>
 
         <!-- 新增弹出框 -->
-        <el-dialog title="编辑" :visible.sync="addVisible" width="30%">
+        <el-dialog title="新增" :visible.sync="addVisible" width="30%">
             <el-form :model="currentHandleNode" label-width="90px">
                 <el-form-item label="名称">
                     <el-input v-model="currentHandleNode.name"></el-input>
@@ -50,7 +56,7 @@
             </el-form>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="addVisible = false">取 消</el-button>
-                <el-button type="primary" @click="saveEdit">确 定</el-button>
+                <el-button type="primary" @click="saveAdd">确 定</el-button>
             </span>
         </el-dialog>
 
@@ -94,6 +100,7 @@
         name: 'nodeList',
         data() {
             return {
+                tableData: [],
                 pageSize: 6,
                 cur_page: 1,
                 multipleSelection: [],
@@ -102,16 +109,18 @@
                 editVisible: false,
                 delVisible: false,
                 currentHandleNode: {
-                    index: -1,
+                    id: 0,
                     name: '',
                     host: '',
                     port: '',
-                    remarks: ''
+                    remarks: '',
+                    createdAt: '',
+                    updatedAt: ''
                 }
             }
         },
         created() {
-
+            this.tableData = this.nodesInfo;
         },
         watch: {
             select_word: function(val, oldVal)
@@ -120,6 +129,12 @@
                 {
                     this.tableData = this.nodesInfo;
                 }
+            },
+
+            nodesInfo: function(val, oldVal)
+            {
+                this.tableData = val;
+                this.search();
             }
         },
         computed:
@@ -129,9 +144,7 @@
             },
 
             ...mapState({
-                nodesInfo: state => state.unl,
-
-                tableData: state => state.unl
+                nodesInfo: state => state.unl
             })
 
         },
@@ -165,17 +178,37 @@
                 this.currentHandleNode = row;
                 this.editVisible = true;
             },
-            handleDelete(index, row) {
-                
+            handleDelete(row) {
+                this.currentHandleNode = row;
                 this.delVisible = true;
             },
             delAll() {
-                let str = '';
-                for (let ele of this.multipleSelection) {
-                    str += ele.name + ' ';
-                }
-                this.$message.success(`删除成功 ${str}`);
-                this.multipleSelection = [];
+                const errMsgs = [];
+
+                (async () => {
+                    for(let node of this.multipleSelection)
+                    {
+                        let res = await this.$axios.post('/deleteNode', node)
+                        if(res.code !== 0)
+                        {
+                            errMsgs.push(res.msg)
+                        }
+                        else
+                        {
+                            this.$message.success(`删除成功, ${node.name}`);
+                        }
+                    }
+                })().then(() => {
+                    if(errMsgs.length > 0)
+                    {
+                        this.$message.error(errMsgs.join(', '));
+                    }
+                }).catch(err => {
+                    this.$message.error(err);
+                }).finally(() => {
+                    this.$store.dispatch('getUnl');
+                    this.multipleSelection = [];
+                });
             },
             handleSelectionChange(val) {
                 this.multipleSelection = val;
@@ -183,19 +216,61 @@
             checkNodeDetail(row)
             {
                 this.$store.commit('switchCurrentNode', row)
-                this.$router.push(`dashboard/${row.index}`);
+                this.$router.push(`dashboard/${row.id}`);
+            },
+            //
+            saveAdd() {
+                this.addVisible = false;
+
+                this.$axios.post('/addNode', this.currentHandleNode).then(res => {
+                    if(res.code !== 0)
+                    {
+                        this.$message.error(res.msg);
+                    }
+                    else
+                    {
+                        this.$message.success('新增成功');
+                        this.$store.dispatch('getUnl');
+                    }
+                }).catch(err => {
+                    this.$message.error(err);
+                });
             },
             // 保存编辑
             saveEdit() {
-                this.$set(this.tableData, this.currentHandleNode.index, this.form);
                 this.editVisible = false;
-                this.$message.success(`修改成功`);
+                
+                this.$axios.post('/modifyNode', this.currentHandleNode).then(res => {
+                    if(res.code !== 0)
+                    {
+                        this.$message.error(res.msg);
+                    }
+                    else
+                    {
+                        this.$message.success('修改成功');
+                        this.$store.dispatch('getUnl');
+                    }
+                }).catch(err => {
+                    this.$message.error(err);
+                });
             },
             // 确定删除
             deleteRow(){
-                
-                this.$message.success('删除成功');
                 this.delVisible = false;
+
+                this.$axios.post('/deleteNode', this.currentHandleNode).then(res => {
+                    if(res.code !== 0)
+                    {
+                        this.$message.error(res.msg);
+                    }
+                    else
+                    {
+                        this.$message.success('删除成功');
+                        this.$store.dispatch('getUnl');
+                    }
+                }).catch(err => {
+                    this.$message.error(err);
+                });
             }
         }
     }

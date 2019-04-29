@@ -12,23 +12,16 @@ log4js.configure({
             pattern: "req-yyyy-MM-dd.log",
             alwaysIncludePattern: true
         },
-        err: {
+        db: {
             type: "dateFile",
-            filename: "monitor_server/logs/err_log/",
-            pattern: "err-yyyy-MM-dd.log",
-            alwaysIncludePattern: true
-        },
-        oth: {
-            type: "dateFile",
-            filename: "monitor_server/logs/oth_log/",
-            pattern: "oth-yyyy-MM-dd.log",
+            filename: "monitor_server/logs/db_log/",
+            pattern: "db-yyyy-MM-dd.log",
             alwaysIncludePattern: true
         }
     },
     categories: {
         default: { appenders: ["stdout", "req"], level: "debug" },
-        err: { appenders: ["stdout", "err"], level: "error" },
-        oth: { appenders: ["stdout", "oth"], level: "info" }
+        db: { appenders: ["stdout", "db"], level: "debug" }
     }
 })
  

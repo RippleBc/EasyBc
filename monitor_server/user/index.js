@@ -6,15 +6,12 @@ const cookie = require('cookie');
 const { ERR_SERVER_INNER, ERR_LOGIN_FAILED } = require('../constant');
 const { SUCCESS, PARAM_ERR, OTH_ERR } = require('../../constant')
 const { randomBytes } = require('crypto');
-const { checkCookie } = require('./checkCookie')
+const checkCookie = require('./checkCookie')
+const assert = require('assert')
+
 const app = process[Symbol.for('app')]
 const cookieSet = process[Symbol.for('cookieSet')];
-
-/*
- * @return {Object|undefined}
- */
-const getUser = username => users.find(user => user.username === username);
-const getUserIndex = username => users.findIndex(user => user.username === username);
+const models = process[Symbol.for('models')]
 
 // password
 passport.use(new LocalStrategy({
@@ -23,114 +20,209 @@ passport.use(new LocalStrategy({
   },
 
   function(username, password, done) {
-    const user = getUser(username);
 
-    if(user === undefined)
-    {
-      return done(null, { message: 'Incorrect username.' });
-    }
+    models.User.findOne({
+      where: {
+        username: username
+      }
+    }).then(user => {
+      if(user === undefined)
+      {
+        return done(null, { message: 'Incorrect username.' });
+      }
 
-    if(password !== user.password)
-    {
-      return done(null, { message: 'Incorrect password.' });
-    }
+      if(password !== user.password)
+      {
+        return done(null, { message: 'Incorrect password.' });
+      }
 
-    return done(null, null)
+      done(null, null)
+    })
   }
 ));
 
-app.get('/users', function(req, res) {
+app.get('/users', checkCookie, function(req, res) {
+  models.User.findAll().then(users => {
+    const formattedUsers = users.map(user => {
+      return { id: user.id, username: user.username, privilege: user.privilege, remarks: user.remarks, createdAt: user.createdAt, updatedAt: user.updatedAt }
+    })
 
-  const formattedUsers = users.map(user => {
-    return { username: user.username, privilege: user.privilege, remarks: user.remarks }
+    res.json({
+      code: SUCCESS,
+      data: formattedUsers
+    });
   })
-
-  res.json({
-    code: SUCCESS,
-    data: formattedUsers
-  });
 });
 
-app.post('/addUser', function(req, res) {
+app.post('/addUser', checkCookie, function(req, res) {
   const username = req.body.username;
   const password = req.body.password;
   const privilege = req.body.privilege;
   const remarks = req.body.remarks;
 
-  if(getUserIndex(username) >= 0)
+  if(!!!username)
   {
     return res.json({
       code: OTH_ERR,
-      msg: 'user has existed'
+      msg: 'invalid username'
     })
   }
 
-  users.push({username, password, privilege, remarks});
+  if(!!!password)
+  {
+    return res.json({
+      code: OTH_ERR,
+      msg: 'invalid password'
+    })
+  }
 
-  res.json({
-    code: SUCCESS
+  if(!!!privilege)
+  {
+    return res.json({
+      code: OTH_ERR,
+      msg: 'invalid privilege'
+    })
+  }
+
+  if(!!!remarks)
+  {
+    return res.json({
+      code: OTH_ERR,
+      msg: 'invalid remarks'
+    })
+  }
+
+  models.User.findOrCreate({
+    where: {
+      username: username
+    },
+    defaults: {
+      password: password,
+      privilege: privilege,
+      remarks: remarks
+    }
+  }).then(([user, created]) => {
+    if(!created)
+    {
+      return res.json({
+        code: OTH_ERR,
+        msg: `user ${user.username} has existed`
+      });
+    }
+    
+    res.json({
+      code: SUCCESS
+    });
   });
 })
 
-app.post('/modifyUser', function(req, res) {
+app.post('/modifyUser', checkCookie, function(req, res) {
   const username = req.body.username;
   const password = req.body.password;
   const privilege = req.body.privilege;
   const remarks = req.body.remarks;
 
-  const index = getUserIndex(username)
-
-  if(username === 'admin' && privilege !== users[index].privilege)
+  if(!!!username)
   {
     return res.json({
       code: OTH_ERR,
-      msg: 'can not modify admin\'s privilege'
+      msg: 'invalid username'
     })
   }
 
-  if(index < 0)
+  if(!!!password)
   {
     return res.json({
       code: OTH_ERR,
-      msg: 'user not exist'
-    });
+      msg: 'invalid password'
+    })
   }
 
-  users[index] = {username, password, privilege, remarks}
+  if(!!!privilege)
+  {
+    return res.json({
+      code: OTH_ERR,
+      msg: 'invalid privilege'
+    })
+  }
 
-  res.json({
-    code: SUCCESS
-  });
+  if(!!!remarks)
+  {
+    return res.json({
+      code: OTH_ERR,
+      msg: 'invalid remarks'
+    })
+  }
+
+  (async () => {
+    const user = await models.User.findOne({where: {
+      username: username
+    }});
+
+    if(undefined === user)
+    {
+      return res.json({
+        code: OTH_ERR,
+        msg: 'user not exist'
+      });
+    }
+
+    if(username === 'admin' && privilege !== user.privilege)
+    {
+      return res.json({
+        code: OTH_ERR,
+        msg: 'can not modify admin\'s privilege'
+      })
+    }
+
+
+    Object.assign(user, {password, privilege, remarks})
+    await user.save();
+
+    res.json({
+      code: SUCCESS
+    });
+  })();  
 })
 
-app.post('/deleteUser', function(req, res) {
+app.post('/deleteUser', checkCookie, function(req, res) {
   const username = req.body.username;
-  const password = req.body.password;
-  const privilege = req.body.privilege;
-  const remarks = req.body.remarks;
 
-  if(username === 'admin')
+  if(!!!username)
   {
     return res.json({
       code: OTH_ERR,
-      msg: 'can not delete admin'
+      msg: 'invalid username'
     })
   }
 
-  const index = getUserIndex(username)
-  if(index < 0)
-  {
-    return res.json({
-      code: OTH_ERR,
-      msg: 'user not exist'
+  (async () => {
+    if(username === 'admin')
+    {
+      return res.json({
+        code: OTH_ERR,
+        msg: 'can not delete admin'
+      })
+    }
+
+    const user = await models.User.findOne({where: {
+      username: username
+    }});
+
+    if(undefined === user)
+    {
+      return res.json({
+        code: OTH_ERR,
+        msg: 'user not exist'
+      });
+    }
+
+    await user.destroy();
+
+    res.json({
+      code: SUCCESS
     });
-  }
-
-  users.splice(index, 1);
-
-  res.json({
-    code: SUCCESS
-  });
+  })();
 })
 
 app.post('/login', function(req, res, next) {

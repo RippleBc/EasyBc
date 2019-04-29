@@ -4,7 +4,7 @@
             <i class="el-icon-share"></i>
             <el-breadcrumb separator="/" style="font-size: 18px;line-height: 18px;margin-left: 20px;">
                 <el-breadcrumb-item>
-                    <span>{{`索引 ${currentNode.index}`}}</span>
+                    <span>{{`索引 ${currentNode.id}`}}</span>
                 </el-breadcrumb-item>
                 <el-breadcrumb-item>
                     <span>{{`名称 ${currentNode.name}`}}</span>
@@ -76,7 +76,7 @@
             },
             getCurrentNode(){
                 const nodeIndex = this.$route.path.split('/')[2];
-                const nodeInfo = this.unl.find(n => nodeIndex == n.index)
+                const nodeInfo = this.unl.find(n => nodeIndex == n.id)
                 this.currentNode = nodeInfo;
             }
         },

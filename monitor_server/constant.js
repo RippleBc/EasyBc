@@ -9,11 +9,29 @@ module.exports.users = [
 		password: 'admin',
 		privilege: 'admin',
 		remarks: 'admin'
+	},
+	{
+		username: 'a',
+		password: 'a',
+		privilege: 'a',
+		remarks: 'a'
+	},
+	{
+		username: 'b',
+		password: 'b',
+		privilege: 'b',
+		remarks: 'b'
+	},
+	{
+		username: 'c',
+		password: 'c',
+		privilege: 'c',
+		remarks: 'c'
 	}
 ];
 
 /**/
-module.exports.unl = [
+module.exports.nodes = [
 	{
 		"index": 1,
 		"name": "a",
