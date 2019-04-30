@@ -151,6 +151,36 @@ class Mysql
   }
 
   /**
+   * @param number {String}
+   * @param stateRoot {String}
+   * @param address {String}
+   */
+  async getAccount(number, stateRoot, address)
+  {
+    assert(typeof number === "string", `Mysql getAccount, number should be a String, now is ${typeof number}`);
+    assert(typeof stateRoot === "string", `Mysql getAccount, stateRoot should be a String, now is ${typeof stateRoot}`);
+    assert(typeof address === "string", `Mysql getAccount, address should be a String, now is ${typeof address}`);
+
+    const promise = new Promise((resolve, reject) => {
+      this.pool.query(`SELECT data FROM account WHERE (stateRoot='${stateRoot}' OR number<='${number}') AND address='${address}' ORDER BY number DESC LIMIT 1`, (err, results) => {
+        if(!!err)
+        {
+          return reject(`Mysql getAccount throw exception, ${err}`);
+        }
+
+        if(results.length === 0)
+        {
+          return resolve();
+        }
+
+        resolve(new Account(`0x${results[0].data}`));
+      });
+    });
+    
+    return promise;
+  }
+
+  /**
    * @param {Buffer} number
    * @param {Buffer} stateRoot
    * @param {Buffer} address
@@ -215,6 +245,32 @@ class Mysql
     return promise;
   }
 
+  /**
+   * @param {String} hash
+   */
+  async getTransaction(hash)
+  {
+    assert(typeof hash === "string", `Mysql getTransaction, hash should be a String, now is ${typeof hash}`);
+
+    const promise = new Promise((resolve, reject) => {
+      this.pool.query(`SELECT data FROM transaction WHERE hash='${hash}'`, (err, results) => {
+        if(!!err)
+        {
+          return reject(`Mysql getTransaction throw exception, ${err}`);
+        }
+        
+        if(results.length === 0)
+        {
+          return resolve();
+        }
+
+        resolve(new Transaction(`0x${results[0].data}`));
+      });
+    });
+    
+    return promise;
+  }
+  
   /**
    * @param {Buffer} number
    * @param {Transaction} transaction

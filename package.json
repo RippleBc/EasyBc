@@ -26,9 +26,11 @@
     "log4js": "^3.0.6",
     "merkle-patricia-tree": "^3.0.0",
     "multiparty": "^4.2.1",
+    "mysql": "^2.16.0",
     "mysql2": "^1.6.5",
     "passport": "^0.4.0",
     "passport-local": "^1.0.0",
+    "pm2": "^3.5.0",
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
     "rlp": "^2.2.1",
@@ -36,19 +38,16 @@
     "secp256k1": "^3.6.1",
     "semaphore": "^1.1.0",
     "sequelize": "^5.7.6",
-    "strip-hex-prefix": "^1.0.0",
-    "mysql": "^2.16.0"
+    "strip-hex-prefix": "^1.0.0"
   },
   "devDependencies": {
     "chai": "^4.2.0",
     "mocha": "^5.2.0"
   },
   "scripts": {
-    "consensus_server": "pm2 start consensus_server/index.js --name=consensus",
-    "query_server": "pm2 start query_server/index.js --name=query",
-    "transaction_client": "pm2 start transaction_server/index.js --name=transaction",
-    "monitor_server": "pm2 start monitor_server/index.js --name=monitor_server",
-    "all": "pm2 start query_server/index.js --name=query && pm2 start consensus_server/index.js --name=consensus",
+    "consensus_server": "pm2 start consensus_server/index.js --no-autorestart --watch=consensus_server --name=consensus",
+    "transaction_server": "pm2 start transaction_server/index.js –-no-autorestart --watch=transaction_server --name=transaction",
+    "monitor_server": "pm2 start monitor_server/index.js –-no-autorestart --watch=monitor_server --name=monitor_server",
     "test": "mocha depends/test/account.js && mocha depends/test/transaction.js && mocha depends/test/block.js && mocha depends/test/cache.js && mocha depends/test/stateManager.js && mocha depends/test/runBlockChain.js && mocha depends/test/net.js"
   },
   "keywords": [

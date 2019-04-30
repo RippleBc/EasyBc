@@ -41,6 +41,12 @@ log4js.configure({
             filename: "consensus_server/logs/update_log/",
             pattern: "update-yyyy-MM-dd.log",
             alwaysIncludePattern: true
+        },
+        query: {
+            type: "dateFile",
+            filename: "consensus_server/logs/query_log/",
+            pattern: "query-yyyy-MM-dd.log",
+            alwaysIncludePattern: true
         }
     },
     categories: {
@@ -49,7 +55,8 @@ log4js.configure({
         net: { appenders: ["stdout", "net"], level: "info" },
         consensus: { appenders: ["stdout", "consensus"], level: "info" },
         mysql: { appenders: ["stdout", "mysql"], level: "info" },
-        update: { appenders: ["stdout", "update"], level: "info" }
+        update: { appenders: ["stdout", "update"], level: "info" },
+        query: { appenders: ["stdout", "update"], level: "info" }
     }
 })
  

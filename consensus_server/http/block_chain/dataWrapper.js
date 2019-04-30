@@ -1,0 +1,90 @@
+const process =require('process');
+const assert = require("assert");
+
+const mysql = process[Symbol.for("mysql")];
+
+class DataWrapper
+{
+	constructor()
+	{
+		this.stateRoot = "";
+		this.number = "";
+		this.block = undefined;
+		this.blockChainHeight = "";
+	}
+
+	async refresh()
+	{	
+		const newBlockChainHeight = await mysql.getBlockChainHeight();
+		if(newBlockChainHeight === undefined)
+		{
+			return;
+		}
+
+		if(this.blockChainHeight === newBlockChainHeight)
+		{
+			return;
+		}
+
+		this.blockChainHeight = newBlockChainHeight;
+		this.block = await mysql.getBlockByNumber(this.blockChainHeight);
+		if(!this.block)
+		{
+			throw new Error(`refresh, getBlockByNumber(${this.blockChainHeight.toString()}) should not return undefined`);
+		}
+
+		this.stateRoot = this.block.header.stateRoot.toString("hex");
+		this.number = this.block.header.number.toString("hex");
+	}
+
+	/**
+	 * @param {String} address
+	 */
+	async getAccount(address)
+	{
+		assert(typeof address === "string", `Block getAccountInfo, address should be a String, now is ${typeof address}`);
+
+		return await mysql.getAccount(this.number, this.stateRoot, address);
+	}
+
+	/**
+	 * @param {String} hash
+	 */
+	async getTrasaction(hash)
+	{
+		assert(typeof hash === "string", `Block getTrasaction, hash should be a String, now is ${typeof hash}`);
+
+		return mysql.getTransaction(hash);
+	}
+
+	/**
+	 * @param {String} hash
+	 */
+	async getBlockByNumber(number)
+	{
+		assert(typeof number === "string", `Block getBlockByNumber, number should be a String, now is ${typeof number}`);
+
+		return await mysql.getBlockByNumber(number);
+	}
+
+	async getLastestBlock()
+	{
+		return this.block;
+	}
+}
+
+
+
+module.exports = new Proxy(DataWrapper, {
+	apply (target, ctx, args) {
+
+		const func = async function()
+		{
+			await ctx.refresh();
+
+			await Reflect.apply(target, ctx, args);
+		}
+    
+    return func();
+  }
+});

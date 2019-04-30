@@ -1,7 +1,28 @@
-const Cache = require("./cache");
+const dataWrapper = require("./dataWrapper");
 const { SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS } = require("../../constant");
 
-const cache = new Cache();
+const processor = process[Symbol.for('processor')];
+const app = process[Symbol.for('app')];
+
+app.post("/sendTransaction", function(req, res) {
+    if(!req.body.tx) {
+        res.send({
+            code: PARAM_ERR,
+            msg: "param error, need tx"
+        });
+        return;
+    }
+
+    processor.processTransaction(req.body.tx)
+    .then(() => {
+        res.send({
+            code: SUCCESS,
+            msg: ""
+        });
+    });
+});
+
+
 app.post("/getAccountInfo", function(req, res) {
 	if(!req.body.address) {
         return res.send({
@@ -9,7 +30,7 @@ app.post("/getAccountInfo", function(req, res) {
             msg: "param error, need address"
         });
     }
-    cache.getAccount(req.body.address).then(account => {
+    dataWrapper.getAccount(req.body.address).then(account => {
         if(account)
         {
             res.send({
@@ -37,7 +58,7 @@ app.post("/getTransactionState", function(req, res) {
         });
     }
 
-    cache.getTrasaction(req.body.hash).then(transaction => {
+    dataWrapper.getTrasaction(req.body.hash).then(transaction => {
         if(!transaction)
         {
             return res.send({
@@ -63,7 +84,7 @@ app.post("/getBlockByNumber", function(req, res) {
         });
     }
 
-    cache.getBlockByNumber(req.body.number).then(block => {
+    dataWrapper.getBlockByNumber(req.body.number).then(block => {
         if(block)
         {
             return res.send({
@@ -81,7 +102,7 @@ app.post("/getBlockByNumber", function(req, res) {
 });
 
 app.post("/getLastestBlock", function(req, res) {
-    cache.getLastestBlock().then(block => {
+    dataWrapper.getLastestBlock().then(block => {
         if(block)
         {
             return res.send({

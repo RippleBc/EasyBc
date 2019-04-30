@@ -1,32 +1,20 @@
-class Point
-{
-	constructor(x, y)
-	{
-		this.x = x;
-		this.y = y;
-	}
-}
+var twice = {
+  apply (target, ctx, args) {
+    return Reflect.apply(...arguments, targe);
+  }
+};
+async function sum (left, right) {
+  return left + right;
+};
+var proxy = new Proxy(sum, twice);
 
-class ColorPoint extends Point
-{
-	constructor(x, y, color)
-	{
-		super(x, y);
-		this.color = color;
-	}
+proxy(1, 2).then(a => {
+	console.log(a)
+})
 
-	hello()
-	{
-		console.log("hello");
-	}
-}
-var p1 = new Point(2, 3);
-var p2 = new ColorPoint(2, 3, 'red');
-
-console.log(Object.getOwnPropertyDescriptors(p2.__proto__.__proto__))
-console.log(Object.getOwnPropertyDescriptors(p1.__proto__))
-// console.log(p2.__proto__) // false
-// console.log(p2.) // true
-
-// console.log(ColorPoint.__proto__ === Point)
-// console.log(ColorPoint.prototype.__proto__ === Point.prototype)
+proxy.call(null, 5, 6).then(a => {
+	console.log(a)
+}) // 22
+proxy.apply(null, [7, 8]).then(a => {
+	console.log(a)
+}) // 30
