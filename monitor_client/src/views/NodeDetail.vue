@@ -41,7 +41,6 @@
 </template>
 
 <script>
-    import Schart from 'vue-schart';
     import bus from '../components/bus';
     import { mapState } from 'vuex';
 
