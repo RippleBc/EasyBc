@@ -49,7 +49,7 @@ class Sender
 		let i;
 		for(i = 0; i < unl.length; i++)
 		{
-			if(!this.finishAddresses.has(stripHexPrefix(unl[i])))
+			if(!this.finishAddresses.has(stripHexPrefix(unl[i].address)))
 			{
 				break;
 			}
@@ -76,9 +76,9 @@ class Sender
 			// record timeout nodes
 			for(let i = 0; i < unl.length; i++)
 			{
-				if(!this.finishAddresses.has(stripHexPrefix(unl[i])))
+				if(!this.finishAddresses.has(stripHexPrefix(unl[i].address)))
 				{
-					this.timeoutAddresses.add(stripHexPrefix(unl[i]));
+					this.timeoutAddresses.add(stripHexPrefix(unl[i].address));
 				}
 			}
 

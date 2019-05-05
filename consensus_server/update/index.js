@@ -9,10 +9,6 @@ const { genesis } = require("../config.json");
 const process = require("process");
 
 let { unl } = require("../config.json");
-unl = unl.map(node => {
-	node.port = 8080;
-	return node;
-});
 
 const db = process[Symbol.for("db")];
 const logger = process[Symbol.for("loggerUpdate")];
@@ -27,8 +23,6 @@ const STAGE_STATE_EMPTY = 0;
 
 
 const GOD_PRIVATE_KEY = Buffer.from("d893eacfffa3ab4199c057a9e52587dad6cb8fc727e5678b92a2f58e7221710d", "hex");
-
-
 
 
 class Update
@@ -127,7 +121,7 @@ class Update
 			{
 				const node = unl[i];
 
-				options.uri = `http://${node.host}:${node.port}`;
+				options.uri = `http://${node.host}:${node.queryPort}`;
 				options.body.number = blockNumberBn.toString(16);
 
 				let response;
@@ -136,13 +130,13 @@ class Update
 					response = await rp(options);
 					if(response.code !== SUCCESS)
 					{
-						logger.error(`Update update, http request on host: ${node.host}, port: ${node.port} failed, ${response.msg}`);
+						logger.error(`Update update, http request on host: ${node.host}, port: ${node.queryPort} failed, ${response.msg}`);
 						continue;
 					}
 				}
 				catch(e)
 				{
-					logger.error(`Update update, http request on host: ${node.host}, port: ${node.port} failed, ${e}`);
+					logger.error(`Update update, http request on host: ${node.host}, port: ${node.queryPort} failed, ${e}`);
 					continue;
 				}
 
@@ -161,7 +155,7 @@ class Update
 				}
 				catch(e)
 				{
-					logger.error(`Update update, new Block failed, http request on host: ${node.host}, port: ${node.port}, ${e}`);
+					logger.error(`Update update, new Block failed, http request on host: ${node.host}, port: ${node.queryPort}, ${e}`);
 					continue;
 				}
 			}

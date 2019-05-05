@@ -92,17 +92,10 @@ app.get("/getToHistory", function(req, res) {
 });
 
 app.get("/sendTransaction", function(req, res) {
-  if(!req.query.queryUrl) {
+  if(!req.url) {
     return res.send({
         code: PARAM_ERR,
-        msg: "param error, need queryUrl"
-    });
-  }
-
-  if(!req.query.transactionUrl) {
-    return res.send({
-        code: PARAM_ERR,
-        msg: "param error, need transactionUrl"
+        msg: "param error, need url"
     });
   }
   
@@ -131,7 +124,7 @@ app.get("/sendTransaction", function(req, res) {
   const to = Buffer.from(req.query.to, "hex");
   const value = Buffer.from(req.query.value, "hex");
 
-  db.sendTransaction(req.query.queryUrl, req.query.transactionUrl, from, to, value).then(transactionHash => {
+  db.sendTransaction(req.query.url, from, to, value).then(transactionHash => {
     res.send({
         code: SUCCESS,
         data: transactionHash

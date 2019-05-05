@@ -2,7 +2,7 @@
 	<div class="container">
     <div style="max-width:1280px;flex-direction:row;">
       <el-card shadow="always">
-        <h2>{{currentNode.consensus.url}}</h2>
+        <h2>{{currentNode.url}}</h2>
       </el-card>
     </div>
     
@@ -10,7 +10,7 @@
       <div style="justify-content:left;" v-for="nodeInfo in nodesInfo">
         <div style="flex-direction:row;justify-content:start;cursor:pointer;" @dblclick="chooseNode(nodeInfo)">
           <span style="width:100px;">节点地址</span>
-          <p style="width:100%;">{{nodeInfo.consensus.url}}</p>
+          <p style="width:100%;">{{nodeInfo.url}}</p>
         </div>
         <div style="flex-direction:row;justify-content:start;">
           <span style="width:100px;">区块哈希值</span>
@@ -144,7 +144,7 @@ export default {
       const self = this;
 
   		this.nodesInfo.forEach(function (nodeInfo) {
-  			axios.get('getLastestBlock', { url: nodeInfo.query.url }, response => {
+  			axios.get('getLastestBlock', { url: self.currentNode.url }, response => {
           if (response.code === 0) {
             nodeInfo.detail = response.data
           } else {
@@ -236,8 +236,7 @@ export default {
     	const self = this
 
       axios.get('sendTransaction', {
-      	queryUrl: self.currentNode.query.url,
-        transactionUrl: self.currentNode.transaction.url,
+      	url: self.currentNode.url,
       	from: self.from,
       	to: self.to,
       	value: self.value
@@ -262,7 +261,7 @@ export default {
     	const self = this
 
       axios.get('getTransactionState', {
-      	url: self.currentNode.query.url,
+      	url: self.currentNode.url,
       	hash: self.transactionHash
       }, response => {
         if (response.code === 0) {
@@ -295,7 +294,7 @@ export default {
     	const self = this
 
       axios.get('getAccountInfo', {
-      	url: self.currentNode.query.url,
+      	url: self.currentNode.url,
       	address: address
       }, response => {
         if (response.code === 0) {
@@ -316,7 +315,7 @@ export default {
     	const self = this
 
       axios.get('getPrivateKey', {
-      	url: self.currentNode.query.url,
+      	url: self.currentNode.url,
       	address: address
       }, response => {
         if (response.code === 0) {

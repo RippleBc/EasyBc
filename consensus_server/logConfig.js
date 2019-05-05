@@ -56,7 +56,7 @@ log4js.configure({
         consensus: { appenders: ["stdout", "consensus"], level: "info" },
         mysql: { appenders: ["stdout", "mysql"], level: "info" },
         update: { appenders: ["stdout", "update"], level: "info" },
-        query: { appenders: ["stdout", "update"], level: "info" }
+        query: { appenders: ["stdout", "query"], level: "info" }
     }
 })
  

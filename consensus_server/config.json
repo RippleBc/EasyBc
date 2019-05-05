@@ -2,12 +2,17 @@
 	"privateKey": "459705e79404b3604e4eef0aa1becedef1a227865a122826106f7f511682ea86",
 	"unl": 
 	[
-		
+		{
+			"host": "0.0.0.0",
+			"queryPort": 8081,
+			"p2pPort": 9090,
+			"address": "ea3ba30a7e81d92ad8aa2e359c5d8f297fc0fb1"
+		}
 	],
 	"http":
 	{
 		"host": "0.0.0.0",
-		"port": 8080 
+		"port": 8081 
 	},
 	"tcp":
 	{
@@ -17,7 +22,7 @@
 	"mysql":
 	{
 		"host": "localhost",
-		"port": 33060,
+		"port": 3306,
 		"user": "root",
 		"password": "root"
 	},

@@ -44,6 +44,8 @@ class DataWrapper
 	{
 		assert(typeof address === "string", `Block getAccountInfo, address should be a String, now is ${typeof address}`);
 
+		await this.refresh();
+
 		return await mysql.getAccount(this.number, this.stateRoot, address);
 	}
 
@@ -69,20 +71,10 @@ class DataWrapper
 
 	async getLastestBlock()
 	{
+		await this.refresh();
+
 		return this.block;
 	}
 }
 
-module.exports = new Proxy(DataWrapper, {
-	apply(target, ctx, args) {
-
-		const func = async function()
-		{
-			await ctx.refresh();
-
-			await Reflect.apply(target, ctx, args);
-		}
-    
-    return func();
-  }
-});
+module.exports = new DataWrapper();

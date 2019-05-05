@@ -14,24 +14,25 @@ const CHECK_CONNECT_INTERVAL = 10 * 1000;
 
 class P2p
 {
-	constructor()
-	{
-		assert(typeof tcp.host === "string", `P2p constructor, tcp.host should be a String, now is ${typeof tcp.host}`);
-		assert(typeof tcp.port === "number", `P2p constructor, tcp.port should be a Number, now is ${typeof tcp.port}`);
-	}
-
 	/**
 	 * @param {Function} dispatcher
 	 */
-	async init(dispatcher)
+	constructor(dispatcher)
 	{
-		assert(typeof dispatcher === "function", `P2p init, dispatcher should be a Function, now is ${typeof dispatcher}`);
+		assert(typeof dispatcher === "function", `P2p constructor, dispatcher should be a Function, now is ${typeof dispatcher}`)
+		assert(typeof tcp.host === "string", `P2p constructor, tcp.host should be a String, now is ${typeof tcp.host}`);
+		assert(typeof tcp.port === "number", `P2p constructor, tcp.port should be a Number, now is ${typeof tcp.port}`);
 
+		this.dispatcher = dispatcher;
+	}
+
+	async init()
+	{
 		// init server
 		const server = await createServer({
 	    host: tcp.host,
 	    port: tcp.port,
-	    dispatcher: dispatcher,
+	    dispatcher: this.dispatcher,
 	    logger: loggerNet
 	  });
 
@@ -44,15 +45,15 @@ class P2p
 			{
 				await createClient({
 					host: node.host,
-					port: node.port,
-					dispatcher: dispatcher,
+					port: node.p2pPort,
+					dispatcher: this.dispatcher,
 					logger: loggerNet,
 					address: Buffer.from(node.address, "hex")
 				});
 			}
 			catch(e)
 			{
-				loggerP2p.error(`P2p init, connect to address: ${node.address}, host: ${node.host}, port: ${node.port} is failed, ${e}`);
+				loggerP2p.error(`P2p init, connect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort} is failed, ${e}`);
 			}
 		}
 
@@ -79,7 +80,7 @@ class P2p
 			catch(e)
 			{
 				const address = connection.address();
-				loggerP2p.error(`P2p sendAll failed, address: ${connection.address}, host: ${address.address}, port: ${address.port}, family: ${address.family}, ${e}`);
+				loggerP2p.error(`P2p send failed, address: ${connection.address}, host: ${address.address}, port: ${address.port}, family: ${address.family}, ${e}`);
 			}
 		}
 	}
@@ -111,7 +112,7 @@ class P2p
 	 */
 	checkIfConnectionIsOpen(address)
 	{
-		assert(Buffer.isBuffer(address), `P2p reconnect, address should be an Buffer, now is ${typeof address}`);
+		assert(Buffer.isBuffer(address), `P2p checkIfConnectionIsOpen, address should be an Buffer, now is ${typeof address}`);
 
 		const connection = connectionsManager.get(address);
 
@@ -146,17 +147,17 @@ class P2p
 				{
 					const connection = await createClient({
 						host: node.host,
-						port: node.port,
-						dispatcher: dispatcher,
+						port: node.p2pPort,
+						dispatcher: this.dispatcher,
 						logger: loggerNet,
 						address: Buffer.from(node.address, "hex")
 					});
 
-					loggerP2p.info(`P2p, reconnect to address: ${node.address}, host: ${node.host}, port: ${node.port} is successed`);
+					loggerP2p.info(`P2p, reconnect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort} is successed`);
 				}
 				catch(e)
 				{
-					loggerP2p.error(`P2p, reconnect to address: ${node.address}, host: ${node.host}, port: ${node.port} is failed, ${e}`);
+					loggerP2p.error(`P2p, reconnect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort} is failed, ${e}`);
 				}
 			}
 		}
@@ -175,17 +176,17 @@ class P2p
 				{
 					const connection = await createClient({
 						host: node.host,
-						port: node.port,
-						dispatcher: dispatcher,
+						port: node.p2pPort,
+						dispatcher: this.dispatcher,
 						logger: loggerNet,
 						address: Buffer.from(node.address, "hex")
 					});
 
-					loggerP2p.info(`P2p, reconnect to address: ${node.address}, host: ${node.host}, port: ${node.port} is successed`);
+					loggerP2p.info(`P2p, reconnectAll to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort} is successed`);
 				}
 				catch(e)
 				{
-					loggerP2p.error(`P2p, reconnect to address: ${node.address}, host: ${node.host}, port: ${node.port} is failed, ${e}`);
+					loggerP2p.error(`P2p, reconnectAll to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort} is failed, ${e}`);
 				}
 			}	
 		}

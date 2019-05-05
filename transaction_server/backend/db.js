@@ -156,17 +156,15 @@ exports.getToHistory = async function()
 }
 
 /**
- * @param {String} queryUrl
- * @param {String} transactionUrl
+ * @param {String} url
  * @param {Buffer} from
  * @param {Buffer} to
  * @param {Buffer} value
  * @return {String}
  */
-exports.sendTransaction = async function(queryUrl, transactionUrl, from, to, value)
+exports.sendTransaction = async function(url, from, to, value)
 {
-	assert(typeof queryUrl === "string", `sendTransaction, queryUrl should be a String, now is ${typeof queryUrl}`);
-	assert(typeof transactionUrl === "string", `sendTransaction, transactionUrl should be a String, now is ${typeof transactionUrl}`);
+	assert(typeof url === "string", `sendTransaction, url should be a String, now is ${typeof url}`);
 	assert(Buffer.isBuffer(from), `sendTransaction, from should be an Buffer, now is ${typeof from}`);
 	assert(Buffer.isBuffer(to), `sendTransaction, to should be an Buffer, now is ${typeof to}`);
 	assert(Buffer.isBuffer(value), `sendTransaction, value should be an Buffer, now is ${typeof value}`);
@@ -216,7 +214,7 @@ exports.sendTransaction = async function(queryUrl, transactionUrl, from, to, val
 	const address = keyPair[2];
 
 	// get account
-	const accountInfo =  await getAccountInfo(queryUrl, address.toString("hex"));
+	const accountInfo =  await getAccountInfo(url, address.toString("hex"));
 	
 	// send tx
 	const tx = new Transaction();
@@ -227,7 +225,7 @@ exports.sendTransaction = async function(queryUrl, transactionUrl, from, to, val
 	tx.sign(privateKey);
 
 	await saveTo(to);
-	await sendTransaction(transactionUrl, tx.serialize().toString("hex"));
+	await sendTransaction(url, tx.serialize().toString("hex"));
 
 	return tx.hash().toString("hex");
 }

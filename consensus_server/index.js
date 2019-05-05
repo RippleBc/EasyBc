@@ -2,13 +2,13 @@ const process = require("process");
 const log4js= require("./logConfig");
 const logger = log4js.getLogger();
 const { fork } = require("child_process");
+const path = require('path');
 
 process[Symbol.for("loggerP2p")] = log4js.getLogger("p2p");
 process[Symbol.for("loggerNet")] = log4js.getLogger("net");
-process[Symbol.for("loggerConsensus")] = log4js.getLogger("consensus");
+const loggerConsensus = process[Symbol.for("loggerConsensus")] = log4js.getLogger("consensus");
 process[Symbol.for("loggerMysql")] = log4js.getLogger("mysql");
 process[Symbol.for("loggerUpdate")] = log4js.getLogger("update");
-process[Symbol.for("loggerQuery")] = log4js.getLogger("query");
 
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -35,7 +35,9 @@ process.on("uncaughtException", function(err) {
 });
 
 /************************************** p2p **************************************/
-const p2p = process[Symbol.for("p2p")] = new P2p();
+const p2p = process[Symbol.for("p2p")] = new P2p((address, message) => {
+    processor.handleMessage(address, message);
+});
 
 /************************************** consensus **************************************/
 const Processor = require("./processor");
@@ -44,19 +46,32 @@ const processor = new Processor();
 process[Symbol.for('processor')] = processor;
 
 /************************************** init p2p and consensus **************************************/
-p2p.init((address, message) => {
-    processor.handleMessage(address, message);
-});
+p2p.init();
 
 processor.run();
 
-/************************************** http **************************************/
-const query_process = fork('./http/index.js');
+/************************************** query **************************************/
+const query_process = fork(path.join(__dirname, './query/index.js'));
 
-query_process.on('message', ({cmd, data}, socket) => {
+query_process.on('message', ({cmd, data}) => {
 	switch(cmd)
 	{
-		case 
+		case 'processTransaction':
+        {
+            processor.processTransaction(data).then(() => {
+                loggerConsensus.info(`transaction: ${data}, is processing`);
+            }).catch(e => {
+                loggerConsensus.error(`transaction: ${data}, is invalid`);
+            })
+        }
+        break;
 	}
-	processor.processTransaction()
+});
+
+query_process.on('error', err => {
+    throw new Error(err);
+});
+
+query_process.on('exit', (code, signal) => {
+    throw new Error('query_process exit');
 });

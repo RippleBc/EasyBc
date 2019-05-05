@@ -1,5 +1,5 @@
 const dataWrapper = require("./dataWrapper");
-const { SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS } = require("../../constant");
+const { SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS } = require("../../../constant");
 const process = require('process');
 
 const app = process[Symbol.for('app')];
@@ -13,22 +13,25 @@ app.post("/sendTransaction", function(req, res) {
         return;
     }
 
-    process.send({
+    const result = process.send({
         cmd: 'processTransaction',
         data: req.body.tx
-    }, res, {
-        keepOpen: true
-    }, err => {
-        if(!!err)
-        {
+    });
 
-        }
-
+    if(result === true)
+    {
         res.json({
             code: SUCCESS,
-            msg: ""
+            msg: ''
         });
-    });
+    }
+    else
+    {
+        res.json({
+            code: OTH_ERR,
+            msg: 'system is busy, please try again after a few seconds'
+        });
+    }
 });
 
 
