@@ -1,6 +1,7 @@
 const process = require("process");
 const log4js= require("./logConfig");
 const logger = log4js.getLogger();
+const { fork } = require("child_process");
 
 process[Symbol.for("loggerP2p")] = log4js.getLogger("p2p");
 process[Symbol.for("loggerNet")] = log4js.getLogger("net");
@@ -50,4 +51,12 @@ p2p.init((address, message) => {
 processor.run();
 
 /************************************** http **************************************/
-require('./http')
+const query_process = fork('./http/index.js');
+
+query_process.on('message', ({cmd, data}, socket) => {
+	switch(cmd)
+	{
+		case 
+	}
+	processor.processTransaction()
+});

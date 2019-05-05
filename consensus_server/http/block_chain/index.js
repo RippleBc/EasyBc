@@ -1,21 +1,30 @@
 const dataWrapper = require("./dataWrapper");
 const { SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS } = require("../../constant");
+const process = require('process');
 
-const processor = process[Symbol.for('processor')];
 const app = process[Symbol.for('app')];
 
 app.post("/sendTransaction", function(req, res) {
     if(!req.body.tx) {
-        res.send({
+        res.json({
             code: PARAM_ERR,
             msg: "param error, need tx"
         });
         return;
     }
 
-    processor.processTransaction(req.body.tx)
-    .then(() => {
-        res.send({
+    process.send({
+        cmd: 'processTransaction',
+        data: req.body.tx
+    }, res, {
+        keepOpen: true
+    }, err => {
+        if(!!err)
+        {
+
+        }
+
+        res.json({
             code: SUCCESS,
             msg: ""
         });
@@ -25,7 +34,7 @@ app.post("/sendTransaction", function(req, res) {
 
 app.post("/getAccountInfo", function(req, res) {
 	if(!req.body.address) {
-        return res.send({
+        return res.json({
             code: PARAM_ERR,
             msg: "param error, need address"
         });
@@ -33,7 +42,7 @@ app.post("/getAccountInfo", function(req, res) {
     dataWrapper.getAccount(req.body.address).then(account => {
         if(account)
         {
-            res.send({
+            res.json({
                 code: SUCCESS,
                 msg: "",
                 data: account.serialize().toString("hex")
@@ -41,7 +50,7 @@ app.post("/getAccountInfo", function(req, res) {
         }
         else
         {
-            res.send({
+            res.json({
                 code: SUCCESS,
                 msg: ""
             });
@@ -52,7 +61,7 @@ app.post("/getAccountInfo", function(req, res) {
 
 app.post("/getTransactionState", function(req, res) {
     if(!req.body.hash) {
-        return res.send({
+        return res.json({
             code: PARAM_ERR,
             msg: "param error, need data"
         });
@@ -61,14 +70,14 @@ app.post("/getTransactionState", function(req, res) {
     dataWrapper.getTrasaction(req.body.hash).then(transaction => {
         if(!transaction)
         {
-            return res.send({
+            return res.json({
                 code: SUCCESS,
                 msg: "",
                 data: TRANSACTION_STATE_NOT_EXISTS
             });
         }
 
-        res.send({
+        res.json({
             code: SUCCESS,
             msg: "",
             data: TRANSACTION_STATE_PACKED
@@ -78,7 +87,7 @@ app.post("/getTransactionState", function(req, res) {
 
 app.post("/getBlockByNumber", function(req, res) {
     if(!req.body.number) {
-        return res.send({
+        return res.json({
             code: PARAM_ERR,
             msg: "getBlockByNumber, param error, need number"
         });
@@ -87,14 +96,14 @@ app.post("/getBlockByNumber", function(req, res) {
     dataWrapper.getBlockByNumber(req.body.number).then(block => {
         if(block)
         {
-            return res.send({
+            return res.json({
                 code: SUCCESS,
                 msg: "",
                 data: block.serialize().toString("hex")
             });
         }
        
-        return res.send({
+        return res.json({
             code: OTH_ERR,
             msg: `getBlockByNumber, block not exist, number ${req.body.number}`
         });
@@ -105,7 +114,7 @@ app.post("/getLastestBlock", function(req, res) {
     dataWrapper.getLastestBlock().then(block => {
         if(block)
         {
-            return res.send({
+            return res.json({
                 code: SUCCESS,
                 msg: "",
                 data: block.serialize().toString("hex")
@@ -113,7 +122,7 @@ app.post("/getLastestBlock", function(req, res) {
         }
         else
         {
-            return res.send({
+            return res.json({
                 code: SUCCESS,
                 msg: ""
             });
