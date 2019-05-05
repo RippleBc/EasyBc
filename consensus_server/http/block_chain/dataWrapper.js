@@ -73,10 +73,8 @@ class DataWrapper
 	}
 }
 
-
-
 module.exports = new Proxy(DataWrapper, {
-	apply (target, ctx, args) {
+	apply(target, ctx, args) {
 
 		const func = async function()
 		{
