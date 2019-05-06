@@ -22,15 +22,39 @@
                     <div style="display: flex;">
                         <template v-for="(block, index) in node.blocks">
                             <div style="display: flex;flex-direction: column;width: 100%" :key="index">
-                                <div style="display: flex;flex-direction: row; align-items: center; height: 80px;">
-                                    <div style="display: flex;align-items: center; justify-content: center; border-radius:50%;width: 30px;height: 30px;border: 2px solid #67c23a;">
-                                        <span>{{block.number}}</span>
+                                <transition name="move">
+                                    <div style="display: flex;flex-direction: row; align-items: center; height: 80px;">
+                                        <div @click="block.show = !block.show" style="display: flex;align-items: center; justify-content: center; border-radius:50%;width: 30px;height: 30px;border: 2px solid #67c23a;">
+                                            <span>{{block.number}}</span>
+                                        </div>
+                                        
+                                        <p style="width: 100%;border: 1px solid #67c23a;height: 2px;box-sizing: border-box;"/>
                                     </div>
-                                    
-                                    <p style="width: 100%;border: 1px solid #67c23a;height: 2px;box-sizing: border-box;"/>
-                                </div>
-                                <span style="margin-bottom: 20px;">{{block.hash}}</span>   
-                                <span>{{block.timestamp}}</span>
+                                </transition>
+                                <transition name="fade">
+                                    <div v-show="block.show">
+                                        <div>
+                                            <span>哈西: </span>
+                                            <span style="margin-bottom: 20px;">{{block.hash}}</span>
+                                        </div>
+                                        <div>
+                                            <span>父节点哈西: </span>
+                                            <span style="margin-bottom: 20px;">{{block.parentHash}}</span>
+                                        </div>
+                                        <div>
+                                            <span>状态树根节点: </span>
+                                            <span style="margin-bottom: 20px;">{{block.stateRoot}}</span> 
+                                        </div>
+                                        <div>
+                                            <span>交易树根节点: </span>
+                                            <span style="margin-bottom: 20px;">{{block.transactionsTrie}}</span>
+                                        </div>
+                                        <div>
+                                            <span>时间戳: </span>
+                                            <span>{{block.timestamp}}</span>
+                                        </div>
+                                    </div>
+                                </transition>
                             </div>
                         </template>
                         
@@ -74,9 +98,14 @@
                     for(let node of this.$store.state.unl)
                     {
                         let res = await this.$axios.get('/blocks', {
-                            host: node.host,
-                            port: node.port
+                            url: `${node.host}:${node.port}`
                         });
+
+                        for(let index of res.data.keys())
+                        {
+                            res.data[index].show = false;
+                        }
+
                         let nodeInfo = {...{
 
                             index: node.index,
@@ -128,7 +157,7 @@
   -webkit-animation: bounce 2.0s infinite ease-in-out;
   animation: bounce 2.0s infinite ease-in-out;
 }
- 
+
 .double-bounce2 {
   -webkit-animation-delay: -1.0s;
   animation-delay: -1.0s;
@@ -148,4 +177,19 @@
     -webkit-transform: scale(1.0);
   }
 }
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity .5s;
+}
+.fade-enter, .fade-leave-to {
+  opacity: 0;
+}
+
+.move-enter-active, .move-leave-active {
+  transition: all 10s;
+}
+.move-enter, .move-leave-to {
+  opacity: 0;
+}
+
 </style>

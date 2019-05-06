@@ -21,8 +21,8 @@
 	},
 	"mysql":
 	{
-		"host": "localhost",
-		"port": 33060,
+		"host": "123.157.68.243",
+		"port": 10050,
 		"user": "root",
 		"password": "root"
 	},

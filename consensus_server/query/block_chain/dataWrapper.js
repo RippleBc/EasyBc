@@ -66,7 +66,7 @@ class DataWrapper
 	{
 		assert(typeof number === "string", `Block getBlockByNumber, number should be a String, now is ${typeof number}`);
 
-		return await mysql.getBlockByNumber(number);
+		return await mysql.getBlockByNumber(Buffer.from(number, 'hex'));
 	}
 
 	async getLastestBlock()

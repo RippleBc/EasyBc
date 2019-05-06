@@ -3,6 +3,8 @@ const process = require('process');
 const Sequelize = require('sequelize');
 const userModelConfig = require('./user');
 const nodeModelConfig = require('./node');
+const cpuModelConfig = require('./cpu');
+const memoryModelConfig = require('./memory');
 
 const logger = process[Symbol.for('dbLogger')] || console
 
@@ -27,7 +29,10 @@ class Model
   {
     this.User = this.sequelize.define(...userModelConfig);
     this.Node = this.sequelize.define(...nodeModelConfig);
+    this.Cpu = this.sequelize.define(...cpuModelConfig);
+    this.Memory = this.sequelize.define(...memoryModelConfig);
 
+    await this.sequelize.authenticate();
     await this.sequelize.sync();
 
     const [user, created] = await this.User.findOrCreate({

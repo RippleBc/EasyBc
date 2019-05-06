@@ -39,8 +39,6 @@ module.exports.sendTransaction = async function(url, tx)
 		}).catch(e => {
 			reject(e.toString());
 		});
-
-		resolve();
 	});
 
 	return promise;

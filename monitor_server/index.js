@@ -45,13 +45,16 @@ process[Symbol.for('models')].init().then(() => {
 
 	logger.info('begin to unl module')
 	require('./unl');
+}).catch(e => {
+	dbLogger.error(`init model throw exception, ${e}`);
 });
 
 
 
 //
-process.on('uncaughtException', function (err) {
+process.on('uncaughtException', err => {
   errlogger.error(err.stack)
+  exit(1)
 })
 
 
