@@ -5,9 +5,7 @@ const cors = require('cors');
 const { host, port } = require("../config.json").http;
 const Mysql = require("../mysql");
 
-
 const log4js= require("../logConfig");
-
 const logger = log4js.getLogger();
 
 process[Symbol.for("loggerMysql")] = log4js.getLogger("mysql");

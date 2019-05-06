@@ -45,9 +45,9 @@
     "mocha": "^5.2.0"
   },
   "scripts": {
-    "consensus_server": "pm2 start consensus_server/index.js --no-autorestart --watch=consensus_server --name=consensus",
-    "transaction_server": "pm2 start transaction_server/index.js –-no-autorestart --watch=transaction_server --name=transaction",
-    "monitor_server": "pm2 start monitor_server/index.js –-no-autorestart --watch=monitor_server --name=monitor_server",
+    "consensus_server": "pm2 start consensus_server/index.js --no-autorestart --name=consensus",
+    "transaction_server": "pm2 start transaction_server/index.js --no-autorestart --name=transaction",
+    "monitor_server": "pm2 start monitor_server/index.js --no-autorestart --name=monitor",
     "test": "mocha depends/test/account.js && mocha depends/test/transaction.js && mocha depends/test/block.js && mocha depends/test/cache.js && mocha depends/test/stateManager.js && mocha depends/test/runBlockChain.js && mocha depends/test/net.js"
   },
   "keywords": [

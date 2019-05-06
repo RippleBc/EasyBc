@@ -23,10 +23,10 @@ app.get('/status', (req, res) => {
 	{
 		nodeInfos.push({
 			"name": value.name,
-			"pid": pid.pid,
-			"pm_id": pm_id.pm_id,
-			"memory": memory.memory,
-			"cpu": cpu.cpu
+			"pid": value.pid,
+			"pm_id": value.pm_id,
+			"memory": value.monit.memory,
+			"cpu": value.monit.cpu
 		})
 	}
 

@@ -15,9 +15,9 @@ class Mysql
     this.pool  = mysql.createPool({
       connectionLimit: 10,
       host: mysqlConfig.host,
+      port: mysqlConfig.port,
       user: mysqlConfig.user,
       password: mysqlConfig.password,
-      port: mysqlConfig.port,
       database: "easy_bc"
     });
   }
@@ -33,7 +33,7 @@ class Mysql
       this.pool.query(`SELECT hash FROM block WHERE number='${number.toString("hex")}'`, (err, results) => {
         if(!!err)
         {
-          reject(`Mysql saveBlock throw exception, ${err}`);
+          reject(`Mysql getBlockHashByNumber throw exception, ${err}`);
         }
         
         if(!results || results.length === 0)
@@ -54,7 +54,7 @@ class Mysql
       this.pool.query("SELECT number FROM block ORDER BY number DESC LIMIT 1", (err, results) => {
         if(!!err)
         {
-          reject(`Mysql saveBlock throw exception, ${err}`);
+          reject(`Mysql getBlockChainHeight throw exception, ${err}`);
         }
         
         if(!results || results.length === 0)
@@ -88,7 +88,7 @@ class Mysql
       this.pool.query(`SELECT data FROM block WHERE hash='${hash.toString("hex")}'`, (err, results) => {
         if(!!err)
         {
-          reject(`Mysql saveBlock throw exception, ${err}`);
+          reject(`Mysql getBlockByHash throw exception, ${err}`);
         }
         
         if(!results || results.length === 0)
@@ -114,7 +114,7 @@ class Mysql
       this.pool.query(`SELECT data FROM block WHERE number='${number.toString("hex")}'`, (err, results) => {
         if(!!err)
         {
-          reject(`Mysql saveBlock throw exception, ${err}`);
+          reject(`Mysql getBlockByNumber throw exception, ${err}`);
         }
         
         if(!results || results.length === 0)
