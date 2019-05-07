@@ -4,7 +4,7 @@ const { SUCCESS, PARAM_ERR, OTH_ERR } = require("../../../constant");
 
 const app =  process[Symbol.for('app')];
 
-let processDescription;
+let processDescription = {};
 
 setInterval(() => {
 	pm2.list((err, processDescriptionList) => {
