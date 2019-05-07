@@ -88,11 +88,11 @@
                 yAxisName: ['数值', '频率']
             },
             cpuConsume:{
-                columns: ['createTime', 'consume'],
+                columns: ['createTime', '处理器'],
                 rows: []
             },
             memoryConsume:{
-                columns: ['createTime', 'consume'],
+                columns: ['createTime', '内存'],
                 rows: []
             }
         }),
@@ -119,13 +119,13 @@
                     this.cpuConsume.rows = res.data.cpus.map(n => {
                         return {
                             createTime: n.createdAt,
-                            consume: n.consume
+                            '处理器': n.consume
                         }
                     });
                     this.memoryConsume.rows = res.data.memories.map(n => {
                         return {
                             createTime: n.createdAt,
-                            consume: n.consume / 1024 / 1024
+                            '内存': n.consume / 1024 / 1024
                         }
                     });
                 }
