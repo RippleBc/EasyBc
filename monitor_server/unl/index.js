@@ -1,9 +1,42 @@
 const checkCookie = require('../user/checkCookie')
 const process = require('process')
 const { SUCCESS, PARAM_ERR, OTH_ERR } = require('../../constant')
+const rp = require("request-promise");
+const assert = require("assert");
 
 const app = process[Symbol.for('app')]
 const models = process[Symbol.for('models')]
+const logger = process[Symbol.for('logger')];
+
+models.Node.findAll().then(nodes => {
+  setInterval(() => {
+    for(let node of nodes.values())
+    {
+      let options = {
+        method: "GET",
+        uri: `${node.host}:${node.port}/status`,
+        json: true // Automatically stringifies the body to JSON
+      };
+
+      (async function() {
+        const response = await rp(options);
+
+        if(response.code !== SUCCESS)
+        {
+            await Promise.reject(response.data.msg) 
+        }
+        logger.info(node.address + ', ' + response.data.cpu)
+
+        await models.Cpu.create({address: node.address, consume: response.data.cpu});
+        await models.Memory.create({address: node.address, consume: response.data.memory});
+      })().then(() => {
+        logger.info(`get cpu and memory success`);
+      }).catch(e => {
+        logger.error(`get cpu and memory throw exception, ${e}`);
+      });
+    }
+  }, 5000);
+})
 
 app.get('/nodes', checkCookie, (req, res) => {
 
@@ -182,4 +215,39 @@ app.post('/deleteNode', checkCookie, (req, res) => {
       code: SUCCESS
     });
   })()
+});
+
+app.get('/nodeStatus', checkCookie, (req, res) => {
+
+  const address = req.query.address;
+
+  (async function(){
+    const cpus = await models.Cpu.findAll({
+      limit: 10,
+      order: [['id', 'DESC']],
+      where: {
+        address: address
+      }
+    });
+
+    const memories = await models.Memory.findAll({
+      limit: 10,
+      order: [['id', 'DESC']],
+      where: {
+        address: address
+      }
+    });
+
+    return { cpus, memories };
+  })().then(({ cpus, memories }) => {
+    res.json({
+      code: SUCCESS,
+      data: { cpus, memories }
+    });
+  }).catch(e => {
+    res.json({
+      code: PARAM_ERR,
+      msg: e
+    });
+  });
 });

@@ -5,6 +5,10 @@ module.exports = ['node', {
     type: Sequelize.STRING,
     allowNull: false
   },
+  address: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
   host: {
     type: Sequelize.STRING,
     allowNull: false

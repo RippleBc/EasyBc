@@ -32,7 +32,14 @@
             <el-row :gutter="20" style="margin-bottom: 20px;">
                 <el-col :span="24">
                     <el-card shadow="hover">
-                        <ve-line ref="consensusTimeConsume" :data="consensusTimeConsumeData" :resizeable="true"></ve-line>
+                        <ve-line :data="cpuConsume" :resizeable="true"></ve-line>
+                    </el-card>
+                </el-col>
+            </el-row>
+            <el-row :gutter="20" style="margin-bottom: 20px;">
+                <el-col :span="24">
+                    <el-card shadow="hover">
+                        <ve-line :data="memoryConsume" :resizeable="true"></ve-line>
                     </el-card>
                 </el-col>
             </el-row>
@@ -80,16 +87,13 @@
                 yAxisType: ['normal', 'normal'],
                 yAxisName: ['数值', '频率']
             },
-            consensusTimeConsumeData:{
-                columns: ['时间', '合并', '交易', '区块'],
-                rows: [
-                    { '时间': '1/1', '合并': 93, '交易': 94, '区块': 32 },
-                    { '时间': '1/2', '合并': 30, '交易': 36, '区块': 26 },
-                    { '时间': '1/3', '合并': 23, '交易': 28, '区块': 76 },
-                    { '时间': '1/4', '合并': 23, '交易': 20, '区块': 49 },
-                    { '时间': '1/5', '合并': 92, '交易': 422, '区块': 323 },
-                    { '时间': '1/6', '合并': 93, '交易': 13, '区块': 78 }
-                ]
+            cpuConsume:{
+                columns: ['createTime', 'consume'],
+                rows: []
+            },
+            memoryConsume:{
+                columns: ['createTime', 'consume'],
+                rows: []
             }
         }),
         computed: {
@@ -102,6 +106,30 @@
         },
         activated(){
             this.getCurrentNode();
+
+            this.$axios.get("nodeStatus", {
+                address: this.currentNode.address
+            }).then(res => {
+                if(res.code !== 0)
+                {
+                    this.$message.error(res.msg);
+                }
+                else
+                {
+                    this.cpuConsume.rows = res.data.cpus.map(n => {
+                        return {
+                            createTime: n.createdAt,
+                            consume: n.consume
+                        }
+                    });
+                    this.memoryConsume.rows = res.data.memories.map(n => {
+                        return {
+                            createTime: n.createdAt,
+                            consume: n.consume / 1024 / 1024
+                        }
+                    });
+                }
+            });
 
             this.handleListener();
         },

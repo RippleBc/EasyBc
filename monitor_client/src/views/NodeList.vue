@@ -13,6 +13,8 @@
                 </el-table-column>
                 <el-table-column prop="name" label="名称" sortable width="120">
                 </el-table-column>
+                <el-table-column prop="address" label="公钥" sortable width="120">
+                </el-table-column>
                 <el-table-column prop="host" label="地址" width="200">
                 </el-table-column>
                 <el-table-column prop="port" label="端口">
@@ -44,6 +46,9 @@
                 <el-form-item label="名称">
                     <el-input v-model="currentHandleNode.name"></el-input>
                 </el-form-item>
+                <el-form-item label="公钥">
+                    <el-input v-model="currentHandleNode.address"></el-input>
+                </el-form-item>
                 <el-form-item label="地址">
                     <el-input v-model="currentHandleNode.host"></el-input>
                 </el-form-item>
@@ -65,6 +70,9 @@
             <el-form :model="currentHandleNode" label-width="90px">
                 <el-form-item label="名称">
                     <el-input v-model="currentHandleNode.name"></el-input>
+                </el-form-item>
+                <el-form-item label="公钥">
+                    <el-input v-model="currentHandleNode.address"></el-input>
                 </el-form-item>
                 <el-form-item label="地址">
                     <el-input v-model="currentHandleNode.host"></el-input>
@@ -111,6 +119,7 @@
                 currentHandleNode: {
                     id: 0,
                     name: '',
+                    address: '',
                     host: '',
                     port: '',
                     remarks: '',
@@ -155,6 +164,10 @@
             search() {
                 this.tableData = this.nodesInfo.filter(data => {
                     if(data.name.includes(this.select_word))
+                    {
+                        return true;
+                    }
+                    else if(data.address.includes(this.select_word))
                     {
                         return true;
                     }
