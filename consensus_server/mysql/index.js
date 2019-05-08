@@ -65,7 +65,6 @@ class Mysql
    */
   async getBlockChainHeight()
   {
-
     const block = await this.Block.findOne({
       attributes: ['number'],
       order: [['number', 'DESC']]
