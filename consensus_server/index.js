@@ -34,44 +34,46 @@ process.on("uncaughtException", function(err) {
     process.exit(1);
 });
 
-/************************************** p2p **************************************/
-const p2p = process[Symbol.for("p2p")] = new P2p(function(message) {
-    processor.handleMessage(this.address, message);
-});
+process[Symbol.for("mysql")].init().then(() => {
+    /************************************** p2p **************************************/
+    const p2p = process[Symbol.for("p2p")] = new P2p(function(message) {
+        processor.handleMessage(this.address, message);
+    });
 
-/************************************** consensus **************************************/
-const Processor = require("./processor");
-const processor = new Processor();
+    /************************************** consensus **************************************/
+    const Processor = require("./processor");
+    const processor = new Processor();
 
-process[Symbol.for('processor')] = processor;
+    process[Symbol.for('processor')] = processor;
 
-/************************************** init p2p and consensus **************************************/
-p2p.init();
+    /************************************** init p2p and consensus **************************************/
+    p2p.init();
 
-processor.run();
+    processor.run();
 
-/************************************** query **************************************/
-const query_process = fork(path.join(__dirname, './query/index.js'));
+    /************************************** query **************************************/
+    const query_process = fork(path.join(__dirname, './query/index.js'));
 
-query_process.on('message', ({cmd, data}) => {
-	switch(cmd)
-	{
-		case 'processTransaction':
+    query_process.on('message', ({cmd, data}) => {
+        switch(cmd)
         {
-            processor.processTransaction(data).then(() => {
-                loggerConsensus.info(`transaction: ${data}, is processing`);
-            }).catch(e => {
-                loggerConsensus.error(`transaction: ${data}, is invalid`);
-            })
+            case 'processTransaction':
+            {
+                processor.processTransaction(data).then(() => {
+                    loggerConsensus.info(`transaction: ${data}, is processing`);
+                }).catch(e => {
+                    loggerConsensus.error(`transaction: ${data}, is invalid`);
+                })
+            }
+            break;
         }
-        break;
-	}
-});
+    });
 
-query_process.on('error', err => {
-    throw new Error(err);
-});
+    query_process.on('error', err => {
+        throw new Error(err);
+    });
 
-query_process.on('exit', (code, signal) => {
-    throw new Error('query_process exit');
+    query_process.on('exit', (code, signal) => {
+        throw new Error('query_process exit');
+    });
 });

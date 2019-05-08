@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize');
 
 module.exports = ['account', {
-  name: {
+  number: {
     type: Sequelize.STRING,
     allowNull: false
   },
@@ -9,25 +9,18 @@ module.exports = ['account', {
     type: Sequelize.STRING,
     allowNull: false
   },
-  host: {
+  stateRoot: {
     type: Sequelize.STRING,
     allowNull: false
   },
-  port: {
-    type: Sequelize.STRING,
-    allowNull: false
-  },
-  remarks: {
-    type: Sequelize.STRING,
+  data: {
+    type: Sequelize.TEXT,
     allowNull: false
   }
 }, {
   indexes: [{
     unique: true,
-    fields: ['name']
-  }, {
-    unique: true,
-    fields: ['host', 'port']
+    fields: ['number', 'address', 'stateRoot']
   }],
   scopes: {
     

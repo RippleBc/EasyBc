@@ -5,6 +5,10 @@ const Block = require("../../depends/block");
 const Transaction = require("../../depends/transaction");
 const utils = require("../../depends/utils");
 const assert = require("assert");
+const accountModelConfig = require('./account');
+const blockModelConfig = require('./block');
+const transactionModelConfig = require('./transaction');
+const Sequelize = require('sequelize');
 
 const Buffer = utils.Buffer;
 
@@ -12,121 +16,107 @@ class Mysql
 {
   constructor()
   {
-    this.pool  = mysql.createPool({
-      connectionLimit: 10,
+    this.sequelize = new Sequelize('consensus', mysqlConfig.user, mysqlConfig.password, {
       host: mysqlConfig.host,
       port: mysqlConfig.port,
-      user: mysqlConfig.user,
-      password: mysqlConfig.password,
-      database: "easy_bc"
+      dialect: 'mysql',
+      pool: {
+        max: 5,
+        min: 0,
+        acquire: 30000,
+        idle: 10000
+      }
     });
+  }
+
+  async init()
+  {
+    this.Account = this.sequelize.define(...accountModelConfig);
+    this.Block = this.sequelize.define(...blockModelConfig);
+    this.Transaction = this.sequelize.define(...transactionModelConfig);
+
+    await this.sequelize.authenticate();
+    await this.sequelize.sync();
   }
 
   /**
    * @param {Buffer} number
+   * @return {Buffer}
    */
   async getBlockHashByNumber(number)
   {
     assert(Buffer.isBuffer(number), `Mysql getBlockHashByNumber, number should be an Buffer, now is ${typeof number}`);
 
-    const promise = new Promise((resolve, reject) => {
-      this.pool.query(`SELECT hash FROM block WHERE number='${number.toString("hex")}'`, (err, results) => {
-        if(!!err)
-        {
-          reject(`Mysql getBlockHashByNumber throw exception, ${err}`);
-        }
-        
-        if(!results || results.length === 0)
-        {
-          return resolve();
-        }
-
-        resolve(Buffer.from(results[0].hash, "hex"));
-      });
+    const block = await this.Block.findOne({
+      attributes: ['hash'],
+      where: {
+        number: number.toString('hex')
+      }
     });
-    
-    return promise;
+  
+    if(block)
+    {
+      return Buffer.from(block.hash, "hex");
+    }
   }
 
+  /*
+   * @return {Buffer}
+   */
   async getBlockChainHeight()
   {
-    const promise = new Promise((resolve, reject) => {
-      this.pool.query("SELECT number FROM block ORDER BY number DESC LIMIT 1", (err, results) => {
-        if(!!err)
-        {
-          reject(`Mysql getBlockChainHeight throw exception, ${err}`);
-        }
-        
-        if(!results || results.length === 0)
-        {
-          return resolve();
-        }
 
-        resolve(Buffer.from(results[0].number, "hex"));
-      });
+    const block = await this.Block.findOne({
+      attributes: ['number'],
+      order: [['number', 'DESC']]
     });
-    
-    return promise;
-  }
-
-  /**
-   * @param {Buffer} number
-   */
-  async saveBlockChainHeight(number)
-  {
-    assert(Buffer.isBuffer(number), `Mysql saveBlockChainHeight, number should be an Buffer, now is ${typeof number}`);
+  
+    if(block)
+    {
+      return Buffer.from(block.number, "hex");
+    }
   }
 
   /**
    * @param {Buffer} hash
+   * @return {Block}
    */
   async getBlockByHash(hash)
   {
     assert(Buffer.isBuffer(hash), `Mysql getBlockByHash, hash should be an Buffer, now is ${typeof hash}`);
 
-    const promise = new Promise((resolve, reject) => {
-      this.pool.query(`SELECT data FROM block WHERE hash='${hash.toString("hex")}'`, (err, results) => {
-        if(!!err)
-        {
-          reject(`Mysql getBlockByHash throw exception, ${err}`);
-        }
-        
-        if(!results || results.length === 0)
-        {
-          return resolve();
-        }
-
-        resolve(new Block(`0x${results[0].data}`));
-      });
+    const block = await this.Block.findOne({
+      attributes: ['data'],
+      where: {
+        hash: hash.toString('hex')
+      }
     });
-    
-    return promise;
+  
+    if(block)
+    {
+      return new Block(Buffer.from(block.data, "hex"));
+    }
   }
 
   /**
    * @param {Buffer} number
+   * @return {Block}
    */
   async getBlockByNumber(number)
   {
     assert(Buffer.isBuffer(number), `Mysql getBlockByNumber, number should be an Buffer, now is ${typeof number}`);
 
-    const promise = new Promise((resolve, reject) => {
-      this.pool.query(`SELECT data FROM block WHERE number='${number.toString("hex")}'`, (err, results) => {
-        if(!!err)
-        {
-          reject(`Mysql getBlockByNumber throw exception, ${err}`);
-        }
-        
-        if(!results || results.length === 0)
-        {
-          return resolve();
-        }
-
-        resolve(new Block(`0x${results[0].data}`));
-      });
+    const block = await this.Block.findOne({
+      attributes: ['data'],
+      where: {
+        number: number.toString('hex')
+      }
     });
-    
-    return promise;
+  
+    if(block)
+    {
+      return new Block(Buffer.from(block.data, "hex"));
+    }
   }
 
   /**
@@ -136,24 +126,18 @@ class Mysql
   {
     assert(block instanceof Block, `Mysql saveBlock, block should be an Block Object, now is ${typeof block}`);
 
-    const promise = new Promise((resolve, reject) => {
-      this.pool.query(`INSERT IGNORE INTO block(number, hash, data) VALUES('${block.header.number.toString("hex")}', '${block.hash().toString("hex")}', '${block.serialize().toString("hex")}')`, err => {
-        if(!!err)
-        {
-          reject(`Mysql saveBlock throw exception, ${err}`);
-        }
-        
-        resolve();
-      });
-    });
-    
-    return promise;
+    await this.Block.create({
+      number: block.header.number.toString('hex'),
+      hash: block.hash().toString('hex'),
+      data: block.serialize().toString('hex')
+    })
   }
 
   /**
    * @param number {String}
    * @param stateRoot {String}
    * @param address {String}
+   * @return {Account}
    */
   async getAccount(number, stateRoot, address)
   {
@@ -161,23 +145,28 @@ class Mysql
     assert(typeof stateRoot === "string", `Mysql getAccount, stateRoot should be a String, now is ${typeof stateRoot}`);
     assert(typeof address === "string", `Mysql getAccount, address should be a String, now is ${typeof address}`);
 
-    const promise = new Promise((resolve, reject) => {
-      this.pool.query(`SELECT data FROM account WHERE (stateRoot='${stateRoot}' OR number<='${number}') AND address='${address}' ORDER BY number DESC LIMIT 1`, (err, results) => {
-        if(!!err)
-        {
-          return reject(`Mysql getAccount throw exception, ${err}`);
-        }
-
-        if(results.length === 0)
-        {
-          return resolve();
-        }
-
-        resolve(new Account(`0x${results[0].data}`));
-      });
+    const account = await this.Account.findOne({
+      attributes: ['data'],
+      order: [['number', 'DESC']],
+      where: {
+        address: address,
+        [Op.or]: [
+          {
+            stateRoot: stateRoot
+          },
+          {
+            number: {
+              [Op.lte]: number
+            }
+          }
+        ]
+      }
     });
-    
-    return promise;
+
+    if(account)
+    {
+      return new Account(Buffer.from(account.data, 'hex'))
+    }
   }
 
   /**
@@ -193,18 +182,12 @@ class Mysql
     assert(Buffer.isBuffer(address), `Mysql saveAccount, address should be an Buffer, now is ${typeof address}`);
     assert(Buffer.isBuffer(account), `Mysql saveAccount, account should be an Buffer, now is ${typeof account}`);
 
-    const promise = new Promise((resolve, reject) => {
-      this.pool.query(`REPLACE INTO account(number, stateRoot, address, data) VALUES('${number.toString("hex")}', '${stateRoot.toString("hex")}', '${address.toString("hex")}', '${account.toString("hex")}')`, err => {
-        if(!!err)
-        {
-          reject(`Mysql saveAccount throw exception, ${err}`);
-        }
-        
-        resolve();
-      });
-    });
-    
-    return promise;
+    await this.Account.create({
+      number: number.toString('hex'),
+      address: address.toString('hex'),
+      stateRoot: stateRoot.toString('hex'),
+      data: account.toString('hex')
+    })
   }
 
   /**
@@ -225,50 +208,24 @@ class Mysql
   }
 
   /**
-   * @param {Buffer} address
-   */
-  async deleteAccount(address)
-  {
-    assert(Buffer.isBuffer(address), `Mysql deleteAccount, address should be an Buffer, now is ${typeof address}`);
-
-    const promise = new Promise((resolve, reject) => {
-      this.pool.query(`DELETE FROM account WHERE address='${address.toString("hex")}'`, err => {
-        if(!!err)
-        {
-          reject(`Mysql deleteAccount throw exception, ${err}`);
-        }
-        
-        resolve();
-      });
-    });
-    
-    return promise;
-  }
-
-  /**
    * @param {String} hash
+   * @return {Transaction}
    */
   async getTransaction(hash)
   {
     assert(typeof hash === "string", `Mysql getTransaction, hash should be a String, now is ${typeof hash}`);
 
-    const promise = new Promise((resolve, reject) => {
-      this.pool.query(`SELECT data FROM transaction WHERE hash='${hash}'`, (err, results) => {
-        if(!!err)
-        {
-          return reject(`Mysql getTransaction throw exception, ${err}`);
-        }
-        
-        if(results.length === 0)
-        {
-          return resolve();
-        }
-
-        resolve(new Transaction(`0x${results[0].data}`));
-      });
+    const transaction = await this.Transaction.findOne({
+      attributes: ['data'],
+      where: {
+        hash: hash
+      }
     });
     
-    return promise;
+    if(transaction)
+    {
+      return new Transaction(Buffer.from(transaction.data, 'hex'))
+    }
   }
   
   /**
@@ -280,18 +237,11 @@ class Mysql
     assert(Buffer.isBuffer(number), `Mysql saveTransaction, number should be an Buffer, now is ${typeof number}`);
     assert(transaction instanceof Transaction, `Mysql saveTransaction, transaction should be an Transaction Object, now is ${typeof transaction}`);
 
-    const promise = new Promise((resolve, reject) => {
-      this.pool.query(`INSERT IGNORE INTO transaction(hash, number, data) VALUES('${transaction.hash().toString("hex")}', '${number.toString("hex")}', '${transaction.serialize().toString("hex")}')`, err => {
-        if(!!err)
-        {
-          reject(`Mysql saveTransaction throw exception, ${err}`);
-        }
-        
-        resolve();
-      });
-    });
-    
-    return promise;
+    await this.Transaction.create({
+      hash: transaction.hash().toString('hex'),
+      number: number.toString('hex'),
+      data: transaction.serialize().toString('hex')
+    })
   }
 
   /**

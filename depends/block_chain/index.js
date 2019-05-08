@@ -70,16 +70,6 @@ class BlockChain
   }
 
   /**
-   * @param {Buffer} number
-   */
-  async updateBlockChainHeight(number)
-  {
-    assert(Buffer.isBuffer(number), `BlockChain updateBlockChainHeight, number should be an Buffer, now is ${typeof number}`);
-    
-    await this.db.saveBlockChainHeight(number);
-  }
-
-  /**
    * Add new block to block chain
    * @param {Block} block
    */
