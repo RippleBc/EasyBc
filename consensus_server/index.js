@@ -35,8 +35,8 @@ process.on("uncaughtException", function(err) {
 });
 
 /************************************** p2p **************************************/
-const p2p = process[Symbol.for("p2p")] = new P2p((address, message) => {
-    processor.handleMessage(address, message);
+const p2p = process[Symbol.for("p2p")] = new P2p(function(message) {
+    processor.handleMessage(this.address, message);
 });
 
 /************************************** consensus **************************************/

@@ -95,7 +95,7 @@ describe("net test", function() {
 		const server = createServer({
 			host: "localhost",
 			port: 8080,
-			dispatcher: function(address, message) {
+			dispatcher: function(message) {
 				assert.equal(bufferToInt(message.cmd), 10, `cmd should be 10, now is ${bufferToInt(message.cmd)}`);
 				assert.equal(message.data.toString(), "walker", `data.name should be walker, now is ${message.data.toString()}`);
 
@@ -110,7 +110,7 @@ describe("net test", function() {
 			createClient({
 				host: "localhost",
 				port: 8080,
-				dispatcher: function(address, message) {
+				dispatcher: function(message) {
 					assert.equal(bufferToInt(message.cmd), 10, `cmd should be 10, now is ${bufferToInt(message.cmd)}`);
 					assert.equal(message.data.toString(), "walker", `data.name should be walker, now is ${message.data.toString()}`);
 

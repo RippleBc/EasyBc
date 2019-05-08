@@ -236,7 +236,7 @@ class Connection extends AsyncEventEmitter
 				{
 					if(this.address)
 					{
-						this.dispatcher(this.address, message);
+						this.dispatcher(message);
 					}
 				}
 			}

@@ -56,10 +56,6 @@ describe("cache check", function(){
 
 		const checkPut = async function()
 		{
-			console.log(`account1: ${account1.nonce.toString('hex')}`)
-			console.log(`account2: ${account2.nonce.toString('hex')}`)
-			console.log(`account3: ${account3.nonce.toString('hex')}`)
-
 			// check put
 			cache.put(address1, account1.serialize(), true);
 			cache.put(address2, account2.serialize(), true);

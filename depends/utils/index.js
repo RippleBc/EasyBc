@@ -485,24 +485,22 @@ exports.defineProperties = function(self, fields, data)
   Reflect.defineProperty(Reflect.getPrototypeOf(self), 'toJSON', {
     enumerable: false,
     configurable: false,
-    get: () => {
-      return function() {
-        const obj = {};
-        self._fields.forEach(field => {
-          obj[field] = `0x${self[field].toString("hex")}`;
-        });
-        return obj;
-      }
+    writable: true,
+    value: function() {
+      const obj = {};
+      this._fields.forEach(field => {
+        obj[field] = `0x${this[field].toString("hex")}`;
+      });
+      return obj;
     }
   });
 
   Reflect.defineProperty(Reflect.getPrototypeOf(self), 'serialize', {
     enumerable: false,
     configurable: false,
-    get: () => {
-      return function() {
-        return rlp.encode(self.raw);
-      }
+    writable: true,
+    value: function() {
+      return rlp.encode(this.raw);
     }
   });
 
