@@ -55,7 +55,7 @@ class Sender
 			}
 		}
 
-		if(i !== unl.length)
+		if(i === unl.length)
 		{
 			this.consensusTimeConsume = Date.now() - this.consensusBeginTime;
 			this.state = SENDER_STATE_FINISH;
