@@ -9,6 +9,7 @@ const accountModelConfig = require('./account');
 const blockModelConfig = require('./block');
 const transactionModelConfig = require('./transaction');
 const Sequelize = require('sequelize');
+const Op = Sequelize.Op;
 
 const Buffer = utils.Buffer;
 
