@@ -68,18 +68,16 @@ describe("block test", function() {
 
 		const checkBlock = async function()
 		{
-			let validateResult = await parentBlock.validate();
+			let validateResult = await parentBlock.validate(new Block());
 			if(!validateResult.state)
 			{
 				await Promise.reject(validateResult.msg);
 			}
-
 			validateResult = await block.validate(parentBlock);
 			if(!validateResult.state)
 			{
 				await Promise.reject(validateResult.msg);
 			}
-
 			// change number
 			block.header.number = 1;
 			validateResult = await block.validate(parentBlock);

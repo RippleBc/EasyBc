@@ -470,27 +470,65 @@ exports.defineProperties = function(self, fields, data)
   assert(Array.isArray(fields), `utils defineProperties, fields should be an Array, now is ${typeof fields}`);
   assert(typeof data === "string" || Buffer.isBuffer(data) || Array.isArray(data) || typeof data === "object", `utils defineProperties, data should be String or Buffer or Array or Object, now is ${typeof data}`);
 
-  // Buffer Array
-  self.raw = [];
+  Reflect.defineProperty(self, 'raw', {
+    enumerable: false,
+    configurable: false,
+    value: []
+  });
 
-  // String Array
-  self._fields = [];
+  Reflect.defineProperty(self, '_fields', {
+    enumerable: false,
+    configurable: false,
+    value: []
+  });
 
-  // attach the toJSON
-  self.toJSON = function()
-  {
-    const obj = {};
-    self._fields.forEach(field => {
-      obj[field] = `0x${self[field].toString("hex")}`;
-    });
-    return obj;
-  }
+  Reflect.defineProperty(Reflect.getPrototypeOf(self), 'toJSON', {
+    enumerable: false,
+    configurable: false,
+    get: () => {
+      return function() {
+        const obj = {};
+        self._fields.forEach(field => {
+          obj[field] = `0x${self[field].toString("hex")}`;
+        });
+        return obj;
+      }
+    }
+  });
 
-  // attach the serialize
-  self.serialize = function()
-  {
-    return rlp.encode(self.raw);
-  }
+  Reflect.defineProperty(Reflect.getPrototypeOf(self), 'serialize', {
+    enumerable: false,
+    configurable: false,
+    get: () => {
+      return function() {
+        return rlp.encode(self.raw);
+      }
+    }
+  });
+
+  self[Symbol.iterator] = function() {
+    let index = 0;
+    return {
+      next: function() {
+        if(index < self._fields.length) {
+          return { value: [self._fields[index], self.raw[index++]], done: false };
+        }
+
+        index++;
+        return { done: true };
+      }
+    };
+  };
+
+  Reflect.defineProperty(Reflect.getPrototypeOf(self), 'serialize', {
+    enumerable: false,
+    configurable: false,
+    get: () => {
+      return function() {
+        return rlp.encode(self.raw);
+      }
+    }
+  });
 
   fields.forEach((field, i) => {
 
@@ -527,7 +565,7 @@ exports.defineProperties = function(self, fields, data)
 
     Object.defineProperty(self, field.name, {
       enumerable: true,
-      configurable: true,
+      configurable: false,
       get: getter,
       set: setter
     });
@@ -540,7 +578,7 @@ exports.defineProperties = function(self, fields, data)
     {
       Object.defineProperty(self, field.alias, {
         enumerable: false,
-        configurable: true,
+        configurable: false,
         get: getter
       });
     }

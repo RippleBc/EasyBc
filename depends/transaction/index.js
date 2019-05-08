@@ -60,7 +60,7 @@ class Transaction
      * @memberof Transaction
      */
     Object.defineProperty(this, "from", {
-      enumerable: true,
+      enumerable: false,
       configurable: true,
       get: function() {
         if(this._from)

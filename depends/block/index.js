@@ -133,7 +133,7 @@ class Block
 
     return {
       state: errors.length ? false : true,
-      msg: `validateTransactions failed, ${errors.join("\r\n")}`
+      msg: `validateTransactions failed\r\n${errors.join("\r\n")}`
     }
   }
 
@@ -188,7 +188,7 @@ class Block
 
     return {
       state: errors.length ? false : true,
-      msg: `block validate failed, ${errors.join("\r\n")}`
+      msg: `block validate failed\r\n${errors.join("\r\n")}`
     };
   }
 
