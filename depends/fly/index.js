@@ -7,33 +7,6 @@ exports.connectionsManager = new ConnectionsManager();
 
 const CONNECT_TIMEOUT = 5 * 1000;
 
-const onConnect = async function(client, dispatcher, address, host, port)
-{
-	const promise = new Promise((resolve, reject) => {
-		client.on("connect", () => {
-			// manage connection
-			const connection = new Connection({
-				socket: client,
-				dispatcher: dispatcher,
-				address: address
-			});
-
-			resolve(connection);
-		});
-
-		client.on("error", e => {
-			reject(`fly onConnect, client connected on host: ${host}, port: ${port}, address: ${address.toString("hex")} failed, ${e}`);
-		});
-
-		const timeout = setTimeout(() => {
-			reject(`fly onConnect, client connected on host: ${host}, port: ${port}, address: ${address.toString("hex")} timeout`);
-		}, CONNECT_TIMEOUT);
-		timeout.unref();
-	});
-
-	return promise;
-}
-
 exports.createClient = async function(opts)
 {
 	const host = opts.host || "localhost";
@@ -51,21 +24,39 @@ exports.createClient = async function(opts)
 	  port: port
 	});
 
-	const connection = await onConnect(client, dispatcher, address, host, port);
+	const connection = await (async function() {
+		const promise = new Promise((resolve, reject) => {
+			client.on("connect", () => {
+				// manage connection
+				const connection = new Connection({
+					socket: client,
+					dispatcher: dispatcher,
+					address: address,
+					logger: logger
+				});
 
-	logger.info(`fly createClient, create an connection on address: ${address.toString("hex")} host: ${host} port: ${port} successed`);
+				resolve(connection);
+			});
 
-	try
-	{
-		await connection.authorize();
-	}
-	catch(e)
-	{
-		return Promise.reject(`fly createClient,authorize is failed, client connected on port: ${client.address().port}, family: ${client.address().family}, host: ${client.address().address}, ${e}`);
-	}
+			client.on("error", e => {
+				reject(`fly onConnect, client connected on host: ${host}, port: ${port}, address: ${address.toString("hex")} failed, ${e}`);
+			});
 
-	// info
-	logger.info(`fly createClient, authorize successed, client connected on port: ${client.address().port}, family: ${client.address().family}, host: ${client.address().address}`);
+			const timeout = setTimeout(() => {
+				reject(`fly onConnect, client connected on host: ${host}, port: ${port}, address: ${address.toString("hex")} timeout`);
+			}, CONNECT_TIMEOUT);
+
+			timeout.unref();
+		});
+
+		return promise;
+	})();
+
+	logger.trace(`fly createClient, create an connection, address: ${address.toString("hex")}, host: ${host}, port: ${port}`);
+
+	await connection.authorize();
+
+	logger.trace(`fly createClient, authorize successed, address: ${address.toString("hex")}, host: ${host}, port: ${port}`);
 
 	exports.connectionsManager.push(connection);
 
@@ -84,38 +75,38 @@ exports.createServer = function(opts)
 	const server = net.createServer();
 
 	server.on("listening", () => {
-		logger.info("fly createServer, opened server on", server.address());
+		logger.trace(`fly createServer, host: ${host}, port: ${port}`);
 	});
 
 	server.on("connection", socket => {
 		// manage connection
 		const connection = new Connection({
 			socket: socket,
-			dispatcher: dispatcher
+			dispatcher: dispatcher,
+			logger: logger
 		});
 
 		const address = socket.address();
-		logger.info(`fly createServer, receive an connection on port: ${address.port}, family: ${address.family}, host: ${address.address} successed`);
+		logger.trace(`fly createServer, receive an connection, host: ${address.address}, port: ${address.port}`);
 
 		connection.authorize().then(() => {
-			// info
-			const address = socket.address();
-			logger.info(`fly createServer, authorize successed, receive an connection port: ${address.port}, family: ${address.family}, host: ${address.address}`);
+			logger.trace(`fly createServer, authorize successed, host: ${address.address}, port: ${address.port}`);
 			
 			exports.connectionsManager.push(connection);
 		}).catch(e => {
-			logger.error(`fly createServer, authorize failed, receive an connection port: ${address.port}, family: ${address.family}, host: ${address.address}, ${e}`)
+			logger.error(`fly createServer, authorize failed, host: ${address.address}, port: ${address.port}, ${e}`)
 		});
 	});
 
 	server.on("close", () => {
-		logger.info("fly createServer, server close success");
+		logger.trace("fly createServer, server close");
 	});
 
-	server.on("error", err => {
-		logger.error(`fly createServer, server throw exception, ${err}`);
+	server.on("error", e => {
+		logger.error(`fly createServer, server throw exception, ${e}`);
 
 		server.close();
+
 		exports.connectionsManager.closeAll();
 	});
 

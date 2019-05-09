@@ -53,7 +53,7 @@ class P2p
 			}
 			catch(e)
 			{
-				loggerP2p.error(`P2p init, connect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort} is failed, ${e}`);
+				loggerP2p.error(`P2p init, connect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort}, ${e}`);
 			}
 		}
 
@@ -79,8 +79,7 @@ class P2p
 			}
 			catch(e)
 			{
-				const address = connection.address();
-				loggerP2p.error(`P2p send failed, address: ${connection.address}, host: ${address.address}, port: ${address.port}, family: ${address.family}, ${e}`);
+				loggerP2p.error(`P2p send, send msg to address: ${connection.address}, host: ${connection.address().address}, port: ${connection.address().port}, ${e}`);
 			}
 		}
 	}
@@ -100,8 +99,7 @@ class P2p
 				}
 				catch(e)
 				{
-					const address = connection.address();
-					loggerP2p.error(`P2p sendAll failed, address: ${connection.address}, host: ${address.address}, port: ${address.port}, family: ${address.family}, ${e}`);
+					loggerP2p.error(`P2p sendAll, send msg to address: ${connection.address}, host: ${connection.address().address}, port: ${connection.address().port}, ${e}`);
 				}
 			}
 		}
@@ -109,6 +107,7 @@ class P2p
 
 	/**
 	 * @param {Buffer} address
+	 * @return {Boolean}
 	 */
 	checkIfConnectionIsOpen(address)
 	{
@@ -141,7 +140,7 @@ class P2p
 		for(let i = 0; i < unl.length; i++)
 		{
 			const node = unl[i];
-			if(node.address.toString("hex") === address.toString("hex"))
+			if(node.address === address.toString("hex"))
 			{
 				try
 				{
@@ -150,14 +149,14 @@ class P2p
 						port: node.p2pPort,
 						dispatcher: this.dispatcher,
 						logger: loggerNet,
-						address: Buffer.from(node.address, "hex")
+						address: address
 					});
 
-					loggerP2p.info(`P2p, reconnect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort} is successed`);
+					loggerP2p.trace(`P2p reconnect, connect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort}, successed`);
 				}
 				catch(e)
 				{
-					loggerP2p.error(`P2p, reconnect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort} is failed, ${e}`);
+					loggerP2p.error(`P2p reconnect, connect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort}, ${e}`);
 				}
 			}
 		}
@@ -182,11 +181,11 @@ class P2p
 						address: Buffer.from(node.address, "hex")
 					});
 
-					loggerP2p.info(`P2p, reconnectAll to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort} is successed`);
+					loggerP2p.trace(`P2p reconnectAll, connect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort}, successed`);
 				}
 				catch(e)
 				{
-					loggerP2p.error(`P2p, reconnectAll to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort} is failed, ${e}`);
+					loggerP2p.error(`P2p reconnectAll, connect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort}, ${e}`);
 				}
 			}	
 		}

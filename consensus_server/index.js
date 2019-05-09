@@ -4,9 +4,9 @@ const logger = log4js.getLogger();
 const { fork } = require("child_process");
 const path = require('path');
 
+process[Symbol.for("loggerConsensus")] = logger;
 process[Symbol.for("loggerP2p")] = log4js.getLogger("p2p");
 process[Symbol.for("loggerNet")] = log4js.getLogger("net");
-const loggerConsensus = process[Symbol.for("loggerConsensus")] = log4js.getLogger("consensus");
 process[Symbol.for("loggerMysql")] = log4js.getLogger("mysql");
 process[Symbol.for("loggerUpdate")] = log4js.getLogger("update");
 
@@ -30,11 +30,15 @@ const bufferToInt = utils.bufferToInt;
 
 //
 process.on("uncaughtException", function(err) {
-    logger.error(err.stack);
+    logger.fatal(err.stack);
     process.exit(1);
 });
 
-process[Symbol.for("mysql")].init().then(() => {
+
+(async function() {
+
+    await process[Symbol.for("mysql")].init();
+
     /************************************** p2p **************************************/
     const p2p = process[Symbol.for("p2p")] = new P2p(function(message) {
         processor.handleMessage(this.address, message);
@@ -42,12 +46,10 @@ process[Symbol.for("mysql")].init().then(() => {
 
     /************************************** consensus **************************************/
     const Processor = require("./processor");
-    const processor = new Processor();
-
-    process[Symbol.for('processor')] = processor;
+    const processor = process[Symbol.for('processor')] = new Processor();
 
     /************************************** init p2p and consensus **************************************/
-    p2p.init();
+    await p2p.init();
 
     processor.run();
 
@@ -60,9 +62,9 @@ process[Symbol.for("mysql")].init().then(() => {
             case 'processTransaction':
             {
                 processor.processTransaction(data).then(() => {
-                    loggerConsensus.info(`transaction: ${data}, is processing`);
+                    logger.trace(`transaction: ${data}, is processing`);
                 }).catch(e => {
-                    loggerConsensus.error(`transaction: ${data}, is invalid`);
+                    logger.warn(`transaction: ${data}, is invalid`);
                 })
             }
             break;
@@ -76,4 +78,5 @@ process[Symbol.for("mysql")].init().then(() => {
     query_process.on('exit', (code, signal) => {
         throw new Error('query_process exit');
     });
-});
+
+})();

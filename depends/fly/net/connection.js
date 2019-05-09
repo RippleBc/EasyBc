@@ -30,6 +30,7 @@ class Connection extends AsyncEventEmitter
 
 		assert(opts.socket instanceof Socket, `Connection	constructor, opts.socket should be a Socket Object, now is ${typeof opts.socket}`);
 		assert(typeof opts.dispatcher	=== "function", `Connection	constructor, opts.dispatcher should be a Function, now is ${typeof opts.dispatcher}`);
+		assert(typeof opts.logger	=== "object", `Connection	constructor, opts.logger should be an Object, now is ${typeof opts.logger}`);
 
 		if(opts.address)
 		{
@@ -39,7 +40,7 @@ class Connection extends AsyncEventEmitter
 
 		this.socket = opts.socket;
 		this.dispatcher = opts.dispatcher;
-		this.logger = opts.logger || {info: console.info, warn: console.warn, error: console.error};
+		this.logger = opts.logger;
 
 		this.nonce = crypto.randomBytes(32);
 
@@ -81,14 +82,13 @@ class Connection extends AsyncEventEmitter
 		});
 
 		this.socket.on("close", () => {
-			const address = self.socket.address();
-			self.logger.info(`socket ${self.address ? self.address.toString("hex") : ""} close success`);
+			self.logger.trace(`Connection constructor, socket close, address: ${self.address ? self.address.toString("hex") : ""}, close success`);
 
 			self.closed = true;
 		});
 
 		this.socket.on("error", e => {
-			self.logger.error(`socket ${self.address ? self.address.toString("hex") : ""} throw error, ${e}`);
+			self.logger.error(`Connection constructor, socket throw error, address: ${self.address ? self.address.toString("hex") : ""}, ${e}`);
 		});
 	}
 
@@ -169,7 +169,7 @@ class Connection extends AsyncEventEmitter
 		}
 		catch(e)
 		{
-			this.logger.error(`get message failed, ${e}`);
+			this.logger.error(`Connection parse, receiveMessageChunkQueue.getMessage, ${e}`);
 			// half close socket, socket will not write data, but will read data from socket
 			this.socket.end();
 		}
@@ -247,7 +247,7 @@ class Connection extends AsyncEventEmitter
 			}
 			catch(e)
 			{
-				this.logger.error(`Connection this.receiveMessageChunkQueue.getMessage() is failed, ${e}`);
+				this.logger.error(`Connection parse, receiveMessageChunkQueue.getMessage, ${e}`);
 
 				// half close socket, socket will not write data, but will read data from socket
 				this.socket.end();

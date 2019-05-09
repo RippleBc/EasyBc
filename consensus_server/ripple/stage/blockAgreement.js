@@ -107,8 +107,7 @@ class BlockAgreement extends Stage
 		}
 
 		const self = this;
-		const run = async function()
-		{
+		(async function() {
 			const height = await self.ripple.processor.blockChain.getBlockChainHeight();
 
 			if(!height)
@@ -135,9 +134,7 @@ class BlockAgreement extends Stage
 
 			//
 			self.rippleBlocks.push(rippleBlock);
-		}
-
-		run();
+		})();
  	}
 
  	/**

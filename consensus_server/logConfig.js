@@ -6,12 +6,6 @@ log4js.configure({
         stdout: {
             type: "stdout"
         },
-        req: {
-            type: "dateFile",
-            filename: "consensus_server/logs/req_log/",
-            pattern: "req-yyyy-MM-dd.log",
-            alwaysIncludePattern: true
-        },
         p2p: {
             type: "dateFile",
             filename: "consensus_server/logs/p2p_log/",
@@ -50,10 +44,9 @@ log4js.configure({
         }
     },
     categories: {
-        default: { appenders: ["stdout", "req"], level: "info" },
+        default: { appenders: ["stdout", "consensus"], level: "info" },
         p2p: { appenders: ["stdout", "p2p"], level: "info" },
         net: { appenders: ["stdout", "net"], level: "info" },
-        consensus: { appenders: ["stdout", "consensus"], level: "info" },
         mysql: { appenders: ["stdout", "mysql"], level: "info" },
         update: { appenders: ["stdout", "update"], level: "info" },
         query: { appenders: ["stdout", "query"], level: "info" }
