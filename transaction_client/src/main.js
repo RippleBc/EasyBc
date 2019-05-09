@@ -6,12 +6,10 @@ import './registerServiceWorker'
 import { Dialog, MessageBox, Card, Button, Select, Input, Notification, Menu, Submenu, MenuItemGroup, MenuItem } from 'element-ui';
 
 Vue.use(Dialog);
-Vue.use(MessageBox);
 Vue.use(Card);
 Vue.use(Button);
 Vue.use(Select);
 Vue.use(Input);
-Vue.use(Notification);
 Vue.use(Menu);
 Vue.use(Submenu);
 Vue.use(MenuItemGroup);
@@ -31,10 +29,6 @@ Vue.prototype.$notify = {
 	warn: opts => {
 		Notification.warning(opts);
 	}
-}
-
-Vue.prototype.$alert = opts => {
-	MessageBox(opts);
 }
 
 new Vue({
