@@ -11,7 +11,7 @@ exports.createClient = async function(opts)
 {
 	const host = opts.host || "localhost";
 	const port = opts.port || 8080;
-	const logger = opts.logger || {info: console.info, warn: console.warn, error: console.error};
+	const logger = opts.logger || { trace: console.info, debug: console.info, info: console.info, warn: console.warn, error: console.error, fatal: console.error };
 
 	const address = opts.address;
 	const dispatcher = opts.dispatcher;
@@ -67,7 +67,7 @@ exports.createServer = function(opts)
 {
 	const host = opts.host || "localhost";
 	const port = opts.port || 8080;
-	const logger = opts.logger || {info: console.info, warn: console.warn, error: console.error};
+	const logger = opts.logger || { trace: console.info, debug: console.info, info: console.info, warn: console.warn, error: console.error, fatal: console.error };
 	const dispatcher = opts.dispatcher;
 
 	assert(typeof dispatcher === "function", `fly createServer, dispatcher should be a function, now is ${typeof dispatcher}`);

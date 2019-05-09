@@ -6,10 +6,10 @@ const { host, port } = require("../config.json").http;
 const Mysql = require("../mysql");
 
 const log4js= require("../logConfig");
-const logger = log4js.getLogger();
+const logger = log4js.getLogger("query");
 
 process[Symbol.for("loggerMysql")] = log4js.getLogger("mysql");
-process[Symbol.for("loggerQuery")] = log4js.getLogger("query");
+process[Symbol.for("loggerQuery")] = logger;
 process[Symbol.for("mysql")] = new Mysql();
 
 // express
