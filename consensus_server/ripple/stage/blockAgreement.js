@@ -34,7 +34,7 @@ class BlockAgreement extends Stage
 	{
 		const blocksHash = new Map();
 		this.rippleBlocks.forEach(rippleBlock => {
-			const key = sha256(rippleBlock.block);
+			const key = sha256(rippleBlock.block).toString('hex');
 
 			if(blocksHash.has(key))
 			{
