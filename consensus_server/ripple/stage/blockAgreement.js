@@ -58,7 +58,7 @@ class BlockAgreement extends Stage
 			return -block[1].count;
 		});
 
-		if(sortedBlocks[0] && sortedBlocks[0][1].count / unl.length >= TRANSACTIONS_CONSENSUS_THRESHOULD)
+		if(sortedBlocks[0] && sortedBlocks[0][1].count / unl.length + 1 >= TRANSACTIONS_CONSENSUS_THRESHOULD)
 		{
 			logger.warn("block agreement success");
 

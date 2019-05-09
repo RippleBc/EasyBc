@@ -56,7 +56,7 @@ class CandidateAgreement extends Stage
 			return -transactionColl[1].count;
 		});
 
-		if(sortedTransactionColls[0] && sortedTransactionColls[0][1].count / unl.length >= TRANSACTIONS_CONSENSUS_THRESHOULD)
+		if(sortedTransactionColls[0] && sortedTransactionColls[0][1].count / unl.length + 1 >= TRANSACTIONS_CONSENSUS_THRESHOULD)
 		{
 			logger.warn("candidate agreement success, go to next stage");
 
