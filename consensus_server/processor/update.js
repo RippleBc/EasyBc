@@ -6,6 +6,7 @@ const utils = require("../../depends/utils");
 const rp = require("request-promise");
 const { SUCCESS } = require("../../constant");
 const { genesis } = require("../config.json");
+const { TRANSACTIONS_CONSENSUS_THRESHOULD } = require('../constant');
 const process = require("process");
 
 let { unl } = require("../config.json");
@@ -43,12 +44,12 @@ class Update
 		}
 
 		this.state = STATE_RUNNING;
-		await this.initBlockChain();
-		await this.update();
+		await this.init();
+		await this.synchronize();
 		this.state = STAGE_STATE_EMPTY;
 	}
 
-	async initBlockChain()
+	async init()
 	{
 		const blockChain = new BlockChain({db: mysql});
 
@@ -93,7 +94,7 @@ class Update
 		const lastestBlock = await blockChain.getBlockByNumber(this.blockChainHeight);
 		if(!lastestBlock)
 		{
-			throw new Error(`Update initBlockChain, blockChain.getBlockByNumber(${this.blockChainHeight.toString("hex")}) should not return undefined`);
+			throw new Error(`Update init, blockChain.getBlockByNumber(${this.blockChainHeight.toString("hex")}) should not return undefined`);
 		}
 
 		this.blockChain = new BlockChain({
@@ -102,7 +103,7 @@ class Update
 		});
 	}
 
-	async update()
+	async synchronize()
 	{
 		let blockNumberBn = new BN(this.blockChainHeight).addn(1);
 		while(true)
@@ -129,13 +130,13 @@ class Update
 					response = await rp(options);
 					if(response.code !== SUCCESS)
 					{
-						logger.error(`Update update, http request on host: ${node.host}, port: ${node.queryPort} failed, ${response.msg}`);
+						logger.error(`Update synchronize, http request on host: ${node.host}, port: ${node.queryPort} failed, ${response.msg}`);
 						continue;
 					}
 				}
 				catch(e)
 				{
-					logger.error(`Update update, http request on host: ${node.host}, port: ${node.queryPort} failed, ${e}`);
+					logger.error(`Update synchronize, http request on host: ${node.host}, port: ${node.queryPort} failed, ${e}`);
 					continue;
 				}
 
@@ -154,7 +155,7 @@ class Update
 				}
 				catch(e)
 				{
-					logger.error(`Update update, new Block failed, http request on host: ${node.host}, port: ${node.queryPort}, ${e}`);
+					logger.error(`Update synchronize, new Block failed, http request on host: ${node.host}, port: ${node.queryPort}, ${e}`);
 					continue;
 				}
 			}
@@ -164,11 +165,18 @@ class Update
 			});
 			if(sortedBlocks[0])
 			{
-				const [majorityBlock] = sortedBlocks[0];
-				await this.blockChain.runBlockChain({
-					block: new Block(Buffer.from(majorityBlock, 'hex'))
-				});
-				blockNumberBn.iaddn(1);
+				const [majorityBlock, count] = sortedBlocks[0];
+				if(count / unl.length >= TRANSACTIONS_CONSENSUS_THRESHOULD)
+				{
+					await this.blockChain.runBlockChain({
+						block: new Block(Buffer.from(majorityBlock, 'hex'))
+					});
+					blockNumberBn.iaddn(1);
+				}
+				else
+				{
+					break;
+				}
 			}
 			else
 			{

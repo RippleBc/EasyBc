@@ -9,7 +9,7 @@ const { TRANSACTION_CACHE_MAX_NUM } = require("../constant");
 const assert = require("assert");
 const Message = require("../../depends/fly/net/message");
 const Trie = require("../../depends/trie");
-const Update = require("../update");
+const Update = require("./update");
 
 const loggerConsensus = process[Symbol.for("loggerConsensus")];
 const loggerUpdate = process[Symbol.for("loggerUpdate")];
