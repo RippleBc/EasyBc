@@ -1,5 +1,7 @@
 const async = require("async");
 const utils = require("../utils");
+const Transaction = require('../transaction');
+const assert = require("assert");
 
 const Buffer = utils.Buffer;
 const BN = utils.BN;
@@ -13,6 +15,8 @@ const BN = utils.BN;
  */
 module.exports = async function(opts)
 {
+  assert(opts.tx instanceof Transaction, `runTx, opts.tx should be an Transaction, now is ${typeof opts.tx}`);
+
   const tx = opts.tx;
   const skipNonce = opts.skipNonce || false;
   const skipBalance = opts.skipBalance || false;

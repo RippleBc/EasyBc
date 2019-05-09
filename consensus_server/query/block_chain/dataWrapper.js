@@ -10,7 +10,7 @@ class DataWrapper
 		this.stateRoot = "";
 		this.number = "";
 		this.block = undefined;
-		this.blockChainHeight = "";
+		this.blockChainHeight = undefined;
 	}
 
 	async refresh()

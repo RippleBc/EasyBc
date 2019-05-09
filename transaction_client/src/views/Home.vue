@@ -18,7 +18,7 @@
         </div>
         <div style="flex-direction:row;justify-content:start;">
           <span style="width:100px;">区块链高度</span>
-          <p style="width:100%;">{{nodeInfo.detail.number ? nodeInfo.detail.number : "未知"}}</p>
+          <p style="width:100%;">{{nodeInfo.detail.number ? nodeInfo.detail.number : 0}}</p>
         </div>
         <HR style="FILTER: alpha(opacity=100,finishopacity=0,style=3)" width="99%" color=#C0C4CC SIZE=1></HR>
       </div>
@@ -144,7 +144,7 @@ export default {
       const self = this;
 
   		this.nodesInfo.forEach(function (nodeInfo) {
-  			axios.get('getLastestBlock', { url: self.currentNode.url }, response => {
+  			axios.get('getLastestBlock', { url: nodeInfo.url }, response => {
           if (response.code === 0) {
             nodeInfo.detail = response.data
           } else {

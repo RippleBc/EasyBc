@@ -3,8 +3,8 @@
 	"unl": 
 	[
 		{
-			"host": "0.0.0.0",
-			"queryPort": 8081,
+			"host": "123.157.68.243",
+			"queryPort": 10051,
 			"p2pPort": 9090,
 			"address": "ea3ba30a7e81d92ad8aa2e359c5d8f297fc0fb1"
 		}

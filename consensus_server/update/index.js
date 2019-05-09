@@ -17,6 +17,7 @@ const mysql = process[Symbol.for("mysql")];
 const BN = utils.BN;
 const toBuffer = utils.toBuffer;
 const Buffer = utils.Buffer;
+const padToEven = utils.padToEven;
 
 const STATE_RUNNING = 1;
 const STAGE_STATE_EMPTY = 0;
@@ -103,15 +104,6 @@ class Update
 
 	async update()
 	{
-		const options = {
-			method: "POST",
-			uri: "",
-			body: {
-				number: ""
-			},
-			json: true // Automatically stringifies the body to JSON
-		};
-
 		let blockNumberBn = new BN(this.blockChainHeight).addn(1);
 		while(true)
 		{
@@ -121,8 +113,15 @@ class Update
 			{
 				const node = unl[i];
 
-				options.uri = `http://${node.host}:${node.queryPort}`;
-				options.body.number = blockNumberBn.toString(16);
+
+				let options = {
+					method: "POST",
+					uri: `http://${node.host}:${node.queryPort}/getBlockByNumber`,
+					body: {
+						number: padToEven(blockNumberBn.toString(16))
+					},
+					json: true
+				};
 
 				let response;
 				try
@@ -161,13 +160,13 @@ class Update
 			}
 
 			const sortedBlocks = [...blocks].sort(ele => {
-				return -ele[0];
+				return -ele[1];
 			});
-			const majorityBlock = sortedBlocks[0];
-			if(majorityBlock)
+			if(sortedBlocks[0])
 			{
+				const [majorityBlock] = sortedBlocks[0];
 				await this.blockChain.runBlockChain({
-					block: majorityBlock
+					block: new Block(Buffer.from(majorityBlock, 'hex'))
 				});
 				blockNumberBn.iaddn(1);
 			}

@@ -1,3 +1,5 @@
+const assert = require('assert')
+const Block = require('../block')
 /**
  * processes block and add to the blockchain
  * @param {Object} opts
@@ -8,8 +10,10 @@
  */
 module.exports = async function(opts)
 {
+  assert(opts.block instanceof Block, `runBlockChain, opts.block should be an Block, now is ${typeof opts.block}`);
+
   const block = opts.block;
-  
+
   // fetch parent block
   let parentBlock;
   if(!block.isGenesis())

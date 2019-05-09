@@ -1,5 +1,7 @@
 const util = require("../utils");
 const async = require("async");
+const assert = require('assert')
+const Block = require('../block')
 
 const rlp = util.rlp;
 const BN = util.BN;
@@ -19,6 +21,8 @@ const Buffer = util.Buffer;
  * @prop {Array} transactions  
  */
 module.exports = async function(opts) {
+  assert(opts.block instanceof Block, `runBlock, opts.block should be an Block, now is ${typeof opts.block}`);
+
   const block = opts.block;
   const ifGenerateStateRoot = opts.generate || false;
   const validateStateRoot = !ifGenerateStateRoot;
