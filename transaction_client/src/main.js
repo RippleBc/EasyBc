@@ -3,8 +3,9 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 import './registerServiceWorker'
-import { Dialog, MessageBox, Card, Button, Select, Input, Notification, Menu, Submenu, MenuItemGroup, MenuItem } from 'element-ui';
+import { DatePicker, Dialog, MessageBox, Card, Button, Select, Input, Notification, Menu, Submenu, MenuItemGroup, MenuItem } from 'element-ui';
 
+Vue.use(DatePicker);
 Vue.use(Dialog);
 Vue.use(Card);
 Vue.use(Button);

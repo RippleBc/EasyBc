@@ -1,10 +1,44 @@
 <template>
 	<div class="container">
     <div class="border" style="max-width:1280px;">
-    	<div style="flex-direction: row;padding: 20px;box-sizing: border-box;">
-    		<span slot="prepend">address</span>
-				<el-input v-model="address" style="margin: 20px;"></el-input>
-    		<el-button type="info" @click="search()">搜索</el-button>
+    	<div style="padding: 20px;box-sizing: border-box;">
+  			<div style="flex-direction: row;">
+  				<span style="width: 100px;flex-shrink: 0;">hash</span>
+					<el-input v-model="hash" style="margin: 20px;"></el-input>
+  			</div>
+  			
+				<div style="flex-direction: row;">
+					<span style="width: 100px;flex-shrink: 0;">from</span>
+					<el-input v-model="from" style="margin: 20px;"></el-input>
+					<span style="width: 100px;flex-shrink: 0;">to</span>
+					<el-input v-model="to" style="margin: 20px;"></el-input>
+  			</div>
+				
+				<div style="flex-direction: row;">
+					<span style="width: 100px;flex-shrink: 0;">开始时间</span>
+					<el-date-picker
+						style="width: 100%;margin: 20px;"
+						v-model="beginTime"
+						align="right"
+						type="date"
+						placeholder="选择日期"
+						:picker-options="pickerOptions">
+					</el-date-picker>
+					
+					<span style="width: 100px;flex-shrink: 0;">结束时间</span>
+					<el-date-picker
+						style="width: 100%;margin: 20px;"
+						v-model="endTime"
+						align="right"
+						type="date"
+						placeholder="选择日期"
+						:picker-options="pickerOptions">
+					</el-date-picker>
+					
+  			</div>
+  			<div style="flex-direction: row; justify-content: end;">
+  				<el-button type="info" @click="search()">搜索</el-button>
+  			</div>
     	</div>
     </div>
 
@@ -50,19 +84,25 @@ import nodesInfo from '../nodes.json'
 	  data () {
 	    return {
 	    	transactions: [],
-	   		address: ''
+	    	hash: '',
+	   		from: '',
+	   		to: '',
+	   		beginTime: '',
+	   		endTime: ''
 	    }
 	  },
 
 	  created () {
-	    this.address = this.$route.path.split('/')[2];
+	    this.from = this.$route.path.split('/')[2];
 	  },
 
 	  methods:
 	  {
 	  	search: function()
 	  	{
-	  		axios.post('/')
+	  		axios.post('/getTransactions', {
+
+	  		})
 	  	}
 	  }
 	}
