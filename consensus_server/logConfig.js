@@ -44,12 +44,12 @@ log4js.configure({
         }
     },
     categories: {
-        default: { appenders: ["stdout", "consensus"], level: "info" },
-        p2p: { appenders: ["stdout", "p2p"], level: "info" },
-        net: { appenders: ["stdout", "net"], level: "info" },
-        mysql: { appenders: ["stdout", "mysql"], level: "info" },
-        update: { appenders: ["stdout", "update"], level: "info" },
-        query: { appenders: ["stdout", "query"], level: "info" }
+        default: { appenders: ["stdout", "consensus"], level: "trace" },
+        p2p: { appenders: ["stdout", "p2p"], level: "warn" },
+        net: { appenders: ["stdout", "net"], level: "warn" },
+        mysql: { appenders: ["stdout", "mysql"], level: "warn" },
+        update: { appenders: ["stdout", "update"], level: "warn" },
+        query: { appenders: ["stdout", "query"], level: "warn" }
     }
 })
  
