@@ -47,7 +47,7 @@ class Counter
 		const countersMap = new Map();
 
 		this.counters.forEach(counter => {
-			const key = sha3(rlp([counter.round, counter.stage]));
+			const key = sha3(rlp.encode([counter.round, counter.stage]));
 
 			if(countersMap.has(key))
 			{
