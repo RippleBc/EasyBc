@@ -59,6 +59,11 @@ class DataWrapper
 		return mysql.getTransaction(hash);
 	}
 
+	async getTransactions({hash, from, to, createdAt})
+	{
+		return mysql.getTransaction({hash, from, to, createdAt});
+	}
+
 	/**
 	 * @param {String} hash
 	 */

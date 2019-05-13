@@ -1,7 +1,6 @@
 const dataWrapper = require("./dataWrapper");
 const { SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS } = require("../../../constant");
 const process = require('process');
-
 const app = process[Symbol.for('app')];
 
 app.post("/sendTransaction", function(req, res) {
@@ -84,6 +83,35 @@ app.post("/getTransactionState", function(req, res) {
             code: SUCCESS,
             msg: "",
             data: TRANSACTION_STATE_PACKED
+        });
+    });
+});
+
+app.post("/getTransactions", function(req, res) {
+    if(!req.body.hash) {
+        return res.json({
+            code: PARAM_ERR,
+            msg: "param error, need data"
+        });
+    }
+
+    dataWrapper.getTransactions({ 
+        hash: req.body.hash, 
+        from: req.body.from, 
+        to: req.body.to, 
+        createdAt: req.body.createdAt, 
+    }).then(transactions => {
+        return res.json({
+            code: SUCCESS,
+            msg: "",
+            data: transactions.map(tx => {
+                return {
+                    nonce: tx.nonce.toString('hex'),
+                    from: tx.from.toString('hex'),
+                    to: tx.to.toString('hex'),
+                    value: tx.value.toString('hex')
+                }
+            })
         });
     });
 });

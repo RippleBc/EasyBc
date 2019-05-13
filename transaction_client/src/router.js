@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import Home from './views/Home.vue'
+import Transactions from './views/Transactions.vue'
 
 Vue.use(Router)
 
@@ -12,6 +13,16 @@ export default new Router({
       path: '/',
       name: 'home',
       component: Home
+    },
+    {
+      path: '/transactions/:address',
+      name: 'transactions',
+      component: Transactions
+    },
+     {
+      path: '/transactions',
+      name: 'transactions',
+      component: Transactions
     },
     {
       path: '/about',

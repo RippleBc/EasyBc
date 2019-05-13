@@ -9,14 +9,34 @@ module.exports = ['transaction', {
     type: Sequelize.STRING,
     allowNull: false
   },
+  nonce: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+  from: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+  to: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+  value: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
   data: {
-    type: Sequelize.TEXT,
+    type: Sequelize.STRING,
     allowNull: false
   }
 }, {
   indexes: [{
     unique: true,
     fields: ['hash']
+  }, {
+    fields: ['from']
+  }, {
+    fields: ['to']
   }],
   scopes: {
     

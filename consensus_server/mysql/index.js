@@ -229,6 +229,16 @@ class Mysql
   }
   
   /**
+   * @param {Array/transactionModel}
+   */
+  async getTransactions({hash, from, to, createdAt})
+  {
+    return await this.Transaction.findAll({
+      where: {hash, from, to, createdAt}
+    });
+  }
+
+  /**
    * @param {Buffer} number
    * @param {Transaction} transaction
    */
@@ -240,7 +250,11 @@ class Mysql
     await this.Transaction.create({
       hash: transaction.hash().toString('hex'),
       number: number.toString('hex'),
-      data: transaction.serialize().toString('hex')
+      nonce: transaction.nonce.toString('hex'),
+      from: transaction.from.toString('hex'),
+      to: transaction.to.toString('hex'),
+      value: transaction.value.toString('hex'),
+      data: transaction.data.toString('hex')
     })
   }
 

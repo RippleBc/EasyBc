@@ -2,17 +2,18 @@
   <div id="app">
     <el-menu
       style="width:200px;height:100%;position:fixed;"
-      default-active="1"
-      :router="true">
-      <el-menu-item index="1" route="/">
+      :default-active="onRoute"
+      unique-opened 
+      router>
+      <el-menu-item index="/">
         <i class="el-icon-location"></i>
         <span>首页</span>
       </el-menu-item>
-      <el-menu-item index="2" route="/transactions">
+      <el-menu-item index="/transactions">
         <i class="el-icon-date"></i>
         <span>交易记录</span>
       </el-menu-item>
-      <el-menu-item index="3" route="/about" disabled>
+      <el-menu-item index="/about" disabled>
         <i class="el-icon-document"></i>
         <span>关于</span>
       </el-menu-item>
@@ -26,6 +27,26 @@
     
   </div>
 </template>
+
+<script>
+import axios from './net/axios.js'
+import nodesInfo from './nodes.json'
+
+  export default {
+    name: 'App',
+    data () {
+      return {
+        onRoute: '/'
+      }
+    },
+
+    watch: {
+      $route: function(){
+        this.onRoute = this.$route.path;
+      }
+    }
+  }
+</script>
 
 <style lang="scss">
 #app {

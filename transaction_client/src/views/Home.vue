@@ -55,13 +55,14 @@
       </div>
     </div>
 		<div style="flex-direction:row;max-width:1280px;">
-			<div class="border" style="height:500px;justify-content:start;align-items:start;padding:20px;margin:20px 20px 20px 0px;">
+			<div class="border" style="height: 500px;justify-content:start;align-items:start;padding:20px;margin:20px 20px 20px 0px;">
         <span>发送者记录</span>
-        <div style="overflow:auto;">
+        <div style="overflow: auto;justify-content: start;">
           <div v-for="from in froms">
             <div>
               <p style="cursor:pointer;width:100%;text-align:left;" @dblclick="chooseFrom(from)">{{from}}</p>
               <div style="flex-direction:row;justify-content:end;">
+                <el-button type="primary" @click="getTransactions(from)">获取交易记录</el-button>
                 <el-button type="primary" @click="getAccountInfo(from)">获取账户信息</el-button>
                 <el-button type="primary" @click="getPrivateKey(from)">获取私钥</el-button>
               </div>
@@ -70,13 +71,14 @@
           </div>  
         </div>
 			</div>
-			<div class="border" style="height:500px;justify-content:start;align-items:start;padding:20px;margin:20px 0px 20px 0px;">
+			<div class="border" style="height: 500px;justify-content:start;align-items:start;padding:20px;margin:20px 0px 20px 0px;">
 				<span>接收者记录</span>
-        <div style="overflow:auto;">
+        <div style="overflow: auto;justify-content: start;">
           <div v-for="to in tos">
             <div>
               <p style="cursor:pointer;width:100%;text-align:left;" @dblclick="chooseTo(to)">{{to}}</p>
               <div style="flex-direction:row;justify-content:end;">
+                <el-button type="primary" @click="getTransactions(to)">获取交易记录</el-button>
                 <el-button type="primary" @click="getAccountInfo(to)">获取账户信息</el-button>
                 <el-button type="primary" @click="getPrivateKey(to)">获取私钥</el-button>
               </div>
@@ -101,6 +103,24 @@
         <el-button type="primary" @click="accontInfoVisisble = false">确 定</el-button>
       </span>
     </el-dialog>
+
+    <el-dialog title="私钥信息" :visible.sync="privateKeyInfoVisible">
+      <div style="flex-direction:row;justify-content:start;">
+        <span style="width:100px">私钥</span><p style="width:100%;">{{privateKeyInfo}}</p>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="privateKeyInfoVisible = false">确 定</el-button>
+      </span>
+    </el-dialog>
+
+    <el-dialog title="交易信息" :visible.sync="transactionInfoVisible">
+      <div style="flex-direction:row;justify-content:start;">
+        <span style="width:100px">交易哈希值</span><p style="width:100%;">{{transactionHashInfo}}</p>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="transactionInfoVisible = false">确 定</el-button>
+      </span>
+    </el-dialog>
 	</div>
 </template>
 
@@ -112,7 +132,7 @@ const TRANSACTION_STATE_PACKED = 1
 const TRANSACTION_STATE_NOT_EXISTS = 2
 
 export default {
-  name: 'App',
+  name: 'Home',
 
   data () {
     return {
@@ -128,7 +148,12 @@ export default {
       accontInfoVisisble: false,
       address: "",
       nonce: "",
-      balance: ""
+      balance: "",
+      privateKeyInfoVisible: false,
+      privateKeyInfo: '',
+      transactionInfoVisible: false,
+      transactionHashInfo: ''
+      
     }
   },
 
@@ -242,11 +267,9 @@ export default {
       	value: self.value
       }, response => {
         if (response.code === 0) {
-          self.$alert({
-            title: '交易哈希值',
-            message: response.data,
-            confirmButtonText: '确定'
-          });
+          this.transactionHashInfo = response.data;
+          this.transactionInfoVisible = true;
+
           self.getToHistory();
         } else {
           self.$notify.error({
@@ -319,11 +342,8 @@ export default {
       	address: address
       }, response => {
         if (response.code === 0) {
-          self.$alert({
-            title: '私钥',
-            message: response.data,
-            confirmButtonText: '确定'
-          });
+          this.privateKeyInfo = response.data;
+          this.privateKeyInfoVisible = true;
         } else {
           self.$notify.error({
             title: 'getPrivateKey',
@@ -335,6 +355,10 @@ export default {
 
     chooseNode: function (node) {
     	this.currentNode = node
+    },
+
+    getTransactions: function(address) {
+      this.$router.push(`transactions/${address}`);
     }
   }
 }
