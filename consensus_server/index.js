@@ -34,9 +34,7 @@ process.on("uncaughtException", function(err) {
     process.exit(1);
 });
 
-
 (async function() {
-
     await process[Symbol.for("mysql")].init();
 
     /************************************** p2p **************************************/
@@ -56,6 +54,10 @@ process.on("uncaughtException", function(err) {
     /************************************** query **************************************/
     const query_process = fork(path.join(__dirname, './query/index.js'));
 
+    process.on('exit', (code) => {
+        query_process.kill('endSuccess');
+    });
+
     query_process.on('message', ({cmd, data}) => {
         switch(cmd)
         {
@@ -72,11 +74,22 @@ process.on("uncaughtException", function(err) {
     });
 
     query_process.on('error', err => {
-        throw new Error(err);
+        logger.fatal(`query_process, throw exception, ${err}`);
+
+        process.exit(1);
     });
 
     query_process.on('exit', (code, signal) => {
-        throw new Error('query_process exit');
+        if(signal && signal === 'endSuccess')
+        {
+            logger.trace('query_process, exited success');
+        }
+        if(code && code === 0)
+        {
+            logger.trace('query_process, exited success');
+        }
+
+        logger.fatal('query_process, exited abnormal');
     });
 
 })();

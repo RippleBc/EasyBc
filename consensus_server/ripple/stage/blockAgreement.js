@@ -134,7 +134,7 @@ class BlockAgreement extends Stage
 			//
 			self.rippleBlocks.push(rippleBlock);
 		})().then(() => {
-			loger.trace('BlockAgreement run, success')
+			logger.trace('BlockAgreement run, success')
 		}).catch(e => {
 			logger.fatal(e);
 
