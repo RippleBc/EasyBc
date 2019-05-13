@@ -53,9 +53,9 @@ class Counter
 			{
 				const { count, timeConsumes } = rlpcountersMap.get(key);
 
-				timeConsumes.primaryConsensusTime += counter.primaryConsensusTime;
-				timeConsumes.finishConsensusTime += counter.finishConsensusTime;
-				timeConsumes.pastTime += counter.pastTime;
+				timeConsumes.primaryConsensusTime += bufferToInt(counter.primaryConsensusTime);
+				timeConsumes.finishConsensusTime += bufferToInt(counter.finishConsensusTime);
+				timeConsumes.pastTime += bufferToInt(counter.pastTime);
 
 				countersMap.set(key, {
 					count: count + 1,
@@ -71,9 +71,9 @@ class Counter
 					round: counter.round,
 					stage: counter.stage,
 					timeConsumes: {
-						primaryConsensusTime: counter.primaryConsensusTime,
-						finishConsensusTime: counter.finishConsensusTime,
-						pastTime: counter.pastTime
+						primaryConsensusTime: bufferToInt(counter.primaryConsensusTime),
+						finishConsensusTime: bufferToInt(counter.finishConsensusTime),
+						pastTime: bufferToInt(counter.pastTime)
 					}
 				});
 			}

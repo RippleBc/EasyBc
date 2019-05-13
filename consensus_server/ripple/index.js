@@ -174,23 +174,20 @@ class Ripple extends AsyncEventemitter
 	/**
 	 * @param {Buffer} round
 	 * @param {Buffer} stage
-	 * @param {Buffer} primaryConsensusTime
-	 * @param {Buffer} finishConsensusTime
-	 * @param {Buffer} pastTime
+	 * @param {Number} primaryConsensusTime
+	 * @param {Number} finishConsensusTime
+	 * @param {Number} pastTime
 	 */
 	handleCounter(round, stage, primaryConsensusTime, finishConsensusTime, pastTime)
 	{
 		assert(Buffer.isBuffer(round), `Ripple handleCounter, round should be an Buffer, now is ${typeof round}`);
 		assert(Buffer.isBuffer(stage), `Ripple handleCounter, stage should be an Buffer, now is ${typeof stage}`);
-		assert(Buffer.isBuffer(primaryConsensusTime), `Ripple handleCounter, primaryConsensusTime should be an Buffer, now is ${typeof primaryConsensusTime}`);
-		assert(Buffer.isBuffer(finishConsensusTime), `Ripple handleCounter, finishConsensusTime should be an Buffer, now is ${typeof finishConsensusTime}`);
-		assert(Buffer.isBuffer(pastTime), `Ripple handleCounter, pastTime should be an Buffer, now is ${typeof pastTime}`);
+		assert(typeof primaryConsensusTime === 'number', `Ripple handleCounter, primaryConsensusTime should be an Buffer, now is ${typeof primaryConsensusTime}`);
+		assert(typeof finishConsensusTime === 'number', `Ripple handleCounter, finishConsensusTime should be an Buffer, now is ${typeof finishConsensusTime}`);
+		assert(typeof pastTime === 'number', `Ripple handleCounter, pastTime should be an Buffer, now is ${typeof pastTime}`);
 
 		round = bufferToInt(round);
 		stage = bufferToInt(stage);
-		primaryConsensusTime = bufferToInt(primaryConsensusTime);
-		finishConsensusTime = bufferToInt(finishConsensusTime);
-		pastTime = bufferToInt(pastTime);
 
 		logger.trace(`Ripple handleCounter, current own round: ${this.round}, stage: ${this.stage}; unl round: ${round}, stage: ${stage}, primaryConsensusTime: ${primaryConsensusTime}, finishConsensusTime: ${finishConsensusTime}, pastTime: ${pastTime}`);
 
