@@ -48,7 +48,7 @@ log4js.configure({
         p2p: { appenders: ["stdout", "p2p"], level: "warn" },
         net: { appenders: ["stdout", "net"], level: "warn" },
         mysql: { appenders: ["stdout", "mysql"], level: "warn" },
-        update: { appenders: ["stdout", "update"], level: "warn" },
+        update: { appenders: ["stdout", "update"], level: "trace" },
         query: { appenders: ["stdout", "query"], level: "warn" }
     }
 })

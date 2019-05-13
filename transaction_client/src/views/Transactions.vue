@@ -4,7 +4,7 @@
     	<div style="flex-direction: row;padding: 20px;box-sizing: border-box;">
     		<span slot="prepend">address</span>
 				<el-input v-model="address" style="margin: 20px;"></el-input>
-    		<el-button type="info">搜索</el-button>
+    		<el-button type="info" @click="search()">搜索</el-button>
     	</div>
     </div>
 
@@ -13,18 +13,27 @@
 	      :data="transactions"
 	      style="width: 100%">
 	      <el-table-column
-	        prop="date"
-	        label="日期"
+	        prop="nonce"
+	        label="nonce"
 	        width="180">
 	      </el-table-column>
 	      <el-table-column
-	        prop="name"
-	        label="发送账户"
+	        prop="createdAt"
+	        label="日期">
+	      </el-table-column>
+	      <el-table-column
+	        prop="from"
+	        label="发送账户">
+	      </el-table-column>
+	      <el-table-column
+	        prop="to"
+	        label="接收账户"
 	        width="180">
 	      </el-table-column>
 	      <el-table-column
-	        prop="address"
-	        label="接受账户">
+	        prop="value"
+	        label="金额"
+	        width="180">
 	      </el-table-column>
 	    </el-table>
     </div>
@@ -40,7 +49,7 @@ import nodesInfo from '../nodes.json'
 
 	  data () {
 	    return {
-	    	transactions: []
+	    	transactions: [],
 	   		address: ''
 	    }
 	  },
@@ -51,7 +60,10 @@ import nodesInfo from '../nodes.json'
 
 	  methods:
 	  {
-	  	
+	  	search: function()
+	  	{
+	  		axios.post('/')
+	  	}
 	  }
 	}
 </script>
