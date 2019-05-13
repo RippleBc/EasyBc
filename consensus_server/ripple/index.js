@@ -212,6 +212,7 @@ class Ripple extends AsyncEventemitter
 		{
 			setTimeout(() => {
 				self.candidateAgreement.run([]);
+
 				self.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
 			}, delayTime);
 		}
@@ -219,6 +220,7 @@ class Ripple extends AsyncEventemitter
 		{
 			setTimeout(() => {
 				self.blockAgreement.run(rlp.encode([]));
+
 				self.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
 			}, delayTime);
 		}
@@ -243,8 +245,7 @@ class Ripple extends AsyncEventemitter
 
 		if(this.state !== RIPPLE_STATE_TRANSACTIONS_CONSENSUS)
 		{
-			logger.warn(`***********************************************\nRipple handleMessage, ripple state should be RIPPLE_STATE_TRANSACTIONS_CONSENSUS, now is ${this.state === RIPPLE_STATE_IDLE ? "RIPPLE_STATE_IDLE" : "RIPPLE_STATE_STAGE_CONSENSUS"}\n***********************************************\n\n\n`);
-			return;
+			return logger.trace(`Ripple handleMessage, ripple state should be RIPPLE_STATE_TRANSACTIONS_CONSENSUS, now is ${this.state === RIPPLE_STATE_IDLE ? "RIPPLE_STATE_IDLE" : "RIPPLE_STATE_STAGE_CONSENSUS"}`);
 		}
 
 		if(cmd >= 100 && cmd < 200)
@@ -255,6 +256,7 @@ class Ripple extends AsyncEventemitter
 				this.blockAgreement.reset();
 			}
 
+			// block agreement is over but, block is still processing, record the messages and process them later
 			if(this.blockAgreement.checkProcessBlockState())
 			{
 				this.amalgamateMessagesCache.push({
@@ -322,7 +324,7 @@ class Ripple extends AsyncEventemitter
 		}
 		else
 		{
-			throw new Error(`invalid cmd: ${cmd}`);
+			logger.error(`Ripple handleMessage, address ${address.toString("hex")}, invalid cmd: ${cmd}`);
 		}
 	}
 

@@ -40,7 +40,7 @@ class Sender
 		}
 		if(this.finishAddresses.has(address))
 		{
-			logger.warn(`Sender recordFinishNode, address ${address} send the same consensus request`);
+			logger.error(`Sender recordFinishNode, address ${address} send the same consensus request`);
 			return;
 		}
 		this.finishAddresses.add(address);

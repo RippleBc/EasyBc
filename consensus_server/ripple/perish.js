@@ -32,7 +32,7 @@ class Perish extends AsyncEventemitter
 
 			if(result)
 			{
-				logger.info("Perish, finish stage is over success");
+				logger.trace("Perish, finish stage is over success");
 
 				//
 				self.handler(true);
@@ -42,7 +42,7 @@ class Perish extends AsyncEventemitter
 			{
 				if(this.leftFinishTimes > 0)
 				{
-					logger.warn("Perish, finish stage retry");
+					logger.trace("Perish, finish stage retry");
 
 					self.finish.reset();
 					self.finish.initFinishTimeout();
@@ -52,7 +52,7 @@ class Perish extends AsyncEventemitter
 				}
 				else
 				{
-					logger.warn("Perish, finish stage is over because of timeout");
+					logger.trace("Perish, finish stage is over because of timeout");
 
 					//
 					self.handler(false);

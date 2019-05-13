@@ -1,6 +1,6 @@
 const process = require("process");
 const log4js= require("./logConfig");
-const logger = log4js.getLogger();
+const logger = log4js.getLogger("loggerConsensus");
 const { fork } = require("child_process");
 const path = require('path');
 
