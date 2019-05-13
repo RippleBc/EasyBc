@@ -60,7 +60,7 @@ class BlockAgreement extends Stage
 
 		if(sortedBlocks[0] && sortedBlocks[0][1].count / (unl.length + 1) >= TRANSACTIONS_CONSENSUS_THRESHOULD)
 		{
-			logger.warn("block agreement success");
+			logger.trace("BlockAgreement handler, block agreement success");
 
 			const self = this;
 
@@ -74,7 +74,7 @@ class BlockAgreement extends Stage
 
 				self.ripple.emit("blockProcessOver");
 
-				logger.warn("run block chain success, go to next stage");			
+				logger.trace("BlockAgreement handler, run block chain success, go to next stage");			
 			});
 
 			return;
@@ -99,11 +99,10 @@ class BlockAgreement extends Stage
 			transactions: transactions
 		});
 
-		logger.warn("Block agreement begin, transactions: ");
 		for(let i = 0; i < block.transactions.length; i++)
 		{
 			let transaction = block.transactions[i];
-			logger.warn(`hash: ${transaction.hash().toString("hex")}, from: ${transaction.from.toString("hex")}, to: ${transaction.to.toString("hex")}, value: ${transaction.value.toString("hex")}, nonce: ${transaction.nonce.toString("hex")}`);
+			logger.trace(`BlockAgreement run, transaction hash: ${transaction.hash().toString("hex")}, from: ${transaction.from.toString("hex")}, to: ${transaction.to.toString("hex")}, value: ${transaction.value.toString("hex")}, nonce: ${transaction.nonce.toString("hex")}`);
 		}
 
 		const self = this;
@@ -112,14 +111,14 @@ class BlockAgreement extends Stage
 
 			if(!height)
 			{
-				throw new Error(`BlockAgreement run, getBlockChainHeight(${height.toString("hex")}) should not return undefined`)
+				await Promise.reject(`BlockAgreement run, getBlockChainHeight(${height.toString("hex")}) should not return undefined`)
 			}
 			
 			block.header.number = (new BN(height).addn(1)).toArrayLike(Buffer);
 			const parentHash = await self.ripple.processor.blockChain.getBlockHashByNumber(height);
 			if(!parentHash)
 			{
-				throw new Error(`BlockAgreement run, getBlockHashByNumber(${height.toString("hex")}) should not return undefined`);
+				await Promise.reject(`BlockAgreement run, getBlockHashByNumber(${height.toString("hex")}) should not return undefined`);
 			}
 
 			block.header.parentHash = parentHash;
@@ -134,7 +133,13 @@ class BlockAgreement extends Stage
 
 			//
 			self.rippleBlocks.push(rippleBlock);
-		})();
+		})().then(() => {
+			loger.trace('BlockAgreement run, success')
+		}).catch(e => {
+			logger.fatal(e);
+
+			process.exit(1);
+		});
  	}
 
  	/**
@@ -178,7 +183,7 @@ class BlockAgreement extends Stage
 			{
 				this.cheatedNodes.push(address);
 
-				logger.error(`BlockAgreement handleBlockAgreement, address is invalid, address should be ${address.toString("hex")}, now is ${rippleBlock.from.toString("hex")}`);
+				logger.error(`BlockAgreement handleBlockAgreement, address should be ${address.toString("hex")}, now is ${rippleBlock.from.toString("hex")}`);
 			}
 			else
 			{
@@ -189,7 +194,7 @@ class BlockAgreement extends Stage
 		{
 			this.cheatedNodes.push(address);
 			
-			logger.error(`BlockAgreement handleBlockAgreement, address ${address.toString("hex")}, send an invalid message`);
+			logger.error(`BlockAgreement handleBlockAgreement, address ${address.toString("hex")}, validate failed`);
 		}
 
 		this.recordFinishNode(address.toString("hex"));

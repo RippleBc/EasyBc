@@ -58,15 +58,15 @@ class CandidateAgreement extends Stage
 
 		if(sortedTransactionColls[0] && sortedTransactionColls[0][1].count / (unl.length + 1) >= TRANSACTIONS_CONSENSUS_THRESHOULD)
 		{
-			logger.warn("candidate agreement success, go to next stage");
+			logger.trace("CandidateAgreement handler, candidate agreement success, go to next stage");
 
-			this.ripple.blockAgreement.run(sortedTransactionColls[0][1].data);
-			return;
+			return this.ripple.blockAgreement.run(sortedTransactionColls[0][1].data);
 		}
 		
 		// return to amalgamate stage
-		logger.warn("candidate agreement failed, go to stage amalgamate");
+		logger.trace("CandidateAgreement handler, candidate agreement failed, go to stage amalgamate");
 
+		// mixed all transactions, and begin to amalgamate
 		const transactionRawsMap = new Map();
 		this.candidates.forEach(candidate => {
 			const rawTransactions = rlp.decode(candidate.transactions);
@@ -90,11 +90,10 @@ class CandidateAgreement extends Stage
 		this.ripple.stage = RIPPLE_STAGE_CANDIDATE_AGREEMENT;
 		this.init();
 
-		logger.warn("Candidate agreement begin, transactions: ");
 		for(let i = 0; i < transactions.length; i++)
 		{
 			let transaction = new Transaction(transactions[i])
-			logger.warn(`hash: ${transaction.hash().toString("hex")}, from: ${transaction.from.toString("hex")}, to: ${transaction.to.toString("hex")}, value: ${transaction.value.toString("hex")}, nonce: ${transaction.nonce.toString("hex")}`);
+			logger.trace(`CandidateAgreement run, transaction hash: ${transaction.hash().toString("hex")}, from: ${transaction.from.toString("hex")}, to: ${transaction.to.toString("hex")}, value: ${transaction.value.toString("hex")}, nonce: ${transaction.nonce.toString("hex")}`);
 		}
 
 		// init candidate
@@ -152,7 +151,7 @@ class CandidateAgreement extends Stage
 			{
 				this.cheatedNodes.push(address);
 
-				logger.error(`CandidateAgreement handleCandidateAgreement, address is invalid, address should be ${address.toString("hex")}, now is ${candidate.from.toString("hex")}`);
+				logger.error(`CandidateAgreement handleCandidateAgreement, address should be ${address.toString("hex")}, now is ${candidate.from.toString("hex")}`);
 			}
 			else
 			{
@@ -163,7 +162,7 @@ class CandidateAgreement extends Stage
 		{
 			this.cheatedNodes.push(address);
 			
-			logger.error(`CandidateAgreement handleCandidateAgreement, address ${address.toString("hex")}, send an invalid message`);
+			logger.error(`CandidateAgreement handleCandidateAgreement, address ${address.toString("hex")}, validate failed`);
 		}
 
 		this.recordFinishNode(address.toString("hex"));

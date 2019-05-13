@@ -5,6 +5,7 @@ const process = require("process");
 const { COUNTER_CONSENSUS_STAGE_THRESHOULD, COUNTER_HANDLER_TIME_DETAY, COUNTER_INVALID_STAGE_TIME_SECTION, COUNTER_STATE_IDLE, COUNTER_STATE_PROCESSING, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_ACOUNTER_REQUEST, PROTOCOL_CMD_ACOUNTER_RESPONSE } = require("../constant");
 
 const rlp = utils.rlp;
+const sha3 = utils.sha3;
 
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
@@ -46,19 +47,21 @@ class Counter
 		const countersMap = new Map();
 
 		this.counters.forEach(counter => {
-			const key = counter.hash(false).toString("hex");
+			const key = sha3(rlp([counter.round, counter.stage]));
 
 			if(countersMap.has(key))
 			{
-				const count = rlpcountersMap.get(key).count;
+				const { count, timeConsumes } = rlpcountersMap.get(key);
+
+				timeConsumes.primaryConsensusTime += counter.primaryConsensusTime;
+				timeConsumes.finishConsensusTime += counter.finishConsensusTime;
+				timeConsumes.pastTime += counter.pastTime;
 
 				countersMap.set(key, {
 					count: count + 1,
 					round: counter.round,
 					stage: counter.stage,
-					primaryConsensusTime: counter.primaryConsensusTime,
-					finishConsensusTime: counter.finishConsensusTime,
-					pastTime: counter.pastTime
+					timeConsumes: timeConsumes
 				});
 			}
 			else
@@ -67,9 +70,11 @@ class Counter
 					count: 1,
 					round: counter.round,
 					stage: counter.stage,
-					primaryConsensusTime: counter.primaryConsensusTime,
-					finishConsensusTime: counter.finishConsensusTime,
-					pastTime: counter.pastTime
+					timeConsumes: {
+						primaryConsensusTime: counter.primaryConsensusTime,
+						finishConsensusTime: counter.finishConsensusTime,
+						pastTime: counter.pastTime
+					}
 				});
 			}
 		});
@@ -80,11 +85,14 @@ class Counter
 
 		if(sortedCounters[0])
 		{
+			const count = sortedCounters[0][1].count
 			const round = sortedCounters[0][1].round;
 			const stage = sortedCounters[0][1].stage;
-			const primaryConsensusTime = sortedCounters[0][1].primaryConsensusTime;
-			const finishConsensusTime = sortedCounters[0][1].finishConsensusTime;
-			const pastTime = sortedCounters[0][1].pastTime;
+			const timeConsumes = sortedCounters[0][1].timeConsumes;
+
+			const primaryConsensusTime = timeConsumes.primaryConsensusTime / count;
+			const finishConsensusTime = timeConsumes.finishConsensusTime / count;
+			const pastTime = timeConsumes.pastTime / count;
 
 			this.ripple.handleCounter(round, stage, primaryConsensusTime, finishConsensusTime, pastTime);
 		}
@@ -105,8 +113,9 @@ class Counter
 			case PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE:
 			case PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE:
 			{
-				logger.error(`******************************\nCounter, stage may be invalid, my round: ${this.ripple.round}, my stage: ${this.ripple.stage}\n******************************\n\n\n\n`);
+				logger.error(`Counter handleMessage, stage may be invalid, current own round: ${this.ripple.round}, stage: ${this.ripple.stage}`);
 
+				// compute the stage invalid times over a specified period of time 
 				const now = Date.now();
 
 				this.invalidStageTimeStatistics.push(now);
@@ -115,6 +124,7 @@ class Counter
 					return ele + COUNTER_INVALID_STAGE_TIME_SECTION > now;
 				}).length;
 
+				// if stage invalid times over a specified period of time is exceeds the limit, try to synchronize the stage
 				if(stageValidTimesInSpecifiedTimeSection >= this.threshould * unl.length)
 				{
 					if(this.state === COUNTER_STATE_IDLE)
@@ -125,9 +135,10 @@ class Counter
 
 						this.timeout = setTimeout(() => {
 
-							logger.warn("Counter, get stage infomation finish because of timeout");
+							logger.error("Counter handleMessage, get stage infomation is over because of timeout");
 
 							this.handler(false);
+
 							this.reset();
 						}, COUNTER_HANDLER_TIME_DETAY);
 					}
@@ -160,7 +171,9 @@ class Counter
 				}
 				else
 				{
-					throw new Error("Counter, invalid ripple stage");
+					logger.fatal("Counter handleMessage, invalid ripple stage");
+
+					process.exit(1);
 				}
 				counterData.sign(privateKey);
 
@@ -181,7 +194,7 @@ class Counter
 					{
 						this.cheatedNodes.push(address);
 
-						logger.error(`Counter handleMessage, address is invalid, address should be ${address.toString("hex")}, now is ${counterData.from.toString("hex")}`);
+						logger.error(`Counter handleMessage, address should be ${address.toString("hex")}, now is ${counterData.from.toString("hex")}`);
 					}
 					else
 					{
@@ -192,16 +205,17 @@ class Counter
 				{
 					this.cheatedNodes.push(address);
 					
-					logger.error(`Counter handleMessage, address ${address.toString("hex")}, send an invalid message`);
+					logger.error(`Counter handleMessage, address ${address.toString("hex")}, validate failed`);
 				}
 
 				if(this.counters.length === unl.length)
 				{
 					clearTimeout(this.timeout);
 
-					logger.warn("Counter, get stage infomation finish success");
+					logger.trace("Counter handleMessage, get stage infomation is over success");
 
 					this.handler(true);
+					
 					this.reset();
 				}
 			}

@@ -50,11 +50,10 @@ class Amalgamate extends Stage
 		this.ripple.stage = RIPPLE_STAGE_AMALGAMATE;
 		this.init();
 
-		logger.warn("amalgamate begin, transactions: ");
 		for(let i = 0; i < transactionRaws.length; i++)
 		{
 			let transaction = new Transaction(transactionRaws[i])
-			logger.warn(`hash: ${transaction.hash().toString("hex")}, from: ${transaction.from.toString("hex")}, to: ${transaction.to.toString("hex")}, value: ${transaction.value.toString("hex")}, nonce: ${transaction.nonce.toString("hex")}`);
+			logger.trace(`Amalgamate run, transaction hash: ${transaction.hash().toString("hex")}, from: ${transaction.from.toString("hex")}, to: ${transaction.to.toString("hex")}, value: ${transaction.value.toString("hex")}, nonce: ${transaction.nonce.toString("hex")}`);
 		}
 		
 		// init candidate
@@ -112,7 +111,7 @@ class Amalgamate extends Stage
 			{
 				this.cheatedNodes.push(address);
 				
-				logger.error(`Amalgamate handleAmalgamate, address is invalid, address should be ${address.toString("hex")}, now is ${candidate.from.toString("hex")}`);
+				logger.error(`Amalgamate handleAmalgamate, address should be ${address.toString("hex")}, now is ${candidate.from.toString("hex")}`);
 			}
 			else
 			{
@@ -123,7 +122,7 @@ class Amalgamate extends Stage
 		{
 			this.cheatedNodes.push(address);
 
-			logger.error(`Amalgamate handleAmalgamate, address ${address.toString("hex")}, send an invalid message`);
+			logger.error(`Amalgamate handleAmalgamate, address: ${address.toString("hex")}, validate failed`);
 		}
 
 		this.recordFinishNode(address.toString("hex"));

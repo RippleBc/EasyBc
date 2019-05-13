@@ -2,8 +2,6 @@ const process = require("process");
 const Base = require("./base");
 const utils = require("../../../depends/utils");
 
-const logger = process[Symbol.for("loggerConsensus")];
-
 const rlp = utils.rlp;
 const Buffer = utils.Buffer;
 

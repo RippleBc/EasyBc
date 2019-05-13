@@ -192,14 +192,11 @@ class Ripple extends AsyncEventemitter
 		finishConsensusTime = bufferToInt(finishConsensusTime);
 		pastTime = bufferToInt(pastTime);
 
-		logger.warn(`**************************************\nRipple, begin to handle consensus, unl's round: ${round}, stage: ${stage}, primaryConsensusTime: ${primaryConsensusTime}, finishConsensusTime: ${finishConsensusTime}, pastTime: ${pastTime}**************************************`);
-		logger.warn(`**************************************\nRipple, begin to handle consensus, my round: ${this.round}, stage: ${this.stage}\n**************************************\n\n\n\n\n`);
+		logger.trace(`Ripple handleCounter, current own round: ${this.round}, stage: ${this.stage}; unl round: ${round}, stage: ${stage}, primaryConsensusTime: ${primaryConsensusTime}, finishConsensusTime: ${finishConsensusTime}, pastTime: ${pastTime}`);
 
 		if(this.round >= round && this.stage >= stage)
 		{
-			logger.info("************************************ I'm fast ************************************");
-
-			return;
+			return logger.trace("Ripple handleCounter, current own stage is more fresh");
 		}
 
 		this.reset();

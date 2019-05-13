@@ -52,7 +52,7 @@ class Stage
 
 			if(result)
 			{
-				logger.info("primary stage is over success");
+				logger.trace("Stage, primary stage is over success");
 
 				self.state = STAGE_STATE_SUCCESS_FINISH;
 				
@@ -69,7 +69,7 @@ class Stage
 				}
 
 				//
-				logger.warn("primary stage is over because of timeout");
+				logger.trace("Stage, primary stage is over because of timeout");
 
 				self.state = STAGE_STATE_TIMEOUT_FINISH;
 			}
@@ -85,7 +85,7 @@ class Stage
 
 			if(result)
 			{
-				logger.info("finish stage is over success");
+				logger.trace("Stage, finish stage is over success");
 
 				// compute finish stage consensus time consume
 				if(self.averageTimeStatisticTimes === 0)
@@ -120,7 +120,7 @@ class Stage
 
 				if(this.leftFinishTimes > 0)
 				{
-					logger.warn("finish stage retry");
+					logger.trace("Stage, finish stage retry");
 
 					self.finish.reset();
 					self.finish.initFinishTimeout();
@@ -130,7 +130,7 @@ class Stage
 				}
 				else
 				{
-					logger.warn("finish stage is over because of timeout");
+					logger.trace("Stage, finish stage is over because of timeout");
 
 					// compute finish stage consensus time consume
 					if(self.averageTimeStatisticTimes === 0)
@@ -236,17 +236,17 @@ class Stage
 
 					this.finish.recordFinishNode(address.toString("hex"));
 
-					logger.warn(`Stage handleMessage, address ${address.toString("hex")} consensus timeout`);
+					logger.trace(`Stage handleMessage, address: ${address.toString("hex")}, consensus is over because of timeout`);
 				}
 				else if(state === STAGE_STATE_SUCCESS_FINISH)
 				{
 					this.finish.recordFinishNode(address.toString("hex"));
 
-					logger.warn(`Stage handleMessage, address ${address.toString("hex")} have consensus all nondes`);
+					logger.trace(`Stage handleMessage, address: ${address.toString("hex")}, consensus is over success`);
 				}
 				else
 				{
-					logger.error(`Stage handleMessage, address ${address.toString("hex")} is not consensus`);
+					logger.error(`Stage handleMessage, address: ${address.toString("hex")}, consensus is proceeding`);
 				}
 			}
 		}
