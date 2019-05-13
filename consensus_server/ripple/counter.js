@@ -6,6 +6,7 @@ const { COUNTER_CONSENSUS_STAGE_THRESHOULD, COUNTER_HANDLER_TIME_DETAY, COUNTER_
 
 const rlp = utils.rlp;
 const sha3 = utils.sha3;
+const bufferToInt = utils.bufferToInt;
 
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
