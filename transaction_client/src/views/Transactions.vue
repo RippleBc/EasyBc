@@ -1,6 +1,6 @@
 <template>
 	<div class="container">
-    <div class="border" style="max-width:1280px;">
+    <div class="border">
     	<div style="padding: 20px;box-sizing: border-box;">
   			<div style="flex-direction: row;">
   				<span style="width: 100px;flex-shrink: 0;">hash</span>
@@ -20,7 +20,7 @@
 						style="width: 100%;margin: 20px;"
 						v-model="beginTime"
 						align="right"
-						type="date"
+						type="datetime"
 						placeholder="选择日期"
 						:picker-options="pickerOptions">
 					</el-date-picker>
@@ -30,7 +30,7 @@
 						style="width: 100%;margin: 20px;"
 						v-model="endTime"
 						align="right"
-						type="date"
+						type="datetime"
 						placeholder="选择日期"
 						:picker-options="pickerOptions">
 					</el-date-picker>
@@ -42,10 +42,15 @@
     	</div>
     </div>
 
-    <div class="border" style="max-width:1280px;margin:20px 0px 20px 0px;">
+    <div class="border" style="margin:20px 0px 20px 0px;">
     	<el-table
 	      :data="transactions"
 	      style="width: 100%">
+	      <el-table-column
+	        prop="id"
+	        label="id"
+	        width="180">
+	      </el-table-column>
 	      <el-table-column
 	        prop="nonce"
 	        label="nonce"
@@ -69,6 +74,11 @@
 	        label="金额"
 	        width="180">
 	      </el-table-column>
+	      <el-table-column
+	        prop="createdAt"
+	        label="创建时间"
+	        width="180">
+	      </el-table-column>
 	    </el-table>
     </div>
 	</div>
@@ -76,7 +86,6 @@
 
 <script>
 import axios from '../net/axios.js'
-import nodesInfo from '../nodes.json'
 
 	export default {
 	  name: 'Transaction',
@@ -92,6 +101,13 @@ import nodesInfo from '../nodes.json'
 	    }
 	  },
 
+	  computed: {
+      currentNode: function()
+      {
+        return this.$store.state.currentNode;
+      }
+    },
+    
 	  created () {
 	    this.from = this.$route.path.split('/')[2];
 	  },
@@ -100,9 +116,25 @@ import nodesInfo from '../nodes.json'
 	  {
 	  	search: function()
 	  	{
-	  		axios.post('/getTransactions', {
+	  		axios.get('/getTransactions', {
+	  			url: this.currentNode.url,
+	  			hash: this.hash,
+	  			from: this.from,
+	  			to: this.to,
+	  			beginTime: this.beginTime,
+	  			endTime: this.endTime
+	  		}, response => {
+					if (response.code === 0) {
+            this.transactions = response.data
+          } else {
+            Vue.prototype.$notify.error({
+              title: 'getTransactions',
+              message: response.msg
+            });
+          }
 
-	  		})
+          resolve()
+        })
 	  	}
 	  }
 	}

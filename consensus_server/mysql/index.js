@@ -229,12 +229,57 @@ class Mysql
   }
   
   /**
-   * @param {Array/transactionModel}
+   * @param {Object}
+   *  @prop {String} hash
+   *  @prop {String} from
+   *  @prop {String} to
+   *  @prop {Number} beginTime
+   *  @prop {Number} endTime
    */
-  async getTransactions({hash, from, to, createdAt})
+  async getTransactions({hash, from, to, beginTime, endTime})
   {
+    if(hash)
+    {
+      assert(typeof hash === 'string', `Mysql getTransactions, hash should be an String, now is ${typeof hash}`);
+    }
+    if(from)
+    {
+      assert(typeof from === 'string', `Mysql getTransactions, from should be an String, now is ${typeof from}`);
+    }
+    if(to)
+    {
+      assert(typeof to === 'string', `Mysql getTransactions, to should be an String, now is ${typeof to}`);
+    }
+    if(beginTime)
+    {
+      assert(typeof beginTime === 'number', `Mysql getTransactions, beginTime should be an Number, now is ${typeof beginTime}`);
+    }
+    if(endTime)
+    {
+      assert(typeof endTime === 'number', `Mysql getTransactions, endTime should be an Number, now is ${typeof endTime}`);
+    }
+
+    const now = new Date()
+    const where = {
+      createdAt: {
+        [Op.gt]: beginTime ? new Date(beginTime) : new Date(now - 24 * 60 * 60 * 1000),
+        [Op.lt]: endTime ? new Date(endTime) : now,
+      }
+    };
+    if(hash)
+    {
+      where.hash = hash;
+    }
+    if(from)
+    {
+      where.from = from;
+    }
+    if(to)
+    {
+      where.to = to;
+    }
     return await this.Transaction.findAll({
-      where: {hash, from, to, createdAt}
+      where: where
     });
   }
 

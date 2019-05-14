@@ -2,7 +2,7 @@ const express = require("express");
 const path = require("path");
 const db = require("./backend/db");
 const { SUCCESS, PARAM_ERR, OTH_ERR } = require("../constant");
-const { getTransactionState, getAccountInfo, getLastestBlock } = require("./backend/net");
+const { getTransactionState, getAccountInfo, getLastestBlock, getTransactions } = require("./backend/net");
 const utils = require("../depends/utils");
 const { port, host } = require("./config.json");
 const cors = require("cors");
@@ -153,6 +153,36 @@ app.get("/getTransactionState", function(req, res) {
     res.send({
         code: SUCCESS,
         data: state
+    });
+  });
+});
+
+app.get("/getTransactions", function(req, res) {
+  if(!req.query.url) {
+    res.send({
+        code: PARAM_ERR,
+        msg: "param error, need url"
+    });
+    return;
+  }
+
+  if(!req.query.from && !req.query.to) {
+    res.send({
+        code: PARAM_ERR,
+        msg: "param error, need from or to"
+    });
+    return;
+  }
+
+  getTransactions(req.query.url, req.query.hash, req.query.from, req.query.to, req.query.beginTime, req.query.endTime).then(transactions => {
+    res.send({
+        code: SUCCESS,
+        data: transactions
+    });
+  }).catch(e => {
+    res.send({
+        code: OTH_ERR,
+        data: e
     });
   });
 });

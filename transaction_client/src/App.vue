@@ -9,35 +9,39 @@
         <i class="el-icon-location"></i>
         <span>首页</span>
       </el-menu-item>
+      <el-menu-item index="/send">
+        <i class="el-icon-folder"></i>
+        <span>交易</span>
+      </el-menu-item>
       <el-menu-item index="/transactions">
         <i class="el-icon-date"></i>
-        <span>交易记录</span>
+        <span>记录</span>
       </el-menu-item>
       <el-menu-item index="/about" disabled>
         <i class="el-icon-document"></i>
         <span>关于</span>
       </el-menu-item>
     </el-menu>
-    <div style="margin-left:200px;display:flex;flex-direction:column;width:100%;">
+    <div style="margin-left:210px;display:flex;flex-direction:column;width:100%;box-sizing: border-box;">
       <h1 style="position:fixed;width:calc(100% - 200px);height:80px;background-color:#ffff;z-index:1;">区块链交易系统</h1>
       <div style="margin-top:120px;">
         <router-view/>
       </div>
     </div>
-    
   </div>
 </template>
 
 <script>
-import axios from './net/axios.js'
-import nodesInfo from './nodes.json'
-
   export default {
     name: 'App',
     data () {
       return {
         onRoute: '/'
       }
+    },
+
+    created () {
+      
     },
 
     watch: {

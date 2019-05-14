@@ -88,28 +88,24 @@ app.post("/getTransactionState", function(req, res) {
 });
 
 app.post("/getTransactions", function(req, res) {
-    if(!req.body.hash) {
-        return res.json({
-            code: PARAM_ERR,
-            msg: "param error, need data"
-        });
-    }
-
     dataWrapper.getTransactions({ 
         hash: req.body.hash, 
         from: req.body.from, 
         to: req.body.to, 
-        createdAt: req.body.createdAt, 
+        beginTime: req.body.beginTime, 
+        endTime: req.body.endTime
     }).then(transactions => {
         return res.json({
             code: SUCCESS,
             msg: "",
             data: transactions.map(tx => {
                 return {
+                    id: tx.id,
                     nonce: tx.nonce.toString('hex'),
                     from: tx.from.toString('hex'),
                     to: tx.to.toString('hex'),
-                    value: tx.value.toString('hex')
+                    value: tx.value.toString('hex'),
+                    createdAt: tx.createdAt
                 }
             })
         });
