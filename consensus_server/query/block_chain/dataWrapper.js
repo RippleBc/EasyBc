@@ -61,7 +61,7 @@ class DataWrapper
 
 	async getTransactions({hash, from, to, beginTime, endTime})
 	{
-		return mysql.getTransaction({hash, from, to, beginTime, endTime});
+		return mysql.getTransactions({hash, from, to, beginTime, endTime});
 	}
 
 	/**
