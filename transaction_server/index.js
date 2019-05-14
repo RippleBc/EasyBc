@@ -182,7 +182,7 @@ app.get("/getTransactions", function(req, res) {
   }).catch(e => {
     res.send({
         code: OTH_ERR,
-        data: e
+        msg: e
     });
   });
 });

@@ -11,8 +11,8 @@ const assert = require("assert");
  */
 module.exports.sendTransaction = async function(url, tx)
 {
-	assert(typeof url === "string", `chat sendTransaction, url should be a String, now is ${typeof url}`);
-	assert(typeof tx === "string", `chat sendTransaction, tx should be a String, now is ${typeof tx}`);
+	assert(typeof url === "string", `net sendTransaction, url should be a String, now is ${typeof url}`);
+	assert(typeof tx === "string", `net sendTransaction, tx should be a String, now is ${typeof tx}`);
 
 	const options = {
     method: "POST",
@@ -45,8 +45,8 @@ module.exports.sendTransaction = async function(url, tx)
  */
 module.exports.getTransactionState = async function(url, transactionHash)
 {
-	assert(typeof url === "string", `chat getTransactionState, url should be a String, now is ${typeof url}`);
-	assert(typeof transactionHash === "string", `chat getTransactionState, transactionHash should be a String, now is ${typeof transactionHash}`);
+	assert(typeof url === "string", `net getTransactionState, url should be a String, now is ${typeof url}`);
+	assert(typeof transactionHash === "string", `net getTransactionState, transactionHash should be a String, now is ${typeof transactionHash}`);
 
 	const options = {
     method: "POST",
@@ -79,8 +79,8 @@ module.exports.getTransactionState = async function(url, transactionHash)
  */
 module.exports.getAccountInfo = async function(url, address)
 {
-	assert(typeof url === "string", `chat getAccountInfo, url should be a String, now is ${typeof url}`);
-	assert(typeof address === "string", `chat getAccountInfo, address should be a String, now is ${typeof address}`);
+	assert(typeof url === "string", `net getAccountInfo, url should be a String, now is ${typeof url}`);
+	assert(typeof address === "string", `net getAccountInfo, address should be a String, now is ${typeof address}`);
 
 	const options = {
     method: "POST",
@@ -112,7 +112,7 @@ module.exports.getAccountInfo = async function(url, address)
  */
 module.exports.getLastestBlock = async function(url)
 {
-	assert(typeof url === "string", `chat getAccountInfo, url should be a String, now is ${typeof url}`);
+	assert(typeof url === "string", `net getAccountInfo, url should be a String, now is ${typeof url}`);
 
 	const options = {
     method: "POST",
@@ -140,7 +140,7 @@ module.exports.getLastestBlock = async function(url)
 }
 
 module.exports.getTransactions = async function(url, hash, from, to, beginTime, endTime) {
-	assert(typeof url === "string", `chat getTransactions, url should be a String, now is ${typeof url}`);
+	assert(typeof url === "string", `net getTransactions, url should be a String, now is ${typeof url}`);
 
 	const options = {
     method: "POST",
@@ -153,33 +153,28 @@ module.exports.getTransactions = async function(url, hash, from, to, beginTime, 
 
 	if(hash)
 	{
-		console.log(`hash: ${hash}`)
 		options.body.hash = hash
-		assert(typeof hash === "string", `chat getTransactions, hash should be a String, now is ${typeof hash}`);
+		assert(typeof hash === "string", `net getTransactions, hash should be a String, now is ${typeof hash}`);
 	}
 	if(from)
 	{
-		console.log(`from: ${from}`)
 		options.body.from = from
-		assert(typeof from === "string", `chat getTransactions, from should be a String, now is ${typeof from}`);
+		assert(typeof from === "string", `net getTransactions, from should be a String, now is ${typeof from}`);
 	}
 	if(to)
 	{
-		console.log(`to: ${to}`)
 		options.body.to = to
-		assert(typeof to === "string", `chat getTransactions, to should be a String, now is ${typeof to}`);
+		assert(typeof to === "string", `net getTransactions, to should be a String, now is ${typeof to}`);
 	}
 	if(beginTime)
 	{
-		console.log(`beginTime: ${beginTime}`)
-		options.body.beginTime = beginTime
-		assert(typeof beginTime === "number", `chat getTransactions, beginTime should be a Number, now is ${typeof beginTime}`);
+		assert(/^\d+$/.test(beginTime), `net getTransactions, beginTime should be a Number, now is ${typeof beginTime}`);
+		options.body.beginTime = parseInt(beginTime)
 	}
 	if(endTime)
 	{
-		console.log(`endTime: ${endTime}`)
-		options.body.endTime = endTime
-		assert(typeof endTime === "number", `chat getTransactions, endTime should be a Number, now is ${typeof endTime}`);
+		assert(/^\d+$/.test(endTime), `net getTransactions, endTime should be a Number, now is ${typeof endTime}`);
+		options.body.endTime = parseInt(endTime)
 	}
 
 	const promise = new Promise((resolve, reject) => {

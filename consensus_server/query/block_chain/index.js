@@ -101,6 +101,7 @@ app.post("/getTransactions", function(req, res) {
             data: transactions.map(tx => {
                 return {
                     id: tx.id,
+                    hash: tx.hash.toString('hex'),
                     nonce: tx.nonce.toString('hex'),
                     from: tx.from.toString('hex'),
                     to: tx.to.toString('hex'),

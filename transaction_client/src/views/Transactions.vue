@@ -21,7 +21,8 @@
 						v-model="beginTime"
 						align="right"
 						type="datetime"
-						placeholder="选择日期">
+						placeholder="选择日期"
+						value-format='timestamp'>
 					</el-date-picker>
 					
 					<span style="width: 100px;flex-shrink: 0;">结束时间</span>
@@ -30,7 +31,8 @@
 						v-model="endTime"
 						align="right"
 						type="datetime"
-						placeholder="选择日期">
+						placeholder="选择日期"
+						value-format='timestamp'>
 					</el-date-picker>
 					
   			</div>
@@ -57,6 +59,10 @@
 	      <el-table-column
 	        prop="createdAt"
 	        label="日期">
+	      </el-table-column>
+	      <el-table-column
+	        prop="hash"
+	        label="哈希值">
 	      </el-table-column>
 	      <el-table-column
 	        prop="from"
