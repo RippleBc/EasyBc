@@ -69,8 +69,12 @@ exports.importAccount = async function(privateKey)
 exports.generateKeyPiar = async function()
 {
 	let privateKey = utils.createPrivateKey();
-
+	const publicKey = utils.privateToPublic(privateKey);
+	const address = utils.publicToAddress(publicKey)
+	
 	await saveFrom(privateKey);
+
+	return { address, privateKey }
 }
 
 /**

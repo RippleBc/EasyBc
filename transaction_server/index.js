@@ -50,9 +50,13 @@ app.get("/importAccount", function(req, res) {
 });
 
 app.get("/generateKeyPiar", function(req, res) {
-  db.generateKeyPiar().then(() => {
+  db.generateKeyPiar().then(({address, privateKey}) => {
     res.send({
-        code: SUCCESS
+        code: SUCCESS,
+        data: {
+          address: address.toString('hex'),
+          privateKey: privateKey.toString('hex')
+        }
     });
   });
 });

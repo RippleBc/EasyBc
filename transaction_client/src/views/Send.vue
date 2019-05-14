@@ -293,7 +293,6 @@ const TRANSACTION_STATE_NOT_EXISTS = 2
       	const self = this
 
         axios.get('getPrivateKey', {
-        	url: self.currentNode.url,
         	address: address
         }, response => {
           if (response.code === 0) {
