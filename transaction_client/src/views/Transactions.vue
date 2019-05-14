@@ -115,6 +115,10 @@ import axios from '../net/axios.js'
 	    this.from = this.$route.path.split('/')[2];
 	  },
 
+	  activated () {
+	  	this.from = this.$route.path.split('/')[2];
+	  },
+
 	  methods:
 	  {
 	  	search: function() {

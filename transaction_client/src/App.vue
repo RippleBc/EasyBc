@@ -25,7 +25,9 @@
     <div style="margin-left:210px;display:flex;flex-direction:column;width:100%;box-sizing: border-box;">
       <h1 style="position:fixed;width:calc(100% - 200px);height:80px;background-color:#ffff;z-index:1;">区块链交易系统</h1>
       <div style="margin-top:120px;">
-        <router-view/>
+        <keep-alive>
+          <router-view/>
+        </keep-alive>
       </div>
     </div>
   </div>

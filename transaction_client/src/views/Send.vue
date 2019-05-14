@@ -107,7 +107,7 @@ const TRANSACTION_STATE_PACKED = 1
 const TRANSACTION_STATE_NOT_EXISTS = 2
 
   export default {
-    name: 'Home',
+    name: 'Send',
 
     data () {
       return {

@@ -28,7 +28,7 @@
 
 <script>
   export default {
-    name: 'NodesInfo',
+    name: 'Home',
     data () {
       return {
         
