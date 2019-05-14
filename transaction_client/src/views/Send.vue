@@ -133,7 +133,6 @@ const TRANSACTION_STATE_NOT_EXISTS = 2
     created () {
       this.getFromHistory()
       this.getToHistory()
-      this.getLastestBlock()
     },
 
     methods:

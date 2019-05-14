@@ -21,8 +21,7 @@
 						v-model="beginTime"
 						align="right"
 						type="datetime"
-						placeholder="选择日期"
-						:picker-options="pickerOptions">
+						placeholder="选择日期">
 					</el-date-picker>
 					
 					<span style="width: 100px;flex-shrink: 0;">结束时间</span>
@@ -31,8 +30,7 @@
 						v-model="endTime"
 						align="right"
 						type="datetime"
-						placeholder="选择日期"
-						:picker-options="pickerOptions">
+						placeholder="选择日期">
 					</el-date-picker>
 					
   			</div>
@@ -49,7 +47,7 @@
 	      <el-table-column
 	        prop="id"
 	        label="id"
-	        width="180">
+	        width="50">
 	      </el-table-column>
 	      <el-table-column
 	        prop="nonce"
@@ -66,13 +64,12 @@
 	      </el-table-column>
 	      <el-table-column
 	        prop="to"
-	        label="接收账户"
-	        width="180">
+	        label="接收账户">
 	      </el-table-column>
 	      <el-table-column
 	        prop="value"
 	        label="金额"
-	        width="180">
+	        width="50">
 	      </el-table-column>
 	      <el-table-column
 	        prop="createdAt"
@@ -114,8 +111,7 @@ import axios from '../net/axios.js'
 
 	  methods:
 	  {
-	  	search: function()
-	  	{
+	  	search: function() {
 	  		axios.get('/getTransactions', {
 	  			url: this.currentNode.url,
 	  			hash: this.hash,
@@ -127,13 +123,11 @@ import axios from '../net/axios.js'
 					if (response.code === 0) {
             this.transactions = response.data
           } else {
-            Vue.prototype.$notify.error({
+            this.$notify.error({
               title: 'getTransactions',
               message: response.msg
             });
           }
-
-          resolve()
         })
 	  	}
 	  }
