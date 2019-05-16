@@ -1,6 +1,6 @@
-const a = [1, 2, 3, 4, 6, 8, 9]
-
-for(let n of a)
-{
-	console.log(n)
-}
+const fs = require('fs');
+const path = require('path')
+fs.readdir('./consensus_server/logs/consensus_log', (err, files) => {
+	for(let file of files)
+		console.log(path.join('./consensus_server/logs/consensus_log', file))
+});

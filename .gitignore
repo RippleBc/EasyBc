@@ -7,5 +7,6 @@ monitor_server/logs/*
 transaction_server/data/*
 transaction_server/logs/*
 consensus_server/data/*
+consensus_server/logSwitcher/data*
 consensus_server/logs/*
 block_chain_data/*
