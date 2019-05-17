@@ -52,13 +52,15 @@ process.on("uncaughtException", function(err) {
     processor.run();
 
     /************************************** query **************************************/
-    const query_process = fork(path.join(__dirname, './query/index.js'));
+    const client_parser_process = fork(path.join(__dirname, './client_parser/index.js'));
+    const log_parser_process = fork(path.join(__dirname, './log_parser/index.js'));
 
     process.on('exit', (code) => {
-        query_process.kill('endSuccess');
+        client_parser_process.kill();
+        log_parser_process.kill();
     });
 
-    query_process.on('message', ({cmd, data}) => {
+    client_parser_process.on('message', ({cmd, data}) => {
         switch(cmd)
         {
             case 'processTransaction':
@@ -73,23 +75,52 @@ process.on("uncaughtException", function(err) {
         }
     });
 
-    query_process.on('error', err => {
-        logger.fatal(`query_process, throw exception, ${err}`);
+    client_parser_process.on('error', err => {
+        logger.fatal(`client_parser_process, throw exception, ${err}`);
 
         process.exit(1);
     });
 
-    query_process.on('exit', (code, signal) => {
-        if(signal && signal === 'endSuccess')
+    client_parser_process.on('exit', (code, signal) => {
+        if(signal && signal === 'SIGTERM')
         {
-            logger.trace('query_process, exited success');
+            return logger.trace('client_parser_process, exited success');
         }
         if(code && code === 0)
         {
-            logger.trace('query_process, exited success');
+            return logger.trace('client_parser_process, exited success');
         }
 
-        logger.fatal('query_process, exited abnormal');
+        logger.fatal('client_parser_process, exited abnormal');
+        process.exit(1);
     });
 
+    //
+    log_parser_process.send({
+        cmd: 'run',
+        data: {
+            dir: path.join(__dirname, './logs'),
+            logsBufferMaxSize: 10
+        } 
+    })
+
+    log_parser_process.on('error', err => {
+        logger.fatal(`log_parser_process, throw exception, ${err}`);
+
+        process.exit(1);
+    });
+
+    log_parser_process.on('exit', (code, signal) => {
+        if(signal && signal === 'SIGTERM')
+        {
+            return logger.trace('log_parser_process, exited success');
+        }
+        if(code && code === 0)
+        {
+            return logger.trace('log_parser_process, exited success');
+        }
+
+        logger.fatal('log_parser_process, exited abnormal');
+        process.exit(1);
+    });
 })();

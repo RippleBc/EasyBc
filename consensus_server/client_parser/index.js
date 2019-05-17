@@ -6,10 +6,10 @@ const { host, port } = require("../config.json").http;
 const Mysql = require("../mysql");
 
 const log4js= require("../logConfig");
-const logger = log4js.getLogger("query");
+const logger = log4js.getLogger("clientParse");
 
 process[Symbol.for("loggerMysql")] = log4js.getLogger("mysql");
-process[Symbol.for("loggerQuery")] = logger;
+process[Symbol.for("loggerClientParse")] = logger;
 process[Symbol.for("mysql")] = new Mysql();
 
 // express
@@ -35,6 +35,6 @@ log4js.useLogger(app, logger);
 
 //
 const server = app.listen(port, host, function() {
-    logger.info(`query server listening at http://${host}:${port}`);
+    logger.info(`clientParse server listening at http://${host}:${port}`);
 });
 

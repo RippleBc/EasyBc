@@ -36,10 +36,16 @@ log4js.configure({
             pattern: "update-yyyy-MM-dd.log",
             alwaysIncludePattern: true
         },
-        query: {
+        clientParse: {
             type: "dateFile",
-            filename: "consensus_server/logs/query_log/",
-            pattern: "query-yyyy-MM-dd.log",
+            filename: "consensus_server/logs/clientParse_log/",
+            pattern: "clientParse-yyyy-MM-dd.log",
+            alwaysIncludePattern: true
+        },
+        logParse: {
+            type: "dateFile",
+            filename: "consensus_server/logs/logParse_log/",
+            pattern: "logParse-yyyy-MM-dd.log",
             alwaysIncludePattern: true
         }
     },
@@ -49,7 +55,8 @@ log4js.configure({
         net: { appenders: ["stdout", "net"], level: "warn" },
         mysql: { appenders: ["stdout", "mysql"], level: "warn" },
         update: { appenders: ["stdout", "update"], level: "trace" },
-        query: { appenders: ["stdout", "query"], level: "warn" }
+        clientParse: { appenders: ["stdout", "clientParse"], level: "warn" },
+        logParse: { appenders: ["stdout", "logParse"], level: "warn" }
     }
 })
  

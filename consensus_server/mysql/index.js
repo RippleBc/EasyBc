@@ -23,7 +23,7 @@ class Mysql
       port: mysqlConfig.port,
       dialect: 'mysql',
       pool: {
-        max: 5,
+        max: 2,
         min: 0,
         acquire: 30000,
         idle: 10000
@@ -329,7 +329,14 @@ class Mysql
 
     for(let log of logs)
     {
-      await this.Log.create({...log});
+      try
+      {
+        await this.Log.create({...log});
+      }
+      catch(e)
+      {
+        await Promise.reject(`time: ${log.time}, type: ${log.type}, title: ${log.title}, data: ${log.data}, ${e}`)
+      }
     }
   }
 
