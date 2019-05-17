@@ -109,7 +109,7 @@ const run = async function(dir, logsBufferMaxSize)
 		  	const [title] = line.match(/[a-zA-Z\d]+(?=\s)/) || [];
 		  	const data = line.substring(line.search(/\s-\s/) + 3);
 
-		  	if(typeof time === 'number' && typeof type === 'string' && typeof title === 'string' && typeof data === 'string')
+		  	if(time !== NaN && typeof time === 'number' && typeof type === 'string' && typeof title === 'string' && typeof data === 'string')
 		  	{
 		  		logs.push({time, type, title, data});
 		  	}
