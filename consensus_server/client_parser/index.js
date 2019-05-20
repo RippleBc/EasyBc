@@ -30,9 +30,6 @@ process[Symbol.for("mysql")].init().then(() => {
 	require('./processor');
 })
 
-
-log4js.useLogger(app, logger);
-
 //
 const server = app.listen(port, host, function() {
     logger.info(`clientParse server listening at http://${host}:${port}`);

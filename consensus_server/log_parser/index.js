@@ -6,7 +6,7 @@ const Mysql = require("../mysql");
 const { getLogFile, saveLogFile, getOffset, saveOffset } = require('./db');
 const log4js= require("../logConfig");
 
-const logger = log4js.getLogger();
+const logger = log4js.getLogger("loggerClientParse");
 
 process[Symbol.for("loggerMysql")] = log4js.getLogger("mysql");
 process[Symbol.for("loggerClientParse")] = logger;
@@ -109,7 +109,7 @@ const run = async function(dir, logsBufferMaxSize)
 		  	const [title] = line.match(/[a-zA-Z\d]+(?=\s)/) || [];
 		  	const data = line.substring(line.search(/\s-\s/) + 3);
 
-		  	if(time !== NaN && typeof time === 'number' && typeof type === 'string' && typeof title === 'string' && typeof data === 'string')
+		  	if(!isNaN(time) && typeof time === 'number' && typeof type === 'string' && typeof title === 'string' && typeof data === 'string')
 		  	{
 		  		logs.push({time, type, title, data});
 		  	}
@@ -179,6 +179,7 @@ const run = async function(dir, logsBufferMaxSize)
 		}
 		else
 		{
+			index = 0;
 			files = await readDir();
 
 			continue;

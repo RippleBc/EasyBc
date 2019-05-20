@@ -1,1 +1,3 @@
-console.log(typeof NaN)
+const time = new Date('adfadf').valueOf()
+
+console.log(isNaN(time))

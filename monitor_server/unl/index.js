@@ -23,9 +23,8 @@ models.Node.findAll().then(nodes => {
 
         if(response.code !== SUCCESS)
         {
-            await Promise.reject(response.data.msg) 
+            await Promise.reject(response.msg) 
         }
-        logger.info(node.address + ', ' + response.data.cpu)
 
         await models.Cpu.create({address: node.address, consume: response.data.cpu});
         await models.Memory.create({address: node.address, consume: response.data.memory});
@@ -260,5 +259,59 @@ app.get('/nodeStatus', checkCookie, (req, res) => {
       code: PARAM_ERR,
       msg: e
     });
+  });
+});
+
+app.get('/logs', checkCookie, (req, res) => {
+  const url = req.query.url;
+  const type = req.query.type;
+  const title = req.query.title;
+  const beginTime = req.query.beginTime;
+  const endTime = req.query.endTime;
+
+  assert(typeof url === 'string', `url should be a String, now is ${typeof url}`);
+  assert(typeof type === 'string', `type should be a String, now is ${typeof type}`);
+
+  (async function() {
+    let options = {
+      method: "POST",
+      uri: `${url}/logs`,
+      body: {
+        type: type
+      },
+      json: true // Automatically stringifies the body to JSON
+    };
+
+    if(title)
+    {
+      options.body.title = title;
+    }
+    if(beginTime)
+    {
+      options.body.beginTime = beginTime;
+    }
+    if(endTime)
+    {
+      options.body.endTime = endTime;
+    }
+
+    const response = await rp(options);
+
+    if(response.code !== SUCCESS)
+    {
+        await Promise.reject(response.msg) 
+    }
+
+    return response.data;
+  })().then(results => {
+    res.json({
+      code: SUCCESS,
+      data: results
+    })
+  }).catch(e => {
+    res.json({
+      code: OTH_ERR,
+      msg: e.toString()
+    })
   });
 });

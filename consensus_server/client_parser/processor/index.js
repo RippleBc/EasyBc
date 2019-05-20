@@ -5,7 +5,7 @@ const { SUCCESS, PARAM_ERR, OTH_ERR } = require("../../../constant");
 const app =  process[Symbol.for('app')];
 const mysql = process[Symbol.for("mysql")];
 
-let processDescription = {};
+let processDescription = undefined;
 
 setInterval(() => {
 	pm2.list((err, processDescriptionList) => {
@@ -18,22 +18,32 @@ setInterval(() => {
 		{
 			if(val.name === 'consensus')
 			{
-					processDescription = val
+					return processDescription = val
 			}
 		}
+
+		processDescription = undefined;
 	});
 }, 5000);
 
 app.get('/status', (req, res) => {
+	if(processDescription)
+	{
+		return res.json({
+			code: SUCCESS,
+			data: {
+				"name": processDescription.name,
+				"pid": processDescription.pid,
+				"pm_id": processDescription.pm_id,
+				"memory": processDescription.monit ? processDescription.monit.memory : undefined,
+				"cpu": processDescription.monit ? processDescription.monit.cpu : undefined
+			}
+		})
+	}
+	
 	res.json({
-		code: SUCCESS,
-		data: {
-			"name": processDescription.name,
-			"pid": processDescription.pid,
-			"pm_id": processDescription.pm_id,
-			"memory": processDescription.monit ? processDescription.monit.memory : undefined,
-			"cpu": processDescription.monit ? processDescription.monit.cpu : undefined
-		}
+		code: OTH_ERR,
+		msg: 'can not get cpu and memory info'
 	})
 });
 
@@ -60,6 +70,4 @@ app.post('/logs', (req, res) => {
 			}
 		})
 	});
-	
-
 })

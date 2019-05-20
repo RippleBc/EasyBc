@@ -281,7 +281,8 @@ class Mysql
       where.to = to;
     }
     return await this.Transaction.findAll({
-      where: where
+      where: where,
+      order: [['id', 'DESC' ]]
     });
   }
 
@@ -368,7 +369,7 @@ class Mysql
 
     const now = new Date()
     const where = {
-      time: {
+      createdAt: {
         [Op.gt]: beginTime ? new Date(beginTime) : new Date(now - 24 * 60 * 60 * 1000),
         [Op.lt]: endTime ? new Date(endTime) : now,
       }
@@ -383,7 +384,8 @@ class Mysql
     }
     return await this.Log.findAndCountAll({
       where: where,
-      limit: 100
+      limit: 100,
+      order: [['id', 'DESC' ]]
     });
   }
 }

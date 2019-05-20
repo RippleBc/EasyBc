@@ -50,13 +50,14 @@ log4js.configure({
         }
     },
     categories: {
-        default: { appenders: ["stdout", "consensus"], level: "trace" },
-        p2p: { appenders: ["stdout", "p2p"], level: "warn" },
-        net: { appenders: ["stdout", "net"], level: "warn" },
-        mysql: { appenders: ["stdout", "mysql"], level: "warn" },
-        update: { appenders: ["stdout", "update"], level: "trace" },
-        clientParse: { appenders: ["stdout", "clientParse"], level: "warn" },
-        logParse: { appenders: ["stdout", "logParse"], level: "warn" }
+        default: { appenders: ["stdout", "consensus"], level: "info" },
+        consensus: { appenders: ["stdout", "consensus"], level: "info" },
+        p2p: { appenders: ["stdout", "p2p"], level: "info" },
+        net: { appenders: ["stdout", "net"], level: "info" },
+        mysql: { appenders: ["stdout", "mysql"], level: "info" },
+        update: { appenders: ["stdout", "update"], level: "info" },
+        clientParse: { appenders: ["stdout", "clientParse"], level: "info" },
+        logParse: { appenders: ["stdout", "logParse"], level: "info" }
     }
 })
  

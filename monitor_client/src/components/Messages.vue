@@ -2,19 +2,21 @@
     <div>
         <div class="crumbs">
             <el-breadcrumb separator="/">
-                <el-breadcrumb-item><i class="el-icon-lx-notice"></i>警告消息</el-breadcrumb-item>
+                <el-breadcrumb-item><i class="el-icon-lx-notice"></i>{{type}}</el-breadcrumb-item>
             </el-breadcrumb>
         </div>
         <div class="container">
             <el-tabs v-model="message">
-                <el-tab-pane :label="`未读消息(${unread.length})`" name="first">
-                    <el-table :data="unread" :show-header="false" style="width: 100%">
-                        <el-table-column>
+                <el-tab-pane :label="`未读消息(${logs.length})`" name="first">
+                    <el-table :data="logs" :show-header="false" style="width: 100%">
+                        <el-table-column prop="id" width="60"></el-table-column>
+                        <el-table-column prop="time" width="180"></el-table-column>
+                        <el-table-column width="120">
                             <template slot-scope="scope">
                                 <span class="message-title">{{scope.row.title}}</span>
                             </template>
                         </el-table-column>
-                        <el-table-column prop="date" width="180"></el-table-column>
+                        <el-table-column prop="data"></el-table-column>
                         <el-table-column width="120">
                             <template slot-scope="scope">
                                 <el-button size="small" @click="handleRead(scope.$index)">标为已读</el-button>
@@ -65,7 +67,6 @@
                         </div>
                     </template>
                 </el-tab-pane>
-                
             </el-tabs>
         </div>
     </div>
@@ -74,16 +75,10 @@
 <script>
     export default {
         name: 'messages',
+        props: ['type', 'logs'],
         data() {
             return {
                 message: 'first',
-                unread: [{
-                    date: '201-03-19 20:00:00',
-                    title: '【系统通知】内网服务器内存达到阀值',
-                },{
-                    date: '2019-03-19 21:00:00',
-                    title: '【系统通知】蟠桃会服务器CPU使用达到阀值',
-                }],
                 read: [{
                     date: '2019-03-19 20:00:00',
                     title: '【系统通知】内网服务器内存达到阀值'
@@ -99,7 +94,7 @@
         },
         methods: {
             handleRead(index) {
-                const item = this.unread.splice(index, 1);
+                const item = this.logs.splice(index, 1);
                 console.log(item);
                 this.read = item.concat(this.read);
             },
@@ -118,7 +113,7 @@
         },
         computed: {
             unreadNum(){
-                return this.unread.length;
+                return this.logs.length;
             }
         }
     }

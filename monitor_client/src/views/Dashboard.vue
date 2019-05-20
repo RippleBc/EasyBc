@@ -17,41 +17,55 @@
         <el-row :gutter="20">
             <el-col>
                 <el-row :gutter="20" class="mgb20">
-                    <el-col :span="12">
-                        <el-card shadow="hover" :body-style="{padding: '0px'}">
-                            <div class="grid-content grid-con-2">
+                    <el-col :span="6">
+                        <el-card shadow="hover" :body-style="{padding: '0px'}" style="cursor:pointer;">
+                            <div class="grid-content grid-con-1" @click="type='INFO'">
                                 <i class="el-icon-lx-notice grid-con-icon"></i>
                                 <div class="grid-cont-right">
-                                    <div class="grid-num">31</div>
+                                    <div class="grid-num">{{infoLogsCount}}</div>
                                     <div>系统消息</div>
                                 </div>
                             </div>
                         </el-card>
                     </el-col>
-                    <el-col :span="12">
-                        <el-card shadow="hover" :body-style="{padding: '0px'}">
-                            <div class="grid-content grid-con-3">
+                    <el-col :span="6">
+                        <el-card shadow="hover" :body-style="{padding: '0px'}" style="cursor:pointer;">
+                            <div class="grid-content grid-con-2" @click="type='WARNING'">
                                 <i class="el-icon-lx-notice grid-con-icon"></i>
                                 <div class="grid-cont-right">
-                                    <div class="grid-num">50</div>
+                                    <div class="grid-num">{{warnLogsCount}}</div>
+                                    <div>警告消息</div>
+                                </div>
+                            </div>
+                        </el-card>
+                    </el-col>
+                    <el-col :span="6">
+                        <el-card shadow="hover" :body-style="{padding: '0px'}" style="cursor:pointer;">
+                            <div class="grid-content grid-con-3" @click="type='ERROR'">
+                                <i class="el-icon-lx-notice grid-con-icon"></i>
+                                <div class="grid-cont-right">
+                                    <div class="grid-num">{{errorLogsCount}}</div>
                                     <div>错误提醒</div>
                                 </div>
                             </div>
                         </el-card>
                     </el-col>
-                    <el-col :span="12">
-                        <el-card shadow="hover" :body-style="{padding: '0px'}">
-                            <div class="grid-content grid-con-3">
+                    <el-col :span="6">
+                        <el-card shadow="hover" :body-style="{padding: '0px'}" style="cursor:pointer;">
+                            <div class="grid-content grid-con-4" @click="type='FATAL'">
                                 <i class="el-icon-lx-notice grid-con-icon"></i>
                                 <div class="grid-cont-right">
-                                    <div class="grid-num">50</div>
+                                    <div class="grid-num">{{fatalLogsCount}}</div>
                                     <div>报警提醒</div>
                                 </div>
                             </div>
                         </el-card>
                     </el-col>
                 </el-row>
-                <v-messages></v-messages>
+                <v-messages :type="type" :logs="infoLogs" v-show="type === 'INFO'"></v-messages>
+                <v-messages :type="type" :logs="warnLogs" v-show="type === 'WARNING'"></v-messages>
+                <v-messages :type="type" :logs="errorLogs" v-show="type === 'ERROR'"></v-messages>
+                <v-messages :type="type" :logs="fatalLogs" v-show="type === 'FATAL'"></v-messages>
             </el-col>
         </el-row>
     </div>
@@ -66,7 +80,16 @@
         name: 'dashboard',
         data() {
             return {
-                currentNode: undefined
+                type: 'INFO',
+                infoLogsCount: 0,
+                infoLogs: [],
+                warnLogsCount: 0,
+                warnLogs: [],
+                errorLogsCount: 0,
+                errorLogs: [],
+                fatalLogsCount: 0,
+                fatalLogs: [],
+                currentNode: undefined,
             }
         },
         computed: {
@@ -89,6 +112,39 @@
                 const nodeIndex = this.$route.path.split('/')[2];
                 const nodeInfo = this.unl.find(n => nodeIndex == n.id)
                 this.currentNode = nodeInfo;
+            },
+            getLogs(type)
+            {
+                this.$axios.get('/logs', {
+                    url: `${this.currentNode.host}:${this.currentNode.port}`,
+                    type: type
+                }).then(res => {
+                    if(res.code !== 0)
+                    {
+                        return this.$message.error(`${type}信息加载错误, ${res.msg}`);
+                    }
+                    if(type === 'INFO')
+                    {
+                        this.infoLogsCount = res.data.count;
+                        this.infoLogs = res.data.logs;
+                    }
+                    if(type === 'WARNING')
+                    {
+                        this.warnLogsCount = res.data.count;
+                        this.warnLogs = res.data.logs;
+                    }
+                    if(type === 'ERROR')
+                    {
+                        this.errorLogsCount = res.data.count;
+                        this.errorLogs = res.data.logs;
+                    }
+                    if(type === 'FATAL')
+                    {
+                        this.fatalLogsCount = res.data.count;
+                        this.fatalLogs = res.data.logs;
+                    }
+                })
+
             }
         },
 
@@ -97,9 +153,10 @@
 
             this.$store.commit('switchNavType', 'node');
 
-            this.$axios.get('/logs', {
-                url: `${node.host}:${node.port}`
-            }).then(res => { })
+            this.getLogs('INFO')
+            this.getLogs('WARNING')
+            this.getLogs('ERROR')
+            this.getLogs('FATAL')
         },
 
         activated(){
@@ -166,6 +223,14 @@
 
     .grid-con-3 .grid-num {
         color: rgb(242, 94, 67);
+    }
+
+    .grid-con-4 .grid-con-icon {
+        background: rgb(128, 0, 128);
+    }
+
+    .grid-con-4 .grid-num {
+        color: rgb(128, 0, 128);
     }
 
     .user-info {
