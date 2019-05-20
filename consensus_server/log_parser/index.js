@@ -49,9 +49,7 @@ const readDir = async function(dir)
 				reject(err);
 			}
 
-			files = files.sort((a, b) => {
-				return a > b
-			});
+			files.sort();
 
 			logger.trace(`readDir ${dir}, files: ${files}`)
 
