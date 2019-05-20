@@ -27,7 +27,7 @@ process[Symbol.for('app')] = app;
 
 process[Symbol.for("mysql")].init().then(() => {
 	require('./block_chain');
-	require('./resource');
+	require('./processor');
 })
 
 

@@ -92,13 +92,12 @@
             {
                 const nodeInfoSet = [];
 
-                (async () => {
-                    for(let node of this.$store.state.unl)
-                    {
-                        let res = await this.$axios.get('/blocks', {
-                            url: `${node.host}:${node.port}`
-                        });
-
+                
+                for(let node of this.$store.state.unl)
+                {
+                    this.$axios.get('/blocks', {
+                        url: `${node.host}:${node.port}`
+                    }).then(res => {
                         for(let index of res.data.keys())
                         {
                             res.data[index].show = false;
@@ -113,12 +112,12 @@
                         }, ...{blocks: res.data}}
 
                         nodeInfoSet.push(nodeInfo);
-                    }
-                })().then(() => {
-                    this.nodes = nodeInfoSet;
-                }).catch(err => {
-                    this.$message.error(err);
-                });
+
+                        this.nodes = nodeInfoSet;
+                    });
+                }
+            
+                
             }
         },
         created() {

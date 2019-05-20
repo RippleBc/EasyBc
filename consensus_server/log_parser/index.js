@@ -29,7 +29,7 @@ process.on('message', ({cmd, data}) => {
 				for(let logdir of logDirs)
 				{
 					run(path.join(dir, logdir), logsBufferMaxSize).catch(e => {
-
+						logger.fatal(`logParser message, throw exception, ${e}`);
 						process.exit(1);
 					});;
 				}

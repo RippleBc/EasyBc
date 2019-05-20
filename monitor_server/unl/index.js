@@ -51,6 +51,7 @@ app.get('/nodes', checkCookie, (req, res) => {
 
 app.post('/addNode', checkCookie, (req, res) => {
 	const name = req.body.name;
+  const address = req.body.address;
 	const host = req.body.host;
 	const port = req.body.port;
 	const remarks = req.body.remarks;
@@ -60,6 +61,14 @@ app.post('/addNode', checkCookie, (req, res) => {
     return res.json({
       code: OTH_ERR,
       msg: 'invalid name'
+    })
+  }
+
+  if(!!!address)
+  {
+    return res.json({
+      code: OTH_ERR,
+      msg: 'invalid address'
     })
   }
 
@@ -89,9 +98,11 @@ app.post('/addNode', checkCookie, (req, res) => {
 
 	models.Node.findOrCreate({
 		where: {
-			name: name
+			address: address
 		},
 		defaults: {
+      name,
+      address,
 			host,
 			port,
 			remarks
@@ -101,7 +112,7 @@ app.post('/addNode', checkCookie, (req, res) => {
     {
       return res.json({
         code: OTH_ERR,
-        msg: `node ${node.name} has existed`
+        msg: `node ${node.address} has existed`
       });
     }
     

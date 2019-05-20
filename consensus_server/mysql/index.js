@@ -381,7 +381,7 @@ class Mysql
     {
       where.title = title;
     }
-    return await this.Log.findAll({
+    return await this.Log.findAndCountAll({
       where: where,
       limit: 100
     });

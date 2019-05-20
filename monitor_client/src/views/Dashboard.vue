@@ -34,6 +34,17 @@
                                 <i class="el-icon-lx-notice grid-con-icon"></i>
                                 <div class="grid-cont-right">
                                     <div class="grid-num">50</div>
+                                    <div>错误提醒</div>
+                                </div>
+                            </div>
+                        </el-card>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-card shadow="hover" :body-style="{padding: '0px'}">
+                            <div class="grid-content grid-con-3">
+                                <i class="el-icon-lx-notice grid-con-icon"></i>
+                                <div class="grid-cont-right">
+                                    <div class="grid-num">50</div>
                                     <div>报警提醒</div>
                                 </div>
                             </div>
@@ -85,6 +96,10 @@
             this.getCurrentNode();
 
             this.$store.commit('switchNavType', 'node');
+
+            this.$axios.get('/logs', {
+                url: `${node.host}:${node.port}`
+            }).then(res => { })
         },
 
         activated(){
