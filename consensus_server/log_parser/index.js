@@ -6,10 +6,10 @@ const Mysql = require("../mysql");
 const { getLogFile, saveLogFile, getOffset, saveOffset } = require('./db');
 const log4js= require("../logConfig");
 
-const logger = log4js.getLogger("loggerClientParse");
+const logger = log4js.getLogger("logParse");
 
 process[Symbol.for("loggerMysql")] = log4js.getLogger("mysql");
-process[Symbol.for("loggerClientParse")] = logger;
+process[Symbol.for("loggerLogParse")] = logger;
 
 const mysql = new Mysql();
 
