@@ -56,8 +56,8 @@ log4js.configure({
         net: { appenders: ["stdout", "net"], level: "info" },
         mysql: { appenders: ["stdout", "mysql"], level: "info" },
         update: { appenders: ["stdout", "update"], level: "info" },
-        clientParse: { appenders: ["stdout", "clientParse"], level: "trace" },
-        logParse: { appenders: ["stdout", "logParse"], level: "trace" }
+        clientParse: { appenders: ["stdout", "clientParse"], level: "info" },
+        logParse: { appenders: ["stdout", "logParse"], level: "info" }
     }
 })
  
