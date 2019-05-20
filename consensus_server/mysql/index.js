@@ -22,6 +22,7 @@ class Mysql
       host: mysqlConfig.host,
       port: mysqlConfig.port,
       dialect: 'mysql',
+      logging: false,
       pool: {
         max: 2,
         min: 0,

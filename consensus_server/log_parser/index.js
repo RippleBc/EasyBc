@@ -94,6 +94,9 @@ const run = async function(dir, logsBufferMaxSize)
 			});
 
 			rl.on('line', line => {
+
+				rl.pause();
+
 				if(line.length <= 0)
 				{
 					logger.trace('logParser run, there is no new logs');
@@ -121,6 +124,8 @@ const run = async function(dir, logsBufferMaxSize)
 		  		}).catch(e => {
 		  			logger.fatal(`logParser run, throw exception, ${e}`)
 		  			process.exit(1)
+		  		}).finally(() => {
+		  			rl.resume();
 		  		})
 
 		  		counter = 0;
