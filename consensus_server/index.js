@@ -52,17 +52,12 @@ process.on("uncaughtException", function(err) {
     processor.run();
 
     /* sub process init */
-    // runLogParser();
+    runLogParser();
     runClientParser();
-
-    process.on('exit', (code) => {
-        // client_parser_process.kill();
-        // log_parser_process.kill();
-    });
 })();
 
 const runClientParser = function() {
-    var client_parser_process = fork(path.join(__dirname, './client_parser/index.js'));
+    const client_parser_process = fork(path.join(__dirname, './client_parser/index.js'));
 
     const processor = process[Symbol.for('processor')];
 
@@ -104,7 +99,7 @@ const runClientParser = function() {
 }
 
 const runLogParser = function() {
-    var log_parser_process = fork(path.join(__dirname, './log_parser/index.js'));
+    const log_parser_process = fork(path.join(__dirname, './log_parser/index.js'));
     
     log_parser_process.send({
         cmd: 'run',
