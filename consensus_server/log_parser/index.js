@@ -53,6 +53,8 @@ const readDir = async function(dir)
 				return a > b
 			});
 
+			logger.trace(`readDir ${dir}, files: ${files}`)
+
 			resolve(files)
 		});
 	})
@@ -145,6 +147,7 @@ const run = async function(dir, logsBufferMaxSize)
 				{
 					// del log file
 					fs.unlinkSync(path.join(dir, files[index]))
+					logger.trace(`logParser run, delete log file ${path.join(dir, files[index])} success`)
 
 					resolve('next');
 				}
@@ -158,6 +161,7 @@ const run = async function(dir, logsBufferMaxSize)
 				{
 					// del log file
 					fs.unlinkSync(path.join(dir, files[index]))
+					logger.trace(`logParser run, delete log file ${path.join(dir, files[index])} success`)
 
 					resolve('refresh');
 				}
