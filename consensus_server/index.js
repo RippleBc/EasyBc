@@ -52,12 +52,12 @@ process.on("uncaughtException", function(err) {
     processor.run();
 
     /* sub process init */
-    runLogParser();
+    // runLogParser();
     runClientParser();
 
     process.on('exit', (code) => {
         client_parser_process.kill();
-        log_parser_process.kill();
+        // log_parser_process.kill();
     });
 })();
 
