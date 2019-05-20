@@ -51,14 +51,18 @@ process.on("uncaughtException", function(err) {
 
     processor.run();
 
-    /************************************** query **************************************/
-    const client_parser_process = fork(path.join(__dirname, './client_parser/index.js'));
-    const log_parser_process = fork(path.join(__dirname, './log_parser/index.js'));
+    /* sub process init */
+    runLogParser();
+    runClientParser();
 
     process.on('exit', (code) => {
         client_parser_process.kill();
         log_parser_process.kill();
     });
+})();
+
+const runClientParser = function() {
+    var client_parser_process = fork(path.join(__dirname, './client_parser/index.js'));
 
     client_parser_process.on('message', ({cmd, data}) => {
         switch(cmd)
@@ -78,7 +82,7 @@ process.on("uncaughtException", function(err) {
     client_parser_process.on('error', err => {
         logger.fatal(`client_parser_process, throw exception, ${err}`);
 
-        process.exit(1);
+        runClientParser();
     });
 
     client_parser_process.on('exit', (code, signal) => {
@@ -92,10 +96,14 @@ process.on("uncaughtException", function(err) {
         }
 
         logger.fatal('client_parser_process, exited abnormal');
-        process.exit(1);
+        
+        runClientParser();
     });
+}
 
-    //
+const runLogParser = function() {
+    var log_parser_process = fork(path.join(__dirname, './log_parser/index.js'));
+    
     log_parser_process.send({
         cmd: 'run',
         data: {
@@ -107,7 +115,7 @@ process.on("uncaughtException", function(err) {
     log_parser_process.on('error', err => {
         logger.fatal(`log_parser_process, throw exception, ${err}`);
 
-        process.exit(1);
+        runLogParser()
     });
 
     log_parser_process.on('exit', (code, signal) => {
@@ -121,6 +129,7 @@ process.on("uncaughtException", function(err) {
         }
 
         logger.fatal('log_parser_process, exited abnormal');
-        process.exit(1);
+        
+        runLogParser()
     });
-})();
+}
