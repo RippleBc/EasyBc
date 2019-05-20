@@ -56,13 +56,15 @@ process.on("uncaughtException", function(err) {
     runClientParser();
 
     process.on('exit', (code) => {
-        client_parser_process.kill();
+        // client_parser_process.kill();
         // log_parser_process.kill();
     });
 })();
 
 const runClientParser = function() {
     var client_parser_process = fork(path.join(__dirname, './client_parser/index.js'));
+
+    const processor = process[Symbol.for('processor')];
 
     client_parser_process.on('message', ({cmd, data}) => {
         switch(cmd)
