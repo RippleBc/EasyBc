@@ -6,10 +6,10 @@ monitor_server/data/*
 monitor_server/logs/*
 transaction_server/data/*
 transaction_server/logs/*
-consensus_server/data/*
-consensus_server/logs/*
+consensus_full_server/data/*
+consensus_full_server/logs/*
+consensus_light_server/data/*
+consensus_light_server/logs/*
 log_parser/data/*
 log_parser/logs/*
-light_consensus_server/data/*
-light_consensus_server/logs/*
 block_chain_data/*
