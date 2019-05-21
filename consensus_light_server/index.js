@@ -2,14 +2,12 @@ const process = require("process");
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require('cors');
-const { host, port } = require("../config.json").http;
-const Mysql = require("../mysql");
+const { host, port } = require("./config.json");
+const Mysql = require("./mysql");
 
-const log4js= require("../logConfig");
+const log4js= require("./logConfig");
 const logger = log4js.getLogger("clientParse");
 
-process[Symbol.for("loggerMysql")] = log4js.getLogger("mysql");
-process[Symbol.for("loggerClientParse")] = logger;
 process[Symbol.for("mysql")] = new Mysql();
 
 // express

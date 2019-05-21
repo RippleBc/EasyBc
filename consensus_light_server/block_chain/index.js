@@ -1,7 +1,10 @@
 const dataWrapper = require("./dataWrapper");
-const { SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS } = require("../../../constant");
+const { SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS } = require("../../constant");
 const process = require('process');
 const app = process[Symbol.for('app')];
+const Transaction = require("../../depends/transaction");
+
+const mysql = process[Symbol.for("mysql")];
 
 app.post("/sendTransaction", function(req, res) {
     if(!req.body.tx) {
@@ -12,25 +15,36 @@ app.post("/sendTransaction", function(req, res) {
         return;
     }
 
-    const result = process.send({
-        cmd: 'processTransaction',
-        data: req.body.tx
-    });
+    let transaction;
 
-    if(result === true)
-    {
+    (async () => {
+        try
+        {
+            transaction = new Transaction(Buffer.from(req.body.tx, "hex"));
+
+            let {state, msg} = transaction.validate();
+            if(!state)
+            {
+                return Promise.reject(`sendTransaction, transaction invalid failed, ${msg}`);
+            }
+        }
+        catch(e)
+        {
+            return Promise.reject(`sendTransaction, new Transaction() failed, ${e}`)
+        }
+
+        await mysql.saveRawTransaction(transaction.hash().toString('hex'), req.body.tx);
+    })().then(() => {
         res.json({
             code: SUCCESS,
             msg: ''
         });
-    }
-    else
-    {
+    }).catch(e => {
         res.json({
             code: OTH_ERR,
-            msg: 'system is busy, please try again after a few seconds'
+            msg: `sendTransaction, throw exception, ${e}`
         });
-    }
+    });
 });
 
 
@@ -69,7 +83,7 @@ app.post("/getTransactionState", function(req, res) {
         });
     }
 
-    dataWrapper.getTrasaction(req.body.hash).then(transaction => {
+    mysql.getTransaction(req.body.hash).then(transaction => {
         if(!transaction)
         {
             return res.json({
@@ -88,7 +102,7 @@ app.post("/getTransactionState", function(req, res) {
 });
 
 app.post("/getTransactions", function(req, res) {
-    dataWrapper.getTransactions({ 
+    mysql.getTransactions({ 
         hash: req.body.hash, 
         from: req.body.from, 
         to: req.body.to, 
@@ -121,7 +135,7 @@ app.post("/getBlockByNumber", function(req, res) {
         });
     }
 
-    dataWrapper.getBlockByNumber(req.body.number).then(block => {
+    mysql.getBlockByNumber(Buffer.from(req.body.number, 'hex')).then(block => {
         if(block)
         {
             return res.json({
@@ -155,6 +169,5 @@ app.post("/getLastestBlock", function(req, res) {
                 msg: ""
             });
         }
-        
     });
 });

@@ -9,11 +9,6 @@
 			"address": "ea3ba30a7e81d92ad8aa2e359c5d8f297fc0fb1"
 		}
 	],
-	"http":
-	{
-		"host": "0.0.0.0",
-		"port": 8081
-	},
 	"tcp":
 	{
 		"host": "0.0.0.0",

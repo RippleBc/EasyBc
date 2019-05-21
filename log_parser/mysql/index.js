@@ -50,54 +50,6 @@ class Mysql
       }
     }
   }
-
-  /**
-   * @param {Object}
-   *  @prop {String} type
-   *  @prop {String} title
-   *  @prop {Number} beginTime
-   *  @prop {Number} endTime
-   */
-  async getLogs({type, title, beginTime, endTime})
-  {
-    if(type)
-    {
-      assert(typeof type === 'string', `Mysql getLogs, type should be an String, now is ${typeof type}`);
-    }
-    if(title)
-    {
-      assert(typeof title === 'string', `Mysql getLogs, title should be an String, now is ${typeof title}`);
-    }
-    if(beginTime)
-    {
-      assert(typeof beginTime === 'number', `Mysql getLogs, beginTime should be an Number, now is ${typeof beginTime}`);
-    }
-    if(endTime)
-    {
-      assert(typeof endTime === 'number', `Mysql getLogs, endTime should be an Number, now is ${typeof endTime}`);
-    }
-
-    const now = new Date()
-    const where = {
-      createdAt: {
-        [Op.gt]: beginTime ? new Date(beginTime) : new Date(now - 24 * 60 * 60 * 1000),
-        [Op.lt]: endTime ? new Date(endTime) : now,
-      }
-    };
-    if(type)
-    {
-      where.type = type;
-    }
-    if(title)
-    {
-      where.title = title;
-    }
-    return await this.Log.findAndCountAll({
-      where: where,
-      limit: 100,
-      order: [['id', 'DESC' ]]
-    });
-  }
 }
 
 module.exports = Mysql;

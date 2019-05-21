@@ -8,6 +8,7 @@ const assert = require("assert");
 const accountModelConfig = require('./account');
 const blockModelConfig = require('./block');
 const transactionModelConfig = require('./transaction');
+const rawTransactionModelConfig = require('./rawTransaction');
 const logModelConfig = require('./log');
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
@@ -37,6 +38,8 @@ class Mysql
     this.Account = this.sequelize.define(...accountModelConfig);
     this.Block = this.sequelize.define(...blockModelConfig);
     this.Transaction = this.sequelize.define(...transactionModelConfig);
+    this.Log = this.sequelize.define(...logModelConfig);
+    this.RawTransaction = this.sequelize.define(...rawTransactionModelConfig);
 
     await this.sequelize.authenticate();
     await this.sequelize.sync();
@@ -122,20 +125,6 @@ class Mysql
   }
 
   /**
-   * @param {Block} block
-   */
-  async saveBlock(block)
-  {
-    assert(block instanceof Block, `Mysql saveBlock, block should be an Block Object, now is ${typeof block}`);
-
-    await this.Block.create({
-      number: block.header.number.toString('hex'),
-      hash: block.hash().toString('hex'),
-      data: block.serialize().toString('hex')
-    })
-  }
-
-  /**
    * @param number {String}
    * @param stateRoot {String}
    * @param address {String}
@@ -168,44 +157,6 @@ class Mysql
     if(account)
     {
       return new Account(Buffer.from(account.data, 'hex'))
-    }
-  }
-
-  /**
-   * @param {Buffer} number
-   * @param {Buffer} stateRoot
-   * @param {Buffer} address
-   * @param {Buffer} account
-   */
-  async saveAccount(number, stateRoot, address, account)
-  {
-    assert(Buffer.isBuffer(number), `Mysql saveAccount, number should be an Buffer, now is ${typeof number}`);
-    assert(Buffer.isBuffer(stateRoot), `Mysql saveAccount, stateRoot should be an Buffer, now is ${typeof stateRoot}`);
-    assert(Buffer.isBuffer(address), `Mysql saveAccount, address should be an Buffer, now is ${typeof address}`);
-    assert(Buffer.isBuffer(account), `Mysql saveAccount, account should be an Buffer, now is ${typeof account}`);
-
-    await this.Account.create({
-      number: number.toString('hex'),
-      address: address.toString('hex'),
-      stateRoot: stateRoot.toString('hex'),
-      data: account.toString('hex')
-    })
-  }
-
-  /**
-   * @param {Buffer} number
-   * @param {Buffer} stateRoot
-   * @param {Array} accounts
-   */
-  async saveAccounts(number, stateRoot, accounts)
-  {
-    assert(Buffer.isBuffer(number), `Mysql saveAccounts, number should be an Buffer, now is ${typeof number}`);
-    assert(Buffer.isBuffer(stateRoot), `Mysql saveAccounts, stateRoot should be an Buffer, now is ${typeof stateRoot}`);
-    assert(Array.isArray(accounts), `Mysql saveAccounts, accounts should be an Array, now is ${typeof accounts}`);
-
-    for(let i = 0; i < accounts.length; i += 2)
-    {
-      await this.saveAccount(number, stateRoot, accounts[i], accounts[i + 1]);
     }
   }
 
@@ -287,38 +238,66 @@ class Mysql
   }
 
   /**
-   * @param {Buffer} number
-   * @param {Transaction} transaction
+   * @param {String} hash
+   * @param {String} tx
    */
-  async saveTransaction(number, transaction)
+  async saveRawTransaction(hash, tx)
   {
-    assert(Buffer.isBuffer(number), `Mysql saveTransaction, number should be an Buffer, now is ${typeof number}`);
-    assert(transaction instanceof Transaction, `Mysql saveTransaction, transaction should be an Transaction Object, now is ${typeof transaction}`);
+    assert(typeof hash === 'string', `Mysql saveRawTransaction, hash should be a String, now is ${typeof hash}`)
+    assert(typeof tx === 'string', `Mysql saveRawTransaction, tx should be a String, now is ${typeof tx}`)
 
-    await this.Transaction.create({
-      hash: transaction.hash().toString('hex'),
-      number: number.toString('hex'),
-      nonce: transaction.nonce.toString('hex'),
-      from: transaction.from.toString('hex'),
-      to: transaction.to.toString('hex'),
-      value: transaction.value.toString('hex'),
-      data: transaction.data.toString('hex')
+    await this.RawTransaction.create({
+      hash: hash,
+      data: tx
     })
   }
 
   /**
-   * @param {Buffer} number
-   * @param {Array/Transaction} transactions
+   * @param {Object}
+   *  @prop {String} type
+   *  @prop {String} title
+   *  @prop {Number} beginTime
+   *  @prop {Number} endTime
    */
-  async saveTransactions(number, transactions)
+  async getLogs({type, title, beginTime, endTime})
   {
-    assert(Buffer.isBuffer(number), `Mysql saveTransactions, number should be an Buffer, now is ${typeof number}`);
-    assert(Array.isArray(transactions), `Mysql saveTransactions, transactions should be an Array, now is ${typeof transactions}`);
-
-    for(let i = 0; i < transactions.length; i++)
+    if(type)
     {
-      await this.saveTransaction(number, transactions[i]);
+      assert(typeof type === 'string', `Mysql getLogs, type should be an String, now is ${typeof type}`);
     }
+    if(title)
+    {
+      assert(typeof title === 'string', `Mysql getLogs, title should be an String, now is ${typeof title}`);
+    }
+    if(beginTime)
+    {
+      assert(typeof beginTime === 'number', `Mysql getLogs, beginTime should be an Number, now is ${typeof beginTime}`);
+    }
+    if(endTime)
+    {
+      assert(typeof endTime === 'number', `Mysql getLogs, endTime should be an Number, now is ${typeof endTime}`);
+    }
+
+    const now = new Date()
+    const where = {
+      createdAt: {
+        [Op.gt]: beginTime ? new Date(beginTime) : new Date(now - 24 * 60 * 60 * 1000),
+        [Op.lt]: endTime ? new Date(endTime) : now,
+      }
+    };
+    if(type)
+    {
+      where.type = type;
+    }
+    if(title)
+    {
+      where.title = title;
+    }
+    return await this.Log.findAndCountAll({
+      where: where,
+      limit: 100,
+      order: [['id', 'DESC' ]]
+    });
   }
 }
 

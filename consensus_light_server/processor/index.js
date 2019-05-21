@@ -1,6 +1,6 @@
 const process = require('process');
 const pm2 = require('pm2');
-const { SUCCESS, PARAM_ERR, OTH_ERR } = require("../../../constant");
+const { SUCCESS, PARAM_ERR, OTH_ERR } = require("../../constant");
 
 const app =  process[Symbol.for('app')];
 const mysql = process[Symbol.for("mysql")];

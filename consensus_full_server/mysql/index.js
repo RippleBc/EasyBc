@@ -8,7 +8,7 @@ const assert = require("assert");
 const accountModelConfig = require('./account');
 const blockModelConfig = require('./block');
 const transactionModelConfig = require('./transaction');
-const logModelConfig = require('./log');
+const rawTransactionModelConfig = require('./rawTransaction');
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 
@@ -37,7 +37,7 @@ class Mysql
     this.Account = this.sequelize.define(...accountModelConfig);
     this.Block = this.sequelize.define(...blockModelConfig);
     this.Transaction = this.sequelize.define(...transactionModelConfig);
-    this.Log = this.sequelize.define(...logModelConfig);
+    this.RawTransaction = this.sequelize.define(...rawTransactionModelConfig);
 
     await this.sequelize.authenticate();
     await this.sequelize.sync();
@@ -243,6 +243,29 @@ class Mysql
     {
       await this.saveTransaction(number, transactions[i]);
     }
+  }
+
+  /**
+   * @param {Number} num
+   */
+  async getRawTransactions(num)
+  {
+    assert(typeof num === 'number', `Mysql getRawTransactions, num should be an Number, now is ${typeof num}`);
+
+    const rawTransactions = await this.RawTransaction.findAll({
+      limit: num
+    });
+    
+    const result = rawTransactions.map(rawTransaction => {
+      return rawTransaction.data
+    })
+
+    for(let rawTransaction of rawTransactions)
+    {
+      await rawTransaction.destroy();
+    }
+
+    return result;
   }
 }
 
