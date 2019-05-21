@@ -69,19 +69,18 @@ class BlockAgreement extends Stage
 			this.ripple.processor.processBlock({
 				block: new Block(sortedBlocks[0][1].data)
 			}).then(() => {
-
-				self.ripple.run();
-
 				self.ripple.emit("blockProcessOver");
 
+				self.ripple.run();
+				
 				logger.trace("BlockAgreement handler, run block chain success, go to next stage");			
 			});
 
 			return;
 		}
 
-		this.ripple.run();
 		this.ripple.handleCheatedNodes(this.cheatedNodes);
+		this.ripple.run();
 	}
 
 	/**
