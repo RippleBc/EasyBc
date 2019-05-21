@@ -1,0 +1,11 @@
+{
+	"mysql":
+	{
+		"host": "123.157.68.243",
+		"port": 10050,
+		"user": "root",
+		"password": "root"
+	},
+	"logDir": "./consensus_server/logs",
+	"logsBufferMaxSize": 10
+}
