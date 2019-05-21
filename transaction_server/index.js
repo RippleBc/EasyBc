@@ -170,14 +170,6 @@ app.get("/getTransactions", function(req, res) {
     return;
   }
 
-  if(!req.query.from && !req.query.to) {
-    res.send({
-        code: PARAM_ERR,
-        msg: "param error, need from or to"
-    });
-    return;
-  }
-
   getTransactions(req.query.url, req.query.hash, req.query.from, req.query.to, req.query.beginTime, req.query.endTime).then(transactions => {
     res.send({
         code: SUCCESS,
