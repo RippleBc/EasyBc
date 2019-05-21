@@ -52,7 +52,7 @@ process.on("uncaughtException", function(err) {
     processor.run();
 
     /* sub process init */
-    runLogParser();
+    // runLogParser();
     runClientParser();
 })();
 
@@ -79,7 +79,8 @@ const runClientParser = function() {
     client_parser_process.on('error', err => {
         logger.fatal(`client_parser_process, throw exception, ${err}`);
 
-        runClientParser();
+        process.exit(1);
+        // runClientParser();
     });
 
     client_parser_process.on('exit', (code, signal) => {
@@ -94,7 +95,8 @@ const runClientParser = function() {
 
         logger.fatal('client_parser_process, exited abnormal');
         
-        runClientParser();
+        process.exit(1);
+        // runClientParser();
     });
 }
 
