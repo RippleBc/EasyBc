@@ -1,7 +1,45 @@
 module.exports = {
   apps : [{
-    name: 'consensus',
-    script: 'consensus_server/index.js',
+    name: 'fullConsensus',
+    script: 'consensus_full_server/index.js',
+    args: '',
+    instances: 1,
+    autorestart: true,
+    exp_backoff_restart_delay: 1000,
+    watch: false,
+    max_memory_restart: '1G',
+    merge_logs: true,
+    output: '/dev/null',
+    error: '/dev/null',
+    log_type: 'json',
+    env: {
+      NODE_ENV: 'development'
+    },
+    env_production: {
+      NODE_ENV: 'production'
+    }
+  },{
+    name: 'lightConsensus',
+    script: 'consensus_light_server/index.js',
+    args: '',
+    instances: "max",
+    autorestart: true,
+    exp_backoff_restart_delay: 1000,
+    watch: false,
+    max_memory_restart: '1G',
+    merge_logs: true,
+    output: '/dev/null',
+    error: '/dev/null',
+    log_type: 'json',
+    env: {
+      NODE_ENV: 'development'
+    },
+    env_production: {
+      NODE_ENV: 'production'
+    }
+  },{
+    name: 'logParser',
+    script: 'log_Parser/index.js',
     args: '',
     instances: 1,
     autorestart: true,
