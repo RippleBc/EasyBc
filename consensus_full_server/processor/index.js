@@ -37,9 +37,6 @@ class Processor
 		});
 
 		this.consensus = new Consensus(self);
-
-		// transactions cache
-		this.transactionRawsCache = [];
 	}
 
 	run()
@@ -54,13 +51,11 @@ class Processor
 	/**
 	 * @param {Number} size
 	 */
-	getTransactions(size)
+	async getTransactions(size)
 	{
 		assert(typeof size === "number", `Processor getTransactions, size should be a Number, now is ${typeof size}`);
 
-		size = size > this.transactionRawsCache.length ? this.transactionRawsCache.length : size;
-
-		return this.transactionRawsCache.splice(0, size);
+		return await mysql.getRawTransactions(size);
 	}
 
 	/**
@@ -76,47 +71,6 @@ class Processor
 		const data = message.data;
 
 		this.consensus.handleMessage(address, cmd, data);
-	}
-
-	/**
-	 * @param {String} transaction
-	 */
-	async processTransaction(transactionRaw)
-	{
-		assert(typeof transactionRaw === "string", `Processor processTransaction, transactionRaw should be a String, now is ${typeof transactionRaw}`);
-
-		const self = this;
-
-		const promise = new Promise((resolve, reject) => {
-			if(self.transactionRawsCache.length > TRANSACTION_CACHE_MAX_NUM)
-			{
-				reject(`Processor processTransaction, this.transactionRawsCache length should be litter than ${TRANSACTION_CACHE_MAX_NUM}`);
-			}
-
-			let transaction;
-			try
-			{
-				transaction = new Transaction(Buffer.from(transactionRaw, "hex"));
-
-				let {state, msg} = transaction.validate();
-				if(!state)
-				{
-					reject(`Processor processTransaction, transaction invalid failed, ${msg}`);
-				}
-			}
-			catch(e)
-			{
-				reject(`Processor processTransaction, new Transaction() failed, ${e}`)
-			}
-
-			loggerConsensus.info(`Processor processTransaction, transaction ${transaction.hash().toString("hex")}: ${JSON.stringify(transaction.toJSON())}`);
-
-			self.transactionRawsCache.push(Buffer.from(transactionRaw, "hex"));
-
-			resolve();
-		});
-
-		return promise;
 	}
 
 	/**

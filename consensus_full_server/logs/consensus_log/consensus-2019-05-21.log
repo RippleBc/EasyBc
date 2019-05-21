@@ -110,4 +110,48 @@
 [2019-05-21T08:54:44.233] [ERROR] loggerConsensus - Counter handleMessage, stage may be invalid, current own round: 2, stage: 1
 [2019-05-21T08:54:44.237] [ERROR] loggerConsensus - Counter handleMessage, stage may be invalid, current own round: 2, stage: 1
 [2019-05-21T08:54:44.242] [ERROR] loggerConsensus - Counter handleMessage, stage may be invalid, current own round: 2, stage: 1
-[2019-05-21T08:54:44.247] [ERROR] loggerConsensus - Counter handleMessage, stage may be invalid, current own round: 2, stage: 1
+[2019-05-21T08:54:44.247] [ERROR] loggerConsensus - Counter handleMessage, stage may be invalid, current own round: 2, stage: 1[2019-05-21T17:20:14.485] [FATAL] loggerConsensus - Ripple run, throw exceptions, Error: util defineProperties, data type should be String or Buffer or Array or Object, now is string
+[2019-05-21T17:30:57.647] [TRACE] loggerConsensus - Amalgamate run, transaction hash: 3ce19938bc4203b5e723d50485c8b50cc7b995d97a0c4417d8528ffa840213f2, from: 21d21b68ded27ce2ef619651d382892c1f77baa4, to: f7df754c988f003619b6cc88293db90003bdaacb, value: 10, nonce: 09
+[2019-05-21T17:30:59.645] [TRACE] loggerConsensus - Stage, primary stage is over because of timeout
+[2019-05-21T17:31:00.647] [TRACE] loggerConsensus - Stage, finish stage retry
+[2019-05-21T17:31:01.649] [TRACE] loggerConsensus - Stage, finish stage retry
+[2019-05-21T17:31:02.650] [TRACE] loggerConsensus - Stage, finish stage retry
+[2019-05-21T17:31:03.652] [TRACE] loggerConsensus - Stage, finish stage is over because of timeout
+[2019-05-21T17:31:03.657] [TRACE] loggerConsensus - CandidateAgreement run, transaction hash: 3ce19938bc4203b5e723d50485c8b50cc7b995d97a0c4417d8528ffa840213f2, from: 21d21b68ded27ce2ef619651d382892c1f77baa4, to: f7df754c988f003619b6cc88293db90003bdaacb, value: 10, nonce: 09
+[2019-05-21T17:31:05.654] [TRACE] loggerConsensus - Stage, primary stage is over because of timeout
+[2019-05-21T17:31:06.655] [TRACE] loggerConsensus - Stage, finish stage retry
+[2019-05-21T17:31:07.656] [TRACE] loggerConsensus - Stage, finish stage retry
+[2019-05-21T17:31:08.657] [TRACE] loggerConsensus - Stage, finish stage retry
+[2019-05-21T17:31:09.659] [TRACE] loggerConsensus - Stage, finish stage is over because of timeout
+[2019-05-21T17:31:09.661] [TRACE] loggerConsensus - CandidateAgreement handler, candidate agreement failed, go to stage amalgamate
+[2019-05-21T17:31:09.665] [TRACE] loggerConsensus - Amalgamate run, transaction hash: 3ce19938bc4203b5e723d50485c8b50cc7b995d97a0c4417d8528ffa840213f2, from: 21d21b68ded27ce2ef619651d382892c1f77baa4, to: f7df754c988f003619b6cc88293db90003bdaacb, value: 10, nonce: 09
+[2019-05-21T17:31:11.663] [TRACE] loggerConsensus - Stage, primary stage is over because of timeout
+[2019-05-21T17:31:12.665] [TRACE] loggerConsensus - Stage, finish stage retry
+[2019-05-21T17:31:13.666] [TRACE] loggerConsensus - Stage, finish stage retry
+[2019-05-21T17:31:14.667] [TRACE] loggerConsensus - Stage, finish stage retry
+[2019-05-21T17:31:15.669] [TRACE] loggerConsensus - Stage, finish stage is over because of timeout
+[2019-05-21T17:31:15.672] [TRACE] loggerConsensus - CandidateAgreement run, transaction hash: 3ce19938bc4203b5e723d50485c8b50cc7b995d97a0c4417d8528ffa840213f2, from: 21d21b68ded27ce2ef619651d382892c1f77baa4, to: f7df754c988f003619b6cc88293db90003bdaacb, value: 10, nonce: 09
+[2019-05-21T17:31:17.670] [TRACE] loggerConsensus - Stage, primary stage is over because of timeout
+[2019-05-21T17:31:18.671] [TRACE] loggerConsensus - Stage, finish stage retry
+[2019-05-21T17:31:19.672] [TRACE] loggerConsensus - Stage, finish stage retry
+[2019-05-21T17:31:20.673] [TRACE] loggerConsensus - Stage, finish stage retry
+[2019-05-21T17:31:21.675] [TRACE] loggerConsensus - Stage, finish stage is over because of timeout
+[2019-05-21T17:31:21.676] [TRACE] loggerConsensus - CandidateAgreement handler, candidate agreement failed, go to stage amalgamate
+[2019-05-21T17:31:21.679] [TRACE] loggerConsensus - Amalgamate run, transaction hash: 3ce19938bc4203b5e723d50485c8b50cc7b995d97a0c4417d8528ffa840213f2, from: 21d21b68ded27ce2ef619651d382892c1f77baa4, to: f7df754c988f003619b6cc88293db90003bdaacb, value: 10, nonce: 09
+[2019-05-21T17:31:23.677] [TRACE] loggerConsensus - Stage, primary stage is over because of timeout
+[2019-05-21T17:31:24.679] [TRACE] loggerConsensus - Stage, finish stage retry
+[2019-05-21T17:31:25.680] [TRACE] loggerConsensus - Stage, finish stage retry
+[2019-05-21T17:31:26.681] [TRACE] loggerConsensus - Stage, finish stage retry
+[2019-05-21T17:31:27.683] [TRACE] loggerConsensus - Stage, finish stage is over because of timeout
+[2019-05-21T17:31:27.686] [TRACE] loggerConsensus - CandidateAgreement run, transaction hash: 3ce19938bc4203b5e723d50485c8b50cc7b995d97a0c4417d8528ffa840213f2, from: 21d21b68ded27ce2ef619651d382892c1f77baa4, to: f7df754c988f003619b6cc88293db90003bdaacb, value: 10, nonce: 09
+[2019-05-21T17:31:29.685] [TRACE] loggerConsensus - Stage, primary stage is over because of timeout
+[2019-05-21T17:31:30.686] [TRACE] loggerConsensus - Stage, finish stage retry
+[2019-05-21T17:31:31.687] [TRACE] loggerConsensus - Stage, finish stage retry
+[2019-05-21T17:31:32.688] [TRACE] loggerConsensus - Stage, finish stage retry
+[2019-05-21T17:31:33.690] [TRACE] loggerConsensus - Stage, finish stage is over because of timeout
+[2019-05-21T17:31:33.691] [TRACE] loggerConsensus - CandidateAgreement handler, candidate agreement failed, go to stage amalgamate
+[2019-05-21T17:31:33.694] [TRACE] loggerConsensus - Amalgamate run, transaction hash: 3ce19938bc4203b5e723d50485c8b50cc7b995d97a0c4417d8528ffa840213f2, from: 21d21b68ded27ce2ef619651d382892c1f77baa4, to: f7df754c988f003619b6cc88293db90003bdaacb, value: 10, nonce: 09
+[2019-05-21T17:31:35.692] [TRACE] loggerConsensus - Stage, primary stage is over because of timeout
+[2019-05-21T17:31:36.693] [TRACE] loggerConsensus - Stage, finish stage retry
+[2019-05-21T17:31:37.694] [TRACE] loggerConsensus - Stage, finish stage retry
+[2019-05-21T17:31:38.695] [TRACE] loggerConsensus - Stage, finish stage retry

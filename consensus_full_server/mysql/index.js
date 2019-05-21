@@ -257,7 +257,7 @@ class Mysql
     });
     
     const result = rawTransactions.map(rawTransaction => {
-      return rawTransaction.data
+      return Buffer.from(rawTransaction.data, 'hex');
     })
 
     for(let rawTransaction of rawTransactions)

@@ -73,7 +73,19 @@ class Ripple extends AsyncEventemitter
 	{
 		if(!ifRetry)
 		{
-			this.processingTransactions = this.processor.getTransactions(MAX_PROCESS_TRANSACTIONS_SIZE);
+			this.processor.getTransactions(MAX_PROCESS_TRANSACTIONS_SIZE).then(transactions => {
+				this.processingTransactions = transactions;
+
+				this.round += 1;
+				this.stage = 0;
+				this.amalgamate.run(this.processingTransactions);
+				this.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
+			}).catch(e => {
+				logger.fatal(`Ripple run, throw exceptions, ${e.stack}`);
+				process.exit(1)
+			})
+
+			return;
 		}
 		
 		this.round += 1;
