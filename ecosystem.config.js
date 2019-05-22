@@ -22,7 +22,7 @@ module.exports = {
     name: 'lightConsensus',
     script: 'consensus_light_server/index.js',
     args: '',
-    instances: "max",
+    instances: 1,
     autorestart: true,
     exp_backoff_restart_delay: 1000,
     watch: false,
@@ -38,8 +38,8 @@ module.exports = {
       NODE_ENV: 'production'
     }
   },{
-    name: 'logParser',
-    script: 'log_Parser/index.js',
+    name: 'consensusLogParser',
+    script: 'consensus_log_parser/index.js',
     args: '',
     instances: 1,
     autorestart: true,
@@ -60,7 +60,7 @@ module.exports = {
     name: 'monitor',
     script: 'monitor_server/index.js',
     args: '',
-    instances: "max",
+    instances: 1,
     autorestart: true,
     exp_backoff_restart_delay: 1000,
     watch: false,

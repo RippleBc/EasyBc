@@ -6,6 +6,6 @@
 		"user": "root",
 		"password": "root"
 	},
-	"logDir": "./consensus_server/logs",
+	"logDir": "./consensus_full_server/logs",
 	"logsBufferMaxSize": 10
 }

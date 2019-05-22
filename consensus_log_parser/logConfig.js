@@ -8,7 +8,7 @@ log4js.configure({
         },
         logParse: {
             type: "dateFile",
-            filename: "log_parser/logs/",
+            filename: "consensus_log_parser/logs/",
             pattern: "logParse-yyyy-MM-dd.log",
             alwaysIncludePattern: true
         }

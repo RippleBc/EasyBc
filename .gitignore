@@ -10,6 +10,6 @@ consensus_full_server/data/*
 consensus_full_server/logs/*
 consensus_light_server/data/*
 consensus_light_server/logs/*
-log_parser/data/*
-log_parser/logs/*
+consensus_log_parser/data/*
+consensus_log_parser/logs/*
 block_chain_data/*
