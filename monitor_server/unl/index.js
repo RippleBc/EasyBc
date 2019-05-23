@@ -8,8 +8,9 @@ const app = process[Symbol.for('app')]
 const models = process[Symbol.for('models')]
 const logger = process[Symbol.for('logger')];
 
-models.Node.findAll().then(nodes => {
-  setInterval(() => {
+
+setInterval(() => {
+  models.Node.findAll().then(nodes => {
     for(let node of nodes.values())
     {
       let options = {
@@ -34,8 +35,8 @@ models.Node.findAll().then(nodes => {
         logger.error(`get cpu and memory throw exception, ${e}`);
       });
     }
-  }, 5000);
-})
+  }
+}, 5000);
 
 app.get('/nodes', checkCookie, (req, res) => {
 
