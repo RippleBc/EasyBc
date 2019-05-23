@@ -26,7 +26,7 @@ setInterval(() => {
 	});
 }, 5000);
 
-app.get('/status', (req, res) => {
+app.post('/status', (req, res) => {
 	if(processDescription)
 	{
 		return res.json({
@@ -43,7 +43,7 @@ app.get('/status', (req, res) => {
 	
 	res.json({
 		code: OTH_ERR,
-		msg: 'can not get cpu and memory info'
+		msg: 'cpu and memory info is can not get'
 	})
 });
 

@@ -13,7 +13,7 @@ models.Node.findAll().then(nodes => {
     for(let node of nodes.values())
     {
       let options = {
-        method: "GET",
+        method: "POST",
         uri: `${node.host}:${node.port}/status`,
         json: true // Automatically stringifies the body to JSON
       };

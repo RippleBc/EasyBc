@@ -137,42 +137,6 @@ class Mysql
   }
 
   /**
-   * @param number {String}
-   * @param stateRoot {String}
-   * @param address {String}
-   * @return {Account}
-   */
-  async getAccount(number, stateRoot, address)
-  {
-    assert(typeof number === "string", `Mysql getAccount, number should be a String, now is ${typeof number}`);
-    assert(typeof stateRoot === "string", `Mysql getAccount, stateRoot should be a String, now is ${typeof stateRoot}`);
-    assert(typeof address === "string", `Mysql getAccount, address should be a String, now is ${typeof address}`);
-
-    const account = await this.Account.findOne({
-      attributes: ['data'],
-      order: [['number', 'DESC']],
-      where: {
-        address: address,
-        [Op.or]: [
-          {
-            stateRoot: stateRoot
-          },
-          {
-            number: {
-              [Op.lte]: number
-            }
-          }
-        ]
-      }
-    });
-
-    if(account)
-    {
-      return new Account(Buffer.from(account.data, 'hex'))
-    }
-  }
-
-  /**
    * @param {Buffer} number
    * @param {Buffer} stateRoot
    * @param {Buffer} address
