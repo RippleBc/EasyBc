@@ -22,8 +22,8 @@ class BlockAgreement extends Stage
 	constructor(ripple)
 	{
 		super({
-			finish_state_request_cmd: PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_REQUEST,
-			finish_state_response_cmd: PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE
+			synchronize_state_request_cmd: PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_REQUEST,
+			synchronize_state_response_cmd: PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE
 		});
 
 		this.ripple = ripple;
@@ -79,7 +79,6 @@ class BlockAgreement extends Stage
 			return;
 		}
 
-		this.ripple.handleCheatedNodes(this.cheatedNodes);
 		this.ripple.run();
 	}
 
@@ -91,7 +90,7 @@ class BlockAgreement extends Stage
  		assert(Buffer.isBuffer(transactions), `BlockAgreement run, transactions should be an Buffer, now is ${typeof transactions}`);
 
  		this.ripple.stage = RIPPLE_STAGE_BLOCK_AGREEMENT;
-		this.init();
+		this.start();
 
  		// init block
 		const block = new Block({
@@ -196,16 +195,16 @@ class BlockAgreement extends Stage
 			logger.error(`BlockAgreement handleBlockAgreement, address ${address.toString("hex")}, validate failed`);
 		}
 
-		this.recordFinishNode(address.toString("hex"));
+		this.recordDataExchangeFinishNode(address.toString("hex"));
 	}
 
 	reset()
 	{
-		super.innerReset();
+		super.reset();
 		this.rippleBlocks = [];
 	}
 
-	checkProcessBlockState()
+	checkIfIsProcessingBlock()
 	{
 		return this.ripple.state === RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK;
 	}

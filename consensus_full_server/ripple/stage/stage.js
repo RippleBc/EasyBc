@@ -1,5 +1,5 @@
 const { unl } = require("../../config.json");
-const { STAGE_STATE_PRIMARY_TIMEOUT, STAGE_STATE_FINISH_TIMEOUT, STAGE_MAX_FINISH_RETRY_TIMES, AVERAGE_TIME_STATISTIC_MAX_TIMES, STAGE_STATE_EMPTY, STAGE_STATE_PROCESSING, STAGE_STATE_SUCCESS_FINISH, STAGE_STATE_TIMEOUT_FINISH } = require("../../constant");
+const { STAGE_DATA_EXCHANGE_TIMEOUT, STAGE_STAGE_SYNCHRONIZE_TIMEOUT, STAGE_MAX_FINISH_RETRY_TIMES, AVERAGE_TIME_STATISTIC_MAX_TIMES, STAGE_STATE_EMPTY, STAGE_STATE_DATA_EXCHANGE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING } = require("../../constant");
 const process = require("process");
 const utils = require("../../../depends/utils");
 const assert = require("assert");
@@ -12,6 +12,7 @@ const bufferToInt = utils.bufferToInt;
 
 const logger = process[Symbol.for("loggerConsensus")];
 const p2p = process[Symbol.for("p2p")];
+const mysql = process[Symbol.for("mysql")];
 
 class Stage
 {
@@ -20,157 +21,121 @@ class Stage
 		this.state = STAGE_STATE_EMPTY;
 
 		// timeout nodes
-		this.friendNodesTimeoutNodes = [];
+		this.otherTimeoutNodes = [];
 		this.ownTimeoutNodes = [];
 
 		// cheated nodes
 		this.cheatedNodes = [];
 
-		// stage consensus time consume
-		this.averageTimeStatisticTimes = 0;
-		this.averagePrimaryTime = 0;
-		this.averageFinishTime = 0;
+		// compute synchronize times
+		this.totalSynchronizeTime = 0;
+		this.leftSynchronizeTryTimes = STAGE_MAX_FINISH_RETRY_TIMES;
 
-		//
-		this.totalFinishTime = 0;
-		this.leftFinishTimes = STAGE_MAX_FINISH_RETRY_TIMES;
-
-		this.finish_state_request_cmd = opts.finish_state_request_cmd;
-		this.finish_state_response_cmd = opts.finish_state_response_cmd;
+		this.synchronize_state_request_cmd = opts.synchronize_state_request_cmd;
+		this.synchronize_state_response_cmd = opts.synchronize_state_response_cmd;
 		
-		const self = this;
-		this.primary = new Sender(result => {
-			// compute primary stage consensus time consume
-			if(self.averageTimeStatisticTimes === 0)
-			{
-				self.averagePrimaryTime = self.primary.consensusTimeConsume;
-			}
-			else
-			{
-				self.averagePrimaryTime = (self.averagePrimaryTime * self.averageTimeStatisticTimes + self.primary.consensusTimeConsume) / (self.averageTimeStatisticTimes + 1)
-			}
+		this.dataExchange = new Sender(result => {
+			// record data exchange time consume
+			mysql.saveDataExchangeTimeConsume(this.dataExchange.consensusTimeConsume).catch(e => {
+				logger.error(`Stage, saveDataExchangeTimeConsume throw exception, ${e}`);
+			});
 
 			if(result)
 			{
-				logger.trace("Stage, primary stage is over success");
-
-				self.state = STAGE_STATE_SUCCESS_FINISH;
-				
+				this.state = STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING;
 			}
 			else
 			{
 				// record the timeout node
 				for(let i = 0; i < unl.length; i++)
 				{
-					if(!this.primary.finishAddresses.has(stripHexPrefix(unl[i].address)))
+					if(!this.dataExchange.finishAddresses.has(stripHexPrefix(unl[i].address)))
 					{
 						this.ownTimeoutNodes.push(unl[i].address);
 					}
 				}
 
 				//
-				logger.trace("Stage, primary stage is over because of timeout");
+				logger.info("Stage, dataExchange is over because of timeout");
 
-				self.state = STAGE_STATE_TIMEOUT_FINISH;
+				this.state = STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING;
 			}
 
-			self.finish.initFinishTimeout();
+			this.stageSynchronize.start();
+			p2p.sendAll(this.synchronize_state_request_cmd);
 
-			p2p.sendAll(self.finish_state_request_cmd);
+		}, STAGE_DATA_EXCHANGE_TIMEOUT);
 
-		}, STAGE_STATE_PRIMARY_TIMEOUT);
-
-		this.finish = new Sender(result => {
-			self.totalFinishTime += self.finish.consensusTimeConsume;
+		this.stageSynchronize = new Sender(result => {
+			this.totalSynchronizeTime += this.stageSynchronize.consensusTimeConsume;
 
 			if(result)
 			{
-				logger.trace("Stage, finish stage is over success");
-
-				// compute finish stage consensus time consume
-				if(self.averageTimeStatisticTimes === 0)
-				{
-					self.averageFinishTime = self.totalFinishTime;
-				}
-				else
-				{
-					self.averageFinishTime = (self.averageFinishTime * self.averageTimeStatisticTimes + self.totalFinishTime) / (self.averageTimeStatisticTimes + 1);
-				}
-				//
-				if(self.averageTimeStatisticTimes < AVERAGE_TIME_STATISTIC_MAX_TIMES)
-				{
-					self.averageTimeStatisticTimes += 1;
-				}
+				// record synchronize time consume
+				mysql.saveStageSynchronizeTimeConsume(this.dataExchange.consensusTimeConsume).catch(e => {
+					logger.error(`Stage, saveStageSynchronizeTimeConsume throw exception, ${e}`);
+				});
 
 				//
-				self.handler(true);
-				self.ripple.handleTimeoutNodes(this.ownTimeoutNodes, this.friendNodesTimeoutNodes);
-				self.reset();
+				this.handler(true);
+				this.ripple.handleTimeoutNodes(this.ownTimeoutNodes, this.otherTimeoutNodes);
+				this.ripple.handleCheatedNodes(this.cheatedNodes);
+				this.reset();
 			}
 			else
 			{
 				// record the timeout node
 				for(let i = 0; i < unl.length; i++)
 				{
-					if(!this.finish.finishAddresses.has(stripHexPrefix(unl[i].address)))
+					if(!this.stageSynchronize.finishAddresses.has(stripHexPrefix(unl[i].address)))
 					{
 						this.ownTimeoutNodes.push(unl[i].address);
 					}
 				}
 
-				if(this.leftFinishTimes > 0)
+				if(this.leftSynchronizeTryTimes > 0)
 				{
-					logger.trace("Stage, finish stage retry");
+					logger.info("Stage, stage synchronize is failed, retry");
 
-					self.finish.reset();
-					self.finish.initFinishTimeout();
-					p2p.sendAll(self.finish_state_request_cmd);
+					this.stageSynchronize.reset();
+					this.stageSynchronize.start();
+					p2p.sendAll(this.synchronize_state_request_cmd);
 
-					this.leftFinishTimes -= 1;
+					this.leftSynchronizeTryTimes -= 1;
 				}
 				else
 				{
-					logger.trace("Stage, finish stage is over because of timeout");
+					logger.info("Stage, stage synchronize is over because of timeout");
 
-					// compute finish stage consensus time consume
-					if(self.averageTimeStatisticTimes === 0)
-					{
-						self.averageFinishTime = self.totalFinishTime;
-					}
-					else
-					{
-						self.averageFinishTime = (self.averageFinishTime * self.averageTimeStatisticTimes + self.totalFinishTime) / (self.averageTimeStatisticTimes + 1);
-					}
-					if(self.averageTimeStatisticTimes < AVERAGE_TIME_STATISTIC_MAX_TIMES)
-					{
-						self.averageTimeStatisticTimes += 1;
-					}
+					// record synchronize time consume
+					mysql.saveStageSynchronizeTimeConsume(this.dataExchange.consensusTimeConsume).catch(e => {
+						logger.error(`Stage, saveStageSynchronizeTimeConsume throw exception, ${e}`);
+					});
 
 					//
-					self.handler(false);
-					self.ripple.handleTimeoutNodes(this.ownTimeoutNodes, this.friendNodesTimeoutNodes);
-					self.reset();
+					this.handler(false);
+					this.ripple.handleTimeoutNodes(this.ownTimeoutNodes, this.otherTimeoutNodes);
+					this.ripple.handleCheatedNodes(this.cheatedNodes);
+					this.reset();
 				}
 			}
-		}, STAGE_STATE_FINISH_TIMEOUT);
+		}, STAGE_STAGE_SYNCHRONIZE_TIMEOUT);
 	}
 
-	init()
+	start()
 	{
-		// init state
-		this.state = STAGE_STATE_PROCESSING;
-
-		this.primary.initFinishTimeout();
+		this.state = STAGE_STATE_DATA_EXCHANGE_PROCEEDING;
+		this.dataExchange.start();
 	}
 
 	/**
 	 * @param {String} address
 	 */
-	recordFinishNode(address)
+	recordDataExchangeFinishNode(address)
 	{
-		assert(typeof address === "string", `Stage recordFinishNode, address should be a String, now is ${typeof address}`);
+		assert(typeof address === "string", `Stage recordDataExchangeFinishNode, address should be a String, now is ${typeof address}`);
 
-		this.primary.recordFinishNode(address);
+		this.dataExchange.recordFinishNode(address);
 	}
 
 	/**
@@ -188,19 +153,20 @@ class Stage
 
 		switch(cmd)
 		{
-			case this.finish_state_request_cmd:
+			case this.synchronize_state_request_cmd:
 			{
+				// compute timeout nodes
 				let timeoutAddresses = [];
-				if(this.state === STAGE_STATE_TIMEOUT_FINISH || this.state === STAGE_STATE_SUCCESS_FINISH)
+				if(this.state === STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING || this.state === STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING)
 				{
 					for(let i = 0; i < unl.length; i++)
 					{
-						if(!this.primary.finishAddresses.has(stripHexPrefix(unl[i].address)))
+						if(!this.dataExchange.finishAddresses.has(stripHexPrefix(unl[i].address)))
 						{
 							timeoutAddresses.push(unl[i].address);
 						}
 
-						if(!this.finish.finishAddresses.has(stripHexPrefix(unl[i].address)))
+						if(!this.stageSynchronize.finishAddresses.has(stripHexPrefix(unl[i].address)))
 						{
 							timeoutAddresses.push(unl[i].address);
 						}
@@ -211,67 +177,68 @@ class Stage
 				}
 				
 				//
-				p2p.send(address, this.finish_state_response_cmd, rlp.encode([toBuffer(this.state), timeoutAddresses]));
+				p2p.send(address, this.synchronize_state_response_cmd, rlp.encode([toBuffer(this.state), timeoutAddresses]));
 			}
 			break;
-			case this.finish_state_response_cmd:
+			case this.synchronize_state_response_cmd:
 			{
 				const nodeInfo = rlp.decode(data);
 				const state = bufferToInt(nodeInfo[0]);
 				const timeoutAddresses = [...new Set(nodeInfo[1])];
 
-				if(state === STAGE_STATE_PROCESSING)
+				if(state === STAGE_STATE_DATA_EXCHANGE_PROCEEDING)
 				{
 					const addressHex = address.toString("hex");
 
-					this.friendNodesTimeoutNodes.push(addressHex)
+					this.otherTimeoutNodes.push(addressHex)
 				}
-				else if(state === STAGE_STATE_TIMEOUT_FINISH)
+				else if(state === STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING)
 				{
+					// record timeout nodes
 					timeoutAddresses.forEach(address => {
 						const addressHex = address.toString("hex");
 						
-						this.friendNodesTimeoutNodes.push(addressHex);
+						this.otherTimeoutNodes.push(addressHex);
 					});
 
-					this.finish.recordFinishNode(address.toString("hex"));
+					this.stageSynchronize.recordFinishNode(address.toString("hex"));
 
-					logger.trace(`Stage handleMessage, address: ${address.toString("hex")}, consensus is over because of timeout`);
+					logger.info(`Stage handleMessage, address: ${address.toString("hex")}, stage synchronize is over because of timeout`);
 				}
-				else if(state === STAGE_STATE_SUCCESS_FINISH)
+				else if(state === STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING)
 				{
-					this.finish.recordFinishNode(address.toString("hex"));
-
-					logger.trace(`Stage handleMessage, address: ${address.toString("hex")}, consensus is over success`);
+					this.stageSynchronize.recordFinishNode(address.toString("hex"));
 				}
 				else
 				{
-					logger.error(`Stage handleMessage, address: ${address.toString("hex")}, consensus is proceeding`);
+					logger.fatal("Stage handleMessage, stage state is empty, can not process messages");
+
+					process.exit(1);
 				}
 			}
 		}
 	}
 
-	innerReset()
+	reset()
 	{
 		this.ownTimeoutNodes = [];
-		this.friendNodesTimeoutNodes = [];
+		this.otherTimeoutNodes = [];
 
 		this.state = STAGE_STATE_EMPTY;
-		this.leftFinishTimes = STAGE_MAX_FINISH_RETRY_TIMES;
+		this.leftSynchronizeTryTimes = STAGE_MAX_FINISH_RETRY_TIMES;
 
-		this.primary.reset();
-		this.finish.reset();
+		this.dataExchange.reset();
+		this.stageSynchronize.reset();
 	}
 
-	checkFinishState()
+	checkIfDataExchangeIsFinish()
 	{
-		return this.state === STAGE_STATE_TIMEOUT_FINISH || this.state === STAGE_STATE_SUCCESS_FINISH;
+		return this.state === STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING || this.state === STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING;
 	}
 
-	checkProcessingState()
+	checkDataExchangeIsProceeding()
 	{
-		return this.state === STAGE_STATE_PROCESSING;
+		return this.state === STAGE_STATE_DATA_EXCHANGE_PROCEEDING;
 	}
 }
 

@@ -154,20 +154,20 @@ class Counter
 				counterData.stage = this.ripple.stage;
 				if(this.ripple.state === RIPPLE_STAGE_AMALGAMATE)
 				{
-					counterData.primaryConsensusTime = this.ripple.amalgamate.averagePrimaryTime;
-					counterData.finishConsensusTime = this.ripple.amalgamate.averageFinishTime;
+					counterData.primaryConsensusTime = this.ripple.amalgamate.averageDataExchangeTime;
+					counterData.finishConsensusTime = this.ripple.amalgamate.averageSynchronizeTime;
 					counterData.pastTime = Date.now() - this.ripple.amalgamate.primary.consensusBeginTime;
 				}
 				else if(this.ripple.state === RIPPLE_STAGE_CANDIDATE_AGREEMENT)
 				{
-					counterData.primaryConsensusTime = this.ripple.candidateAgreement.averagePrimaryTime;
-					counterData.finishConsensusTime = this.ripple.candidateAgreement.averageFinishTime;
+					counterData.primaryConsensusTime = this.ripple.candidateAgreement.averageDataExchangeTime;
+					counterData.finishConsensusTime = this.ripple.candidateAgreement.averageSynchronizeTime;
 					counterData.pastTime = Date.now() - this.ripple.candidateAgreement.primary.consensusBeginTime;
 				}
 				else if(this.ripple.state === RIPPLE_STAGE_BLOCK_AGREEMENT || this.ripple.state === RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK)
 				{
-					counterData.primaryConsensusTime = this.ripple.blockAgreement.averagePrimaryTime;
-					counterData.finishConsensusTime = this.ripple.blockAgreement.averageFinishTime;
+					counterData.primaryConsensusTime = this.ripple.blockAgreement.averageDataExchangeTime;
+					counterData.finishConsensusTime = this.ripple.blockAgreement.averageSynchronizeTime;
 					counterData.pastTime = Date.now() - this.ripple.blockAgreement.primary.consensusBeginTime;
 				}
 				else

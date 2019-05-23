@@ -17,8 +17,8 @@ class Amalgamate extends Stage
 	constructor(ripple)
 	{
 		super({
-			finish_state_request_cmd: PROTOCOL_CMD_CANDIDATE_AMALGAMATE_FINISH_STATE_REQUEST,
-			finish_state_response_cmd: PROTOCOL_CMD_CANDIDATE_AMALGAMATE_FINISH_STATE_RESPONSE
+			synchronize_state_request_cmd: PROTOCOL_CMD_CANDIDATE_AMALGAMATE_FINISH_STATE_REQUEST,
+			synchronize_state_response_cmd: PROTOCOL_CMD_CANDIDATE_AMALGAMATE_FINISH_STATE_RESPONSE
 		});
 
 		this.ripple = ripple;
@@ -37,7 +37,6 @@ class Amalgamate extends Stage
 		});
 
 		this.ripple.candidateAgreement.run([...transactionRawsMap.values()]);
-		this.ripple.handleCheatedNodes(this.cheatedNodes);
 	}
 
 	/**
@@ -48,7 +47,7 @@ class Amalgamate extends Stage
 		assert(Array.isArray(transactionRaws), `Amalgamate run, transactionRaws should be an Array, now is ${typeof transactionRaws}`);
 
 		this.ripple.stage = RIPPLE_STAGE_AMALGAMATE;
-		this.init();
+		this.start();
 
 		for(let i = 0; i < transactionRaws.length; i++)
 		{
@@ -125,12 +124,12 @@ class Amalgamate extends Stage
 			logger.error(`Amalgamate handleAmalgamate, address: ${address.toString("hex")}, validate failed`);
 		}
 
-		this.recordFinishNode(address.toString("hex"));
+		this.recordDataExchangeFinishNode(address.toString("hex"));
 	}
 
 	reset()
 	{
-		super.innerReset();
+		super.reset();
 		this.candidates = [];
 	}
 }

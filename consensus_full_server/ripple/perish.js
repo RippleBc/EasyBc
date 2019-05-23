@@ -45,7 +45,7 @@ class Perish extends AsyncEventemitter
 					logger.trace("Perish, finish stage retry");
 
 					self.finish.reset();
-					self.finish.initFinishTimeout();
+					self.finish.start();
 					p2p.sendAll(PROTOCOL_CMD_KILL_NODE_STATUS_REQUEST);
 
 					this.leftFinishTimes -= 1;
@@ -114,7 +114,7 @@ class Perish extends AsyncEventemitter
 
 		perishData.sign(privateKey);
 
-		this.finish.initFinishTimeout();
+		this.finish.start();
 		p2p.sendAll(PROTOCOL_CMD_KILL_NODE_REQUEST, perishData.serialize());
 
 	}
@@ -149,7 +149,7 @@ class Perish extends AsyncEventemitter
 					}
 					else
 					{
-						this.finish.initFinishTimeout();
+						this.finish.start();
 						p2p.sendAll(PROTOCOL_CMD_KILL_NODE_STATUS_REQUEST, perishData.address);
 					}
 				}

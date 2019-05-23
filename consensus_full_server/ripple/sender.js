@@ -66,7 +66,7 @@ class Sender
 		}
 	}
 
-	initFinishTimeout()
+	start()
 	{
 		this.consensusBeginTime = Date.now();
 

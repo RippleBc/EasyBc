@@ -19,8 +19,8 @@ class CandidateAgreement extends Stage
 	constructor(ripple)
 	{
 		super({
-			finish_state_request_cmd: PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_REQUEST,
-			finish_state_response_cmd: PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_RESPONSE
+			synchronize_state_request_cmd: PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_REQUEST,
+			synchronize_state_response_cmd: PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_RESPONSE
 		});
 
 		this.ripple = ripple;
@@ -77,7 +77,6 @@ class CandidateAgreement extends Stage
 		});
 
 		this.ripple.amalgamate.run([...transactionRawsMap.values()]);
-		this.ripple.handleCheatedNodes(this.cheatedNodes);
 	}
 
 	/**
@@ -88,7 +87,7 @@ class CandidateAgreement extends Stage
 		assert(Array.isArray(transactions), `CandidateAgreement run, transactions should be an Array, now is ${typeof transactions}`);
 
 		this.ripple.stage = RIPPLE_STAGE_CANDIDATE_AGREEMENT;
-		this.init();
+		this.start();
 
 		for(let i = 0; i < transactions.length; i++)
 		{
@@ -165,12 +164,12 @@ class CandidateAgreement extends Stage
 			logger.error(`CandidateAgreement handleCandidateAgreement, address ${address.toString("hex")}, validate failed`);
 		}
 
-		this.recordFinishNode(address.toString("hex"));
+		this.recordDataExchangeFinishNode(address.toString("hex"));
 	}
 
 	reset()
 	{
-		super.innerReset();
+		super.reset();
 		this.candidates = [];
 	}
 }
