@@ -20,8 +20,8 @@ log4js.configure({
         }
     },
     categories: {
-        default: { appenders: ["stdout", "req"], level: "debug" },
-        db: { appenders: ["stdout", "db"], level: "debug" }
+        default: { appenders: ["stdout", "req"], level: "info" },
+        db: { appenders: ["stdout", "db"], level: "info" }
     }
 })
  

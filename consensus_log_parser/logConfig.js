@@ -14,8 +14,8 @@ log4js.configure({
         }
     },
     categories: {
-        default: { appenders: ["stdout", "logParse"], level: "trace" },
-        logParse: { appenders: ["stdout", "logParse"], level: "trace" }
+        default: { appenders: ["stdout", "logParse"], level: "info" },
+        logParse: { appenders: ["stdout", "logParse"], level: "info" }
     }
 })
 
