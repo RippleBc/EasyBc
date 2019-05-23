@@ -16,7 +16,7 @@ setInterval(() => {
 
 		for(let val of processDescriptionList.values())
 		{
-			if(val.name === 'consensus')
+			if(val.name === 'fullConsensus')
 			{
 					return processDescription = val
 			}
