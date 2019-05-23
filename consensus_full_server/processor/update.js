@@ -16,7 +16,6 @@ const logger = process[Symbol.for("loggerUpdate")];
 const mysql = process[Symbol.for("mysql")];
 
 const BN = utils.BN;
-const toBuffer = utils.toBuffer;
 const Buffer = utils.Buffer;
 const padToEven = utils.padToEven;
 
@@ -68,8 +67,8 @@ class Update
 			for(let i = 0; i < genesis.length; i++)
 			{
 				let tx = new Transaction({
-					to: toBuffer(genesis[i].address),
-					value: toBuffer(genesis[i].balance)
+					to: Buffer.from(genesis[i].address, 'hex'),
+					value: Buffer.from(genesis[i].balance, 'hex')
 				});
 				tx.sign(GOD_PRIVATE_KEY);
 
