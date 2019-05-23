@@ -1,7 +1,7 @@
 const process = require('process');
 const fs = require('fs');
 const path = require('path');
-const readline = require('./readline');
+const readLine = require('./readLine');
 const Mysql = require("./mysql");
 const { getLogFile, saveLogFile, getOffset, saveOffset } = require('./db');
 const log4js= require("./logConfig");
@@ -76,7 +76,7 @@ const run = async function(dir, logsBufferMaxSize)
 
 		logger.trace(`logParser run, start to readLogs, logFile: ${logFile}, offset: ${offset}`);
 
-		const rl = readline.createInterface({
+		const rl = readLine.createInterface({
 			input: fs.createReadStream(path.join(dir, files[index]), {
 				start: offset
 			})
