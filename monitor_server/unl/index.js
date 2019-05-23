@@ -35,7 +35,9 @@ setInterval(() => {
         logger.error(`get cpu and memory throw exception, ${e}`);
       });
     }
-  }
+  }).catch(e => {
+    logger.error(`get nodes info throw exception, ${e}`);
+  });
 }, 5000);
 
 app.get('/nodes', checkCookie, (req, res) => {
