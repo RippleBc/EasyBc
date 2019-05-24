@@ -146,8 +146,8 @@ class Ripple extends AsyncEventemitter
 			})
 		});
 
-		otherTimeoutNodes.forEach(friendNodesTimeoutNode => {
-			mysql.saveTimeoutNode(ownTimeoutNode).catch(e => {
+		otherTimeoutNodes.forEach(otherTimeoutNode => {
+			mysql.saveTimeoutNode(otherTimeoutNode).catch(e => {
 				logger.error(`Ripple handleTimeoutNodes, saveTimeoutNode throw exception, ${e}`);
 			})
 		});
