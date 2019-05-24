@@ -245,10 +245,10 @@ class Mysql
     assert(typeof type === 'number', `Mysql saveDataExchangeTimeConsume, type should be a Number, now is ${typeof type}`);
     assert(typeof timeConsume === 'number', `Mysql saveDataExchangeTimeConsume, timeConsume should be a Number, now is ${typeof timeConsume}`);
 
-    await.this.TimeConsume.create({ 
+    await this.TimeConsume.create({ 
       stage: stage, 
       type: 1,
-      timeConsume: timeConsume 
+      data: timeConsume 
     });
   }
 
@@ -258,7 +258,7 @@ class Mysql
    */
   async getDataExchangeTimeConsume(stage)
   {
-    await this.TimeConsume.avg({
+    return await this.TimeConsume.avg('data', {
       where: { 
         stage: stage, 
         type: 1
@@ -278,10 +278,10 @@ class Mysql
     assert(typeof type === 'number', `Mysql saveDataExchangeTimeConsume, type should be a Number, now is ${typeof type}`);
     assert(typeof timeConsume === 'number', `Mysql saveDataExchangeTimeConsume, timeConsume should be a Number, now is ${typeof timeConsume}`);
 
-    await.this.TimeConsume.create({ 
+    await this.TimeConsume.create({ 
       stage: stage, 
       type: 2,
-      timeConsume: timeConsume 
+      data: timeConsume 
     });
   }
 
@@ -291,7 +291,7 @@ class Mysql
    */
   async getStageSynchronizeTimeConsume(stage)
   {
-    await this.TimeConsume.avg({
+    return await this.TimeConsume.avg('data', {
       where: { 
         stage: stage, 
         type: 2
