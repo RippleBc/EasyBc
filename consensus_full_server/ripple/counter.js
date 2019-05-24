@@ -148,7 +148,7 @@ class Counter
 				{
 					return;
 				}
-					
+
 				(async () => {
 					const counterData = new CounterData();
 
@@ -216,6 +216,8 @@ class Counter
 
 				if(this.counters.length === unl.length)
 				{
+					logger.info("Counter handleMessage, get stage infomation is over success");
+
 					this.handler(true);
 					
 					this.reset();
