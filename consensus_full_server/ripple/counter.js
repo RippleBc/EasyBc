@@ -112,8 +112,6 @@ class Counter
 			case PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE:
 			case PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE:
 			{
-				logger.info(`Counter handleMessage, stage may be invalid, current own round: ${this.ripple.round}, stage: ${this.ripple.stage}`);
-
 				// check if need to synchronize stage
 				const now = Date.now();
 				this.stageSynchronizeTrigger.push(now);
@@ -123,6 +121,8 @@ class Counter
 					{
 						return;
 					}
+
+					logger.info(`Counter handleMessage, begin to synchronize stage, current own round: ${this.ripple.round}, stage: ${this.ripple.stage}`);
 
 					this.ripple.state = RIPPLE_STATE_STAGE_CONSENSUS;
 

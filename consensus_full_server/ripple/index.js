@@ -246,8 +246,6 @@ class Ripple extends AsyncEventemitter
 			}
 			else
 			{
-				logger.info(`Ripple handleMessage, address ${address.toString("hex")}'s stage is invalid`);
-
 				p2p.send(address, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE);
 			}
 		}
@@ -270,8 +268,6 @@ class Ripple extends AsyncEventemitter
 			}
 			else
 			{
-				logger.info(`Ripple handleMessage, address ${address.toString("hex")}'s stage is invalid`);
-
 				p2p.send(address, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE);
 			}
 		}
@@ -294,8 +290,6 @@ class Ripple extends AsyncEventemitter
 			}
 			else
 			{
-				logger.info(`Ripple handleMessage, address ${address.toString("hex")}'s stage is invalid`);
-
 				p2p.send(address, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE);
 			}
 		}
