@@ -152,19 +152,22 @@ class Ripple extends AsyncEventemitter
 
 		if(cmd >= 100 && cmd < 200)
 		{
-			if(this.state === RIPPLE_STATE_STAGE_CONSENSUS && this.counter.checkIfDataExchangeIsFinish())
+			if(this.state === RIPPLE_STATE_STAGE_CONSENSUS)
 			{
-				logger.fatal("stage synchronize success");
+				if(this.counter.checkIfDataExchangeIsFinish())
+				{
+					logger.fatal("stage synchronize success");
 
-				this.reset();
-				this.counter.reset();
+					this.reset();
+					this.counter.reset();
 
-				this.run(true);
-				this.amalgamate.handleMessage(address, cmd, data);
-			}
-			else
-			{
-				return logger.info(`Ripple handleMessage, processor is synchronizing stage, do not handle transaction consensus messages`);
+					this.run(true);
+					this.amalgamate.handleMessage(address, cmd, data);
+				}
+				else
+				{
+					return logger.info(`Ripple handleMessage, processor is synchronizing stage, do not handle transaction consensus messages`);
+				}
 			}
 
 			if(this.blockAgreement.checkIfDataExchangeIsFinish())
