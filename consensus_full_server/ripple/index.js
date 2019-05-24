@@ -3,7 +3,7 @@ const CandidateAgreement = require("./stage/candidateAgreement");
 const BlockAgreement = require("./stage/blockAgreement");
 const { STAGE_MAX_FINISH_RETRY_TIMES, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, RIPPLE_STATE_STAGE_CONSENSUS, RIPPLE_STATE_TRANSACTIONS_CONSENSUS, MAX_PROCESS_TRANSACTIONS_SIZE, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_MAX_ROUND } = require("../constant");
 const assert = require("assert");
-const Counter = require("./counter");
+const Counter = require("./stage/counter");
 const Perish = require("./perish");
 const utils = require("../../depends/utils");
 const AsyncEventemitter = require("async-eventemitter");
@@ -31,8 +31,6 @@ class Ripple extends AsyncEventemitter
 		this.round = 0;
 		this.stage = 0;
 
-		// this should store in database
-		this.pursueTime = 0;
 
 		this.counter = new Counter(this);
 		this.perish = new Perish(this);
@@ -153,56 +151,10 @@ class Ripple extends AsyncEventemitter
 		});
 	}
 
-	/**
-	 * @param {Buffer} round
-	 * @param {Buffer} stage
-	 * @param {Number} dataExchangeTimeConsume
-	 * @param {Number} stageSynchronizeTimeConsume
-	 * @param {Number} pastTime
-	 */
-	handleCounter(round, stage, dataExchangeTimeConsume, stageSynchronizeTimeConsume, pastTime)
+	handleCounter()
 	{
-		assert(Buffer.isBuffer(round), `Ripple handleCounter, round should be an Buffer, now is ${typeof round}`);
-		assert(Buffer.isBuffer(stage), `Ripple handleCounter, stage should be an Buffer, now is ${typeof stage}`);
-		assert(typeof dataExchangeTimeConsume === 'number', `Ripple handleCounter, dataExchangeTimeConsume should be an Buffer, now is ${typeof dataExchangeTimeConsume}`);
-		assert(typeof stageSynchronizeTimeConsume === 'number', `Ripple handleCounter, stageSynchronizeTimeConsume should be an Buffer, now is ${typeof stageSynchronizeTimeConsume}`);
-		assert(typeof pastTime === 'number', `Ripple handleCounter, pastTime should be an Buffer, now is ${typeof pastTime}`);
-
-		round = bufferToInt(round);
-		stage = bufferToInt(stage);
-
-		logger.info(`Ripple handleCounter, current own round: ${this.round}, stage: ${this.stage}; unl round: ${round}, stage: ${stage}, dataExchangeTimeConsume: ${dataExchangeTimeConsume}, stageSynchronizeTimeConsume: ${stageSynchronizeTimeConsume}, pastTime: ${pastTime}`);
-
-		if(round !== 0 && this.round >= round && this.stage >= stage)
-		{
-			return logger.info("Ripple handleCounter, current own stage is more fresh");
-		}
-
-		this.reset();
-		this.round = round;
-
-		// compute new round and stage
-		const delayTime = (dataExchangeTimeConsume +  stageSynchronizeTimeConsume - pastTime > 0 ? dataExchangeTimeConsume +  stageSynchronizeTimeConsume - pastTime : 0) + this.pursueTime;
-		if(stage === RIPPLE_STAGE_AMALGAMATE)
-		{
-			setTimeout(() => {
-				this.candidateAgreement.run([]);
-				this.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
-			}, delayTime);
-		}
-		else if(stage === RIPPLE_STAGE_CANDIDATE_AGREEMENT)
-		{
-			setTimeout(() => {
-				this.blockAgreement.run(rlp.encode([]));
-				this.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
-			}, delayTime);
-		}
-		else
-		{
-			setTimeout(() => {
-				this.run();
-			}, delayTime);
-		}
+		this.run(true);
+		this.counter.reset();
 	}
 
 	/**
@@ -218,7 +170,13 @@ class Ripple extends AsyncEventemitter
 
 		if(cmd >= 100 && cmd < 200)
 		{
-			if(this.state === RIPPLE_STATE_STAGE_CONSENSUS)
+			if(this.state === RIPPLE_STATE_STAGE_CONSENSUS && this.counter.checkIfDataExchangeIsFinish())
+			{
+				this.run(true);
+				this.counter.reset();
+				this.amalgamate.handleMessage(address, cmd, data);
+			}
+			else
 			{
 				return logger.info(`Ripple handleMessage, processor is synchronizing stage, do not handle messages`);
 			}

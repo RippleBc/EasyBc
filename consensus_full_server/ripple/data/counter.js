@@ -20,31 +20,7 @@ class Counter extends Base
 
 		// Define Properties
     const fields = [{
-      name: "round",
-      length: 32,
-      allowZero: true,
-      allowLess: true,
-      default: Buffer.alloc(0)
-    }, {
-      name: "stage",
-      length: 32,
-      allowZero: true,
-      allowLess: true,
-      default: Buffer.alloc(0)
-    }, {
-      name: "dataExchangeTimeConsume",
-      length: 32,
-      allowZero: true,
-      allowLess: true,
-      default: Buffer.alloc(0)
-    }, {
-      name: "stageSynchronizeTimeConsume",
-      length: 32,
-      allowZero: true,
-      allowLess: true,
-      default: Buffer.alloc(0)
-    }, {
-      name: "pastTime",
+      name: "timestamp",
       length: 32,
       allowZero: true,
       allowLess: true,
