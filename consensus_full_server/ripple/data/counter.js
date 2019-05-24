@@ -32,13 +32,13 @@ class Counter extends Base
       allowLess: true,
       default: Buffer.alloc(0)
     }, {
-      name: "primaryConsensusTime",
+      name: "dataExchangeTimeConsume",
       length: 32,
       allowZero: true,
       allowLess: true,
       default: Buffer.alloc(0)
     }, {
-      name: "finishConsensusTime",
+      name: "stageSynchronizeTimeConsume",
       length: 32,
       allowZero: true,
       allowLess: true,

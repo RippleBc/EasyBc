@@ -33,10 +33,11 @@ class Stage
 
 		this.synchronize_state_request_cmd = opts.synchronize_state_request_cmd;
 		this.synchronize_state_response_cmd = opts.synchronize_state_response_cmd;
-		
+		this.name = opts.name;
+
 		this.dataExchange = new Sender(result => {
 			// record data exchange time consume
-			mysql.saveDataExchangeTimeConsume(this.dataExchange.consensusTimeConsume).catch(e => {
+			mysql.saveDataExchangeTimeConsume(this.ripple.stage, this.dataExchange.consensusTimeConsume).catch(e => {
 				logger.error(`Stage, saveDataExchangeTimeConsume throw exception, ${e}`);
 			});
 
@@ -72,7 +73,7 @@ class Stage
 			if(result)
 			{
 				// record synchronize time consume
-				mysql.saveStageSynchronizeTimeConsume(this.dataExchange.consensusTimeConsume).catch(e => {
+				mysql.saveStageSynchronizeTimeConsume(this.ripple.stage, this.dataExchange.consensusTimeConsume).catch(e => {
 					logger.error(`Stage, saveStageSynchronizeTimeConsume throw exception, ${e}`);
 				});
 
@@ -108,7 +109,7 @@ class Stage
 					logger.info("Stage, stage synchronize is over because of timeout");
 
 					// record synchronize time consume
-					mysql.saveStageSynchronizeTimeConsume(this.dataExchange.consensusTimeConsume).catch(e => {
+					mysql.saveStageSynchronizeTimeConsume(this.ripple.stage, this.dataExchange.consensusTimeConsume).catch(e => {
 						logger.error(`Stage, saveStageSynchronizeTimeConsume throw exception, ${e}`);
 					});
 

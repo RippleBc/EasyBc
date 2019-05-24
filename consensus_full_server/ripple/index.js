@@ -74,7 +74,6 @@ class Ripple extends AsyncEventemitter
 					this.round = 0;
 				}
 
-				this.stage = 0;
 				this.amalgamate.run(this.processingTransactions);
 				this.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
 			}).catch(e => {
@@ -90,8 +89,6 @@ class Ripple extends AsyncEventemitter
 		{
 			this.round = 0;
 		}
-
-		this.stage = 0;
 
 		this.amalgamate.run(this.processingTransactions);
 		this.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
@@ -159,57 +156,53 @@ class Ripple extends AsyncEventemitter
 	/**
 	 * @param {Buffer} round
 	 * @param {Buffer} stage
-	 * @param {Number} primaryConsensusTime
-	 * @param {Number} finishConsensusTime
+	 * @param {Number} dataExchangeTimeConsume
+	 * @param {Number} stageSynchronizeTimeConsume
 	 * @param {Number} pastTime
 	 */
-	handleCounter(round, stage, primaryConsensusTime, finishConsensusTime, pastTime)
+	handleCounter(round, stage, dataExchangeTimeConsume, stageSynchronizeTimeConsume, pastTime)
 	{
 		assert(Buffer.isBuffer(round), `Ripple handleCounter, round should be an Buffer, now is ${typeof round}`);
 		assert(Buffer.isBuffer(stage), `Ripple handleCounter, stage should be an Buffer, now is ${typeof stage}`);
-		assert(typeof primaryConsensusTime === 'number', `Ripple handleCounter, primaryConsensusTime should be an Buffer, now is ${typeof primaryConsensusTime}`);
-		assert(typeof finishConsensusTime === 'number', `Ripple handleCounter, finishConsensusTime should be an Buffer, now is ${typeof finishConsensusTime}`);
+		assert(typeof dataExchangeTimeConsume === 'number', `Ripple handleCounter, dataExchangeTimeConsume should be an Buffer, now is ${typeof dataExchangeTimeConsume}`);
+		assert(typeof stageSynchronizeTimeConsume === 'number', `Ripple handleCounter, stageSynchronizeTimeConsume should be an Buffer, now is ${typeof stageSynchronizeTimeConsume}`);
 		assert(typeof pastTime === 'number', `Ripple handleCounter, pastTime should be an Buffer, now is ${typeof pastTime}`);
 
 		round = bufferToInt(round);
 		stage = bufferToInt(stage);
 
-		logger.trace(`Ripple handleCounter, current own round: ${this.round}, stage: ${this.stage}; unl round: ${round}, stage: ${stage}, primaryConsensusTime: ${primaryConsensusTime}, finishConsensusTime: ${finishConsensusTime}, pastTime: ${pastTime}`);
+		logger.info(`Ripple handleCounter, current own round: ${this.round}, stage: ${this.stage}; unl round: ${round}, stage: ${stage}, dataExchangeTimeConsume: ${dataExchangeTimeConsume}, stageSynchronizeTimeConsume: ${stageSynchronizeTimeConsume}, pastTime: ${pastTime}`);
 
-		if(this.round >= round && this.stage >= stage)
+		if(round !== 0 && this.round >= round && this.stage >= stage)
 		{
-			return logger.trace("Ripple handleCounter, current own stage is more fresh");
+			return logger.info("Ripple handleCounter, current own stage is more fresh");
 		}
 
-		this.reset();
-
-		this.state = RIPPLE_STATE_STAGE_CONSENSUS;
-
+		this.amalgamate.reset();
+		this.candidateAgreement.reset();
+		this.blockAgreement.reset();
 		this.round = round;
 
 		// compute new round and stage
-		const self = this;
-		const delayTime = (primaryConsensusTime +  finishConsensusTime - pastTime > 0 ? primaryConsensusTime +  finishConsensusTime - pastTime : 0) + this.pursueTime;
+		const delayTime = (dataExchangeTimeConsume +  stageSynchronizeTimeConsume - pastTime > 0 ? dataExchangeTimeConsume +  stageSynchronizeTimeConsume - pastTime : 0) + this.pursueTime;
 		if(stage === RIPPLE_STAGE_AMALGAMATE)
 		{
 			setTimeout(() => {
-				self.candidateAgreement.run([]);
-
-				self.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
+				this.candidateAgreement.run([]);
+				this.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
 			}, delayTime);
 		}
 		else if(stage === RIPPLE_STAGE_CANDIDATE_AGREEMENT)
 		{
 			setTimeout(() => {
-				self.blockAgreement.run(rlp.encode([]));
-
-				self.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
+				this.blockAgreement.run(rlp.encode([]));
+				this.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
 			}, delayTime);
 		}
 		else
 		{
 			setTimeout(() => {
-				self.run();
+				this.run();
 			}, delayTime);
 		}
 	}

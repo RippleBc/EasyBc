@@ -2,7 +2,7 @@ const CounterData = require("./data/counter");
 const { unl } = require("../config.json");
 const utils = require("../../depends/utils");
 const process = require("process");
-const { COUNTER_CONSENSUS_STAGE_THRESHOULD, COUNTER_HANDLER_TIME_DETAY, COUNTER_INVALID_STAGE_TIME_SECTION, COUNTER_STATE_IDLE, COUNTER_STATE_PROCESSING, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_ACOUNTER_REQUEST, PROTOCOL_CMD_ACOUNTER_RESPONSE } = require("../constant");
+const { COUNTER_CONSENSUS_STAGE_THRESHOULD, COUNTER_HANDLER_TIME_DETAY, COUNTER_INVALID_STAGE_TIME_SECTION, COUNTER_STATE_IDLE, COUNTER_STATE_PROCESSING, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_STAGE_INFO_REQUEST, PROTOCOL_CMD_STAGE_INFO_RESPONSE } = require("../constant");
 
 const rlp = utils.rlp;
 const sha3 = utils.sha3;
@@ -11,6 +11,7 @@ const bufferToInt = utils.bufferToInt;
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
 const privateKey = process[Symbol.for("privateKey")];
+const mysql = process[Symbol.for("mysql")];
 
 class Counter
 {
@@ -24,21 +25,18 @@ class Counter
 		// 
 		this.counters = [];
 
-		// statistic the frequency of fall behind
-		this.invalidStageTimeStatistics = [];
+		//
+		this.stageSynchronizeTrigger = [];
 
 		//
 		this.cheatedNodes = [];
-
-		// should store in database
-		this.threshould = COUNTER_CONSENSUS_STAGE_THRESHOULD;
 	}
 
 	reset()
 	{
 		this.state = COUNTER_STATE_IDLE;
 		this.counters = [];
-		this.invalidStageTimeStatistics = [];
+		this.stageSynchronizeTrigger = [];
 		
 		clearTimeout(this.timeout);
 	}
@@ -52,10 +50,10 @@ class Counter
 
 			if(countersMap.has(key))
 			{
-				const { count, timeConsumes } = rlpcountersMap.get(key);
+				const { count, timeConsumes } = countersMap.get(key);
 
-				timeConsumes.primaryConsensusTime += bufferToInt(counter.primaryConsensusTime);
-				timeConsumes.finishConsensusTime += bufferToInt(counter.finishConsensusTime);
+				timeConsumes.dataExchangeTimeConsume += bufferToInt(counter.dataExchangeTimeConsume);
+				timeConsumes.stageSynchronizeTimeConsume += bufferToInt(counter.stageSynchronizeTimeConsume);
 				timeConsumes.pastTime += bufferToInt(counter.pastTime);
 
 				countersMap.set(key, {
@@ -72,8 +70,8 @@ class Counter
 					round: counter.round,
 					stage: counter.stage,
 					timeConsumes: {
-						primaryConsensusTime: bufferToInt(counter.primaryConsensusTime),
-						finishConsensusTime: bufferToInt(counter.finishConsensusTime),
+						dataExchangeTimeConsume: bufferToInt(counter.dataExchangeTimeConsume),
+						stageSynchronizeTimeConsume: bufferToInt(counter.stageSynchronizeTimeConsume),
 						pastTime: bufferToInt(counter.pastTime)
 					}
 				});
@@ -84,18 +82,18 @@ class Counter
 			return -counter[1].count;
 		});
 
-		if(sortedCounters[0])
+		if(sortedCounters[0] && sortedCounters[0][1].count > COUNTER_CONSENSUS_STAGE_THRESHOULD * unl.length)
 		{
 			const count = sortedCounters[0][1].count
 			const round = sortedCounters[0][1].round;
 			const stage = sortedCounters[0][1].stage;
 			const timeConsumes = sortedCounters[0][1].timeConsumes;
 
-			const primaryConsensusTime = timeConsumes.primaryConsensusTime / count;
-			const finishConsensusTime = timeConsumes.finishConsensusTime / count;
+			const dataExchangeTimeConsume = timeConsumes.dataExchangeTimeConsume / count;
+			const stageSynchronizeTimeConsume = timeConsumes.stageSynchronizeTimeConsume / count;
 			const pastTime = timeConsumes.pastTime / count;
 
-			this.ripple.handleCounter(round, stage, primaryConsensusTime, finishConsensusTime, pastTime);
+			this.ripple.handleCounter(round, stage, dataExchangeTimeConsume, stageSynchronizeTimeConsume, pastTime);
 		}
 
 		this.ripple.handleCheatedNodes(this.cheatedNodes);
@@ -114,79 +112,80 @@ class Counter
 			case PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE:
 			case PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE:
 			{
-				logger.error(`Counter handleMessage, stage may be invalid, current own round: ${this.ripple.round}, stage: ${this.ripple.stage}`);
+				logger.info(`Counter handleMessage, stage may be invalid, current own round: ${this.ripple.round}, stage: ${this.ripple.stage}`);
 
-				// compute the stage invalid times over a specified period of time 
+				// check if need to synchronize stage
 				const now = Date.now();
-
-				this.invalidStageTimeStatistics.push(now);
-
-				const stageValidTimesInSpecifiedTimeSection = this.invalidStageTimeStatistics.filter(ele => { 
-					return ele + COUNTER_INVALID_STAGE_TIME_SECTION > now;
-				}).length;
-
-				// if stage invalid times over a specified period of time is exceeds the limit, try to synchronize the stage
-				if(stageValidTimesInSpecifiedTimeSection >= this.threshould * unl.length)
+				this.stageSynchronizeTrigger.push(now);
+				if(this.stageSynchronizeTrigger.filter(ele => (ele + COUNTER_INVALID_STAGE_TIME_SECTION) > now).length >= COUNTER_CONSENSUS_STAGE_THRESHOULD * unl.length)
 				{
-					if(this.state === COUNTER_STATE_IDLE)
+					if(this.state == COUNTER_STATE_PROCESSING)
 					{
-						this.state = COUNTER_STATE_PROCESSING;
-
-						p2p.sendAll(PROTOCOL_CMD_ACOUNTER_REQUEST);
-
-						this.timeout = setTimeout(() => {
-
-							logger.error("Counter handleMessage, get stage infomation is over because of timeout");
-
-							this.handler(false);
-
-							this.reset();
-						}, COUNTER_HANDLER_TIME_DETAY);
+						return;
 					}
+					
+					this.ripple.state = RIPPLE_STATE_STAGE_CONSENSUS;
+					
+					this.state = COUNTER_STATE_PROCESSING;
+
+					p2p.sendAll(PROTOCOL_CMD_STAGE_INFO_REQUEST);
+
+					this.timeout = setTimeout(() => {
+
+						logger.info("Counter handleMessage, get stage infomation is over because of timeout");
+
+						this.handler(false);
+
+						this.reset();
+					}, COUNTER_HANDLER_TIME_DETAY);
 				}
 			}
 			break;
-			case PROTOCOL_CMD_ACOUNTER_REQUEST:
+			case PROTOCOL_CMD_STAGE_INFO_REQUEST:
 			{
-				const counterData = new CounterData();
+				(async () => {
+					const counterData = new CounterData();
 
-				counterData.round = this.ripple.round;
-				counterData.stage = this.ripple.stage;
-				if(this.ripple.state === RIPPLE_STAGE_AMALGAMATE)
-				{
-					counterData.primaryConsensusTime = this.ripple.amalgamate.averageDataExchangeTime;
-					counterData.finishConsensusTime = this.ripple.amalgamate.averageSynchronizeTime;
-					counterData.pastTime = Date.now() - this.ripple.amalgamate.primary.consensusBeginTime;
-				}
-				else if(this.ripple.state === RIPPLE_STAGE_CANDIDATE_AGREEMENT)
-				{
-					counterData.primaryConsensusTime = this.ripple.candidateAgreement.averageDataExchangeTime;
-					counterData.finishConsensusTime = this.ripple.candidateAgreement.averageSynchronizeTime;
-					counterData.pastTime = Date.now() - this.ripple.candidateAgreement.primary.consensusBeginTime;
-				}
-				else if(this.ripple.state === RIPPLE_STAGE_BLOCK_AGREEMENT || this.ripple.state === RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK)
-				{
-					counterData.primaryConsensusTime = this.ripple.blockAgreement.averageDataExchangeTime;
-					counterData.finishConsensusTime = this.ripple.blockAgreement.averageSynchronizeTime;
-					counterData.pastTime = Date.now() - this.ripple.blockAgreement.primary.consensusBeginTime;
-				}
-				else
-				{
-					logger.fatal("Counter handleMessage, invalid ripple stage");
+					counterData.round = this.ripple.round;
+					counterData.stage = this.ripple.stage;
 
-					process.exit(1);
-				}
-				counterData.sign(privateKey);
+					if(this.ripple.stage === RIPPLE_STAGE_AMALGAMATE)
+					{
+						counterData.pastTime = Date.now() - this.ripple.amalgamate.dataExchange.consensusBeginTime;
+					}
+					else if(this.ripple.stage === RIPPLE_STAGE_CANDIDATE_AGREEMENT)
+					{
+						counterData.pastTime = Date.now() - this.ripple.candidateAgreement.dataExchange.consensusBeginTime;
+					}
+					else if(this.ripple.stage === RIPPLE_STAGE_BLOCK_AGREEMENT || this.ripple.state === RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK)
+					{
+						counterData.pastTime = Date.now() - this.ripple.blockAgreement.dataExchange.consensusBeginTime;
+					}
+					else
+					{
+						logger.fatal("Counter handleMessage, invalid ripple stage");
 
-				p2p.send(address, PROTOCOL_CMD_ACOUNTER_RESPONSE, counterData.serialize())
+						process.exit(1);
+					}
+
+					counterData.dataExchangeTimeConsume = await mysql.getDataExchangeTimeConsume(this.ripple.stage);
+					counterData.stageSynchronizeTimeConsume = await mysql.getStageSynchronizeTimeConsume(this.ripple.stage);
+
+					counterData.sign(privateKey);
+
+					p2p.send(address, PROTOCOL_CMD_STAGE_INFO_RESPONSE, counterData.serialize())
+				})().catch(e => {
+					logger.error(e);
+				})
 			}
 			break;
-			case PROTOCOL_CMD_ACOUNTER_RESPONSE:
+			case PROTOCOL_CMD_STAGE_INFO_RESPONSE:
 			{
 				if(this.state === COUNTER_STATE_IDLE)
 				{
 					return;
 				}
+
 				const counterData = new CounterData(data);
 
 				if(counterData.validate())
@@ -195,7 +194,7 @@ class Counter
 					{
 						this.cheatedNodes.push(address);
 
-						logger.error(`Counter handleMessage, address should be ${address.toString("hex")}, now is ${counterData.from.toString("hex")}`);
+						logger.info(`Counter handleMessage, address should be ${address.toString("hex")}, now is ${counterData.from.toString("hex")}`);
 					}
 					else
 					{
@@ -206,15 +205,11 @@ class Counter
 				{
 					this.cheatedNodes.push(address);
 					
-					logger.error(`Counter handleMessage, address ${address.toString("hex")}, validate failed`);
+					logger.info(`Counter handleMessage, address ${address.toString("hex")}, validate failed`);
 				}
 
 				if(this.counters.length === unl.length)
 				{
-					clearTimeout(this.timeout);
-
-					logger.trace("Counter handleMessage, get stage infomation is over success");
-
 					this.handler(true);
 					
 					this.reset();

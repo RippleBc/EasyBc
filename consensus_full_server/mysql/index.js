@@ -9,6 +9,7 @@ const accountModelConfig = require('./account');
 const blockModelConfig = require('./block');
 const transactionModelConfig = require('./transaction');
 const rawTransactionModelConfig = require('./rawTransaction');
+const timeConsumeModelConfig = require('./timeConsume');
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 
@@ -38,6 +39,7 @@ class Mysql
     this.Block = this.sequelize.define(...blockModelConfig);
     this.Transaction = this.sequelize.define(...transactionModelConfig);
     this.RawTransaction = this.sequelize.define(...rawTransactionModelConfig);
+    this.TimeConsume = this.sequelize.define(...timeConsumeModelConfig);
 
     await this.sequelize.authenticate();
     await this.sequelize.sync();
@@ -230,6 +232,72 @@ class Mysql
     }
 
     return result;
+  }
+  
+  /**
+   * @param {Number} stage
+   * @param {Number} type
+   * @param {Number} timeConsume
+   */
+  async saveDataExchangeTimeConsume(stage, timeConsume)
+  {
+    assert(typeof stage === 'number', `Mysql saveDataExchangeTimeConsume, stage should be a Number, now is ${typeof stage}`);
+    assert(typeof type === 'number', `Mysql saveDataExchangeTimeConsume, type should be a Number, now is ${typeof type}`);
+    assert(typeof timeConsume === 'number', `Mysql saveDataExchangeTimeConsume, timeConsume should be a Number, now is ${typeof timeConsume}`);
+
+    await.this.TimeConsume.create({ 
+      stage: stage, 
+      type: 1,
+      timeConsume: timeConsume 
+    });
+  }
+
+  /**
+   * @param {Number} stage
+   * @param {Number} type
+   */
+  async getDataExchangeTimeConsume(stage)
+  {
+    await this.TimeConsume.avg({
+      where: { 
+        stage: stage, 
+        type: 1
+      },
+      limit: 100,
+    });
+  }
+
+  /**
+   * @param {Number} stage
+   * @param {Number} type
+   * @param {Number} timeConsume
+   */
+  async saveStageSynchronizeTimeConsume(stage, timeConsume)
+  {
+    assert(typeof stage === 'number', `Mysql saveDataExchangeTimeConsume, stage should be a Number, now is ${typeof stage}`);
+    assert(typeof type === 'number', `Mysql saveDataExchangeTimeConsume, type should be a Number, now is ${typeof type}`);
+    assert(typeof timeConsume === 'number', `Mysql saveDataExchangeTimeConsume, timeConsume should be a Number, now is ${typeof timeConsume}`);
+
+    await.this.TimeConsume.create({ 
+      stage: stage, 
+      type: 2,
+      timeConsume: timeConsume 
+    });
+  }
+
+  /**
+   * @param {Number} stage
+   * @param {Number} type
+   */
+  async getStageSynchronizeTimeConsume(stage)
+  {
+    await this.TimeConsume.avg({
+      where: { 
+        stage: stage, 
+        type: 2
+      },
+      limit: 100,
+    });
   }
 }
 
