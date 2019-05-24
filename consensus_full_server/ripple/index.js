@@ -153,6 +153,7 @@ class Ripple extends AsyncEventemitter
 
 	handleCounter()
 	{
+		this.reset();
 		this.run(true);
 		this.counter.reset();
 	}

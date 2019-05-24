@@ -40,6 +40,15 @@ class Counter extends Stage
 
 	handler(ifSuccess)
 	{
+		if(ifSuccess)
+		{
+			logger.fatal("stage synchronize success")
+		}
+		else
+		{
+			logger.info("stage synchronize failed")
+		}
+
 		this.ripple.handleCounter();
 		this.ripple.handleCheatedNodes(this.cheatedNodes);
 	}
@@ -124,7 +133,7 @@ class Counter extends Stage
 				{
 					return;
 				}
-				
+
 				super.handleMessage(address, cmd, data);
 			}
 		}
