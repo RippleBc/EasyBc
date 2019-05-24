@@ -11,7 +11,7 @@ const bufferToInt = utils.bufferToInt;
 
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
-const privateKey = processSymbol[.for("privateKey")];
+const privateKey = process[Symbol.for("privateKey")];
 const mysql = process[Symbol.for("mysql")];
 
 class Counter extends Stage
