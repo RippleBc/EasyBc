@@ -71,7 +71,9 @@ class BlockAgreement extends Stage
 			}).then(() => {
 				self.ripple.emit("blockProcessOver");
 
-				self.ripple.run();
+				self.ripple.run().catch(e => {
+					logger.error(`BlockAgreement handler, ripple.run throw exception, ${e}`);
+				});
 				
 				logger.trace("BlockAgreement handler, run block chain success, go to next stage");			
 			});
@@ -79,7 +81,9 @@ class BlockAgreement extends Stage
 			return;
 		}
 
-		this.ripple.run();
+		this.ripple.run().catch(e => {
+			logger.error(`BlockAgreement handler, ripple.run throw exception, ${e}`);
+		});
 	}
 
 	/**

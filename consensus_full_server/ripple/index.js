@@ -28,9 +28,7 @@ class Ripple extends AsyncEventemitter
 
 		this.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
 
-		this.round = 0;
 		this.stage = 0;
-
 
 		this.counter = new Counter(this);
 		this.perish = new Perish(this);
@@ -59,37 +57,20 @@ class Ripple extends AsyncEventemitter
 	/*
 	 * @param {Boolean} ifRetry
 	 */
-	run(ifRetry = false)
+	async run(ifRetry = false)
 	{
+		this.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
+
 		if(!ifRetry)
 		{
-			this.processor.getTransactions(MAX_PROCESS_TRANSACTIONS_SIZE).then(transactions => {
-				this.processingTransactions = transactions;
-
-				this.round += 1;
-				if(this.round > RIPPLE_MAX_ROUND)
-				{
-					this.round = 0;
-				}
-
-				this.amalgamate.run(this.processingTransactions);
-				this.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
-			}).catch(e => {
-				logger.fatal(`Ripple run, throw exceptions, ${e.stack}`);
-				process.exit(1)
-			})
+			this.processingTransactions = await this.processor.getTransactions(MAX_PROCESS_TRANSACTIONS_SIZE);
+			
+			this.amalgamate.run(this.processingTransactions);
 
 			return;
 		}
-		
-		this.round += 1;
-		if(this.round > RIPPLE_MAX_ROUND)
-		{
-			this.round = 0;
-		}
 
 		this.amalgamate.run(this.processingTransactions);
-		this.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
 	}
 
 	/**
@@ -154,8 +135,8 @@ class Ripple extends AsyncEventemitter
 	handleCounter()
 	{
 		this.reset();
-		this.run(true);
 		this.counter.reset();
+		this.run(true);
 	}
 
 	/**
@@ -173,9 +154,12 @@ class Ripple extends AsyncEventemitter
 		{
 			if(this.state === RIPPLE_STATE_STAGE_CONSENSUS && this.counter.checkIfDataExchangeIsFinish())
 			{
+				logger.fatal("stage synchronize success");
+
 				this.reset();
-				this.run(true);
 				this.counter.reset();
+
+				this.run(true);
 				this.amalgamate.handleMessage(address, cmd, data);
 			}
 			else
@@ -271,7 +255,6 @@ class Ripple extends AsyncEventemitter
 		this.candidateAgreement.reset();
 		this.blockAgreement.reset();
 
-		this.round = 0;
 		this.stage = 0;
 	}
 }
