@@ -245,7 +245,6 @@ class Mysql
   async saveDataExchangeTimeConsume(stage, timeConsume)
   {
     assert(typeof stage === 'number', `Mysql saveDataExchangeTimeConsume, stage should be a Number, now is ${typeof stage}`);
-    assert(typeof type === 'number', `Mysql saveDataExchangeTimeConsume, type should be a Number, now is ${typeof type}`);
     assert(typeof timeConsume === 'number', `Mysql saveDataExchangeTimeConsume, timeConsume should be a Number, now is ${typeof timeConsume}`);
 
     await this.TimeConsume.create({ 
@@ -278,7 +277,6 @@ class Mysql
   async saveStageSynchronizeTimeConsume(stage, timeConsume)
   {
     assert(typeof stage === 'number', `Mysql saveDataExchangeTimeConsume, stage should be a Number, now is ${typeof stage}`);
-    assert(typeof type === 'number', `Mysql saveDataExchangeTimeConsume, type should be a Number, now is ${typeof type}`);
     assert(typeof timeConsume === 'number', `Mysql saveDataExchangeTimeConsume, timeConsume should be a Number, now is ${typeof timeConsume}`);
 
     await this.TimeConsume.create({ 
