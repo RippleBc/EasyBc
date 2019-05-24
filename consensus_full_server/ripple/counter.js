@@ -144,6 +144,11 @@ class Counter
 			break;
 			case PROTOCOL_CMD_STAGE_INFO_REQUEST:
 			{
+				if(this.state == COUNTER_STATE_PROCESSING)
+				{
+					return;
+				}
+					
 				(async () => {
 					const counterData = new CounterData();
 
