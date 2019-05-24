@@ -260,13 +260,17 @@ class Mysql
    */
   async getDataExchangeTimeConsume(stage)
   {
-    return await this.TimeConsume.avg('data', {
+    const limit = 100
+
+    const total =  await this.TimeConsume.sum('data', {
       where: { 
         stage: stage, 
         type: 1
       },
-      limit: 100,
+      limit: limit,
     });
+
+    return total / limit
   }
 
   /**
@@ -292,13 +296,17 @@ class Mysql
    */
   async getStageSynchronizeTimeConsume(stage)
   {
-    return await this.TimeConsume.avg('data', {
+    const limit = 100
+    
+    const total =  await this.TimeConsume.sum('data', {
       where: { 
         stage: stage, 
         type: 2
       },
-      limit: 100,
+      limit: limit,
     });
+
+    return total / limit
   }
 
   /**
