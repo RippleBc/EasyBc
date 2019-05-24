@@ -124,6 +124,7 @@ class Counter
 
 					logger.info(`Counter handleMessage, begin to synchronize stage, current own round: ${this.ripple.round}, stage: ${this.ripple.stage}`);
 
+					this.ripple.reset();
 					this.ripple.state = RIPPLE_STATE_STAGE_CONSENSUS;
 
 					this.state = COUNTER_STATE_PROCESSING;

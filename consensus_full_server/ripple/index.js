@@ -178,9 +178,7 @@ class Ripple extends AsyncEventemitter
 			return logger.info("Ripple handleCounter, current own stage is more fresh");
 		}
 
-		this.amalgamate.reset();
-		this.candidateAgreement.reset();
-		this.blockAgreement.reset();
+		this.reset();
 		this.round = round;
 
 		// compute new round and stage
@@ -305,6 +303,16 @@ class Ripple extends AsyncEventemitter
 		{
 			logger.info(`Ripple handleMessage, address ${address.toString("hex")}, invalid cmd: ${cmd}`);
 		}
+	}
+
+	reset()
+	{
+		this.amalgamate.reset();
+		this.candidateAgreement.reset();
+		this.blockAgreement.reset();
+
+		this.round = 0;
+		this.stage = 0;
 	}
 }
 
