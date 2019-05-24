@@ -120,6 +120,11 @@ class Counter extends Stage
 			break;
 			default:
 			{
+				if(this.state === COUNTER_STATE_IDLE)
+				{
+					return;
+				}
+				
 				super.handleMessage(address, cmd, data);
 			}
 		}

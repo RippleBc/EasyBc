@@ -178,7 +178,7 @@ class Ripple extends AsyncEventemitter
 			}
 			else
 			{
-				return logger.info(`Ripple handleMessage, processor is synchronizing stage, do not handle messages`);
+				return logger.info(`Ripple handleMessage, processor is synchronizing stage, do not handle transaction consensus messages`);
 			}
 
 			if(this.blockAgreement.checkIfDataExchangeIsFinish())
@@ -209,7 +209,7 @@ class Ripple extends AsyncEventemitter
 		{
 			if(this.state === RIPPLE_STATE_STAGE_CONSENSUS)
 			{
-				return logger.info(`Ripple handleMessage, processor is synchronizing stage, do not handle messages`);
+				return logger.info(`Ripple handleMessage, processor is synchronizing stage, do not handle transaction consensus messages`);
 			}
 
 			if(this.amalgamate.checkIfDataExchangeIsFinish())
@@ -231,7 +231,7 @@ class Ripple extends AsyncEventemitter
 		{
 			if(this.state === RIPPLE_STATE_STAGE_CONSENSUS)
 			{
-				return logger.info(`Ripple handleMessage, processor is synchronizing stage, do not handle messages`);
+				return logger.info(`Ripple handleMessage, processor is synchronizing stage, do not handle transaction consensus messages`);
 			}
 
 			if(this.candidateAgreement.checkIfDataExchangeIsFinish())
