@@ -173,6 +173,7 @@ class Ripple extends AsyncEventemitter
 		{
 			if(this.state === RIPPLE_STATE_STAGE_CONSENSUS && this.counter.checkIfDataExchangeIsFinish())
 			{
+				this.reset();
 				this.run(true);
 				this.counter.reset();
 				this.amalgamate.handleMessage(address, cmd, data);
