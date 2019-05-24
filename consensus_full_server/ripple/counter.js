@@ -149,38 +149,37 @@ class Counter
 					return;
 				}
 
+				const counterData = new CounterData();
+
+				counterData.round = this.ripple.round;
+				counterData.stage = this.ripple.stage;
+
+				if(this.ripple.stage === RIPPLE_STAGE_AMALGAMATE)
+				{
+					counterData.pastTime = Date.now() - this.ripple.amalgamate.dataExchange.consensusBeginTime;
+				}
+				else if(this.ripple.stage === RIPPLE_STAGE_CANDIDATE_AGREEMENT)
+				{
+					counterData.pastTime = Date.now() - this.ripple.candidateAgreement.dataExchange.consensusBeginTime;
+				}
+				else if(this.ripple.stage === RIPPLE_STAGE_BLOCK_AGREEMENT || this.ripple.state === RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK)
+				{
+					counterData.pastTime = Date.now() - this.ripple.blockAgreement.dataExchange.consensusBeginTime;
+				}
+				else
+				{
+					logger.fatal("Counter handleMessage, invalid ripple stage");
+
+					process.exit(1);
+				}
+
 				(async () => {
-					const counterData = new CounterData();
-
-					counterData.round = this.ripple.round;
-					counterData.stage = this.ripple.stage;
-
-					if(this.ripple.stage === RIPPLE_STAGE_AMALGAMATE)
-					{
-						counterData.pastTime = Date.now() - this.ripple.amalgamate.dataExchange.consensusBeginTime;
-					}
-					else if(this.ripple.stage === RIPPLE_STAGE_CANDIDATE_AGREEMENT)
-					{
-						counterData.pastTime = Date.now() - this.ripple.candidateAgreement.dataExchange.consensusBeginTime;
-					}
-					else if(this.ripple.stage === RIPPLE_STAGE_BLOCK_AGREEMENT || this.ripple.state === RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK)
-					{
-						counterData.pastTime = Date.now() - this.ripple.blockAgreement.dataExchange.consensusBeginTime;
-					}
-					else
-					{
-						logger.fatal("Counter handleMessage, invalid ripple stage");
-
-						process.exit(1);
-					}
-
 					counterData.dataExchangeTimeConsume = await mysql.getDataExchangeTimeConsume(this.ripple.stage);
 					counterData.stageSynchronizeTimeConsume = await mysql.getStageSynchronizeTimeConsume(this.ripple.stage);
-
+				})().then(() => {
 					counterData.sign(privateKey);
-
 					p2p.send(address, PROTOCOL_CMD_STAGE_INFO_RESPONSE, counterData.serialize())
-				})().catch(e => {
+				}).catch(e => {
 					logger.error(e);
 				})
 			}
