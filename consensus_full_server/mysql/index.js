@@ -10,6 +10,8 @@ const blockModelConfig = require('./block');
 const transactionModelConfig = require('./transaction');
 const rawTransactionModelConfig = require('./rawTransaction');
 const timeConsumeModelConfig = require('./timeConsume');
+const abnormalNodeModelConfig = require('./abnormalNode');
+
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 
@@ -40,6 +42,7 @@ class Mysql
     this.Transaction = this.sequelize.define(...transactionModelConfig);
     this.RawTransaction = this.sequelize.define(...rawTransactionModelConfig);
     this.TimeConsume = this.sequelize.define(...timeConsumeModelConfig);
+    this.AbnormalNode = this.sequelize.define(...abnormalNodeModelConfig);
 
     await this.sequelize.authenticate();
     await this.sequelize.sync();
@@ -298,6 +301,28 @@ class Mysql
       },
       limit: 100,
     });
+  }
+
+  /**
+   * @param {String} address
+   */
+  async saveTimeoutNode(address)
+  {
+    await this.AbnormalNode.create({
+      address: address, 
+      type: 1
+    })
+  }
+
+  /**
+   * @param {String} address
+   */
+  async saveCheatedNode(address)
+  {
+    await this.AbnormalNode.create({
+      address: address, 
+      type: 2
+    })
   }
 }
 
