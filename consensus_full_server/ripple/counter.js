@@ -79,10 +79,10 @@ class Counter
 		});
 
 		const sortedCounters = [...countersMap].sort(counter => {
-			return -counter[1].count;
+			return -(counter[1].count * RIPPLE_MAX_ROUND + counter[1].round);
 		});
 
-		if(sortedCounters[0] && sortedCounters[0][1].count > COUNTER_CONSENSUS_STAGE_THRESHOULD * unl.length)
+		if(sortedCounters[0] && sortedCounters[0][1].count)
 		{
 			const count = sortedCounters[0][1].count
 			const round = sortedCounters[0][1].round;
