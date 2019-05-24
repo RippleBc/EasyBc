@@ -38,7 +38,7 @@ class Stage
 		this.dataExchange = new Sender(result => {
 			// record data exchange time consume
 			mysql.saveDataExchangeTimeConsume(this.ripple.stage, this.dataExchange.consensusTimeConsume).catch(e => {
-				logger.error(`Stage, saveDataExchangeTimeConsume throw exception, ${e}`);
+				logger.error(`Stage, state: ${this.ripple.state}, stage: ${this.ripple.stage}, saveDataExchangeTimeConsume throw exception, ${e}`);
 			});
 
 			if(result)
@@ -57,7 +57,7 @@ class Stage
 				}
 
 				//
-				logger.info("Stage, dataExchange is over because of timeout");
+				logger.info(`Stage, state: ${this.ripple.state}, stage: ${this.ripple.stage}, dataExchange is over because of timeout`);
 
 				this.state = STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING;
 			}
@@ -74,7 +74,7 @@ class Stage
 			{
 				// record synchronize time consume
 				mysql.saveStageSynchronizeTimeConsume(this.ripple.stage, this.dataExchange.consensusTimeConsume).catch(e => {
-					logger.error(`Stage, saveStageSynchronizeTimeConsume throw exception, ${e}`);
+					logger.error(`Stage, state: ${this.ripple.state}, stage: ${this.ripple.stage}, saveStageSynchronizeTimeConsume throw exception, ${e}`);
 				});
 
 				//
@@ -96,7 +96,7 @@ class Stage
 
 				if(this.leftSynchronizeTryTimes > 0)
 				{
-					logger.info("Stage, stage synchronize is failed, retry");
+					logger.info(`Stage, state: ${this.ripple.state}, stage: ${this.ripple.stage}, stage synchronize is failed, retry`);
 
 					this.stageSynchronize.reset();
 					this.stageSynchronize.start();
@@ -106,11 +106,11 @@ class Stage
 				}
 				else
 				{
-					logger.info("Stage, stage synchronize is over because of timeout");
+					logger.info(`Stage, state: ${this.ripple.state}, stage: ${this.ripple.stage}, stage synchronize is over because of timeout`);
 
 					// record synchronize time consume
 					mysql.saveStageSynchronizeTimeConsume(this.ripple.stage, this.dataExchange.consensusTimeConsume).catch(e => {
-						logger.error(`Stage, saveStageSynchronizeTimeConsume throw exception, ${e}`);
+						logger.error(`Stage, state: ${this.ripple.state}, stage: ${this.ripple.stage}, saveStageSynchronizeTimeConsume throw exception, ${e}`);
 					});
 
 					//
@@ -204,7 +204,7 @@ class Stage
 
 					this.stageSynchronize.recordFinishNode(address.toString("hex"));
 
-					logger.info(`Stage handleMessage, address: ${address.toString("hex")}, stage synchronize is over because of timeout`);
+					logger.info(`Stage handleMessage, state: ${this.ripple.state}, stage: ${this.ripple.stage}, address: ${address.toString("hex")}, stage synchronize is over because of timeout`);
 				}
 				else if(state === STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING)
 				{
@@ -212,7 +212,7 @@ class Stage
 				}
 				else
 				{
-					logger.fatal("Stage handleMessage, stage state is empty, can not process messages");
+					logger.fatal(`Stage handleMessage, state: ${this.ripple.state}, stage: ${this.ripple.stage}, stage state is empty, can not process messages`);
 
 					process.exit(1);
 				}

@@ -156,7 +156,7 @@ class Ripple extends AsyncEventemitter
 			{
 				if(this.counter.checkIfDataExchangeIsFinish())
 				{
-					logger.fatal("stage synchronize success");
+					logger.fatal("negative stage synchronize success");
 
 					this.reset();
 					this.counter.reset();

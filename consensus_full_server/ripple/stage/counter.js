@@ -42,11 +42,11 @@ class Counter extends Stage
 	{
 		if(ifSuccess)
 		{
-			logger.fatal("stage synchronize success")
+			logger.fatal("positive stage synchronize success")
 		}
 		else
 		{	
-			logger.info("stage synchronize failed")
+			logger.info("positive stage synchronize failed")
 		}
 
 		this.ripple.handleCounter();
