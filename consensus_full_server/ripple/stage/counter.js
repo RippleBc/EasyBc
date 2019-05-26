@@ -2,7 +2,7 @@ const CounterData = require("../data/counter");
 const { unl } = require("../../config.json");
 const utils = require("../../../depends/utils");
 const process = require("process");
-const { PROTOCOL_CMD_COUNTER_FINISH_STATE_REQUEST, PROTOCOL_CMD_COUNTER_FINISH_STATE_RESPONSE, RIPPLE_STATE_STAGE_CONSENSUS, COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD, COUNTER_HANDLER_TIME_DETAY, COUNTER_INVALID_STAGE_TIME_SECTION, COUNTER_STATE_IDLE, COUNTER_STATE_PROCESSING, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_STAGE_INFO_REQUEST, PROTOCOL_CMD_STAGE_INFO_RESPONSE } = require("../../constant");
+const { PROTOCOL_CMD_COUNTER_FINISH_STATE_REQUEST, PROTOCOL_CMD_COUNTER_FINISH_STATE_RESPONSE, RIPPLE_STATE_STAGE_CONSENSUS, COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD, COUNTER_HANDLER_TIME_DETAY, COUNTER_INVALID_STAGE_TIME_SECTION, STAGE_STATE_EMPTY, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_STAGE_INFO_REQUEST, PROTOCOL_CMD_STAGE_INFO_RESPONSE } = require("../../constant");
 const Stage = require("./stage");
 
 const rlp = utils.rlp;
@@ -24,17 +24,14 @@ class Counter extends Stage
 		});
 
 		this.ripple = ripple;
-		this.state = COUNTER_STATE_IDLE;
 
 		this.stageSynchronizeTrigger = [];
-		this.cheatedNodes = [];
 	}
 
 	reset()
 	{
 		super.reset();
 
-		this.state = COUNTER_STATE_IDLE;
 		this.stageSynchronizeTrigger = [];
 	}
 
@@ -72,7 +69,7 @@ class Counter extends Stage
 				if(this.stageSynchronizeTrigger.filter(ele => (ele + COUNTER_INVALID_STAGE_TIME_SECTION) > now).length >= COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD * unl.length)
 				{
 					// begin to stage synchronize
-					if(this.state === COUNTER_STATE_IDLE)
+					if(this.state === STAGE_STATE_EMPTY)
 					{
 						this.startStageSynchronize();
 					}
@@ -82,7 +79,7 @@ class Counter extends Stage
 			case PROTOCOL_CMD_STAGE_INFO_REQUEST:
 			{
 				// begin stage synchronize
-				if(this.state === COUNTER_STATE_IDLE)
+				if(this.state === STAGE_STATE_EMPTY)
 				{
 					this.startStageSynchronize();
 				}
@@ -97,7 +94,7 @@ class Counter extends Stage
 			break;
 			case PROTOCOL_CMD_STAGE_INFO_RESPONSE:
 			{
-				if(this.state === COUNTER_STATE_IDLE)
+				if(this.state === STAGE_STATE_EMPTY)
 				{
 					return;
 				}
@@ -129,7 +126,7 @@ class Counter extends Stage
 			break;
 			default:
 			{
-				if(this.state === COUNTER_STATE_IDLE)
+				if(this.state === STAGE_STATE_EMPTY)
 				{
 					return;
 				}
@@ -147,8 +144,6 @@ class Counter extends Stage
 
 		this.ripple.reset();
 		this.ripple.state = RIPPLE_STATE_STAGE_CONSENSUS;
-
-		this.state = COUNTER_STATE_PROCESSING;
 
 		p2p.sendAll(PROTOCOL_CMD_STAGE_INFO_REQUEST);
 	}
