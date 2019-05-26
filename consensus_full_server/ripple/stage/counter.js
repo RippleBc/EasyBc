@@ -138,7 +138,7 @@ class Counter extends Stage
 
 	startStageSynchronize()
 	{
-		logger.info(`Counter handleMessage, begin to synchronize stage, stage: ${this.ripple.stage}`);
+		logger.warn(`Counter handleMessage, begin to synchronize stage, stage: ${this.ripple.stage}`);
 
 		this.start();
 
