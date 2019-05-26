@@ -69,11 +69,11 @@ class BlockAgreement extends Stage
 			this.ripple.processor.processBlock({
 				block: new Block(sortedBlocks[0][1].data)
 			}).then(() => {
-				logger.warn("BlockAgreement handler, block agreement success, process block success");
+				logger.warn("BlockAgreement handler, block agreement success, process block is over");
 
-				self.ripple.emit("blockProcessOver");
-
-				self.ripple.run().catch(e => {
+				self.ripple.run().then(() => {
+					self.ripple.emit("blockProcessOver");
+				}).catch(e => {
 					logger.error(`BlockAgreement handler, ripple.run throw exception, ${e}`);
 				});
 				
