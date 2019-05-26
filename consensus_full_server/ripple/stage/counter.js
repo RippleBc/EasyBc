@@ -10,7 +10,7 @@ const sha3 = utils.sha3;
 const bufferToInt = utils.bufferToInt;
 
 const p2p = process[Symbol.for("p2p")];
-const logger = process[Symbol.for("loggerConsensus")];
+const logger = process[Symbol.for("loggerStageConsensus")];
 const privateKey = process[Symbol.for("privateKey")];
 const mysql = process[Symbol.for("mysql")];
 
@@ -39,11 +39,11 @@ class Counter extends Stage
 	{
 		if(ifSuccess)
 		{
-			logger.warn("Counter handler, stage synchronize success")
+			logger.fatal("Counter handler, stage synchronize success")
 		}
 		else
 		{	
-			logger.warn("Counter handler, stage synchronize success because of timeout")
+			logger.fatal("Counter handler, stage synchronize success because of timeout")
 		}
 
 		this.ripple.handleCounter();
@@ -138,7 +138,7 @@ class Counter extends Stage
 
 	startStageSynchronize()
 	{
-		logger.warn(`Counter handleMessage, begin to synchronize stage, stage: ${this.ripple.stage}`);
+		logger.fatal(`Counter handleMessage, begin to synchronize stage, stage: ${this.ripple.stage}`);
 
 		this.start();
 

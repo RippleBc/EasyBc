@@ -14,6 +14,7 @@ const rlp = utils.rlp;
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
 const mysql = process[Symbol.for("mysql")];
+const loggerStageConsensus = process[Symbol.for("loggerStageConsensus")];
 
 class Ripple extends AsyncEventemitter
 {
@@ -156,7 +157,7 @@ class Ripple extends AsyncEventemitter
 			{
 				if(this.counter.checkIfDataExchangeIsFinish())
 				{
-					logger.warn("Ripple handleMessage, stage synchronize success because of node notification");
+					loggerStageConsensus.fatal("Ripple handleMessage, stage synchronize success because of node notification");
 
 					this.reset();
 					this.counter.reset();

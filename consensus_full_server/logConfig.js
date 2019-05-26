@@ -35,6 +35,12 @@ log4js.configure({
             filename: "consensus_full_server/logs/update_log/",
             pattern: "update-yyyy-MM-dd.log",
             alwaysIncludePattern: true
+        },
+        stageConsensus: {
+            type: "dateFile",
+            filename: "consensus_full_server/logs/stageConsensus_log/",
+            pattern: "stageConsensus-yyyy-MM-dd.log",
+            alwaysIncludePattern: true
         }
     },
     categories: {
@@ -43,7 +49,8 @@ log4js.configure({
         p2p: { appenders: ["stdout", "p2p"], level: "info" },
         net: { appenders: ["stdout", "net"], level: "info" },
         mysql: { appenders: ["stdout", "mysql"], level: "info" },
-        update: { appenders: ["stdout", "update"], level: "info" }
+        update: { appenders: ["stdout", "update"], level: "info" },
+        stageConsensus: { appenders: ["stdout", "stageConsensus"], level: "info" }
     }
 })
  
