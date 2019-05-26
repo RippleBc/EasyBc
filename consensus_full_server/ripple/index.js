@@ -167,7 +167,7 @@ class Ripple extends AsyncEventemitter
 				}
 				else
 				{
-					logger.info(`Ripple handleMessage, processor is synchronizing stage, do not handle transaction consensus messages`);
+					loggerStageConsensus.fatal("Ripple handleMessage, processor is synchronizing stage, do not handle transaction consensus messages");
 				}
 
 				return;
@@ -196,6 +196,8 @@ class Ripple extends AsyncEventemitter
 			}
 			else
 			{
+				loggerStageConsensus.fatal(`Ripple handleMessage, address ${address.toString("hex")}, own stage ${this.stage}, other stage 1`);
+
 				p2p.send(address, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE);
 			}
 		}
@@ -220,6 +222,8 @@ class Ripple extends AsyncEventemitter
 			}
 			else
 			{
+				loggerStageConsensus.fatal(`Ripple handleMessage, address ${address.toString("hex")}, own stage ${this.stage}, other stage 1`);
+
 				p2p.send(address, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE);
 			}
 		}
@@ -244,6 +248,8 @@ class Ripple extends AsyncEventemitter
 			}
 			else
 			{
+				loggerStageConsensus.fatal(`Ripple handleMessage, address ${address.toString("hex")}, own stage ${this.stage}, other stage 1`);
+
 				p2p.send(address, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE);
 			}
 		}
