@@ -59,7 +59,7 @@ class Stage
 				}
 
 				//
-				logger.info(`Stage, ${this.ripple.state === RIPPLE_STATE_STAGE_CONSENSUS ? 'transaction consensus' : 'stage consensus'}, stage: ${this.ripple.stage}, dataExchange is over because of timeout`);
+				logger.fatal(`Stage, ${this.ripple.state === RIPPLE_STATE_STAGE_CONSENSUS ? 'transaction consensus' : 'stage consensus'}, stage: ${this.ripple.stage}, dataExchange is over because of timeout`);
 
 				this.state = STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING;
 			}
@@ -110,7 +110,7 @@ class Stage
 				}
 				else
 				{
-					logger.info(`Stage, ${this.ripple.state === RIPPLE_STATE_STAGE_CONSENSUS ? 'transaction consensus' : 'stage consensus'}, stage: ${this.ripple.stage}, stage synchronize is over because of timeout`);
+					logger.fatal(`Stage, ${this.ripple.state === RIPPLE_STATE_STAGE_CONSENSUS ? 'transaction consensus' : 'stage consensus'}, stage: ${this.ripple.stage}, stage synchronize is over because of timeout`);
 
 					// record synchronize time consume
 					mysql.saveStageSynchronizeTimeConsume(this.ripple.stage, this.dataExchange.consensusTimeConsume).catch(e => {
@@ -207,8 +207,6 @@ class Stage
 					});
 
 					this.stageSynchronize.recordFinishNode(address.toString("hex"));
-
-					logger.info(`Stage handleMessage, ${this.ripple.state === RIPPLE_STATE_STAGE_CONSENSUS ? 'transaction consensus' : 'stage consensus'}, stage: ${this.ripple.stage}, address: ${address.toString("hex")}, stage synchronize is over because of timeout`);
 				}
 				else if(state === STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING)
 				{
