@@ -89,7 +89,7 @@ class Processor
 		{
 			if(block.transactions.length === 0)
 			{
-				loggerConsensus.trace(`Processor processBlock, block ${block.hash().toString("hex")} has no transaction`);
+				loggerConsensus.warn(`Processor processBlock, block ${block.hash().toString("hex")} has no transaction`);
 				break;
 			}
 
