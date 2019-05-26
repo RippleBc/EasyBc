@@ -156,7 +156,7 @@ class Ripple extends AsyncEventemitter
 			{
 				if(this.counter.checkIfDataExchangeIsFinish())
 				{
-					logger.fatal("negative stage synchronize success");
+					logger.warn("Ripple handleMessage, stage synchronize success because of node notification");
 
 					this.reset();
 					this.counter.reset();
@@ -166,12 +166,16 @@ class Ripple extends AsyncEventemitter
 				}
 				else
 				{
-					return logger.info(`Ripple handleMessage, processor is synchronizing stage, do not handle transaction consensus messages`);
+					logger.info(`Ripple handleMessage, processor is synchronizing stage, do not handle transaction consensus messages`);
 				}
+
+				return;
 			}
 
 			if(this.blockAgreement.checkIfDataExchangeIsFinish())
 			{
+				logger.info(`Ripple handleMessage, transaction consensus, stage: ${this.stage}, stage synchronize is over because of node notification`);
+
 				this.blockAgreement.handler();
 				this.blockAgreement.reset();
 			}
@@ -203,6 +207,8 @@ class Ripple extends AsyncEventemitter
 
 			if(this.amalgamate.checkIfDataExchangeIsFinish())
 			{
+				logger.info(`Ripple handleMessage, transaction consensus, stage: ${this.stage}, stage synchronize is over because of node notification`);
+
 				this.amalgamate.handler();
 				this.amalgamate.reset();
 			}
@@ -225,6 +231,8 @@ class Ripple extends AsyncEventemitter
 
 			if(this.candidateAgreement.checkIfDataExchangeIsFinish())
 			{
+				logger.info(`Ripple handleMessage, transaction consensus, stage: ${this.stage}, stage synchronize is over because of node notification`);
+
 				this.candidateAgreement.handler();
 				this.candidateAgreement.reset();
 			}

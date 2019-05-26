@@ -39,11 +39,11 @@ class Counter extends Stage
 	{
 		if(ifSuccess)
 		{
-			logger.fatal("positive stage synchronize success")
+			logger.warn("Counter handler, stage synchronize success")
 		}
 		else
 		{	
-			logger.info("positive stage synchronize failed")
+			logger.warn("Counter handler, stage synchronize success because of timeout")
 		}
 
 		this.ripple.handleCounter();
