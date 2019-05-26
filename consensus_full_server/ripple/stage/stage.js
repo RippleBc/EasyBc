@@ -38,7 +38,7 @@ class Stage
 		this.dataExchange = new Sender(result => {
 			// record data exchange time consume
 			mysql.saveDataExchangeTimeConsume(this.ripple.stage, this.dataExchange.consensusTimeConsume).catch(e => {
-				logger.error(`Stage, ${this.ripple.state === RIPPLE_STATE_STAGE_CONSENSUS ? 'transaction consensus' : 'stage consensus'}, stage: ${this.ripple.stage}, saveDataExchangeTimeConsume throw exception, ${e}`);
+				logger.error(`Stage dataExchange, ${this.ripple.state === RIPPLE_STATE_STAGE_CONSENSUS ? 'transaction consensus' : 'stage consensus'}, stage: ${this.ripple.stage}, saveDataExchangeTimeConsume throw exception, ${e}`);
 			});
 
 			if(result)
@@ -74,7 +74,7 @@ class Stage
 			{
 				// record synchronize time consume
 				mysql.saveStageSynchronizeTimeConsume(this.ripple.stage, this.dataExchange.consensusTimeConsume).catch(e => {
-					logger.error(`Stage, ${this.ripple.state === RIPPLE_STATE_STAGE_CONSENSUS ? 'transaction consensus' : 'stage consensus'}, stage: ${this.ripple.stage}, saveStageSynchronizeTimeConsume throw exception, ${e}`);
+					logger.error(`Stage stageSynchronize, ${this.ripple.state === RIPPLE_STATE_STAGE_CONSENSUS ? 'transaction consensus' : 'stage consensus'}, stage: ${this.ripple.stage}, saveStageSynchronizeTimeConsume throw exception, ${e}`);
 				});
 
 				//
