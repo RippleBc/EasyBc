@@ -318,3 +318,111 @@ app.get('/logs', checkCookie, (req, res) => {
     })
   });
 });
+
+
+app.get('/timeConsume', checkCookie, (req, res) => {
+  const url = req.query.url;
+  const type = req.query.type;
+  const stage = req.query.stage;
+  const beginTime = req.query.beginTime;
+  const endTime = req.query.endTime;
+
+  assert(typeof url === 'string', `url should be a String, now is ${typeof url}`);
+
+  (async function() {
+    let options = {
+      method: "POST",
+      uri: `${url}/timeConsume`,
+      body: {
+      },
+      json: true // Automatically stringifies the body to JSON
+    };
+
+    if(type)
+    {
+      options.body.type = type;
+    }
+    if(stage)
+    {
+      options.body.stage = stage;
+    }
+    if(beginTime)
+    {
+      options.body.beginTime = beginTime;
+    }
+    if(endTime)
+    {
+      options.body.endTime = endTime;
+    }
+
+    const response = await rp(options);
+
+    if(response.code !== SUCCESS)
+    {
+        await Promise.reject(response.msg) 
+    }
+
+    return response.data;
+  })().then(results => {
+    res.json({
+      code: SUCCESS,
+      data: results
+    })
+  }).catch(e => {
+    res.json({
+      code: OTH_ERR,
+      msg: e.toString()
+    })
+  });
+});
+
+app.get('/abnormalNodes', checkCookie, (req, res) => {
+  const url = req.query.url;
+  const type = req.query.type;
+  const beginTime = req.query.beginTime;
+  const endTime = req.query.endTime;
+
+  assert(typeof url === 'string', `url should be a String, now is ${typeof url}`);
+
+  (async function() {
+    let options = {
+      method: "POST",
+      uri: `${url}/abnormalNodes`,
+      body: {
+      },
+      json: true // Automatically stringifies the body to JSON
+    };
+
+    if(type)
+    {
+      options.body.type = type;
+    }
+    if(beginTime)
+    {
+      options.body.beginTime = beginTime;
+    }
+    if(endTime)
+    {
+      options.body.endTime = endTime;
+    }
+    
+    const response = await rp(options);
+
+    if(response.code !== SUCCESS)
+    {
+      await Promise.reject(response.msg) 
+    }
+
+    return response.data;
+  })().then(results => {
+    res.json({
+      code: SUCCESS,
+      data: results
+    })
+  }).catch(e => {
+    res.json({
+      code: OTH_ERR,
+      msg: e.toString()
+    })
+  });
+});

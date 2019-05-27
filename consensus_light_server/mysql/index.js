@@ -344,7 +344,7 @@ class Mysql
     {
       where.stage = stage;
     }
-    return await this.TimeConsume.findAndCountAll({
+    return await this.TimeConsume.findAll({
       where: where,
       limit: 500,
       order: [['id', 'DESC' ]]
@@ -376,8 +376,8 @@ class Mysql
       where.type = type;
     }
 
-    return await this.TimeConsume.findAll({
-      attributes: ['address', [this.sequelize.fn('count', sequelize.col('address')), 'frequency']],
+    return await this.AbnormalNode.findAll({
+      attributes: ['address', [this.sequelize.fn('count', this.sequelize.col('address')), 'frequency']],
       raw: true,
       where: where,
       group: ['address'],

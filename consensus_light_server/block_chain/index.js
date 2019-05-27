@@ -1,4 +1,3 @@
-const dataWrapper = require("./dataWrapper");
 const { SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS } = require("../../constant");
 const process = require('process');
 const app = process[Symbol.for('app')];
@@ -55,7 +54,22 @@ app.post("/getAccountInfo", function(req, res) {
             msg: "param error, need address"
         });
     }
-    dataWrapper.getAccount(req.body.address).then(account => {
+
+    const address = req.body.address
+
+    (async () => {
+        const blockChainHeight = await mysql.getBlockChainHeight();
+        if(blockChainHeight === undefined)
+        {
+            return;
+        }
+
+        const block = await mysql.getBlockByNumber(blockChainHeight);
+        const blockHeight = block.header.number.toString("hex");
+        const stateRoot = block.header.stateRoot.toString("hex");
+        
+        return await mysql.getAccount(blockHeight, stateRoot, address);
+    }).then(account => {
         if(account)
         {
             res.json({
@@ -71,6 +85,11 @@ app.post("/getAccountInfo", function(req, res) {
                 msg: ""
             });
         }
+    }).catch(e => {
+        res.json({
+            code: OTH_ERR,
+            msg: e.toString()
+        });
     });
 });
 
@@ -153,7 +172,13 @@ app.post("/getBlockByNumber", function(req, res) {
 });
 
 app.post("/getLastestBlock", function(req, res) {
-    dataWrapper.getLastestBlock().then(block => {
+    (async () => {
+        const blockChainHeight = await mysql.getBlockChainHeight();
+        if(blockChainHeight !== undefined)
+        {
+            return await mysql.getBlockByNumber(this.blockChainHeight);
+        }
+    })().then(block => {
         if(block)
         {
             return res.json({
@@ -169,5 +194,10 @@ app.post("/getLastestBlock", function(req, res) {
                 msg: ""
             });
         }
+    }).catch(e => {
+        return res.json({
+            code: OTH_ERR,
+            msg: e.toString()
+        });
     });
 });

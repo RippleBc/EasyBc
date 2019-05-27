@@ -5,45 +5,46 @@ const { SUCCESS, PARAM_ERR, OTH_ERR } = require("../../constant");
 const app =  process[Symbol.for('app')];
 const mysql = process[Symbol.for("mysql")];
 
-let processDescription = undefined;
-
-setInterval(() => {
-	pm2.list((err, processDescriptionList) => {
-		if(err)
-		{
-			throw new Error(`pm2.list throw error, ${err.toString()}`);
-		}
-
-		for(let val of processDescriptionList.values())
-		{
-			if(val.name === 'fullConsensus')
-			{
-					return processDescription = val
-			}
-		}
-
-		processDescription = undefined;
-	});
-}, 5000);
-
 app.post('/status', (req, res) => {
-	if(processDescription)
-	{
-		return res.json({
-			code: SUCCESS,
-			data: {
-				"name": processDescription.name,
-				"pid": processDescription.pid,
-				"pm_id": processDescription.pm_id,
-				"memory": processDescription.monit ? processDescription.monit.memory : undefined,
-				"cpu": processDescription.monit ? processDescription.monit.cpu : undefined
+	(async () => {
+		pm2.list((err, processDescriptionList) => {
+			if(err)
+			{
+				throw new Error(`pm2.list throw error, ${err.toString()}`);
 			}
+
+			for(let val of processDescriptionList.values())
+			{
+				if(val.name === 'fullConsensus')
+				{
+						return val; 
+				}
+			}
+		});
+	}).then(processDescription => {
+		if(processDescription)
+		{
+			return res.json({
+				code: SUCCESS,
+				data: {
+					"name": processDescription.name,
+					"pid": processDescription.pid,
+					"pm_id": processDescription.pm_id,
+					"memory": processDescription.monit ? processDescription.monit.memory : undefined,
+					"cpu": processDescription.monit ? processDescription.monit.cpu : undefined
+				}
+			})
+		}
+
+		res.json({
+			code: OTH_ERR,
+			msg: 'cpu and memory info is can not get'
 		})
-	}
-	
-	res.json({
-		code: OTH_ERR,
-		msg: 'cpu and memory info is can not get'
+	}).catch(e => {
+		es.json({
+			code: OTH_ERR,
+			msg: e.toString()
+		})
 	})
 });
 
@@ -78,44 +79,36 @@ app.post("/timeConsume", (req, res) => {
 	const beginTime = req.body.beginTime;
 	const endTime = req.body.endTime;
 
-	mysql.getLogs({ type, stage, beginTime, endTime }).then(result => {
+	mysql.getTimeConsume({ type, stage, beginTime, endTime }).then(result => {
 		res.json({
 			code: SUCCESS,
-			data: {
-				count: result.count,
-				logs: result.rows.map(log => {
-					return {
-						id: log.id,
-						time: log.time,
-						type: log.type,
-						stage: log.stage,
-						data: log.data
-					}
-				})
-			}
+			data: result.map(ele => {
+				return {
+					id: ele.id,
+					time: ele.createdAt,
+					stage: ele.stage,
+					type: ele.type,
+					data: ele.data
+				}
+			})
 		})
 	});
 })
 
 app.post("/abnormalNodes", (req, res) => {
-	const type = req.body.type;
+	const type = req.body.type || 1;
 	const beginTime = req.body.beginTime;
 	const endTime = req.body.endTime;
 
-	mysql.getLogs({ type, beginTime, endTime }).then(result => {
+	mysql.getAbnormalNodes({ type, beginTime, endTime }).then(result => {
 		res.json({
 			code: SUCCESS,
-			data: {
-				count: result.count,
-				logs: result.rows.map(log => {
-					return {
-						id: log.id,
-						time: log.time,
-						type: log.type,
-						data: log.data
-					}
-				})
-			}
-		})
-	});
+			data: result.map(ele => {
+				return {
+					address: ele.address,
+					frequency: ele.frequency
+				}
+			})
+		});
+	})
 })
