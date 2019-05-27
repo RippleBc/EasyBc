@@ -10,7 +10,7 @@ const rlp = utils.rlp;
 const toBuffer = utils.toBuffer;
 const bufferToInt = utils.bufferToInt;
 
-const logger = process[Symbol.for("loggerConsensus")];
+const logger = process[Symbol.for("loggerStageConsensus")];
 const p2p = process[Symbol.for("p2p")];
 const mysql = process[Symbol.for("mysql")];
 

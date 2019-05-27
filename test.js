@@ -1,5 +1,27 @@
-(async () => {
-	console.log(1)
-})();
+class B {
+	constructor()
+	{
 
-console.log(2)
+	}
+
+	say() {
+		console.log("hello")
+	}
+}
+
+class A extends B {
+	constructor()
+	{
+		super()
+	}
+
+	say() {
+		super.say();
+		console.log(" world")
+	}
+}
+
+
+
+
+(new A()).say();
