@@ -11,7 +11,6 @@ const transactionModelConfig = require('./transaction');
 const rawTransactionModelConfig = require('./rawTransaction');
 const timeConsumeModelConfig = require('./timeConsume');
 const abnormalNodeModelConfig = require('./abnormalNode');
-
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 

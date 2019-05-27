@@ -56,25 +56,6 @@ module.exports = {
     env_production: {
       NODE_ENV: 'production'
     }
-  }, {
-    name: 'monitor',
-    script: 'monitor_server/index.js',
-    args: '',
-    instances: 1,
-    autorestart: true,
-    exp_backoff_restart_delay: 1000,
-    watch: false,
-    max_memory_restart: '1G',
-    merge_logs: true,
-    output: '/dev/null',
-    error: '/dev/null',
-    log_type: 'json',
-    env: {
-      NODE_ENV: 'development'
-    },
-    env_production: {
-      NODE_ENV: 'production'
-    }
   }],
 
   deploy : {

@@ -71,3 +71,51 @@ app.post('/logs', (req, res) => {
 		})
 	});
 })
+
+app.post("/timeConsume", (req, res) => {
+	const type = req.body.type;
+	const stage = req.body.stage;
+	const beginTime = req.body.beginTime;
+	const endTime = req.body.endTime;
+
+	mysql.getLogs({ type, stage, beginTime, endTime }).then(result => {
+		res.json({
+			code: SUCCESS,
+			data: {
+				count: result.count,
+				logs: result.rows.map(log => {
+					return {
+						id: log.id,
+						time: log.time,
+						type: log.type,
+						stage: log.stage,
+						data: log.data
+					}
+				})
+			}
+		})
+	});
+})
+
+app.post("/abnormalNodes", (req, res) => {
+	const type = req.body.type;
+	const beginTime = req.body.beginTime;
+	const endTime = req.body.endTime;
+
+	mysql.getLogs({ type, beginTime, endTime }).then(result => {
+		res.json({
+			code: SUCCESS,
+			data: {
+				count: result.count,
+				logs: result.rows.map(log => {
+					return {
+						id: log.id,
+						time: log.time,
+						type: log.type,
+						data: log.data
+					}
+				})
+			}
+		})
+	});
+})

@@ -10,6 +10,8 @@ const blockModelConfig = require('./block');
 const transactionModelConfig = require('./transaction');
 const rawTransactionModelConfig = require('./rawTransaction');
 const logModelConfig = require('./log');
+const timeConsumeModelConfig = require('./timeConsume');
+const abnormalNodeModelConfig = require('./abnormalNode');
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 
@@ -40,6 +42,8 @@ class Mysql
     this.Transaction = this.sequelize.define(...transactionModelConfig);
     this.Log = this.sequelize.define(...logModelConfig);
     this.RawTransaction = this.sequelize.define(...rawTransactionModelConfig);
+    this.TimeConsume = this.sequelize.define(...timeConsumeModelConfig);
+    this.AbnormalNode = this.sequelize.define(...abnormalNodeModelConfig);
 
     await this.sequelize.authenticate();
     await this.sequelize.sync();
@@ -295,8 +299,89 @@ class Mysql
     }
     return await this.Log.findAndCountAll({
       where: where,
-      limit: 100,
+      limit: 500,
       order: [['id', 'DESC' ]]
+    });
+  }
+
+  /**
+   * @param {Object}
+   *  @prop {String} type
+   *  @prop {Number} beginTime
+   *  @prop {Number} endTime
+   */
+  async getTimeConsume({type, stage, beginTime, endTime})
+  {
+    if(type)
+    {
+      assert(typeof type === 'number', `Mysql getTimeConsume, type should be an Number, now is ${typeof type}`);
+    }
+    if(stage)
+    {
+      assert(typeof stage === 'number', `Mysql getTimeConsume, stage should be an Number, now is ${typeof stage}`);
+    }
+    if(beginTime)
+    {
+      assert(typeof beginTime === 'number', `Mysql getTimeConsume, beginTime should be an Number, now is ${typeof beginTime}`);
+    }
+    if(endTime)
+    {
+      assert(typeof endTime === 'number', `Mysql getTimeConsume, endTime should be an Number, now is ${typeof endTime}`);
+    }
+
+    const now = new Date()
+    const where = {
+      createdAt: {
+        [Op.gt]: beginTime ? new Date(beginTime) : new Date(now - 24 * 60 * 60 * 1000),
+        [Op.lt]: endTime ? new Date(endTime) : now,
+      }
+    };
+    if(type)
+    {
+      where.type = type;
+    }
+    if(stage)
+    {
+      where.stage = stage;
+    }
+    return await this.TimeConsume.findAndCountAll({
+      where: where,
+      limit: 500,
+      order: [['id', 'DESC' ]]
+    });
+  }
+
+  async getAbnormalNodes({type, beginTime, endTime})
+  {
+    assert(typeof type === 'number', `Mysql getAbnormalNodes, type should be an Number, now is ${typeof type}`);
+
+    if(beginTime)
+    {
+      assert(typeof beginTime === 'number', `Mysql getAbnormalNodes, beginTime should be an Number, now is ${typeof beginTime}`);
+    }
+    if(endTime)
+    {
+      assert(typeof endTime === 'number', `Mysql getAbnormalNodes, endTime should be an Number, now is ${typeof endTime}`);
+    }
+
+    const now = new Date()
+    const where = {
+      createdAt: {
+        [Op.gt]: beginTime ? new Date(beginTime) : new Date(now - 24 * 60 * 60 * 1000),
+        [Op.lt]: endTime ? new Date(endTime) : now,
+      }
+    };
+    if(type)
+    {
+      where.type = type;
+    }
+
+    return await this.TimeConsume.findAll({
+      attributes: ['address', [this.sequelize.fn('count', sequelize.col('address')), 'frequency']],
+      raw: true,
+      where: where,
+      group: ['address'],
+      limit: 500
     });
   }
 }
