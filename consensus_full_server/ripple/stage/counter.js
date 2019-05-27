@@ -134,12 +134,14 @@ class Counter extends Stage
 
 	checkIfTriggered()
 	{
-		let stageInvalidNum = 0;
+		const now = Date.now();
+
+		let stageInvalidFrequency = 0;
 		for(let timestamp of this.stageSynchronizeTrigger.reverse())
 		{
 			if(timestamp + COUNTER_INVALID_STAGE_TIME_SECTION > now)
 			{
-				stageInvalidNum ++;
+				stageInvalidFrequency ++;
 			}
 			else
 			{
@@ -148,7 +150,7 @@ class Counter extends Stage
 		}
 
 
-		return this.state === STAGE_STATE_EMPTY && stageInvalidNum >= COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD * unl.length
+		return this.state === STAGE_STATE_EMPTY && stageInvalidFrequency >= COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD * unl.length
 	}
 
 	startStageSynchronize()
