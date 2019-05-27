@@ -176,7 +176,7 @@ app.post("/getLastestBlock", function(req, res) {
         const blockChainHeight = await mysql.getBlockChainHeight();
         if(blockChainHeight !== undefined)
         {
-            return await mysql.getBlockByNumber(this.blockChainHeight);
+            return await mysql.getBlockByNumber(blockChainHeight);
         }
     })().then(block => {
         if(block)
