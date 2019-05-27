@@ -21,7 +21,7 @@ app.post('/status', (req, res) => {
 				}
 			}
 		});
-	}).then(processDescription => {
+	})().then(processDescription => {
 		if(processDescription)
 		{
 			return res.json({
