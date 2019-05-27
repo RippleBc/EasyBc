@@ -8,7 +8,7 @@
                             <i class="el-icon-share"></i>
                             <el-breadcrumb separator="/" style="font-size: 16px;line-height: 16px;margin-left: 20px;">
                                 <el-breadcrumb-item>
-                                    <span>{{`索引 ${node.index}`}}</span>
+                                    <span>{{`索引 ${node.id}`}}</span>
                                 </el-breadcrumb-item>
                                 <el-breadcrumb-item>
                                     <span>{{`名称 ${node.name}`}}</span>
@@ -104,8 +104,7 @@
                         }
 
                         let nodeInfo = {...{
-
-                            index: node.index,
+                            id: node.id,
                             name: node.name,
                             host: node.host,
                             port: node.port

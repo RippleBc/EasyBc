@@ -291,11 +291,13 @@ app.get('/logs', checkCookie, (req, res) => {
     }
     if(beginTime)
     {
-      options.body.beginTime = beginTime;
+      assert(/^\d+$/.test(beginTime), `beginTime should be a Number, now is ${typeof beginTime}`)
+      options.body.beginTime = parseInt(beginTime);
     }
     if(endTime)
     {
-      options.body.endTime = endTime;
+      assert(/^\d+$/.test(endTime), `endTime should be a Number, now is ${typeof endTime}`)
+      options.body.endTime = parseInt(endTime);
     }
 
     const response = await rp(options);
@@ -340,19 +342,23 @@ app.get('/timeConsume', checkCookie, (req, res) => {
 
     if(type)
     {
-      options.body.type = type;
+      assert(/^\d+$/.test(type), `type should be a Number, now is ${typeof type}`)
+      options.body.type = parseInt(type);
     }
     if(stage)
     {
-      options.body.stage = stage;
+      assert(/^\d+$/.test(stage), `stage should be a Number, now is ${typeof stage}`)
+      options.body.stage = parseInt(stage);
     }
     if(beginTime)
     {
-      options.body.beginTime = beginTime;
+      assert(/^\d+$/.test(beginTime), `beginTime should be a Number, now is ${typeof beginTime}`)
+      options.body.beginTime = parseInt(beginTime);
     }
     if(endTime)
     {
-      options.body.endTime = endTime;
+      assert(/^\d+$/.test(endTime), `endTime should be a Number, now is ${typeof endTime}`)
+      options.body.endTime = parseInt(endTime);
     }
 
     const response = await rp(options);
@@ -395,15 +401,18 @@ app.get('/abnormalNodes', checkCookie, (req, res) => {
 
     if(type)
     {
-      options.body.type = type;
+      assert(/^\d+$/.test(type), `type should be a Number, now is ${typeof type}`)
+      options.body.type = parseInt(type);
     }
     if(beginTime)
     {
-      options.body.beginTime = beginTime;
+      assert(/^\d+$/.test(beginTime), `beginTime should be a Number, now is ${typeof beginTime}`)
+      options.body.beginTime = parseInt(beginTime);
     }
     if(endTime)
     {
-      options.body.endTime = endTime;
+      assert(/^\d+$/.test(endTime), `endTime should be a Number, now is ${typeof endTime}`)
+      options.body.endTime = parseInt(endTime);
     }
     
     const response = await rp(options);

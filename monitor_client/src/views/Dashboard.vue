@@ -126,22 +126,34 @@
                     if(type === 'INFO')
                     {
                         this.infoLogsCount = res.data.count;
-                        this.infoLogs = res.data.logs;
+                        this.infoLogs = res.data.logs.map(log => {
+                            log.time = new Date(parseInt(log.time)).toLocaleString()
+                            return log
+                        });
                     }
                     if(type === 'WARNING')
                     {
                         this.warnLogsCount = res.data.count;
-                        this.warnLogs = res.data.logs;
+                        this.warnLogs = res.data.logs.map(log => {
+                            log.time = new Date(parseInt(log.time)).toLocaleString()
+                            return log
+                        });
                     }
                     if(type === 'ERROR')
                     {
                         this.errorLogsCount = res.data.count;
-                        this.errorLogs = res.data.logs;
+                        this.errorLogs = res.data.logs.map(log => {
+                            log.time = new Date(parseInt(log.time)).toLocaleString()
+                            return log
+                        });
                     }
                     if(type === 'FATAL')
                     {
                         this.fatalLogsCount = res.data.count;
-                        this.fatalLogs = res.data.logs;
+                        this.fatalLogs = res.data.logs.map(log => {
+                            log.time = new Date(parseInt(log.time)).toLocaleString()
+                            return log
+                        });
                     }
                 })
 

@@ -32,6 +32,13 @@
             <el-row :gutter="20" style="margin-bottom: 20px;">
                 <el-col :span="24">
                     <el-card shadow="hover">
+                        <ve-line :data="timeConsume" :resizeable="true"></ve-line>
+                    </el-card>
+                </el-col>
+            </el-row>
+            <el-row :gutter="20" style="margin-bottom: 20px;">
+                <el-col :span="24">
+                    <el-card shadow="hover">
                         <ve-line :data="cpuConsume" :resizeable="true"></ve-line>
                     </el-card>
                 </el-col>
@@ -56,43 +63,33 @@
         data: () => ({
             currentNode: undefined,
             timeoutNodesData:{
-                columns: ['节点', '超时次数', '超时频率'],
-                rows: [
-                    { '节点': 'aaa', '超时次数': 18000, '超时频率': 20000 },
-                    { '节点': 'bbb', '超时次数': 101, '超时频率': 101 },
-                    { '节点': 'bbb', '超时次数': 102, '超时频率': 102 },
-                    { '节点': 'bbb', '超时次数': 103, '超时频率': 103 },
-                    { '节点': 'bbb', '超时次数': 104, '超时频率': 104 },
-                    { '节点': 'bbb', '超时次数': 105, '超时频率': 105 }
-                ]
+                columns: ['address', 'times', 'frequency'],
+                rows: []
             },
             timeoutNodesSettings:{
                 axisSite: { right: ['超时频率'] },
                 yAxisType: ['normal', 'normal'],
-                yAxisName: ['数值', '频率']
+                yAxisName: ['超时次数', '超时频率']
             },
             cheatedNodesData:{
-                columns: ['节点', '作弊次数', '作弊频率'],
-                rows: [
-                    { '节点': 'aaa', '作弊次数': 18000, '作弊频率': 20000 },
-                    { '节点': 'bbb', '作弊次数': 101, '作弊频率': 101 },
-                    { '节点': 'bbb', '作弊次数': 102, '作弊频率': 102 },
-                    { '节点': 'bbb', '作弊次数': 103, '作弊频率': 103 },
-                    { '节点': 'bbb', '作弊次数': 104, '作弊频率': 104 },
-                    { '节点': 'bbb', '作弊次数': 105, '作弊频率': 105 }
-                ]
+                columns: ['address', 'times', 'frequency'],
+                rows: []
             },
             cheatedNodesSettings:{
                 axisSite: { right: ['作弊频率'] },
                 yAxisType: ['normal', 'normal'],
-                yAxisName: ['数值', '频率']
+                yAxisName: ['作弊次数', '作弊频率']
+            },
+            timeConsume: {
+                columns: ['createTime', 'consume'],
+                rows: []
             },
             cpuConsume:{
-                columns: ['createTime', '处理器'],
+                columns: ['createTime', 'cpu'],
                 rows: []
             },
             memoryConsume:{
-                columns: ['createTime', '内存'],
+                columns: ['createTime', 'memory'],
                 rows: []
             }
         }),
@@ -118,14 +115,76 @@
                 {
                     this.cpuConsume.rows = res.data.cpus.map(n => {
                         return {
-                            createTime: n.createdAt,
-                            '处理器': n.consume
+                            createTime: new Date(n.createdAt).toLocaleString(),
+                            cpu: n.consume
                         }
-                    });
+                    }).reverse();
                     this.memoryConsume.rows = res.data.memories.map(n => {
                         return {
-                            createTime: n.createdAt,
-                            '内存': n.consume / 1024 / 1024
+                            createTime: new Date(n.createdAt).toLocaleString(),
+                            memory: n.consume / 1024 / 1024
+                        }
+                    }).reverse();
+                }
+            });
+
+            this.$axios.get("timeConsume", {
+                url: `${this.currentNode.host}:${this.currentNode.port}`,
+                beginTime: Date.now() - 2 * 60 * 60 * 1000,
+                endTime: Date.now()
+            }).then(res => {
+                if(res.code !== 0)
+                {
+                    this.$message.error(res.msg);
+                }
+                else
+                {
+                    this.timeConsume.rows = res.data.map(n => {
+                        return {
+                            createTime: new Date(n.time).toLocaleString(),
+                            consume: n.data
+                        }
+                    }).reverse();
+                }
+            });
+
+            this.$axios.get("abnormalNodes", {
+                url: `${this.currentNode.host}:${this.currentNode.port}`,
+                type: 1,
+                beginTime: Date.now() - 2 * 60 * 60 * 1000,
+                endTime: Date.now()
+            }).then(res => {
+                if(res.code !== 0)
+                {
+                    this.$message.error(res.msg);
+                }
+                else
+                {
+                    this.timeoutNodesData.rows = res.data.map(n => {
+                        return {
+                            address: n.address,
+                            times: n.frequency,
+                            frequency: n.frequency / 2
+                        }
+                    });
+                }
+            });
+
+            this.$axios.get("abnormalNodes", {
+                url: `${this.currentNode.host}:${this.currentNode.port}`,
+                type: 2
+            }).then(res => {
+                if(res.code !== 0)
+                {
+                    this.$message.error(res.msg);
+                }
+                else
+                {
+                    this.cheatedNodesData.rows = res.data.map(n => {
+                        return {
+                            address: n.address,
+                            times: n.frequency,
+                            frequency: parseInt(n.frequency) / 2
                         }
                     });
                 }
