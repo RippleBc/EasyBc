@@ -58,8 +58,13 @@ class Stage
 					}
 				}
 
-				//
 				logger.fatal(`Stage, ${this.ripple.state === RIPPLE_STATE_STAGE_CONSENSUS ? 'transaction consensus' : 'stage consensus'}, stage: ${this.ripple.stage}, dataExchange is over because of timeout`);
+
+				// data exchange is failed, try to stage consensus
+				if(this.ripple.counter.checkIfTriggered())
+				{
+					this.ripple.counter.startStageSynchronize();
+				}
 
 				this.state = STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING;
 			}
@@ -111,6 +116,12 @@ class Stage
 				else
 				{
 					logger.fatal(`Stage, ${this.ripple.state === RIPPLE_STATE_STAGE_CONSENSUS ? 'transaction consensus' : 'stage consensus'}, stage: ${this.ripple.stage}, stage synchronize is over because of timeout`);
+
+					// data exchange is failed, try to stage consensus
+					if(this.ripple.counter.checkIfTriggered())
+					{
+						this.ripple.counter.startStageSynchronize();
+					}
 
 					// record synchronize time consume
 					mysql.saveStageSynchronizeTimeConsume(this.ripple.stage, this.dataExchange.consensusTimeConsume).catch(e => {

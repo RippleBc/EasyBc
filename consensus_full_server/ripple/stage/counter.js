@@ -2,7 +2,7 @@ const CounterData = require("../data/counter");
 const { unl } = require("../../config.json");
 const utils = require("../../../depends/utils");
 const process = require("process");
-const { PROTOCOL_CMD_COUNTER_FINISH_STATE_REQUEST, PROTOCOL_CMD_COUNTER_FINISH_STATE_RESPONSE, RIPPLE_STATE_STAGE_CONSENSUS, COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD, COUNTER_HANDLER_TIME_DETAY, COUNTER_INVALID_STAGE_TIME_SECTION, STAGE_STATE_EMPTY, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_STAGE_INFO_REQUEST, PROTOCOL_CMD_STAGE_INFO_RESPONSE } = require("../../constant");
+const { COUNTER_CONSENSUS_STAGE_TRIGGER_MAX_SIZE, PROTOCOL_CMD_COUNTER_FINISH_STATE_REQUEST, PROTOCOL_CMD_COUNTER_FINISH_STATE_RESPONSE, RIPPLE_STATE_STAGE_CONSENSUS, COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD, COUNTER_HANDLER_TIME_DETAY, COUNTER_INVALID_STAGE_TIME_SECTION, STAGE_STATE_EMPTY, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_STAGE_INFO_REQUEST, PROTOCOL_CMD_STAGE_INFO_RESPONSE } = require("../../constant");
 const Stage = require("./stage");
 
 const rlp = utils.rlp;
@@ -63,17 +63,13 @@ class Counter extends Stage
 			case PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE:
 			case PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE:
 			{
-				// check if need to synchronize stage
+				if(this.stageSynchronizeTrigger.length > COUNTER_CONSENSUS_STAGE_TRIGGER_MAX_SIZE * unl.length)
+				{
+					this.stageSynchronizeTrigger.shift();
+				}
+				
 				const now = Date.now();
 				this.stageSynchronizeTrigger.push(now);
-				if(this.stageSynchronizeTrigger.filter(ele => (ele + COUNTER_INVALID_STAGE_TIME_SECTION) > now).length >= COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD * unl.length)
-				{
-					// begin to stage synchronize
-					if(this.state === STAGE_STATE_EMPTY)
-					{
-						this.startStageSynchronize();
-					}
-				}
 			}
 			break;
 			case PROTOCOL_CMD_STAGE_INFO_REQUEST:
@@ -134,6 +130,25 @@ class Counter extends Stage
 				super.handleMessage(address, cmd, data);
 			}
 		}
+	}
+
+	checkIfTriggered()
+	{
+		let stageInvalidNum = 0;
+		for(let timestamp of this.stageSynchronizeTrigger.reverse())
+		{
+			if(timestamp + COUNTER_INVALID_STAGE_TIME_SECTION > now)
+			{
+				stageInvalidNum ++;
+			}
+			else
+			{
+				break;
+			}
+		}
+
+
+		return this.state === STAGE_STATE_EMPTY && stageInvalidNum >= COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD * unl.length
 	}
 
 	startStageSynchronize()
