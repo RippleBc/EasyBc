@@ -69,7 +69,7 @@ app.post("/getAccountInfo", function(req, res) {
         const stateRoot = block.header.stateRoot.toString("hex");
         
         return await mysql.getAccount(blockHeight, stateRoot, address);
-    }).then(account => {
+    })().then(account => {
         if(account)
         {
             res.json({
