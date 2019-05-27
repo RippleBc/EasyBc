@@ -55,7 +55,7 @@ app.post("/getAccountInfo", function(req, res) {
         });
     }
 
-    const address = req.body.address
+    const address = req.body.address;
 
     (async () => {
         const blockChainHeight = await mysql.getBlockChainHeight();
