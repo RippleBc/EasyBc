@@ -45,12 +45,12 @@ log4js.configure({
     },
     categories: {
         default: { appenders: ["stdout", "consensus"], level: "info" },
-        consensus: { appenders: ["stdout", "consensus"], level: "info" },
+        consensus: { appenders: ["stdout", "consensus"], level: "error" },
         p2p: { appenders: ["stdout", "p2p"], level: "info" },
         net: { appenders: ["stdout", "net"], level: "info" },
         mysql: { appenders: ["stdout", "mysql"], level: "info" },
         update: { appenders: ["stdout", "update"], level: "info" },
-        stageConsensus: { appenders: ["stdout", "stageConsensus"], level: "info" }
+        stageConsensus: { appenders: ["stdout", "stageConsensus"], level: "error" }
     }
 })
  
