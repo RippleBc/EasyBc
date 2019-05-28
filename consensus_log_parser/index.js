@@ -19,7 +19,9 @@ const mysql = new Mysql();
 
 	for(let ld of logDirs)
 	{
-		run(path.join(logDir, ld), logsBufferMaxSize)
+		run(path.join(logDir, ld), logsBufferMaxSize).catch(e => {
+			logger.fatal(`run, throw exception, ${e}`);
+		})
 	}
 })()
 
