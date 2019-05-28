@@ -41,6 +41,12 @@ log4js.configure({
             filename: "consensus_full_server/logs/stageConsensus_log/",
             pattern: "stageConsensus-yyyy-MM-dd.log",
             alwaysIncludePattern: true
+        },
+        perishNode: {
+            type: "dateFile",
+            filename: "consensus_full_server/logs/perishNode_log/",
+            pattern: "perishNode-yyyy-MM-dd.log",
+            alwaysIncludePattern: true
         }
     },
     categories: {
@@ -50,7 +56,8 @@ log4js.configure({
         net: { appenders: ["stdout", "net"], level: "info" },
         mysql: { appenders: ["stdout", "mysql"], level: "info" },
         update: { appenders: ["stdout", "update"], level: "info" },
-        stageConsensus: { appenders: ["stdout", "stageConsensus"], level: "error" }
+        stageConsensus: { appenders: ["stdout", "stageConsensus"], level: "error" },
+        perishNode: { appenders: ["stdout", "perishNode"], level: "error" }
     }
 })
  

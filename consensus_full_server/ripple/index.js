@@ -1,10 +1,10 @@
 const Amalgamate = require("./stage/amalgamate");
 const CandidateAgreement = require("./stage/candidateAgreement");
 const BlockAgreement = require("./stage/blockAgreement");
-const { STAGE_MAX_FINISH_RETRY_TIMES, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, RIPPLE_STATE_STAGE_CONSENSUS, RIPPLE_STATE_TRANSACTIONS_CONSENSUS, MAX_PROCESS_TRANSACTIONS_SIZE, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_MAX_ROUND } = require("../constant");
+const { RIPPLE_STAGE_EMPTY, STAGE_MAX_FINISH_RETRY_TIMES, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, RIPPLE_STATE_STAGE_CONSENSUS, RIPPLE_STATE_TRANSACTIONS_CONSENSUS, MAX_PROCESS_TRANSACTIONS_SIZE, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_MAX_ROUND } = require("../constant");
 const assert = require("assert");
 const Counter = require("./stage/counter");
-const Perish = require("./perish");
+const Perish = require("./stage/perish");
 const utils = require("../../depends/utils");
 const AsyncEventemitter = require("async-eventemitter");
 
@@ -23,13 +23,9 @@ class Ripple extends AsyncEventemitter
 		super();
 
 		this.processor = processor;
-		
-		//
-		this.killedNodes = new Set();
 
 		this.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
-
-		this.stage = 0;
+		this.stage = RIPPLE_STAGE_EMPTY;
 
 		this.counter = new Counter(this);
 		this.perish = new Perish(this);
@@ -37,7 +33,7 @@ class Ripple extends AsyncEventemitter
 		this.candidateAgreement = new CandidateAgreement(this);
 		this.blockAgreement = new BlockAgreement(this);
 
-		//
+		// used for cache transactions that is consensusing
 		this.processingTransactions = [];
 
 		// used for cache amalgamate message
@@ -77,22 +73,9 @@ class Ripple extends AsyncEventemitter
 	/**
 	 * @param {Buffer} address
 	 */
-	recordKilledNode(address)
+	handlePerishNode(address)
 	{
-		assert(Buffer.isBuffer(address), `Ripple recordKilledNode, address should be an Buffer, now is ${typeof address}`);
-
-		this.killedNodes.add(address.toString("hex"));
-	}
-
-	/**
-	 * @param {Buffer} address
-	 * @return {Boolean}
-	 */
-	checkIfNodeIsKilled(address)
-	{
-		assert(Buffer.isBuffer(address), `Ripple checkIfNodeIsKilled, address should be an Buffer, now is ${typeof address}`);
-
-		return this.killedNodes.has(address.toString("hex"));
+		assert(Buffer.isBuffer(address), `Ripple handlePerishNode, address should be an Buffer, now is ${typeof address}`);
 	}
 
 	/**
@@ -273,7 +256,7 @@ class Ripple extends AsyncEventemitter
 		this.candidateAgreement.reset();
 		this.blockAgreement.reset();
 
-		this.stage = 0;
+		this.stage = RIPPLE_STAGE_EMPTY;
 	}
 }
 
