@@ -21,6 +21,7 @@ const mysql = new Mysql();
 	{
 		run(path.join(logDir, ld), logsBufferMaxSize).catch(e => {
 			logger.fatal(`run, throw exception, ${e}`);
+			process.exit(1);
 		})
 	}
 })()
@@ -142,6 +143,24 @@ const run = async function(dir, logsBufferMaxSize)
 	  		counter = 0;
 	  		logs = [];
 	  	}
+		}
+	}
+
+	while(true)
+	{
+		if(files.length <= 0)
+		{
+			await new Promise((resolve, reject) => {
+				setTimeout(() => {
+					resolve()
+				}, 2000)
+			})
+
+			files = await readDir();
+		}
+		else
+		{
+			break;
 		}
 	}
 

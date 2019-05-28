@@ -1,27 +1,9 @@
-class B {
-	constructor()
+while(1)
+{
+	console.log(1)
+	while(1)
 	{
-
-	}
-
-	say() {
-		console.log("hello")
+		console.log(2)
+		break;
 	}
 }
-
-class A extends B {
-	constructor()
-	{
-		super()
-	}
-
-	say() {
-		super.say();
-		console.log(" world")
-	}
-}
-
-
-
-
-(new A()).say();
