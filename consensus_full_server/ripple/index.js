@@ -1,7 +1,7 @@
 const Amalgamate = require("./stage/amalgamate");
 const CandidateAgreement = require("./stage/candidateAgreement");
 const BlockAgreement = require("./stage/blockAgreement");
-const { RIPPLE_STAGE_EMPTY, STAGE_MAX_FINISH_RETRY_TIMES, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, RIPPLE_STATE_STAGE_CONSENSUS, RIPPLE_STATE_TRANSACTIONS_CONSENSUS, MAX_PROCESS_TRANSACTIONS_SIZE, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_MAX_ROUND } = require("../constant");
+const { RIPPLE_STAGE_PERISH_NODE, RIPPLE_STAGE_EMPTY, STAGE_MAX_FINISH_RETRY_TIMES, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, RIPPLE_STATE_STAGE_CONSENSUS, RIPPLE_STATE_TRANSACTIONS_CONSENSUS, MAX_PROCESS_TRANSACTIONS_SIZE, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_MAX_ROUND } = require("../constant");
 const assert = require("assert");
 const Counter = require("./stage/counter");
 const Perish = require("./stage/perish");
@@ -15,6 +15,7 @@ const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
 const mysql = process[Symbol.for("mysql")];
 const loggerStageConsensus = process[Symbol.for("loggerStageConsensus")];
+const loggerPerishNode = process[Symbol.for("loggerPerishNode")];
 
 class Ripple extends AsyncEventemitter
 {
@@ -71,11 +72,15 @@ class Ripple extends AsyncEventemitter
 	}
 
 	/**
-	 * @param {Buffer} address
+	 * @param {Buffer} sponsorNode
+	 * @param {Buffer} perishNode
 	 */
-	handlePerishNode(address)
+	handlePerishNode(sponsorNode, perishNode)
 	{
-		assert(Buffer.isBuffer(address), `Ripple handlePerishNode, address should be an Buffer, now is ${typeof address}`);
+		assert(Buffer.isBuffer(sponsorNode), `Ripple handlePerishNode, sponsorNode should be an Buffer, now is ${typeof sponsorNode}`);
+		assert(Buffer.isBuffer(perishNode), `Ripple handlePerishNode, perishNode should be an Buffer, now is ${typeof perishNode}`);
+		
+		this.run(true);
 	}
 
 	/**
@@ -118,8 +123,6 @@ class Ripple extends AsyncEventemitter
 
 	handleCounter()
 	{
-		this.reset();
-		this.counter.reset();
 		this.run(true);
 	}
 
@@ -136,14 +139,26 @@ class Ripple extends AsyncEventemitter
 
 		if(cmd >= 100 && cmd < 200)
 		{
+			if(this.state === RIPPLE_STAGE_PERISH_NODE)
+			{
+				if(this.perish.checkIfDataExchangeIsFinish())
+				{
+					loggerPerishNode.fatal("Ripple handleMessage, perish node success because of node notification");
+
+					this.run(true);
+					this.amalgamate.handleMessage(address, cmd, data);
+				}
+				else
+				{
+					return loggerPerishNode.fatal("Ripple handleMessage, processor is perishing node, do not handle transaction consensus messages");
+				}
+			}
+
 			if(this.state === RIPPLE_STATE_STAGE_CONSENSUS)
 			{
 				if(this.counter.checkIfDataExchangeIsFinish())
 				{
 					loggerStageConsensus.fatal("Ripple handleMessage, stage synchronize success because of node notification");
-
-					this.reset();
-					this.counter.reset();
 
 					this.run(true);
 					this.amalgamate.handleMessage(address, cmd, data);
@@ -186,6 +201,11 @@ class Ripple extends AsyncEventemitter
 		}
 		else if(cmd >= 200 && cmd < 300)
 		{
+			if(this.state === RIPPLE_STAGE_PERISH_NODE)
+			{
+				return loggerPerishNode.fatal("Ripple handleMessage, processor is perishing node, do not handle transaction consensus messages");
+			}
+
 			if(this.state === RIPPLE_STATE_STAGE_CONSENSUS)
 			{
 				return logger.info(`Ripple handleMessage, processor is synchronizing stage, do not handle transaction consensus messages`);
@@ -212,6 +232,11 @@ class Ripple extends AsyncEventemitter
 		}
 		else if(cmd >= 300 && cmd < 400)
 		{
+			if(this.state === RIPPLE_STAGE_PERISH_NODE)
+			{
+				return loggerPerishNode.fatal("Ripple handleMessage, processor is perishing node, do not handle transaction consensus messages");
+			}
+
 			if(this.state === RIPPLE_STATE_STAGE_CONSENSUS)
 			{
 				return logger.info(`Ripple handleMessage, processor is synchronizing stage, do not handle transaction consensus messages`);
@@ -238,6 +263,11 @@ class Ripple extends AsyncEventemitter
 		}
 		else if(cmd >= 400 && cmd < 500)
 		{
+			if(this.state === RIPPLE_STAGE_PERISH_NODE)
+			{
+				return loggerPerishNode.fatal("Ripple handleMessage, processor is perishing node, do not handle stage synchronize messages");
+			}
+
 			this.counter.handleMessage(address, cmd, data);
 		}
 		else if(cmd >= 500 && cmd < 600)

@@ -190,8 +190,9 @@ class Perish extends Stage
 		this.start();
 
 		this.ripple.reset();
-		this.ripple.state = RIPPLE_STAGE_PERISH_NODE;
+		this.ripple.counter.reset();
 
+		this.ripple.state = RIPPLE_STAGE_PERISH_NODE;
 		
 		p2p.sendAll(PROTOCOL_CMD_KILL_NODE_REQUEST, perishData.serialize());
 	}
