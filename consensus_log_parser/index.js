@@ -156,7 +156,7 @@ const run = async function(dir, logsBufferMaxSize)
 				}, 2000)
 			})
 
-			files = await readDir();
+			files = await readDir(dir);
 		}
 		else
 		{
@@ -184,7 +184,7 @@ const run = async function(dir, logsBufferMaxSize)
 			index = 0;
 			while(true) 
 			{
-				files = await readDir();
+				files = await readDir(dir);
 				if(files.length <= 0)
 				{
 					await new Promise((resolve, reject) => {
