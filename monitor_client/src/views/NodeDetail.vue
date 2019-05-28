@@ -97,10 +97,111 @@
             ...mapState(['unl'])
         },
         created(){
-            this.getCurrentNode();
-
-            this.handleListener();
+            if(this.currentNode === undefined)
+            {
+                this.getCurrentNode();
+            }
         },
+        watch: {
+            $route(newVal, oldVal)
+            {
+                if(newVal.path.split('/')[1] !== oldVal.path.split('/')[1])
+                {
+                    return
+                }
+
+                this.getCurrentNode();
+
+                this.$axios.get("nodeStatus", {
+                    address: this.currentNode.address
+                }).then(res => {
+                    if(res.code !== 0)
+                    {
+                        this.$message.error(res.msg);
+                    }
+                    else
+                    {
+                        this.cpuConsume.rows = res.data.cpus.map(n => {
+                            return {
+                                createTime: new Date(n.createdAt).toLocaleString(),
+                                cpu: n.consume
+                            }
+                        }).reverse();
+                        this.memoryConsume.rows = res.data.memories.map(n => {
+                            return {
+                                createTime: new Date(n.createdAt).toLocaleString(),
+                                memory: n.consume / 1024 / 1024
+                            }
+                        }).reverse();
+                    }
+                });
+
+                this.$axios.get("timeConsume", {
+                    url: `${this.currentNode.host}:${this.currentNode.port}`,
+                    beginTime: Date.now() - 2 * 60 * 60 * 1000,
+                    endTime: Date.now()
+                }).then(res => {
+                    if(res.code !== 0)
+                    {
+                        this.$message.error(res.msg);
+                    }
+                    else
+                    {
+                        this.timeConsume.rows = res.data.map(n => {
+                            return {
+                                createTime: new Date(n.time).toLocaleString(),
+                                consume: n.data
+                            }
+                        }).reverse();
+                    }
+                });
+
+                this.$axios.get("abnormalNodes", {
+                    url: `${this.currentNode.host}:${this.currentNode.port}`,
+                    type: 1,
+                    beginTime: Date.now() - 2 * 60 * 60 * 1000,
+                    endTime: Date.now()
+                }).then(res => {
+                    if(res.code !== 0)
+                    {
+                        this.$message.error(res.msg);
+                    }
+                    else
+                    {
+                        this.timeoutNodesData.rows = res.data.map(n => {
+                            return {
+                                address: n.address,
+                                times: n.frequency,
+                                frequency: n.frequency / 2
+                            }
+                        });
+                    }
+                });
+
+                this.$axios.get("abnormalNodes", {
+                    url: `${this.currentNode.host}:${this.currentNode.port}`,
+                    type: 2
+                }).then(res => {
+                    if(res.code !== 0)
+                    {
+                        this.$message.error(res.msg);
+                    }
+                    else
+                    {
+                        this.cheatedNodesData.rows = res.data.map(n => {
+                            return {
+                                address: n.address,
+                                times: n.frequency,
+                                frequency: parseInt(n.frequency) / 2
+                            }
+                        });
+                    }
+                });
+
+                this.handleListener();
+            }
+        },
+        
         activated(){
             this.getCurrentNode();
 
@@ -192,9 +293,11 @@
 
             this.handleListener();
         },
+
         deactivated(){
             bus.$off('collapse', this.renderCharts);
         },
+
         methods:
         {
             handleListener(){

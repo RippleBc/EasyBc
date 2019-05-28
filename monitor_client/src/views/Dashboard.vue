@@ -161,6 +161,31 @@
         },
 
         created() {
+            if(this.currentNode === undefined)
+            {
+                this.getCurrentNode();
+            }
+        },
+
+        watch: {
+            $route(newVal, oldVal){
+                // watch the route, when the route of the same corresponding component has changed, mean the content of the same component is change, init data again
+                if(newVal.path.split('/')[1] === oldVal.path.split('/')[1])
+                {
+                    this.getCurrentNode();
+
+                    this.$store.commit('switchNavType', 'node');
+
+                    this.getLogs('INFO')
+                    this.getLogs('WARNING')
+                    this.getLogs('ERROR')
+                    this.getLogs('FATAL')
+                }
+            }
+        },
+
+        activated(){
+            // when the component is activated again, init data again
             this.getCurrentNode();
 
             this.$store.commit('switchNavType', 'node');
@@ -170,11 +195,9 @@
             this.getLogs('ERROR')
             this.getLogs('FATAL')
         },
-
-        activated(){
-            this.getCurrentNode();
-
-            this.$store.commit('switchNavType', 'node');
+        
+        deactivated(){
+            bus.$off('collapse', this.renderCharts);
         }
     }
 
