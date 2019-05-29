@@ -20,8 +20,6 @@ class Ripple
 {
 	constructor(processor)
 	{
-		super();
-
 		this.processor = processor;
 
 		this.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
