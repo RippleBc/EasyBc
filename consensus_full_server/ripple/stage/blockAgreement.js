@@ -85,7 +85,7 @@ class BlockAgreement extends Stage
 			})().then(() => {
 				logger.trace("BlockAgreement handler, process block success, new round begin")
 			}).catch(e => {
-				logger.fatal(`BlockAgreement handler, throw exception, ${e}`)
+				logger.fatal(`BlockAgreement handler, throw exception, ${e}`);
 				process.exit(1);
 			});
 			return;
