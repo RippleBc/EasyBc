@@ -1,1 +1,2 @@
-console.log(new Date("1990-11-12").valueOf())
+
+console.log(new Buffer("01", 'hex').length)

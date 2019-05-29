@@ -81,6 +81,9 @@ class Update
 				transactions: transactions
 			});
 
+			// init number
+			block.header.number = 0;
+
 			// init transactionTrie
 			block.header.transactionsTrie = await block.genTxTrie();
 
