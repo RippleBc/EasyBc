@@ -6,7 +6,6 @@ const assert = require("assert");
 const Counter = require("./stage/counter");
 const Perish = require("./stage/perish");
 const utils = require("../../depends/utils");
-const AsyncEventemitter = require("async-eventemitter");
 
 const bufferToInt = utils.bufferToInt;
 const rlp = utils.rlp;
@@ -17,7 +16,7 @@ const mysql = process[Symbol.for("mysql")];
 const loggerStageConsensus = process[Symbol.for("loggerStageConsensus")];
 const loggerPerishNode = process[Symbol.for("loggerPerishNode")];
 
-class Ripple extends AsyncEventemitter
+class Ripple
 {
 	constructor(processor)
 	{
@@ -39,17 +38,6 @@ class Ripple extends AsyncEventemitter
 
 		// used for cache amalgamate message
 		this.amalgamateMessagesCache = [];
-
-		const self = this;
-		this.on("blockProcessOver", () => {
-			for(let i = 0; i < self.amalgamateMessagesCache.length; i++)
-			{
-				let {address, cmd, data} = self.amalgamateMessagesCache[i];
-				self.amalgamate.handleMessage(address, cmd, data);
-			}
-
-			self.amalgamateMessagesCache = [];
-		});
 	}
 
 	/*

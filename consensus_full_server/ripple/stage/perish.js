@@ -2,7 +2,6 @@ const PerishData = require("../data/perish");
 const { unl } = require("../../config.json");
 const utils = require("../../../depends/utils");
 const process = require("process");
-const AsyncEventemitter = require("async-eventemitter");
 const Sender = require("../sender");
 const Stage = require("./stage");
 const { TRANSACTIONS_CONSENSUS_THRESHOULD, PROTOCOL_CMD_KILL_NODE_FINISH_STATE_REQUEST, PROTOCOL_CMD_KILL_NODE_FINISH_STATE_RESPONSE, PERISH_DATA_PERIOD_OF_VALID, STAGE_STATE_EMPTY, RIPPLE_STAGE_PERISH_NODE, PROTOCOL_CMD_KILL_NODE_REQUEST, PROTOCOL_CMD_KILL_NODE_RESPONSE } = require("../../constant");

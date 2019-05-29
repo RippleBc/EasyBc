@@ -63,31 +63,37 @@ class BlockAgreement extends Stage
 		{
 			logger.warn("BlockAgreement handler, block agreement success, begin to process block");
 
-			const self = this;
-
 			this.ripple.state = RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK;
 
-			this.ripple.processor.processBlock({
-				block: new Block(sortedBlocks[0][1].data)
-			}).then(() => {
+			(async () => {
+				await this.ripple.processor.processBlock({
+					block: new Block(sortedBlocks[0][1].data)
+				});
+
 				logger.warn("BlockAgreement handler, block agreement success, process block is over");
 
-				self.ripple.run().then(() => {
-					self.ripple.emit("blockProcessOver");
-				}).catch(e => {
-					logger.error(`BlockAgreement handler, ripple.run throw exception, ${e}`);
-				});
-				
-				logger.trace("BlockAgreement handler, run block chain success, go to next stage");			
+				await this.ripple.run();
+
+				for(let i = 0; i < this.ripple.amalgamateMessagesCache.length; i++)
+				{
+					let {address, cmd, data} = this.ripple.amalgamateMessagesCache[i];
+					this.ripple.amalgamate.handleMessage(address, cmd, data);
+				}
+
+				this.ripple.amalgamateMessagesCache = [];		
+
+			})().then(() => {
+				logger.trace("BlockAgreement handler, process block success, new round begin")
 			}).catch(e => {
 				logger.fatal(`BlockAgreement handler, throw exception, ${e}`)
 				process.exit(1);
 			});
-
 			return;
 		}
 
-		this.ripple.run().catch(e => {
+		this.ripple.run().then(() => {
+
+		}).catch(e => {
 			logger.error(`BlockAgreement handler, ripple.run throw exception, ${e}`);
 		});
 	}
