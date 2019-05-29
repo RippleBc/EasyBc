@@ -102,6 +102,8 @@ class Block
 
       await this.txTrie.put(transaction.hash(true), transaction.serialize());
     };
+
+    return this.txTrie.root;
   }
 
   /**
@@ -133,7 +135,7 @@ class Block
 
     return {
       state: errors.length ? false : true,
-      msg: `validateTransactions failed\r\n${errors.join("\r\n")}`
+      msg: `validateTransactions failed, ${errors.join(", ")}`
     }
   }
 
@@ -188,7 +190,7 @@ class Block
 
     return {
       state: errors.length ? false : true,
-      msg: `block validate failed\r\n${errors.join("\r\n")}`
+      msg: `block validate failed, ${errors.join(", ")}`
     };
   }
 

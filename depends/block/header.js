@@ -88,7 +88,7 @@ class BlockHeader
 
     return {
       state: errors.length ? false : true,
-      msg: `header validate failed, ${errors.join("\r\n")}`
+      msg: `header validate failed, ${errors.join(", ")}`
     }
   }
 

@@ -56,7 +56,6 @@ module.exports = async function(opts) {
   addresses = [...new Set(addresses)];
   await this.stateManager.warmCache(addresses);
 
-
   // process transactions
   for(let i = 0; i < block.transactions.length; i++)
   {
@@ -80,7 +79,7 @@ module.exports = async function(opts) {
   {
     return {
       state: false,
-      msg: `runBlock, some transactions is invalid\r\n${errors.join("\r\n")}`,
+      msg: `runBlock, some transactions is invalid, ${errors.join(", ")}`,
       transactions: failedTransactions
     };
   }

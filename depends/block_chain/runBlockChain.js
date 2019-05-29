@@ -23,17 +23,23 @@ module.exports = async function(opts)
     if(!parentBlock)
     {
       return {
-          state: false,
-          msg: "run block chain, getBlockByHash key not found"
-        }
+        state: 2
+      }
     }
   }
 
-  // check parentHash and number
-  await block.validate(parentBlock);
+  // check parentHash and number and transactions and transactionsTrie
+  let result = await block.validate(parentBlock);
+  if(false === result.state)
+  {
+    return {
+      state: 3,
+      msg: result.msg
+    }
+  }
 
   // run block
-  const result = await this.runBlock({
+  result = await this.runBlock({
     block: block,
     root: parentBlock ? parentBlock.header.stateRoot : undefined,
     generate: opts.generate,
@@ -47,5 +53,9 @@ module.exports = async function(opts)
     await this.addBlock(block);
   }
 
-  return result;
+  return {
+    state: result.state === true ? 0 : 1,
+    msg: result.msg,
+    transactions: result.transactions
+  };
 }

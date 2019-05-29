@@ -61,8 +61,6 @@ const run = async function(dir, logsBufferMaxSize)
 
 	logger.trace(`logParser run, init logFile: ${logFile}, offset: ${offset}`);
 
-	let files = await readDir(dir);
-
 	const readLogs = async function(index)
 	{
 		if(logFile !== files[index])
@@ -146,8 +144,11 @@ const run = async function(dir, logsBufferMaxSize)
 		}
 	}
 
+	let files;
+
 	while(true)
 	{
+		files = await readDir(dir);
 		if(files.length <= 0)
 		{
 			await new Promise((resolve, reject) => {
@@ -155,8 +156,6 @@ const run = async function(dir, logsBufferMaxSize)
 					resolve()
 				}, 2000)
 			})
-
-			files = await readDir(dir);
 		}
 		else
 		{

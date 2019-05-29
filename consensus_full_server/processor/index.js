@@ -98,17 +98,12 @@ class Processor
 				generate: generate
 			});
 
-			// block chain is out of date, need update
-			if(state === false)
+			if(state === 0)
 			{
-				if(msg.indexOf("run block chain, getBlockByHash key not found") >= 0)
-				{
-					update.run().then(() => {
-						loggerUpdate.info("update is success");
-					});
-					break;
-				}
-
+				break;
+			}
+			else if(state === 1)
+			{
 				loggerConsensus.error(`Processor processBlock, some transactions are invalid: `)
 				for(let i = 0; i < transactions.length; i++)
 				{
@@ -119,9 +114,22 @@ class Processor
 				// del invalid transactions
 				block.delInvalidTransactions(transactions);
 			}
+			else if(state === 2)
+			{
+				update.run().then(() => {
+					loggerUpdate.info("update is success");
+				});
+				break;
+			}
+			else if(state === 3)
+			{
+				loggerConsensus.fatal(`Processor processBlock, block is invalid, ${msg}`);
+				process.exit(1);
+			}
 			else
 			{
-				break;
+				loggerConsensus.fatal(`Processor processBlock, invalid return state, ${state}`);
+				process.exit(1);
 			}
 		}
 		while(true);

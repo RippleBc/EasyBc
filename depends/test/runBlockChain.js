@@ -317,7 +317,7 @@ describe("run block chain test", function() {
 				block: parentBlock,
 				generate: true
 			});
-			assert.equal(runBlockChainResult.state, true, `run parent block failed, ${runBlockChainResult.msg}`);
+			assert.equal(runBlockChainResult.state, 0, `run parent block failed, ${runBlockChainResult.msg}`);
 
 			// init account nonce
 			fromAccount = await blockChain.stateManager.getAccount(from);
@@ -330,7 +330,7 @@ describe("run block chain test", function() {
 				block: block,
 				generate: true
 			});
-			assert.equal(runBlockChainResult.state, true, `run block failed, ${runBlockChainResult.msg}`);
+			assert.equal(runBlockChainResult.state, 0, `run block failed, ${runBlockChainResult.msg}`);
 
 			// check number 1 block
 			const parentBlockTmp = await blockChain.getBlockByNumber(toBuffer(1));

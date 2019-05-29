@@ -129,6 +129,7 @@ class BlockAgreement extends Stage
 			}
 
 			block.header.parentHash = parentHash;
+			block.header.transactionsTrie = await block.genTxTrie();
 
 			const rippleBlock = new RippleBlock({
 				block: block.serialize()

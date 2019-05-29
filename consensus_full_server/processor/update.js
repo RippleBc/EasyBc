@@ -80,12 +80,18 @@ class Update
 				transactions: transactions
 			});
 
-			await this.blockChain.runBlockChain({
+			const result = await this.blockChain.runBlockChain({
 				block: block,
 				generate: true,
 				skipNonce: true,
 				skipBalance: true
 			});
+			if(result.state !== 0)
+			{
+				logger.fatal(`Update init, blockChain.runBlockChain, ${result.msg}`)
+
+				process.exit(1);
+			}
 
 			return;
 		}
@@ -167,9 +173,17 @@ class Update
 				const [majorityBlock, count] = sortedBlocks[0];
 				if(count / unl.length >= TRANSACTIONS_CONSENSUS_THRESHOULD)
 				{
-					await this.blockChain.runBlockChain({
+					const result = await this.blockChain.runBlockChain({
 						block: new Block(Buffer.from(majorityBlock, 'hex'))
 					});
+					if(result.state !== 0)
+					{
+						logger.fatal('Update synchronize, runBlockChain failed, please clear the entrie database and synchronize again');
+
+						process.exit(1);
+					}
+
+
 					blockNumberBn.iaddn(1);
 				}
 				else
