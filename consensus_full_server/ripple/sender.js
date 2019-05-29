@@ -30,6 +30,16 @@ class Sender
 	/**
 	 * @param {String} address
 	 */
+	checkIfNodeIsFinished(address)
+	{
+		assert(typeof address === "string", `Sender checkIfNodeIsFinished, address should be a String, now is ${typeof address}`);
+
+		return this.finishAddresses.has(address);
+	}
+
+	/**
+	 * @param {String} address
+	 */
 	recordFinishNode(address)
 	{
 		assert(typeof address === "string", `Sender recordFinishNode, address should be a String, now is ${typeof address}`);

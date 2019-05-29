@@ -47,7 +47,6 @@ class Counter extends Stage
 		}
 
 		this.ripple.handleCounter();
-		this.ripple.handleCheatedNodes(this.cheatedNodes);
 	}
 
 	/**
@@ -101,7 +100,7 @@ class Counter extends Stage
 				{
 					if(address.toString("hex") !== counterData.from.toString("hex"))
 					{
-						this.cheatedNodes.push(address);
+						this.cheatedNodes.push(address.toString('hex'));
 
 						logger.info(`Counter handleMessage, address should be ${address.toString("hex")}, now is ${counterData.from.toString("hex")}`);
 					}
@@ -112,7 +111,7 @@ class Counter extends Stage
 				}
 				else
 				{
-					this.cheatedNodes.push(address);
+					this.cheatedNodes.push(address.toString('hex'));
 					
 					logger.info(`Counter handleMessage, address ${address.toString("hex")}, validate failed`);
 				}

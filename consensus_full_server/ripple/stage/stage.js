@@ -1,5 +1,5 @@
 const { unl } = require("../../config.json");
-const { RIPPLE_STATE_STAGE_CONSENSUS, STAGE_DATA_EXCHANGE_TIMEOUT, STAGE_STAGE_SYNCHRONIZE_TIMEOUT, STAGE_MAX_FINISH_RETRY_TIMES, AVERAGE_TIME_STATISTIC_MAX_TIMES, STAGE_STATE_EMPTY, STAGE_STATE_DATA_EXCHANGE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING } = require("../../constant");
+const { RIPPLE_STATE_STAGE_CONSENSUS, STAGE_DATA_EXCHANGE_TIMEOUT, STAGE_STAGE_SYNCHRONIZE_TIMEOUT, STAGE_MAX_FINISH_RETRY_TIMES, STAGE_STATE_EMPTY, STAGE_STATE_DATA_EXCHANGE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING } = require("../../constant");
 const process = require("process");
 const utils = require("../../../depends/utils");
 const assert = require("assert");
@@ -9,6 +9,7 @@ const stripHexPrefix = utils.stripHexPrefix;
 const rlp = utils.rlp;
 const toBuffer = utils.toBuffer;
 const bufferToInt = utils.bufferToInt;
+const Buffer = utils.Buffer;
 
 const logger = process[Symbol.for("loggerStageConsensus")];
 const p2p = process[Symbol.for("p2p")];
@@ -52,7 +53,7 @@ class Stage
 				// record the timeout node
 				for(let i = 0; i < unl.length; i++)
 				{
-					if(!this.dataExchange.finishAddresses.has(stripHexPrefix(unl[i].address)))
+					if(!this.dataExchange.checkIfNodeIsFinished(stripHexPrefix(unl[i].address)))
 					{
 						this.ownTimeoutNodes.push(unl[i].address);
 					}
@@ -97,7 +98,7 @@ class Stage
 				// record the timeout node
 				for(let i = 0; i < unl.length; i++)
 				{
-					if(!this.stageSynchronize.finishAddresses.has(stripHexPrefix(unl[i].address)))
+					if(!this.stageSynchronize.checkIfNodeIsFinished(stripHexPrefix(unl[i].address)))
 					{
 						this.ownTimeoutNodes.push(unl[i].address);
 					}
@@ -109,7 +110,14 @@ class Stage
 
 					this.stageSynchronize.reset();
 					this.stageSynchronize.start();
-					p2p.sendAll(this.synchronize_state_request_cmd);
+
+					for(let node of unl)
+					{
+						if(!this.stageSynchronize.checkIfNodeIsFinished(node.address))
+						{
+							p2p.send(Buffer.from(node.address, "hex"), this.synchronize_state_request_cmd);
+						}
+					}
 
 					this.leftSynchronizeTryTimes -= 1;
 				}
@@ -177,12 +185,12 @@ class Stage
 				{
 					for(let i = 0; i < unl.length; i++)
 					{
-						if(!this.dataExchange.finishAddresses.has(stripHexPrefix(unl[i].address)))
+						if(!this.dataExchange.checkIfNodeIsFinished(stripHexPrefix(unl[i].address)))
 						{
 							timeoutAddresses.push(unl[i].address);
 						}
 
-						if(!this.stageSynchronize.finishAddresses.has(stripHexPrefix(unl[i].address)))
+						if(!this.stageSynchronize.checkIfNodeIsFinished(stripHexPrefix(unl[i].address)))
 						{
 							timeoutAddresses.push(unl[i].address);
 						}
@@ -217,11 +225,26 @@ class Stage
 						this.otherTimeoutNodes.push(addressHex);
 					});
 
-					this.stageSynchronize.recordFinishNode(address.toString("hex"));
+					if(this.stageSynchronize.checkIfNodeIsFinished(address.toString("hex")))
+					{
+						this.cheatedNodes.push(address.toString('hex'))
+					}
+					else
+					{
+						this.stageSynchronize.recordFinishNode(address.toString("hex"));
+					}
+					
 				}
 				else if(state === STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING)
 				{
-					this.stageSynchronize.recordFinishNode(address.toString("hex"));
+					if(this.stageSynchronize.checkIfNodeIsFinished(address.toString("hex")))
+					{
+						this.cheatedNodes.push(address.toString('hex'));
+					}
+					else
+					{
+						this.stageSynchronize.recordFinishNode(address.toString("hex"));
+					}
 				}
 				else
 				{
@@ -253,6 +276,16 @@ class Stage
 	checkDataExchangeIsProceeding()
 	{
 		return this.state === STAGE_STATE_DATA_EXCHANGE_PROCEEDING;
+	}
+
+	/**
+	 * @param {String} address
+	 */
+	checkIfNodeFinishDataExchange(address)
+	{
+		assert(typeof address === "string", `Stage checkIfNodeFinishDataExchange, address should be a String, now is ${typeof address}`);
+
+		return this.dataExchange.checkIfNodeIsFinished(address)
 	}
 }
 

@@ -238,7 +238,6 @@ class Mysql
   
   /**
    * @param {Number} stage
-   * @param {Number} type
    * @param {Number} timeConsume
    */
   async saveDataExchangeTimeConsume(stage, timeConsume)
@@ -255,10 +254,11 @@ class Mysql
 
   /**
    * @param {Number} stage
-   * @param {Number} type
    */
   async getDataExchangeTimeConsume(stage)
   {
+    assert(typeof stage === 'number', `Mysql getDataExchangeTimeConsume, stage should be a Number, now is ${typeof stage}`);
+
     const limit = 100
 
     const total =  await this.TimeConsume.sum('data', {
@@ -274,7 +274,6 @@ class Mysql
 
   /**
    * @param {Number} stage
-   * @param {Number} type
    * @param {Number} timeConsume
    */
   async saveStageSynchronizeTimeConsume(stage, timeConsume)
@@ -291,10 +290,11 @@ class Mysql
 
   /**
    * @param {Number} stage
-   * @param {Number} type
    */
   async getStageSynchronizeTimeConsume(stage)
   {
+    assert(typeof stage === 'number', `Mysql getStageSynchronizeTimeConsume, stage should be a Number, now is ${typeof stage}`);
+
     const limit = 100
     
     const total =  await this.TimeConsume.sum('data', {
@@ -313,6 +313,8 @@ class Mysql
    */
   async saveTimeoutNode(address)
   {
+    assert(typeof address === 'string', `Mysql saveTimeoutNode, address should be a String, now is ${typeof address}`);
+
     await this.AbnormalNode.create({
       address: address, 
       type: 1
@@ -324,6 +326,8 @@ class Mysql
    */
   async saveCheatedNode(address)
   {
+    assert(typeof address === 'string', `Mysql saveCheatedNode, address should be a String, now is ${typeof address}`);
+    
     await this.AbnormalNode.create({
       address: address, 
       type: 2

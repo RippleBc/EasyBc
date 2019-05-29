@@ -210,18 +210,27 @@ class BlockAgreement extends Stage
 		{
 			if(address.toString("hex") !== rippleBlock.from.toString("hex"))
 			{
-				this.cheatedNodes.push(address);
+				this.cheatedNodes.push(address.toString('hex'));
 
 				logger.error(`BlockAgreement handleBlockAgreement, address should be ${address.toString("hex")}, now is ${rippleBlock.from.toString("hex")}`);
 			}
 			else
 			{
-				this.rippleBlocks.push(rippleBlock);
+				if(this.checkIfNodeFinishDataExchange(address.toString("hex")))
+				{
+					logger.fatal(`BlockAgreement handleBlockAgreement, address: ${address.toString("hex")}, send the same exchange data`);
+				
+					this.cheatedNodes.push(address.toString('hex'));
+				}
+				else
+				{
+					this.rippleBlocks.push(rippleBlock);
+				}
 			}
 		}
 		else
 		{
-			this.cheatedNodes.push(address);
+			this.cheatedNodes.push(address.toString('hex'));
 			
 			logger.error(`BlockAgreement handleBlockAgreement, address ${address.toString("hex")}, validate failed`);
 		}

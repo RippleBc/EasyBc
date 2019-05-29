@@ -108,18 +108,27 @@ class Amalgamate extends Stage
 		{
 			if(address.toString("hex") !== candidate.from.toString("hex"))
 			{
-				this.cheatedNodes.push(address);
+				this.cheatedNodes.push(address.toString('hex'));
 				
 				logger.error(`Amalgamate handleAmalgamate, address should be ${address.toString("hex")}, now is ${candidate.from.toString("hex")}`);
 			}
 			else
 			{
-				this.candidates.push(candidate);
+				if(this.checkIfNodeFinishDataExchange(address.toString("hex")))
+				{
+					logger.fatal(`Amalgamate handleAmalgamate, address: ${address.toString("hex")}, send the same exchange data`);
+				
+					this.cheatedNodes.push(address.toString('hex'));
+				}
+				else
+				{
+					this.candidates.push(candidate);
+				}
 			}
 		}
 		else
 		{
-			this.cheatedNodes.push(address);
+			this.cheatedNodes.push(address.toString('hex'));
 
 			logger.error(`Amalgamate handleAmalgamate, address: ${address.toString("hex")}, validate failed`);
 		}

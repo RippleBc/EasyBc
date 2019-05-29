@@ -94,12 +94,12 @@ class Perish extends Stage
 						}
 						else
 						{
-							this.cheatedNodes.push(address);
+							this.cheatedNodes.push(address.toString('hex'));
 						}
 					}
 					else
 					{
-						this.cheatedNodes.push(address);
+						this.cheatedNodes.push(address.toString('hex'));
 
 						logger.error(`Perish handleMessage, address ${address.toString("hex")}, send an invalid message`);
 					}
@@ -121,21 +121,30 @@ class Perish extends Stage
 					// check if perishData timestamp is valid
 					if(bufferToInt(perishData.timestamp) + PERISH_DATA_PERIOD_OF_VALID > Date.now())
 					{
-						this.allPerishData.push(perishData);
+						if(this.checkIfNodeFinishDataExchange(address.toString("hex")))
+						{
+							logger.fatal(`Perish handleMessage, address: ${address.toString("hex")}, send the same exchange data`);
 
-						this.recordDataExchangeFinishNode(address.toString("hex"));
+							this.cheatedNodes.push(address.toString('hex'));
+						}
+						else
+						{
+							this.allPerishData.push(perishData);
+						}
 					}
 					else
 					{
-						this.cheatedNodes.push(address);
+						this.cheatedNodes.push(address.toString('hex'));
 					}
 				}
 				else
 				{
-					this.cheatedNodes.push(address);
+					this.cheatedNodes.push(address.toString('hex'));
 
 					logger.error(`Perish handleMessage, address ${address.toString("hex")}, send an invalid message`);
 				}
+
+				this.recordDataExchangeFinishNode(address.toString("hex"));
 			}
 			break;
 			default:

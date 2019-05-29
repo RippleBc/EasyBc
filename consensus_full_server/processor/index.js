@@ -5,7 +5,6 @@ const Block = require("../../depends/block");
 const BlockChain = require("../../depends/block_chain");
 const utils = require("../../depends/utils");
 const Consensus = require("../ripple");
-const { TRANSACTION_CACHE_MAX_NUM } = require("../constant");
 const assert = require("assert");
 const Message = require("../../depends/fly/net/message");
 const Trie = require("../../depends/trie");
