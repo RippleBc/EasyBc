@@ -76,10 +76,13 @@ class Update
 				transactions.push(tx.serialize());
 			}
 			
-
+			// init transactions
 			const block = new Block({
 				transactions: transactions
 			});
+
+			// init transactionTrie
+			block.header.transactionsTrie = await block.genTxTrie();
 
 			const result = await this.blockChain.runBlockChain({
 				block: block,
