@@ -80,6 +80,7 @@
         name: 'dashboard',
         data() {
             return {
+                switch: false,
                 type: 'INFO',
                 infoLogsCount: 0,
                 infoLogs: [],
@@ -169,22 +170,23 @@
 
         watch: {
             $route(newVal, oldVal){
-                // watch the route, when the route of the same corresponding component has changed, mean the content of the same component is change, init data again
-                if(newVal.path.split('/')[1] === oldVal.path.split('/')[1])
+                if(!this.switch)
                 {
                     this.getCurrentNode();
-
-                    this.$store.commit('switchNavType', 'node');
 
                     this.getLogs('INFO')
                     this.getLogs('WARNING')
                     this.getLogs('ERROR')
                     this.getLogs('FATAL')
                 }
+
+                this.switch = false;
             }
         },
 
         activated(){
+            this.switch = true;
+
             // when the component is activated again, init data again
             this.getCurrentNode();
 

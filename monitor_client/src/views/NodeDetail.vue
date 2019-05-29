@@ -61,6 +61,7 @@
     export default {
         name: 'nodeDetail',
         data: () => ({
+            switch: false,
             currentNode: undefined,
             timeoutNodesData:{
                 columns: ['address', 'times', 'frequency'],
@@ -105,13 +106,56 @@
         watch: {
             $route(newVal, oldVal)
             {
-                if(newVal.path.split('/')[1] !== oldVal.path.split('/')[1])
+                if(!this.switch)
                 {
-                    return
+                    this.getCurrentNode();
+
+                    this.getNodeStatus();
+                    this.getTimeConsume();
+                    this.getCheatedNodes();
+                    this.getTimeoutNodes();
+
+                    this.handleListener();
                 }
 
-                this.getCurrentNode();
+                this.switch = false;
+            }
+        },
+        
+        activated(){
+            this.switch = true;
 
+            this.getCurrentNode();
+
+            this.$store.commit('switchNavType', 'node');
+
+            this.getNodeStatus();
+            this.getTimeConsume();
+            this.getCheatedNodes();
+            this.getTimeoutNodes();
+
+            this.handleListener();
+        },
+
+        deactivated(){
+            bus.$off('collapse', this.renderCharts);
+        },
+
+        methods:
+        {
+            handleListener(){
+                bus.$on('collapse', this.renderCharts);
+            },
+
+            renderCharts(){
+                
+            },
+            getCurrentNode(){
+                const nodeIndex = this.$route.path.split('/')[2];
+                const nodeInfo = this.unl.find(n => nodeIndex == n.id)
+                this.currentNode = nodeInfo;
+            },
+            getNodeStatus() {
                 this.$axios.get("nodeStatus", {
                     address: this.currentNode.address
                 }).then(res => {
@@ -135,7 +179,8 @@
                         }).reverse();
                     }
                 });
-
+            },
+            getTimeConsume() {
                 this.$axios.get("timeConsume", {
                     url: `${this.currentNode.host}:${this.currentNode.port}`,
                     beginTime: Date.now() - 2 * 60 * 60 * 1000,
@@ -155,7 +200,8 @@
                         }).reverse();
                     }
                 });
-
+            },
+            getTimeoutNodes() {
                 this.$axios.get("abnormalNodes", {
                     url: `${this.currentNode.host}:${this.currentNode.port}`,
                     type: 1,
@@ -177,7 +223,8 @@
                         });
                     }
                 });
-
+            },
+            getCheatedNodes() {
                 this.$axios.get("abnormalNodes", {
                     url: `${this.currentNode.host}:${this.currentNode.port}`,
                     type: 2
@@ -197,120 +244,6 @@
                         });
                     }
                 });
-
-                this.handleListener();
-            }
-        },
-        
-        activated(){
-            this.getCurrentNode();
-
-            this.$axios.get("nodeStatus", {
-                address: this.currentNode.address
-            }).then(res => {
-                if(res.code !== 0)
-                {
-                    this.$message.error(res.msg);
-                }
-                else
-                {
-                    this.cpuConsume.rows = res.data.cpus.map(n => {
-                        return {
-                            createTime: new Date(n.createdAt).toLocaleString(),
-                            cpu: n.consume
-                        }
-                    }).reverse();
-                    this.memoryConsume.rows = res.data.memories.map(n => {
-                        return {
-                            createTime: new Date(n.createdAt).toLocaleString(),
-                            memory: n.consume / 1024 / 1024
-                        }
-                    }).reverse();
-                }
-            });
-
-            this.$axios.get("timeConsume", {
-                url: `${this.currentNode.host}:${this.currentNode.port}`,
-                beginTime: Date.now() - 2 * 60 * 60 * 1000,
-                endTime: Date.now()
-            }).then(res => {
-                if(res.code !== 0)
-                {
-                    this.$message.error(res.msg);
-                }
-                else
-                {
-                    this.timeConsume.rows = res.data.map(n => {
-                        return {
-                            createTime: new Date(n.time).toLocaleString(),
-                            consume: n.data
-                        }
-                    }).reverse();
-                }
-            });
-
-            this.$axios.get("abnormalNodes", {
-                url: `${this.currentNode.host}:${this.currentNode.port}`,
-                type: 1,
-                beginTime: Date.now() - 2 * 60 * 60 * 1000,
-                endTime: Date.now()
-            }).then(res => {
-                if(res.code !== 0)
-                {
-                    this.$message.error(res.msg);
-                }
-                else
-                {
-                    this.timeoutNodesData.rows = res.data.map(n => {
-                        return {
-                            address: n.address,
-                            times: n.frequency,
-                            frequency: n.frequency / 2
-                        }
-                    });
-                }
-            });
-
-            this.$axios.get("abnormalNodes", {
-                url: `${this.currentNode.host}:${this.currentNode.port}`,
-                type: 2
-            }).then(res => {
-                if(res.code !== 0)
-                {
-                    this.$message.error(res.msg);
-                }
-                else
-                {
-                    this.cheatedNodesData.rows = res.data.map(n => {
-                        return {
-                            address: n.address,
-                            times: n.frequency,
-                            frequency: parseInt(n.frequency) / 2
-                        }
-                    });
-                }
-            });
-
-            this.handleListener();
-        },
-
-        deactivated(){
-            bus.$off('collapse', this.renderCharts);
-        },
-
-        methods:
-        {
-            handleListener(){
-                bus.$on('collapse', this.renderCharts);
-            },
-
-            renderCharts(){
-                
-            },
-            getCurrentNode(){
-                const nodeIndex = this.$route.path.split('/')[2];
-                const nodeInfo = this.unl.find(n => nodeIndex == n.id)
-                this.currentNode = nodeInfo;
             }
         }
     }
