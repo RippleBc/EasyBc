@@ -6,12 +6,13 @@ const process = require("process");
 const async = require("async");
 const assert = require("assert");
 const { unl } = require("../../config.json");
-const { TRANSACTIONS_CONSENSUS_THRESHOULD, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_BLOCK_AGREEMENT, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_REQUEST, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE } = require("../../constant");
+const { BLOCK_AGREEMENT_TIMESTAMP_MAX_OFFSET, TRANSACTIONS_CONSENSUS_THRESHOULD, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_BLOCK_AGREEMENT, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_REQUEST, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE } = require("../../constant");
 
 const sha256 = utils.sha256;
 const Buffer = utils.Buffer;
 const BN = utils.BN;
 const rlp = utils.rlp;
+const bufferToInt = utils.bufferToInt;
 
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
@@ -101,20 +102,34 @@ class BlockAgreement extends Stage
  		this.ripple.stage = RIPPLE_STAGE_BLOCK_AGREEMENT;
 		this.start();
 
- 		// init block
+ 		// init block trasactions
 		const block = new Block({
 			transactions: transactions
 		});
 
+		// init timestamp
+		let timestamp = 0;
 		for(let i = 0; i < block.transactions.length; i++)
 		{
 			let transaction = block.transactions[i];
+
+			if(bufferToInt(transaction.timestamp) > timestamp)
+			{
+				timestamp = bufferToInt(transaction.timestamp)
+			}
+
 			logger.trace(`BlockAgreement run, transaction hash: ${transaction.hash().toString("hex")}, from: ${transaction.from.toString("hex")}, to: ${transaction.to.toString("hex")}, value: ${transaction.value.toString("hex")}, nonce: ${transaction.nonce.toString("hex")}`);
 		}
+		const now = Date.now();
+		while(now - timestamp > BLOCK_AGREEMENT_TIMESTAMP_MAX_OFFSET)
+		{
+			timestamp += BLOCK_AGREEMENT_TIMESTAMP_MAX_OFFSET
+		}
+		block.header.timestamp = timestamp;
 
-		const self = this;
-		(async function() {
-			const height = await self.ripple.processor.blockChain.getBlockChainHeight();
+		// init oth property
+		(async () => {
+			const height = await this.ripple.processor.blockChain.getBlockChainHeight();
 
 			if(!height)
 			{
@@ -122,7 +137,7 @@ class BlockAgreement extends Stage
 			}
 			
 			block.header.number = (new BN(height).addn(1)).toArrayLike(Buffer);
-			const parentHash = await self.ripple.processor.blockChain.getBlockHashByNumber(height);
+			const parentHash = await this.ripple.processor.blockChain.getBlockHashByNumber(height);
 			if(!parentHash)
 			{
 				await Promise.reject(`BlockAgreement run, getBlockHashByNumber(${height.toString("hex")}) should not return undefined`);
@@ -140,7 +155,7 @@ class BlockAgreement extends Stage
 			p2p.sendAll(PROTOCOL_CMD_BLOCK_AGREEMENT, rippleBlock.serialize());
 
 			//
-			self.rippleBlocks.push(rippleBlock);
+			this.rippleBlocks.push(rippleBlock);
 		})().then(() => {
 			logger.trace('BlockAgreement run, success')
 		}).catch(e => {

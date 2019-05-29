@@ -223,6 +223,7 @@ exports.sendTransaction = async function(url, from, to, value)
 	// send tx
 	const tx = new Transaction();
 	tx.nonce = (new BN(accountInfo.nonce).addn(1)).toArrayLike(Buffer);
+	tx.timestamp = Date.now();
 	tx.value = value;
 	tx.data = "";
 	tx.to = to;

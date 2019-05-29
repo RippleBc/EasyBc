@@ -19,6 +19,12 @@ class Transaction
       allowLess: true,
       default: Buffer.alloc(0)
     }, {
+      name: "timestamp",
+      length: 32,
+      allowZero: true,
+      allowLess: true,
+      default: Buffer.alloc(0)
+    }, {
       name: "to",
       length: 20,
       default: Buffer.alloc(20)
