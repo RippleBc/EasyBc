@@ -1,9 +1,1 @@
-while(1)
-{
-	console.log(1)
-	while(1)
-	{
-		console.log(2)
-		break;
-	}
-}
+console.log(new Date("1990-11-12").valueOf())

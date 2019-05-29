@@ -67,6 +67,7 @@ class Update
 			for(let i = 0; i < genesis.length; i++)
 			{
 				let tx = new Transaction({
+					nonce: 1,
 					to: Buffer.from(genesis[i].address, 'hex'),
 					value: Buffer.from(genesis[i].balance, 'hex')
 				});
