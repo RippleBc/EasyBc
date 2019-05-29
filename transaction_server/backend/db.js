@@ -161,12 +161,13 @@ exports.getToHistory = async function()
 
 /**
  * @param {String} url
+ * @param {Buffer|Undefined} _privateKey
  * @param {Buffer} from
  * @param {Buffer} to
  * @param {Buffer} value
  * @return {String}
  */
-exports.sendTransaction = async function(url, from, to, value)
+exports.sendTransaction = async function(url, _privateKey, from, to, value)
 {
 	assert(typeof url === "string", `sendTransaction, url should be a String, now is ${typeof url}`);
 	assert(Buffer.isBuffer(from), `sendTransaction, from should be an Buffer, now is ${typeof from}`);
@@ -188,34 +189,47 @@ exports.sendTransaction = async function(url, from, to, value)
 		await Promise.reject("sendTransaction, invalid value");
 	}
 
-
-	// get corresponding private key
-	const keyPairArrayRaw = await	db.get(KEY_KEY_PIAR_ARRAY);
-	let keyPairArray;
-	if(keyPairArrayRaw)
+	// get corresponding private key and address
+	let privateKey;
+	let address;
+	if(_privateKey)
 	{
-		keyPairArray = rlp.decode(keyPairArrayRaw);
+		assert(Buffer.isBuffer(_privateKey), `sendTransaction, _privateKey should be an Buffer, now is ${typeof _privateKey}`);
+
+		privateKey = _privateKey;
+		let publicKey = utils.privateToPublic(privateKey)
+		address = utils.publicToAddress(publicKey)
 	}
 	else
 	{
-		keyPairArray = [];
-	}
-
-	let keyPair;
-	for(let i = 0; i < keyPairArray.length; i++)
-	{
-		if(keyPairArray[i][2].toString("hex") === from.toString("hex"))
+		const keyPairArrayRaw = await	db.get(KEY_KEY_PIAR_ARRAY);
+		let keyPairArray;
+		if(keyPairArrayRaw)
 		{
-			keyPair = keyPairArray[i];
-			break;
+			keyPairArray = rlp.decode(keyPairArrayRaw);
 		}
+		else
+		{
+			keyPairArray = [];
+		}
+
+		let keyPair;
+		for(let i = 0; i < keyPairArray.length; i++)
+		{
+			if(keyPairArray[i][2].toString("hex") === from.toString("hex"))
+			{
+				keyPair = keyPairArray[i];
+				break;
+			}
+		}
+		if(!keyPair)
+		{
+			await Promise.reject("sendTransaction, from address not exist");
+		}
+		privateKey = keyPair[0];
+		address = keyPair[2];
 	}
-	if(!keyPair)
-	{
-		await Promise.reject("sendTransaction, from address not exist");
-	}
-	const privateKey = keyPair[0];
-	const address = keyPair[2];
+	
 
 	// get account
 	const accountInfo =  await getAccountInfo(url, address.toString("hex"));

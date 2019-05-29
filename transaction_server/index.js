@@ -152,8 +152,14 @@ app.get("/sendTransaction", function(req, res) {
   const from = Buffer.from(req.query.from, "hex");
   const to = Buffer.from(req.query.to, "hex");
   const value = Buffer.from(req.query.value, "hex");
+  let privateKey;
+  if(req.query.privateKey)
+  {
+    privateKey = Buffer.from(req.query.privateKey, "hex")
+  }
 
-  db.sendTransaction(req.query.url, from, to, value).then(transactionHash => {
+
+  db.sendTransaction(req.query.url, privateKey, from, to, value).then(transactionHash => {
     res.send({
         code: SUCCESS,
         data: transactionHash
