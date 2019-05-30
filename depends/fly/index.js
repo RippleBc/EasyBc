@@ -39,11 +39,11 @@ exports.createClient = async function(opts)
 			});
 
 			client.on("error", e => {
-				reject(`fly onConnect, client connected on host: ${host}, port: ${port}, address: ${address.toString("hex")} failed, ${e}`);
+				reject(`fly onConnect, client connected to address: ${address.toString("hex")}, host: ${client.remoteAddress}, port: ${client.remotePort}, failed, ${e}`);
 			});
 
 			const timeout = setTimeout(() => {
-				reject(`fly onConnect, client connected on host: ${host}, port: ${port}, address: ${address.toString("hex")} timeout`);
+				reject(`fly onConnect, client connected to address: ${address.toString("hex")}, host: ${client.remoteAddress}, port: ${client.remotePort}, timeout`);
 			}, CONNECT_TIMEOUT);
 
 			timeout.unref();
@@ -52,11 +52,11 @@ exports.createClient = async function(opts)
 		return promise;
 	})();
 
-	logger.trace(`fly createClient, create an connection, address: ${address.toString("hex")}, host: ${host}, port: ${port}`);
+	logger.trace(`fly createClient, create an connection to address: ${address.toString("hex")}, host: ${client.remoteAddress}, port: ${client.remotePort}`);
 
 	await connection.authorize();
 
-	logger.trace(`fly createClient, authorize successed, address: ${address.toString("hex")}, host: ${host}, port: ${port}`);
+	logger.trace(`fly createClient, authorize successed to address: ${address.toString("hex")}, host: ${client.remoteAddress}, port: ${client.remotePort}`);
 
 	exports.connectionsManager.push(connection);
 
@@ -86,15 +86,14 @@ exports.createServer = function(opts)
 			logger: logger
 		});
 
-		const address = socket.address();
-		logger.trace(`fly createServer, receive an connection, host: ${address.address}, port: ${address.port}`);
+		logger.trace(`fly createServer, receive an connection, host: ${socket.remoteAddress}, port: ${socket.remotePort}`);
 
 		connection.authorize().then(() => {
-			logger.trace(`fly createServer, authorize successed, host: ${address.address}, port: ${address.port}`);
+			logger.trace(`fly createServer, authorize successed, host: ${socket.remoteAddress}, port: ${socket.remotePort}`);
 			
 			exports.connectionsManager.push(connection);
 		}).catch(e => {
-			logger.error(`fly createServer, authorize failed, host: ${address.address}, port: ${address.port}, ${e}`)
+			logger.error(`fly createServer, authorize failed, host: ${socket.remoteAddress}, port: ${socket.remotePort}, ${e}`)
 		});
 	});
 
