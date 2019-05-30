@@ -111,10 +111,14 @@ class Connection extends AsyncEventEmitter
 			});
 
 			this.on("authorizeFailed", () => {
+				this.close();
+
 				reject(AUTHORIZE_FAILED_BECAUSE_OF_INVALID_SIGNATURE);
 			});
 
 			const timeOut = setTimeout(() => {
+				this.close();
+				
 				reject(AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT);
 			}, AUTHORIZE_DELAY_TIME);
 
