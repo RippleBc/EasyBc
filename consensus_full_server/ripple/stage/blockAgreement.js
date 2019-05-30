@@ -170,7 +170,7 @@ class BlockAgreement extends Stage
 		})().then(() => {
 			logger.trace('BlockAgreement run, success')
 		}).catch(e => {
-			logger.fatal(e);
+			logger.fatal(`BlockAgreement run, throw exception, ${e}`);
 
 			process.exit(1);
 		});
