@@ -83,13 +83,13 @@ class Connection extends AsyncEventEmitter
 		});
 
 		this.socket.on("close", () => {
-			self.logger.trace(`Connection constructor, socket close, address: ${self.address ? self.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}, close success`);
+			self.logger.fatal(`Connection constructor, socket close, address: ${self.address ? self.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}, close success`);
 
 			self.closed = true;
 		});
 
 		this.socket.on("error", e => {
-			self.logger.error(`Connection constructor, socket throw error, address: ${self.address ? self.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}, ${e}`);
+			self.logger.fatal(`Connection constructor, socket throw error, address: ${self.address ? self.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}, ${e}`);
 		});
 	}
 
