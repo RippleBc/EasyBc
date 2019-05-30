@@ -81,6 +81,7 @@ class Sender
 		if(this.state !== SENDER_STATE_IDLE)
 		{
 			logger.fatal(`Sender start, before start please call reset`)
+			process.exit(1)
 		}
 
 		this.consensusBeginTime = Date.now();

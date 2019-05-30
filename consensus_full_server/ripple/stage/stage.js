@@ -67,6 +67,8 @@ class Stage
 					logger.fatal(`Counter handleMessage, begin to synchronize stage actively, stage: ${this.ripple.stage}`);
 
 					this.ripple.counter.startStageSynchronize();
+
+					return;
 				}
 
 				this.state = STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING;
@@ -89,10 +91,11 @@ class Stage
 					logger.error(`Stage stageSynchronize, ${this.ripple.state === RIPPLE_STATE_STAGE_CONSENSUS ? 'transaction consensus' : 'stage consensus'}, stage: ${this.ripple.stage}, saveStageSynchronizeTimeConsume throw exception, ${e}`);
 				});
 
-				//
-				this.handler(true);
+				// handle abnormal nodes
 				this.ripple.handleTimeoutNodes(this.ownTimeoutNodes, this.otherTimeoutNodes);
 				this.ripple.handleCheatedNodes(this.cheatedNodes);
+
+				this.handler(true);
 			}
 			else
 			{
@@ -126,23 +129,26 @@ class Stage
 				{
 					logger.fatal(`Stage, ${this.ripple.state === RIPPLE_STATE_STAGE_CONSENSUS ? 'transaction consensus' : 'stage consensus'}, stage: ${this.ripple.stage}, stage synchronize is over because of timeout`);
 
+					// record synchronize time consume
+					mysql.saveStageSynchronizeTimeConsume(this.ripple.stage, this.dataExchange.consensusTimeConsume).catch(e => {
+						logger.error(`Stage, ${this.ripple.state === RIPPLE_STATE_STAGE_CONSENSUS ? 'transaction consensus' : 'stage consensus'}, stage: ${this.ripple.stage}, saveStageSynchronizeTimeConsume throw exception, ${e}`);
+					});
+
+					// handle abnormal nodes
+					this.ripple.handleTimeoutNodes(this.ownTimeoutNodes, this.otherTimeoutNodes);
+					this.ripple.handleCheatedNodes(this.cheatedNodes);
+
 					// data exchange is failed, try to stage consensus
 					if(this.ripple.counter.checkIfTriggered() && this.ripple.state !== RIPPLE_STAGE_PERISH_NODE)
 					{
 						logger.fatal(`Counter handleMessage, begin to synchronize stage actively again, stage: ${this.ripple.stage}`);
 						
 						this.ripple.counter.startStageSynchronize();
+
+						return
 					}
 
-					// record synchronize time consume
-					mysql.saveStageSynchronizeTimeConsume(this.ripple.stage, this.dataExchange.consensusTimeConsume).catch(e => {
-						logger.error(`Stage, ${this.ripple.state === RIPPLE_STATE_STAGE_CONSENSUS ? 'transaction consensus' : 'stage consensus'}, stage: ${this.ripple.stage}, saveStageSynchronizeTimeConsume throw exception, ${e}`);
-					});
-
-					//
 					this.handler(false);
-					this.ripple.handleTimeoutNodes(this.ownTimeoutNodes, this.otherTimeoutNodes);
-					this.ripple.handleCheatedNodes(this.cheatedNodes);
 				}
 			}
 		}, STAGE_STAGE_SYNCHRONIZE_TIMEOUT);
