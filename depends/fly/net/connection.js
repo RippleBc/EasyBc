@@ -130,6 +130,9 @@ class Connection extends AsyncEventEmitter
 
 	close()
 	{
+
+		throw new Error("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+
 		this.logger.info(`Connection close, try to close socket, address: ${this.address ? this.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}`)
 		
 		// stop new data write to buffer

@@ -28,7 +28,7 @@ class ConnectionsManager
 		{
 			this.connections.push(connection);
 			
-			connection.logger.info(`ConnectionsManager push, new address ${connection.address.toString("hex")} has connected`);
+			connection.logger.info(`ConnectionsManager push, new address ${connection.address.toString("hex")}`);
 		}
 		else
 		{
