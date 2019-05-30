@@ -93,6 +93,8 @@ class Connection extends AsyncEventEmitter
 		this.socket.on("close", () => {
 			this.logger.info(`Connection constructor, socket close, address: ${this.address ? this.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}, close success`);
 
+			this.writeChannelClosed = true;
+			this.readChannelClosed = true;
 			this.allChannelClosed = true;
 		});
 
