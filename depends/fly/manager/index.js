@@ -85,6 +85,8 @@ class ConnectionsManager
 		{
 			if(this.connections[i].address === address)
 			{
+				this.connections[i].logger.info(`ConnectionsManager close, address ${address}`)
+
 				this.connections[i].close();
 			}
 		}
@@ -94,6 +96,8 @@ class ConnectionsManager
 	{
 		for(let i = 0; i < this.connections.length; i++)
 		{
+			this.connections[i].logger.info(`ConnectionsManager closeAll, address ${this.connections[i].address ? this.connections[i].address.toString('hex') : ""}`)
+
 			this.connections[i].close();
 		}
 	}

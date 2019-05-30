@@ -87,10 +87,10 @@ exports.createServer = function(opts)
 			logger: logger
 		});
 
-		logger.trace(`fly createServer, receive an connection, host: ${socket.remoteAddress}, port: ${socket.remotePort}`);
+		logger.info(`fly createServer, receive an connection, host: ${socket.remoteAddress}, port: ${socket.remotePort}`);
 
 		connection.authorize().then(() => {
-			logger.trace(`fly createServer, authorize successed, host: ${socket.remoteAddress}, port: ${socket.remotePort}`);
+			logger.info(`fly createServer, authorize successed, host: ${socket.remoteAddress}, port: ${socket.remotePort}`);
 			
 			exports.connectionsManager.push(connection);
 		}).catch(errCode => {
