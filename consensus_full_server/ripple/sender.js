@@ -78,6 +78,11 @@ class Sender
 
 	start()
 	{
+		if(this.state !== SENDER_STATE_IDLE)
+		{
+			logger.fatal(`Sender start, before start please call reset`)
+		}
+
 		this.consensusBeginTime = Date.now();
 
 		this.state = SENDER_STATE_PROCESSING;

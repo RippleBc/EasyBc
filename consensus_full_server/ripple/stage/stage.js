@@ -1,5 +1,5 @@
 const { unl } = require("../../config.json");
-const { RIPPLE_STATE_STAGE_CONSENSUS, STAGE_DATA_EXCHANGE_TIMEOUT, STAGE_STAGE_SYNCHRONIZE_TIMEOUT, STAGE_MAX_FINISH_RETRY_TIMES, STAGE_STATE_EMPTY, STAGE_STATE_DATA_EXCHANGE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING } = require("../../constant");
+const { RIPPLE_STAGE_PERISH_NODE, RIPPLE_STATE_STAGE_CONSENSUS, STAGE_DATA_EXCHANGE_TIMEOUT, STAGE_STAGE_SYNCHRONIZE_TIMEOUT, STAGE_MAX_FINISH_RETRY_TIMES, STAGE_STATE_EMPTY, STAGE_STATE_DATA_EXCHANGE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING } = require("../../constant");
 const process = require("process");
 const utils = require("../../../depends/utils");
 const assert = require("assert");
@@ -62,7 +62,7 @@ class Stage
 				logger.fatal(`Stage, ${this.ripple.state === RIPPLE_STATE_STAGE_CONSENSUS ? 'transaction consensus' : 'stage consensus'}, stage: ${this.ripple.stage}, dataExchange is over because of timeout`);
 
 				// data exchange is failed, try to stage consensus
-				if(this.ripple.counter.checkIfTriggered())
+				if(this.ripple.counter.checkIfTriggered() && this.ripple.state !== RIPPLE_STAGE_PERISH_NODE)
 				{
 					logger.fatal(`Counter handleMessage, begin to synchronize stage actively, stage: ${this.ripple.stage}`);
 
@@ -93,7 +93,6 @@ class Stage
 				this.handler(true);
 				this.ripple.handleTimeoutNodes(this.ownTimeoutNodes, this.otherTimeoutNodes);
 				this.ripple.handleCheatedNodes(this.cheatedNodes);
-				this.reset();
 			}
 			else
 			{
@@ -128,7 +127,7 @@ class Stage
 					logger.fatal(`Stage, ${this.ripple.state === RIPPLE_STATE_STAGE_CONSENSUS ? 'transaction consensus' : 'stage consensus'}, stage: ${this.ripple.stage}, stage synchronize is over because of timeout`);
 
 					// data exchange is failed, try to stage consensus
-					if(this.ripple.counter.checkIfTriggered())
+					if(this.ripple.counter.checkIfTriggered() && this.ripple.state !== RIPPLE_STAGE_PERISH_NODE)
 					{
 						logger.fatal(`Counter handleMessage, begin to synchronize stage actively again, stage: ${this.ripple.stage}`);
 						
@@ -144,7 +143,6 @@ class Stage
 					this.handler(false);
 					this.ripple.handleTimeoutNodes(this.ownTimeoutNodes, this.otherTimeoutNodes);
 					this.ripple.handleCheatedNodes(this.cheatedNodes);
-					this.reset();
 				}
 			}
 		}, STAGE_STAGE_SYNCHRONIZE_TIMEOUT);

@@ -88,14 +88,19 @@ class BlockAgreement extends Stage
 				logger.fatal(`BlockAgreement handler, throw exception, ${e}`);
 				process.exit(1);
 			});
+
+			this.reset();
+
 			return;
 		}
 
 		this.ripple.run().then(() => {
-
+			
 		}).catch(e => {
 			logger.error(`BlockAgreement handler, ripple.run throw exception, ${e}`);
 		});
+
+		this.reset();
 	}
 
 	/**

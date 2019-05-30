@@ -69,17 +69,23 @@ class Perish extends Stage
 			logger.fatal(`Perish handler, begin to handle vicious node, sponsor node: ${perishData.from.toString('hex')}, perish node: ${perishData.address.toString('hex')}`)
 
 			this.ripple.handlePerishNode(perishData.from, perishData.address);
+
+			this.reset();
 		}
 		else
 		{
 			if(this.ifActive)
 			{
+				this.reset();
+
 				// perish node failed, and i'm sure this is a cheated node, try repeated until the cheated node is perished
 				this.tryToKillNode(this.ownPerishData);
 			}
 			else
 			{
 				this.ripple.run(true);
+
+				this.reset();
 			}
 		}
 	}

@@ -131,13 +131,19 @@ class Ripple
 				{
 					loggerPerishNode.fatal("Ripple handleMessage, perish node success because of node notification");
 
-					this.run(true);
-					this.amalgamate.handleMessage(address, cmd, data);
+					this.perish.handler(false);
+
+					if(this.state === RIPPLE_STATE_TRANSACTIONS_CONSENSUS)
+					{
+						this.amalgamate.handleMessage(address, cmd, data);
+					}
 				}
 				else
 				{
-					return loggerPerishNode.fatal("Ripple handleMessage, processor is perishing node, do not handle transaction consensus messages");
+					loggerPerishNode.fatal("Ripple handleMessage, processor is perishing node, do not handle transaction consensus messages");
 				}
+
+				return
 			}
 
 			if(this.state === RIPPLE_STATE_STAGE_CONSENSUS)
@@ -146,8 +152,12 @@ class Ripple
 				{
 					loggerStageConsensus.fatal("Ripple handleMessage, stage synchronize success because of node notification");
 
-					this.run(true);
-					this.amalgamate.handleMessage(address, cmd, data);
+					this.counter.handler(false);
+
+					if(this.state === RIPPLE_STATE_TRANSACTIONS_CONSENSUS)
+					{
+						this.amalgamate.handleMessage(address, cmd, data);
+					}
 				}
 				else
 				{
@@ -161,8 +171,7 @@ class Ripple
 			{
 				logger.info(`Ripple handleMessage, transaction consensus, stage: ${this.stage}, stage synchronize is over because of node notification`);
 
-				this.blockAgreement.handler();
-				this.blockAgreement.reset();
+				this.blockAgreement.handler(false);
 			}
 
 			// block agreement is over but, block is still processing, record the messages and process them later
@@ -201,8 +210,7 @@ class Ripple
 			{
 				logger.info(`Ripple handleMessage, transaction consensus, stage: ${this.stage}, stage synchronize is over because of node notification`);
 
-				this.amalgamate.handler();
-				this.amalgamate.reset();
+				this.amalgamate.handler(false);
 			}
 
 			if(this.candidateAgreement.checkDataExchangeIsProceeding() || this.candidateAgreement.checkIfDataExchangeIsFinish())
@@ -232,8 +240,7 @@ class Ripple
 			{
 				logger.info(`Ripple handleMessage, transaction consensus, stage: ${this.stage}, stage synchronize is over because of node notification`);
 
-				this.candidateAgreement.handler();
-				this.candidateAgreement.reset();
+				this.candidateAgreement.handler(false);
 			}
 			
 			if(this.blockAgreement.checkDataExchangeIsProceeding() || this.blockAgreement.checkIfDataExchangeIsFinish())

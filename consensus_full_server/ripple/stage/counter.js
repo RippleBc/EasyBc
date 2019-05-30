@@ -42,6 +42,8 @@ class Counter extends Stage
 			logger.fatal("Counter handler, stage synchronize success")
 
 			this.ripple.handleCounter();
+
+			this.reset();
 		}
 		else
 		{	
@@ -50,7 +52,7 @@ class Counter extends Stage
 			this.reset();
 
 			logger.fatal(`Counter handleMessage, begin to synchronize stage actively again, stage: ${this.ripple.stage}`);
-			
+
 			this.startStageSynchronize();
 		}
 	}

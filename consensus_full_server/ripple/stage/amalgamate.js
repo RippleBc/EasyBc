@@ -37,6 +37,8 @@ class Amalgamate extends Stage
 		});
 
 		this.ripple.candidateAgreement.run([...transactionRawsMap.values()]);
+
+		this.reset();
 	}
 
 	/**

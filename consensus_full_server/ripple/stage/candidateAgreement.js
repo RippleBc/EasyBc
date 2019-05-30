@@ -60,7 +60,11 @@ class CandidateAgreement extends Stage
 		{
 			logger.trace("CandidateAgreement handler, candidate agreement success, go to next stage");
 
-			return this.ripple.blockAgreement.run(sortedTransactionColls[0][1].data);
+			this.ripple.blockAgreement.run(sortedTransactionColls[0][1].data);
+
+			this.reset();
+
+			return;
 		}
 		
 		// return to amalgamate stage
@@ -77,6 +81,8 @@ class CandidateAgreement extends Stage
 		});
 
 		this.ripple.amalgamate.run([...transactionRawsMap.values()]);
+
+		this.reset();
 	}
 
 	/**
