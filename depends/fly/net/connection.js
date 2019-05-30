@@ -61,7 +61,7 @@ class Connection extends AsyncEventEmitter
 		this.receiveMessageChunkQueue = new MessageChunkQueue();
 
 		this.socket.setTimeout(HEART_BEAT_TIME, () => {
-			logger.error(`Connection constructor, socket is idle for a long time, address: ${this.address ? this.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}, try to close it`);
+			this.logger.error(`Connection constructor, socket is idle for a long time, address: ${this.address ? this.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}, try to close it`);
 
       this.close();
     });
@@ -75,7 +75,7 @@ class Connection extends AsyncEventEmitter
 		});
 
 		this.socket.on("end", () => {
-			logger.info(`Connection constructor, socket is closed by the other end, address: ${this.address ? this.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}, try to close it`);
+			this.logger.info(`Connection constructor, socket is closed by the other end, address: ${this.address ? this.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}, try to close it`);
 			
 			this.readChannelClosed = true;
 
@@ -118,7 +118,7 @@ class Connection extends AsyncEventEmitter
 
 			const timeOut = setTimeout(() => {
 				this.close();
-				
+
 				reject(AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT);
 			}, AUTHORIZE_DELAY_TIME);
 
@@ -130,7 +130,7 @@ class Connection extends AsyncEventEmitter
 
 	close()
 	{
-		logger.info(`Connection close, try to close socket, address: ${this.address ? this.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}`)
+		this.logger.info(`Connection close, try to close socket, address: ${this.address ? this.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}`)
 		
 		// stop new data write to buffer
 		this.stopWriteToBuffer = true;
