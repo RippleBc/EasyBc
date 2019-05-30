@@ -107,11 +107,6 @@ class Ripple
 		});
 	}
 
-	handleCounter()
-	{
-		this.run(true);
-	}
-
 	/**
 	 * @param {Buffer} address
 	 * @param {Number} cmd
@@ -131,7 +126,7 @@ class Ripple
 				{
 					loggerPerishNode.fatal("Ripple handleMessage, perish node success because of node notification");
 
-					this.perish.handler(false);
+					this.perish.handler(true);
 
 					if(this.state === RIPPLE_STATE_TRANSACTIONS_CONSENSUS)
 					{
@@ -152,7 +147,7 @@ class Ripple
 				{
 					loggerStageConsensus.fatal("Ripple handleMessage, stage synchronize success because of node notification");
 
-					this.counter.handler(false);
+					this.counter.handler(true);
 
 					if(this.state === RIPPLE_STATE_TRANSACTIONS_CONSENSUS)
 					{
@@ -171,7 +166,7 @@ class Ripple
 			{
 				logger.info(`Ripple handleMessage, transaction consensus, stage: ${this.stage}, stage synchronize is over because of node notification`);
 
-				this.blockAgreement.handler(false);
+				this.blockAgreement.handler(true);
 			}
 
 			// block agreement is over but, block is still processing, record the messages and process them later
@@ -210,7 +205,7 @@ class Ripple
 			{
 				logger.info(`Ripple handleMessage, transaction consensus, stage: ${this.stage}, stage synchronize is over because of node notification`);
 
-				this.amalgamate.handler(false);
+				this.amalgamate.handler(true);
 			}
 
 			if(this.candidateAgreement.checkDataExchangeIsProceeding() || this.candidateAgreement.checkIfDataExchangeIsFinish())
@@ -240,7 +235,7 @@ class Ripple
 			{
 				logger.info(`Ripple handleMessage, transaction consensus, stage: ${this.stage}, stage synchronize is over because of node notification`);
 
-				this.candidateAgreement.handler(false);
+				this.candidateAgreement.handler(true);
 			}
 			
 			if(this.blockAgreement.checkDataExchangeIsProceeding() || this.blockAgreement.checkIfDataExchangeIsFinish())
