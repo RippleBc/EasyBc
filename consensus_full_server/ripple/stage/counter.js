@@ -40,13 +40,16 @@ class Counter extends Stage
 		if(ifSuccess)
 		{
 			logger.fatal("Counter handler, stage synchronize success")
+
+			this.ripple.handleCounter();
 		}
 		else
 		{	
-			logger.fatal("Counter handler, stage synchronize success because of timeout")
-		}
+			logger.fatal("Counter handler, stage synchronize success because of timeout, synchronize again")
 
-		this.ripple.handleCounter();
+			this.reset();
+			this.startStageSynchronize();
+		}
 	}
 
 	/**

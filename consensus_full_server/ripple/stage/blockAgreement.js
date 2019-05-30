@@ -212,13 +212,13 @@ class BlockAgreement extends Stage
 			{
 				this.cheatedNodes.push(address.toString('hex'));
 
-				logger.error(`BlockAgreement handleBlockAgreement, address should be ${address.toString("hex")}, now is ${rippleBlock.from.toString("hex")}`);
+				logger.info(`BlockAgreement handleBlockAgreement, address should be ${address.toString("hex")}, now is ${rippleBlock.from.toString("hex")}`);
 			}
 			else
 			{
 				if(this.checkIfNodeFinishDataExchange(address.toString("hex")))
 				{
-					logger.fatal(`BlockAgreement handleBlockAgreement, address: ${address.toString("hex")}, send the same exchange data`);
+					logger.info(`BlockAgreement handleBlockAgreement, address: ${address.toString("hex")}, send the same exchange data`);
 				
 					this.cheatedNodes.push(address.toString('hex'));
 				}
@@ -232,7 +232,7 @@ class BlockAgreement extends Stage
 		{
 			this.cheatedNodes.push(address.toString('hex'));
 			
-			logger.error(`BlockAgreement handleBlockAgreement, address ${address.toString("hex")}, validate failed`);
+			logger.info(`BlockAgreement handleBlockAgreement, address ${address.toString("hex")}, validate failed`);
 		}
 
 		this.recordDataExchangeFinishNode(address.toString("hex"));

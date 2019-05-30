@@ -150,13 +150,13 @@ class CandidateAgreement extends Stage
 			{
 				this.cheatedNodes.push(address.toString('hex'));
 
-				logger.error(`CandidateAgreement handleCandidateAgreement, address should be ${address.toString("hex")}, now is ${candidate.from.toString("hex")}`);
+				logger.info(`CandidateAgreement handleCandidateAgreement, address should be ${address.toString("hex")}, now is ${candidate.from.toString("hex")}`);
 			}
 			else
 			{
 				if(this.checkIfNodeFinishDataExchange(address.toString("hex")))
 				{
-					logger.fatal(`CandidateAgreement handleCandidateAgreement, address: ${address.toString("hex")}, send the same exchange data`);
+					logger.info(`CandidateAgreement handleCandidateAgreement, address: ${address.toString("hex")}, send the same exchange data`);
 					
 					this.cheatedNodes.push(address.toString('hex'));
 				}
@@ -170,7 +170,7 @@ class CandidateAgreement extends Stage
 		{
 			this.cheatedNodes.push(address.toString('hex'));
 			
-			logger.error(`CandidateAgreement handleCandidateAgreement, address ${address.toString("hex")}, validate failed`);
+			logger.info(`CandidateAgreement handleCandidateAgreement, address ${address.toString("hex")}, validate failed`);
 		}
 
 		this.recordDataExchangeFinishNode(address.toString("hex"));

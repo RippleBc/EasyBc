@@ -110,13 +110,13 @@ class Amalgamate extends Stage
 			{
 				this.cheatedNodes.push(address.toString('hex'));
 				
-				logger.error(`Amalgamate handleAmalgamate, address should be ${address.toString("hex")}, now is ${candidate.from.toString("hex")}`);
+				logger.info(`Amalgamate handleAmalgamate, address should be ${address.toString("hex")}, now is ${candidate.from.toString("hex")}`);
 			}
 			else
 			{
 				if(this.checkIfNodeFinishDataExchange(address.toString("hex")))
 				{
-					logger.fatal(`Amalgamate handleAmalgamate, address: ${address.toString("hex")}, send the same exchange data`);
+					logger.info(`Amalgamate handleAmalgamate, address: ${address.toString("hex")}, send the same exchange data`);
 				
 					this.cheatedNodes.push(address.toString('hex'));
 				}
@@ -130,7 +130,7 @@ class Amalgamate extends Stage
 		{
 			this.cheatedNodes.push(address.toString('hex'));
 
-			logger.error(`Amalgamate handleAmalgamate, address: ${address.toString("hex")}, validate failed`);
+			logger.info(`Amalgamate handleAmalgamate, address: ${address.toString("hex")}, validate failed`);
 		}
 
 		this.recordDataExchangeFinishNode(address.toString("hex"));

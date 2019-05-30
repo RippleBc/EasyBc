@@ -4,7 +4,7 @@ const utils = require("../../../depends/utils");
 const process = require("process");
 const Sender = require("../sender");
 const Stage = require("./stage");
-const { TRANSACTIONS_CONSENSUS_THRESHOULD, PROTOCOL_CMD_KILL_NODE_FINISH_STATE_REQUEST, PROTOCOL_CMD_KILL_NODE_FINISH_STATE_RESPONSE, PERISH_DATA_PERIOD_OF_VALID, STAGE_STATE_EMPTY, RIPPLE_STAGE_PERISH_NODE, PROTOCOL_CMD_KILL_NODE_REQUEST, PROTOCOL_CMD_KILL_NODE_RESPONSE } = require("../../constant");
+const { TRANSACTIONS_CONSENSUS_THRESHOULD, PROTOCOL_CMD_KILL_NODE_FINISH_STATE_REQUEST, PROTOCOL_CMD_KILL_NODE_FINISH_STATE_RESPONSE, NEGATIVE_PERISH_DATA_PERIOD_OF_VALID, ACTIVE_PERISH_DATA_PERIOD_OF_VALID, STAGE_STATE_EMPTY, RIPPLE_STAGE_PERISH_NODE, PROTOCOL_CMD_KILL_NODE_REQUEST, PROTOCOL_CMD_KILL_NODE_RESPONSE } = require("../../constant");
 
 const bufferToInt = utils.bufferToInt;
 
@@ -25,6 +25,7 @@ class Perish extends Stage
 
 		this.ownPerishData = undefined
 		this.allPerishData = [];
+		this.ifActive = true;
 	}
 
 	handler(ifSuccess)
@@ -69,6 +70,18 @@ class Perish extends Stage
 
 			this.ripple.handlePerishNode(perishData.from, perishData.address);
 		}
+		else
+		{
+			if(this.ifActive)
+			{
+				// perish node failed, and i'm sure this is a cheated node, try repeated until the cheated node is perished
+				this.tryToKillNode(this.ownPerishData);
+			}
+			else
+			{
+				this.ripple.run(true);
+			}
+		}
 	}
 
 	/**
@@ -87,21 +100,34 @@ class Perish extends Stage
 					const perishData = new PerishData(data);
 					if(perishData.validate())
 					{
-						// check if perishData timestamp is valid
-						if(bufferToInt(perishData.timestamp) + PERISH_DATA_PERIOD_OF_VALID > Date.now())
+						let perishDataPeriodOfValid;
+						if(address.toString('hex') === perishData.from.toString('hex'))
 						{
-							this.startKillNode(perishData);
+							perishDataPeriodOfValid = ACTIVE_PERISH_DATA_PERIOD_OF_VALID;
+						}
+						else
+						{
+							perishDataPeriodOfValid = NEGATIVE_PERISH_DATA_PERIOD_OF_VALID;
+						}
+						// check if perishData timestamp is valid
+						if(bufferToInt(perishData.timestamp) + perishDataPeriodOfValid > Date.now())
+						{
+							// 
+							this.ifActive = false;
+							this.tryToKillNode(perishData);
 						}
 						else
 						{
 							this.cheatedNodes.push(address.toString('hex'));
+
+							logger.info(`Perish handleMessage, address: ${address.toString("hex")}, send an out of date message`);
 						}
 					}
 					else
 					{
 						this.cheatedNodes.push(address.toString('hex'));
 
-						logger.error(`Perish handleMessage, address ${address.toString("hex")}, send an invalid message`);
+						logger.info(`Perish handleMessage, address: ${address.toString("hex")}, send an invalid message`);
 					}
 				}
 
@@ -119,29 +145,22 @@ class Perish extends Stage
 				if(perishData.validate())
 				{
 					// check if perishData timestamp is valid
-					if(bufferToInt(perishData.timestamp) + PERISH_DATA_PERIOD_OF_VALID > Date.now())
+					if(this.checkIfNodeFinishDataExchange(address.toString("hex")))
 					{
-						if(this.checkIfNodeFinishDataExchange(address.toString("hex")))
-						{
-							logger.fatal(`Perish handleMessage, address: ${address.toString("hex")}, send the same exchange data`);
+						logger.info(`Perish handleMessage, address: ${address.toString("hex")}, send the same response exchange data`);
 
-							this.cheatedNodes.push(address.toString('hex'));
-						}
-						else
-						{
-							this.allPerishData.push(perishData);
-						}
+						this.cheatedNodes.push(address.toString('hex'));
 					}
 					else
 					{
-						this.cheatedNodes.push(address.toString('hex'));
+						this.allPerishData.push(perishData);
 					}
 				}
 				else
 				{
 					this.cheatedNodes.push(address.toString('hex'));
 
-					logger.error(`Perish handleMessage, address ${address.toString("hex")}, send an invalid message`);
+					logger.info(`Perish handleMessage, address: ${address.toString("hex")}, send an invalid response exchange message`);
 				}
 
 				this.recordDataExchangeFinishNode(address.toString("hex"));
@@ -165,6 +184,7 @@ class Perish extends Stage
 
 		this.ownPerishData = undefined;
 		this.allPerishData = [];
+		this.ifActive = true;
 	}
 
 	/**
@@ -187,8 +207,9 @@ class Perish extends Stage
 
 	/**
 	 * @param {PerishData} perishData
+	 * @param {}
 	 */
-	startKillNode(perishData)
+	tryToKillNode(perishData)
 	{
 		assert(perishData instanceof PerishData, `Perish assemblePerishData, perishData should be a PerishData instance, now is ${typeof address}`);
 
