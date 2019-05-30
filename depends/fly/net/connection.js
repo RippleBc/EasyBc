@@ -106,23 +106,17 @@ class Connection extends AsyncEventEmitter
 		this.write(AUTHORIZE_GET_NONCE_CMD);
 
 		const promise = new Promise((resolve, reject) => {
+			setTimeout(() => {
+				reject(AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT);
+			}, AUTHORIZE_DELAY_TIME).unref();
+
 			this.on("authorizeSuccessed", () => {
 				resolve();
 			});
 
 			this.on("authorizeFailed", () => {
-				this.close();
-
 				reject(AUTHORIZE_FAILED_BECAUSE_OF_INVALID_SIGNATURE);
 			});
-
-			const timeOut = setTimeout(() => {
-				this.close();
-
-				reject(AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT);
-			}, AUTHORIZE_DELAY_TIME);
-
-			timeOut.unref();
 		});
 
 		return promise;

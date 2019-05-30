@@ -97,10 +97,14 @@ exports.createServer = function(opts)
 			if(errCode === AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT)
 			{
 				logger.error(`fly createServer, authorize failed because of timeout, host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
+
+				connection.close();
 			}
 			else if(errCode === AUTHORIZE_FAILED_BECAUSE_OF_INVALID_SIGNATURE)
 			{
 				logger.error(`fly createServer, authorize failed because of invalid signature, host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
+
+				connection.close();
 			}
 			else
 			{
