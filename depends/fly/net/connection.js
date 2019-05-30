@@ -104,13 +104,13 @@ class Connection extends AsyncEventEmitter
 			});
 
 			self.on("authorizeFailed", () => {
-				this.socket.end();
+				// this.socket.end();
 
 				reject(AUTHORIZE_FAILED_BECAUSE_OF_INVALID_SIGNATURE);
 			});
 
 			const timeOut = setTimeout(() => {
-				this.socket.end();
+				// this.socket.end();
 
 				reject(AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT);
 			}, AUTHORIZE_DELAY_TIME);
@@ -128,7 +128,7 @@ class Connection extends AsyncEventEmitter
 	flush()
 	{
 		// check if send kenel buffer is full
-		if(this.sendKenelBufferFull)
+		if(this.sendKenelBufferFull || this.closed)
 		{
 			return;
 		}
