@@ -64,6 +64,8 @@ class Stage
 				// data exchange is failed, try to stage consensus
 				if(this.ripple.counter.checkIfTriggered())
 				{
+					logger.fatal(`Counter handleMessage, begin to synchronize stage actively, stage: ${this.ripple.stage}`);
+
 					this.ripple.counter.startStageSynchronize();
 				}
 
@@ -128,6 +130,8 @@ class Stage
 					// data exchange is failed, try to stage consensus
 					if(this.ripple.counter.checkIfTriggered())
 					{
+						logger.fatal(`Counter handleMessage, begin to synchronize stage actively again, stage: ${this.ripple.stage}`);
+						
 						this.ripple.counter.startStageSynchronize();
 					}
 
