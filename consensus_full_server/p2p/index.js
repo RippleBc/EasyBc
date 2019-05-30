@@ -71,7 +71,7 @@ class P2p
 		assert(Buffer.isBuffer(address), `P2p send, data should be an Buffer, now is ${typeof address}`);
 		
 		const connection = connectionsManager.get(address);
-		if(connection && !connection.closed)
+		if(connection && !connection.checkIfCanWrite())
 		{
 			try
 			{
@@ -91,7 +91,7 @@ class P2p
 		for(let i = 0; i < unl.length; i++)
 		{
 			const connection = connectionsManager.get(Buffer.from(unl[i].address, "hex"));
-			if(connection && !connection.closed)
+			if(connection && !connection.checkIfCanWrite())
 			{
 				try
 				{
@@ -115,7 +115,7 @@ class P2p
 
 		const connection = connectionsManager.get(address);
 
-		if(!connection || connection.closed)
+		if(!connection || connection.checkIfClosed())
 		{
 			return false;
 		}
@@ -132,7 +132,7 @@ class P2p
 
 		const connection = connectionsManager.get(address);
 
-		if(connection && !connection.closed)
+		if(connection && !connection.checkIfClosed())
 		{
 			return;
 		}
@@ -169,7 +169,7 @@ class P2p
 			const node = unl[i];
 			const connection = connectionsManager.get(Buffer.from(node.address, "hex"));
 
-			if(!connection || connection.closed)
+			if(!connection || connection.checkIfClosed())
 			{
 				try
 				{

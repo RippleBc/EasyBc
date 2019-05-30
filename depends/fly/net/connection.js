@@ -45,55 +45,59 @@ class Connection extends AsyncEventEmitter
 
 		this.nonce = crypto.randomBytes(32);
 
-		this.closed = false;
+		// if other end's write channel is closed
+		this.readChannelClosed = false;
+		// if own write channel is closed
+		this.writeChannelClosed = false;
+		// if own write and read channel are all closed
+		this.allChannelClosed = false;
+
+		// if stop write to buffer
+		this.stopWriteToBuffer = false;
 
 		this.sendKenelBufferFull = false;
 		this.sendBufferArray = [];
 
 		this.receiveMessageChunkQueue = new MessageChunkQueue();
 
-		const self = this;
-
 		this.socket.setTimeout(HEART_BEAT_TIME, () => {
-			logger.error(`Connection constructor, socket is idle for a long time, address: ${self.address ? self.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}, try to close it`);
+			logger.error(`Connection constructor, socket is idle for a long time, address: ${this.address ? this.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}, try to close it`);
 
-      self.socket.end();
+      this.close();
     });
 
 		this.socket.on("data", data => {
-			if(!self.closed)
+			if(!this.allChannelClosed)
 			{
-				self.receiveMessageChunkQueue.push(data);
-				self.parse();
+				this.receiveMessageChunkQueue.push(data);
+				this.parse();
 			}
 		});
 
 		this.socket.on("end", () => {
-			let timeout = setTimeout(() => {
-				if(self.socket && !self.socket.destroyed)
-				{
-					logger.error(`Connection constructor, socket is closed by the other end, address: ${self.address ? self.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}, try to close it`);
+			logger.info(`Connection constructor, socket is closed by the other end, address: ${this.address ? this.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}, try to close it`);
+			
+			this.readChannelClosed = true;
 
-					self.socket.end();
-				}
-			}, END_CLEAR_SEND_BUFFER_TIME_DEAY);
-
-			timeout.unref();
+			if(!this.writeChannelClosed)
+			{
+				this.close();
+			}
 		});
 
 		this.socket.on("drain", () => {
-			self.sendKenelBufferFull = false;
-			self.flush();
+			this.sendKenelBufferFull = false;
+			this.flush();
 		});
 
 		this.socket.on("close", () => {
-			self.logger.fatal(`Connection constructor, socket close, address: ${self.address ? self.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}, close success`);
+			this.logger.info(`Connection constructor, socket close, address: ${this.address ? this.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}, close success`);
 
-			self.closed = true;
+			this.allChannelClosed = true;
 		});
 
 		this.socket.on("error", e => {
-			self.logger.fatal(`Connection constructor, socket throw error, address: ${self.address ? self.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}, ${e}`);
+			this.logger.error(`Connection constructor, socket throw error, address: ${this.address ? this.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}, ${e}`);
 		});
 	}
 
@@ -101,23 +105,19 @@ class Connection extends AsyncEventEmitter
 	{
 		this.write(AUTHORIZE_GET_NONCE_CMD);
 
-		const self = this;
 		const promise = new Promise((resolve, reject) => {
-			self.on("authorizeSuccessed", () => {
+			this.on("authorizeSuccessed", () => {
 				resolve();
 			});
 
-			self.on("authorizeFailed", () => {
-				// this.socket.end();
-
+			this.on("authorizeFailed", () => {
 				reject(AUTHORIZE_FAILED_BECAUSE_OF_INVALID_SIGNATURE);
 			});
 
 			const timeOut = setTimeout(() => {
-				// this.socket.end();
-
 				reject(AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT);
 			}, AUTHORIZE_DELAY_TIME);
+
 			timeOut.unref();
 		});
 
@@ -126,15 +126,33 @@ class Connection extends AsyncEventEmitter
 
 	close()
 	{
-		this.socket.end();
+		logger.info(`Connection close, try to close socket, address: ${this.address ? this.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}`)
+		
+		// stop new data write to buffer
+		this.stopWriteToBuffer = true;
+
+		if(this.socket && !this.socket.destroyed)
+		{
+			// try to flush all data
+			this.flush();
+
+			// wait specialized time for flush data from kenel to network
+			setTimeout(() => {
+				this.writeChannelClosed = true;
+				this.socket.end();
+			}, END_CLEAR_SEND_BUFFER_TIME_DEAY).unref()
+		}
 	}
 
+	/**
+	 * @return {Number} 1 show all data is pump to kenel buffer, 2 show part of the data is pump to kenel buffer
+	 */
 	flush()
 	{
 		// check if send kenel buffer is full
-		if(this.sendKenelBufferFull || this.closed)
+		if(this.sendKenelBufferFull || this.writeChannelClosed)
 		{
-			return;
+			return 0;
 		}
 
 		while(this.sendBufferArray.length > 0)
@@ -143,12 +161,16 @@ class Connection extends AsyncEventEmitter
 
 			this.sendBufferArray.splice(0, 1);
 
+			// part or all of the data is queuing up at the system send buffer waiting to be pump to kenel buffer
 			if(writeResult === false)
 			{
 				this.sendKenelBufferFull = true;
-				break;
+				
+				return 2;
 			}
 		}
+
+		return 1;
 	}
 
 	/**
@@ -158,6 +180,11 @@ class Connection extends AsyncEventEmitter
 	write(cmd, data)
 	{
 		assert(typeof cmd === "number", `Connection write, cmd should be a Number, now is ${typeof cmd}`);
+
+		if(this.stopWriteToBuffer)
+		{
+			return;
+		}
 
 		const msg = new Message({
 			cmd: cmd,
@@ -179,8 +206,9 @@ class Connection extends AsyncEventEmitter
 		catch(e)
 		{
 			this.logger.error(`Connection parse, receiveMessageChunkQueue.getMessage, ${e}`);
+
 			// half close socket, socket will not write data, but will read data from socket
-			this.socket.end();
+			this.close();
 		}
 
 		while(message)
@@ -258,9 +286,27 @@ class Connection extends AsyncEventEmitter
 				this.logger.error(`Connection parse, receiveMessageChunkQueue.getMessage, ${e}`);
 
 				// half close socket, socket will not write data, but will read data from socket
-				this.socket.end();
+				this.close();
 			}
 		}
+	}
+
+	/**
+	 * if the socket's write channel is open
+	 * @return {Boolean}
+	 */
+	checkIfCanWrite()
+	{
+		return !this.stopWriteToBuffer;
+	}
+
+	/**
+	 * if the socket is total closed
+	 * @return {Boolean}
+	 */
+	checkIfClosed()
+	{
+		return this.allChannelClosed;
 	}
 }
 
