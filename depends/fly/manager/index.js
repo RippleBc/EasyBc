@@ -32,7 +32,7 @@ class ConnectionsManager
 		}
 		else
 		{
-			if(this.connections[i].closed === true)
+			if(this.connections[i].checkIfClosed())
 			{
 				// del closed connection
 				this.connections.splice(i, 1);
@@ -44,9 +44,9 @@ class ConnectionsManager
 			}
 			else
 			{
-				connection.close();
-
 				connection.logger.error(`ConnectionsManager push, address ${connection.address.toString("hex")} has connected, close the same connection`);
+
+				connection.close();
 			}
 		}
 	}
