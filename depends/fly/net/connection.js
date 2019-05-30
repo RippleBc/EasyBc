@@ -8,6 +8,7 @@ const crypto = require("crypto");
 const process = require("process");
 const AsyncEventEmitter = require("async-eventemitter");
 const utils = require("../../utils");
+const { AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT, AUTHORIZE_FAILED_BECAUSE_OF_INVALID_SIGNATURE } = require("../constant");
 
 const Buffer = utils.Buffer;
 
@@ -103,11 +104,15 @@ class Connection extends AsyncEventEmitter
 			});
 
 			self.on("authorizeFailed", () => {
-				reject();
+				this.socket.end();
+
+				reject(AUTHORIZE_FAILED_BECAUSE_OF_INVALID_SIGNATURE);
 			});
 
 			const timeOut = setTimeout(() => {
-				reject();
+				this.socket.end();
+
+				reject(AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT);
 			}, AUTHORIZE_DELAY_TIME);
 			timeOut.unref();
 		});
@@ -213,7 +218,6 @@ class Connection extends AsyncEventEmitter
 					else
 					{
 						this.write(AUTHORIZE_FAILED_CMD);
-						this.socket.end();
 
 						this.emit("authorizeFailed");
 					}
@@ -228,8 +232,6 @@ class Connection extends AsyncEventEmitter
 
 				case AUTHORIZE_FAILED_CMD:
 				{
-					this.socket.end();
-
 					this.emit("authorizeFailed");
 				}
 				break;

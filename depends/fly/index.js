@@ -2,6 +2,7 @@ const net = require("net");
 const assert = require("assert");
 const Connection = require("./net/connection");
 const ConnectionsManager =require("./manager");
+const { AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT, AUTHORIZE_FAILED_BECAUSE_OF_INVALID_SIGNATURE } = require("./constant");
 
 exports.connectionsManager = new ConnectionsManager();
 
@@ -92,8 +93,21 @@ exports.createServer = function(opts)
 			logger.trace(`fly createServer, authorize successed, host: ${socket.remoteAddress}, port: ${socket.remotePort}`);
 			
 			exports.connectionsManager.push(connection);
-		}).catch(e => {
-			logger.error(`fly createServer, authorize failed, host: ${socket.remoteAddress}, port: ${socket.remotePort}, ${e}`)
+		}).catch(errCode => {
+			if(errCode === AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT)
+			{
+				logger.error(`fly createServer, authorize failed because of timeout, host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
+			}
+			else if(errCode === AUTHORIZE_FAILED_BECAUSE_OF_INVALID_SIGNATURE)
+			{
+				logger.error(`fly createServer, authorize failed because of invalid signature, host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
+			}
+			else
+			{
+				logger.fatal(`fly createServer, authorize throw unexpected err, ${errCode}`);
+
+				connection.close();
+			}
 		});
 	});
 
