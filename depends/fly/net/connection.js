@@ -55,7 +55,9 @@ class Connection extends AsyncEventEmitter
 		const self = this;
 
 		this.socket.setTimeout(HEART_BEAT_TIME, () => {
-        self.socket.end();
+			logger.error(`Connection constructor, socket is idle for a long time, address: ${self.address ? self.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}, try to close it`);
+
+      self.socket.end();
     });
 
 		this.socket.on("data", data => {
@@ -70,6 +72,8 @@ class Connection extends AsyncEventEmitter
 			let timeout = setTimeout(() => {
 				if(self.socket && !self.socket.destroyed)
 				{
+					logger.error(`Connection constructor, socket is closed by the other end, address: ${self.address ? self.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}, try to close it`);
+
 					self.socket.end();
 				}
 			}, END_CLEAR_SEND_BUFFER_TIME_DEAY);
