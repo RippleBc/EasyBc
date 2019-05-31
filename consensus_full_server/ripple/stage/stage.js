@@ -17,37 +17,37 @@ const loggerConsensus = process[Symbol.for("loggerConsensus")];
 const p2p = process[Symbol.for("p2p")];
 const mysql = process[Symbol.for("mysql")];
 
-const loggerHandler = {
-	apply: (target, ctx, args) => {
-		switch(this.ripple.state)
-		{
-			case RIPPLE_STATE_TRANSACTIONS_CONSENSUS: 
-			{
-				Reflect.apply(target, loggerConsensus, args)
-			}
-			break;
-
-			case RIPPLE_STATE_STAGE_CONSENSUS:
-			{
-				Reflect.apply(target, loggerStageConsensus, args)
-			}
-			break;
-
-			case RIPPLE_STATE_PERISH_NODE:
-			{
-				Reflect.apply(target, loggerPerishNode, args)
-			}
-			break;
-		}
-	}
-}
-
 class Stage
 {
 	constructor(opts)
 	{
 		this.state = STAGE_STATE_EMPTY;
 
+		const loggerHandler = {
+			apply: (target, ctx, args) => {
+				switch(this.ripple.state)
+				{
+					case RIPPLE_STATE_TRANSACTIONS_CONSENSUS: 
+					{
+						Reflect.apply(target, loggerConsensus, args)
+					}
+					break;
+
+					case RIPPLE_STATE_STAGE_CONSENSUS:
+					{
+						Reflect.apply(target, loggerStageConsensus, args)
+					}
+					break;
+
+					case RIPPLE_STATE_PERISH_NODE:
+					{
+						Reflect.apply(target, loggerPerishNode, args)
+					}
+					break;
+				}
+			}
+		}
+		
 		this.logger = {
 			trace: new Proxy(function(args) {
 				this.trace(args);
