@@ -100,6 +100,12 @@ class Stage
 				this.logger.info(`Stage dataExchange, stage: ${this.ripple.stage}, dataExchange is over success`);
 
 				this.state = STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING;
+
+				// if state is transactions consensus and stage sync success, reset counter
+				if(this.ripple.state === RIPPLE_STATE_TRANSACTIONS_CONSENSUS)
+				{
+					this.ripple.counter.resetTrigger();
+				}
 			}
 			else
 			{
@@ -148,6 +154,12 @@ class Stage
 				this.ripple.handleTimeoutNodes(this.ownTimeoutNodes, this.otherTimeoutNodes);
 				this.ripple.handleCheatedNodes(this.cheatedNodes);
 
+				// if state is transactions consensus and stage sync success, reset counter
+				if(this.ripple.state === RIPPLE_STATE_TRANSACTIONS_CONSENSUS)
+				{
+					this.ripple.counter.resetTrigger();
+				}
+				
 				this.handler(true);
 			}
 			else
