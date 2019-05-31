@@ -61,7 +61,7 @@ class BlockAgreement extends Stage
 
 		if(sortedBlocks[0] && sortedBlocks[0][1].count / (unl.length + 1) >= TRANSACTIONS_CONSENSUS_THRESHOULD)
 		{
-			logger.warn("BlockAgreement handler, block agreement success, begin to process block");
+			logger.info("BlockAgreement handler, block agreement success, begin to process block");
 
 			this.ripple.state = RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK;
 
@@ -70,7 +70,7 @@ class BlockAgreement extends Stage
 					block: new Block(sortedBlocks[0][1].data)
 				});
 
-				logger.warn("BlockAgreement handler, block agreement success, process block is over");
+				logger.info("BlockAgreement handler, block agreement success, process block is over");
 
 				await this.ripple.run();
 

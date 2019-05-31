@@ -88,7 +88,7 @@ class Processor
 		{
 			if(block.transactions.length === 0)
 			{
-				loggerConsensus.warn(`Processor processBlock, block ${block.hash().toString("hex")} has no transaction`);
+				loggerConsensus.info(`Processor processBlock, block ${block.hash().toString("hex")} has no transaction`);
 				break;
 			}
 
