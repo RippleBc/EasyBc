@@ -142,18 +142,6 @@ class Counter extends Stage
 		}
 	}
 
-	resetTrigger()
-	{
-		if(this.state !== STAGE_STATE_EMPTY)
-		{
-			logger.fatal(`Counter resetTrigger, counter state should be STAGE_STATE_EMPTY, now is ${this.state}, ${process[Symbol.for("getStackInfo")]()}`);
-			
-			process.exit(1)
-		}
-
-		this.stageSynchronizeTrigger = [];
-	}
-
 	checkIfTriggered()
 	{
 		const now = Date.now();
