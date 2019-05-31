@@ -64,6 +64,8 @@ class BlockAgreement extends Stage
 
 			this.ripple.state = RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK;
 
+			this.reset();
+			
 			(async () => {
 				await this.ripple.processor.processBlock({
 					block: new Block(sortedBlocks[0][1].data)
@@ -89,18 +91,11 @@ class BlockAgreement extends Stage
 				process.exit(1);
 			});
 
-			this.reset();
-
 			return;
 		}
 
-		this.ripple.run(true).then(() => {
-			
-		}).catch(e => {
-			logger.error(`BlockAgreement handler, ripple.run throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
-		});
-
 		this.reset();
+		this.ripple.run(true)
 	}
 
 	/**

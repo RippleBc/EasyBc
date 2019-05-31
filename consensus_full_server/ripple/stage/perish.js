@@ -82,9 +82,8 @@ class Perish extends Stage
 			}
 			else
 			{
-				this.ripple.run(true);
-
 				this.reset();
+				this.ripple.run(true);
 			}
 		}
 	}

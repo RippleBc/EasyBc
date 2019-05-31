@@ -40,13 +40,8 @@ class Counter extends Stage
 		{
 			logger.warn("Counter handler, stage synchronize success")
 
-			this.ripple.run(true).then(() => {
-
-			}).catch(e => {
-				logger.error(`Counter handler, ripple.run throw exception, ${process[Symbol.for("getStackInfo")](e)}`)
-			});
-
 			this.reset();
+			this.ripple.run(true);
 		}
 		else
 		{
@@ -150,7 +145,7 @@ class Counter extends Stage
 			
 			process.exit(1)
 		}
-		
+
 		// this.stageSynchronizeTrigger = [];
 	}
 
