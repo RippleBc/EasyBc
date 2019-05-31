@@ -184,7 +184,7 @@ class Ripple
 			}
 			else
 			{
-				loggerStageConsensus.warn(`Ripple handleMessage, address ${address.toString("hex")}, own stage ${this.stage}, other stage is amalgamate`);
+				loggerStageConsensus.info(`Ripple handleMessage, address ${address.toString("hex")}, own stage ${this.stage}, other stage is amalgamate`);
 
 				p2p.send(address, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE);
 			}
@@ -214,7 +214,7 @@ class Ripple
 			}
 			else
 			{
-				loggerStageConsensus.warn(`Ripple handleMessage, address ${address.toString("hex")}, own stage ${this.stage}, other stage is candidateAgreement`);
+				loggerStageConsensus.info(`Ripple handleMessage, address ${address.toString("hex")}, own stage ${this.stage}, other stage is candidateAgreement`);
 
 				p2p.send(address, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE);
 			}
@@ -244,7 +244,7 @@ class Ripple
 			}
 			else
 			{
-				loggerStageConsensus.warn(`Ripple handleMessage, address ${address.toString("hex")}, own stage ${this.stage}, other stage is blockAgreement`);
+				loggerStageConsensus.info(`Ripple handleMessage, address ${address.toString("hex")}, own stage ${this.stage}, other stage is blockAgreement`);
 
 				p2p.send(address, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE);
 			}
