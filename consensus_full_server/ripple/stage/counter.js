@@ -151,7 +151,7 @@ class Counter extends Stage
 			process.exit(1)
 		}
 		
-		this.stageSynchronizeTrigger = [];
+		// this.stageSynchronizeTrigger = [];
 	}
 
 	checkIfTriggered()
