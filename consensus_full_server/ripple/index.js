@@ -79,7 +79,7 @@ class Ripple
 		addresses.forEach(address => {
 			address = address.toString("hex");
 			mysql.saveCheatedNode(address).catch(e => {
-				logger.error(`Ripple handleCheatedNodes, saveCheatedNode throw exception, ${e}`);
+				logger.error(`Ripple handleCheatedNodes, saveCheatedNode throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 			});
 		});
 	}
@@ -96,13 +96,13 @@ class Ripple
 		const self = this;
 		ownTimeoutNodes.forEach(ownTimeoutNode => {
 			mysql.saveTimeoutNode(ownTimeoutNode).catch(e => {
-				logger.error(`Ripple handleTimeoutNodes, saveTimeoutNode throw exception, ${e}`);
+				logger.error(`Ripple handleTimeoutNodes, saveTimeoutNode throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 			})
 		});
 
 		otherTimeoutNodes.forEach(otherTimeoutNode => {
 			mysql.saveTimeoutNode(otherTimeoutNode).catch(e => {
-				logger.error(`Ripple handleTimeoutNodes, saveTimeoutNode throw exception, ${e}`);
+				logger.error(`Ripple handleTimeoutNodes, saveTimeoutNode throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 			})
 		});
 	}

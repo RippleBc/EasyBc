@@ -1,39 +1,45 @@
-let state = 2;
+const process = require('process')
 
-const loggerHandler = {
-	apply: (target, ctx, args) => {
-		switch(state)
-		{
-			case 1: 
-			{
-				Reflect.apply(target, {
-					num: 100
-				}, args)
-			}
-			break;
 
-			case 2:
-			{
-				Reflect.apply(target, {
-					num: 200
-				}, args)
-			}
-			break;
-
-			case 3:
-			{
-				Reflect.apply(target, {
-					num: 300
-				}, args)
-			}
-			break;
-		}
-	}
+function a()
+{
+	console.log('a')
+	b()
 }
 
-const proxy = new Proxy(function(args) {
-	console.log(this.num + ': ' + args)
-}, loggerHandler)
+function b()
+{
+	console.log('b')
+	c()
+}
 
-proxy('aaaaaaaaaaaaaaaaa');
+function c()
+{
+    throw new Error('')
+   
+	console.log('c')
+}
 
+try
+{
+    a()
+}
+catch(e)
+{
+    try
+    {
+        throw new Error('')
+    }   
+    catch(e)
+    {
+        if(e.stack.split('\r\n').length > 1)
+        {
+            console.log(e.stack.split('\r\n').join('')) ;
+        }
+        else
+        {
+            console.log(e.stack.split('\n').join('')) ;
+        }
+    }
+    
+}

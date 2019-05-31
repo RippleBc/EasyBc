@@ -1,6 +1,5 @@
 const { unl } = require("../../config.json");
 const { RIPPLE_STATE_PERISH_NODE, RIPPLE_STATE_TRANSACTIONS_CONSENSUS, RIPPLE_STATE_STAGE_CONSENSUS, STAGE_DATA_EXCHANGE_TIMEOUT, STAGE_STAGE_SYNCHRONIZE_TIMEOUT, STAGE_MAX_FINISH_RETRY_TIMES, STAGE_STATE_EMPTY, STAGE_STATE_DATA_EXCHANGE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING } = require("../../constant");
-const process = require("process");
 const utils = require("../../../depends/utils");
 const assert = require("assert");
 const Sender = require("../sender");
@@ -70,7 +69,8 @@ class Stage
 			}, loggerHandler),
 
 			fatal: new Proxy(function(args) {
-				this.fatal(args);
+				this.fatal(`args, ${process[Symbol.for("getStackInfo")]()}`);
+				
 			}, loggerHandler),
 		}
 
@@ -92,7 +92,7 @@ class Stage
 		this.dataExchange = new Sender(result => {
 			// record data exchange time consume
 			mysql.saveDataExchangeTimeConsume(this.ripple.stage, this.dataExchange.consensusTimeConsume).catch(e => {
-				this.logger.error(`Stage dataExchange, stage: ${this.ripple.stage}, saveDataExchangeTimeConsume throw exception, ${e}`);
+				this.logger.error(`Stage dataExchange, stage: ${this.ripple.stage}, saveDataExchangeTimeConsume throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 			});
 
 			if(result)
@@ -147,7 +147,7 @@ class Stage
 
 				// record synchronize time consume
 				mysql.saveStageSynchronizeTimeConsume(this.ripple.stage, this.dataExchange.consensusTimeConsume).catch(e => {
-					this.logger.error(`Stage stageSynchronize, stage: ${this.ripple.stage}, saveStageSynchronizeTimeConsume throw exception, ${e}`);
+					this.logger.error(`Stage stageSynchronize, stage: ${this.ripple.stage}, saveStageSynchronizeTimeConsume throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 				});
 
 				// handle abnormal nodes
@@ -196,7 +196,7 @@ class Stage
 
 					// record synchronize time consume
 					mysql.saveStageSynchronizeTimeConsume(this.ripple.stage, this.dataExchange.consensusTimeConsume).catch(e => {
-						this.logger.error(`Stage stageSynchronize, stage: ${this.ripple.stage}, saveStageSynchronizeTimeConsume throw exception, ${e}`);
+						this.logger.error(`Stage stageSynchronize, stage: ${this.ripple.stage}, saveStageSynchronizeTimeConsume throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 					});
 
 					// handle abnormal nodes

@@ -7,7 +7,6 @@ const rp = require("request-promise");
 const { SUCCESS } = require("../../constant");
 const { genesis } = require("../config.json");
 const { TRANSACTIONS_CONSENSUS_THRESHOULD } = require('../constant');
-const process = require("process");
 
 let { unl } = require("../config.json");
 
@@ -95,7 +94,7 @@ class Update
 			});
 			if(result.state !== 0)
 			{
-				logger.fatal(`Update init, blockChain.runBlockChain, ${result.msg}`)
+				logger.fatal(`Update init, blockChain.runBlockChain, ${result.msg}, ${process[Symbol.for("getStackInfo")]()}`)
 
 				process.exit(1);
 			}
@@ -148,7 +147,7 @@ class Update
 				}
 				catch(e)
 				{
-					logger.error(`Update synchronize, http request on host: ${node.host}, port: ${node.queryPort} failed, ${e}`);
+					logger.error(`Update synchronize, http request on host: ${node.host}, port: ${node.queryPort} failed, ${process[Symbol.for("getStackInfo")](e)}`);
 					continue;
 				}
 
@@ -167,7 +166,7 @@ class Update
 				}
 				catch(e)
 				{
-					logger.error(`Update synchronize, new Block failed, http request on host: ${node.host}, port: ${node.queryPort}, ${e}`);
+					logger.error(`Update synchronize, new Block failed, http request on host: ${node.host}, port: ${node.queryPort}, ${process[Symbol.for("getStackInfo")](e)}`);
 					continue;
 				}
 			}
@@ -185,8 +184,8 @@ class Update
 					});
 					if(result.state !== 0)
 					{
-						logger.fatal('Update synchronize, runBlockChain failed, please clear the entrie database and synchronize again');
-
+						logger.fatal(`Update synchronize, runBlockChain failed, please clear the entrie database and synchronize again, ${process[Symbol.for("getStackInfo")]()}`);
+						
 						process.exit(1);
 					}
 

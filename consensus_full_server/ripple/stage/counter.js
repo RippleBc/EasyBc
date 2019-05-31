@@ -1,7 +1,6 @@
 const CounterData = require("../data/counter");
 const { unl } = require("../../config.json");
 const utils = require("../../../depends/utils");
-const process = require("process");
 const { COUNTER_CONSENSUS_STAGE_TRIGGER_MAX_SIZE, PROTOCOL_CMD_COUNTER_FINISH_STATE_REQUEST, PROTOCOL_CMD_COUNTER_FINISH_STATE_RESPONSE, RIPPLE_STATE_STAGE_CONSENSUS, COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD, COUNTER_HANDLER_TIME_DETAY, COUNTER_INVALID_STAGE_TIME_SECTION, STAGE_STATE_EMPTY, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_STAGE_INFO_REQUEST, PROTOCOL_CMD_STAGE_INFO_RESPONSE } = require("../../constant");
 const Stage = require("./stage");
 
@@ -44,7 +43,7 @@ class Counter extends Stage
 			this.ripple.run(true).then(() => {
 
 			}).catch(e => {
-				logger.error(`Counter handler, ripple.run throw exception, ${e}`)
+				logger.error(`Counter handler, ripple.run throw exception, ${process[Symbol.for("getStackInfo")](e)}`)
 			});
 
 			this.reset();
@@ -147,8 +146,8 @@ class Counter extends Stage
 	{
 		if(this.state !== STAGE_STATE_EMPTY)
 		{
-			logger.fatal(`Counter resetTrigger, counter state should be STAGE_STATE_EMPTY, now is ${this.state}`);
-
+			logger.fatal(`Counter resetTrigger, counter state should be STAGE_STATE_EMPTY, now is ${this.state}, ${process[Symbol.for("getStackInfo")]()}`);
+			
 			process.exit(1)
 		}
 

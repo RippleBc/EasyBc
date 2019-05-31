@@ -1,7 +1,6 @@
 const { unl } = require("../config.json");
 const utils = require("../../depends/utils");
 const assert = require("assert");
-const process = require("process");
 
 const stripHexPrefix = utils.stripHexPrefix;
 
@@ -80,7 +79,8 @@ class Sender
 	{
 		if(this.state !== SENDER_STATE_IDLE)
 		{
-			logger.fatal(`Sender start, before start please call reset`)
+			logger.fatal(`Sender start, before start please call reset, ${process[Symbol.for("getStackInfo")]()}`)
+			
 			process.exit(1)
 		}
 

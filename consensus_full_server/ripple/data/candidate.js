@@ -1,4 +1,3 @@
-const process = require("process");
 const Base = require("./base");
 const util = require("../../../depends/utils");
 const Transaction = require("../../../depends/transaction");
@@ -85,7 +84,7 @@ class Candidate extends Base
     }
     catch(e)
     {
-      logger.error(`Candidate validate, check transactions failed, ${e}`);
+      logger.error(`Candidate validate, check transactions failed, ${process[Symbol.for("getStackInfo")](e)}`);
 
       return false;
     }

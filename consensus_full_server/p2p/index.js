@@ -53,7 +53,7 @@ class P2p
 			}
 			catch(e)
 			{
-				loggerP2p.error(`P2p init, connect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort}, ${e}`);
+				loggerP2p.error(`P2p init, connect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort}, ${process[Symbol.for("getStackInfo")](e)}`);
 			}
 		}
 
@@ -79,7 +79,7 @@ class P2p
 			}
 			catch(e)
 			{
-				loggerP2p.error(`P2p send, send msg to address: ${connection.address}, host: ${connection.address().address}, port: ${connection.address().port}, ${e}`);
+				loggerP2p.error(`P2p send, send msg to address: ${connection.address}, host: ${connection.address().address}, port: ${connection.address().port}, ${process[Symbol.for("getStackInfo")](e)}`);
 			}
 		}
 	}
@@ -99,7 +99,7 @@ class P2p
 				}
 				catch(e)
 				{
-					loggerP2p.error(`P2p sendAll, send msg to address: ${connection.address}, host: ${connection.address().address}, port: ${connection.address().port}, ${e}`);
+					loggerP2p.error(`P2p sendAll, send msg to address: ${connection.address}, host: ${connection.address().address}, port: ${connection.address().port}, ${process[Symbol.for("getStackInfo")](e)}`);
 				}
 			}
 		}
@@ -156,7 +156,7 @@ class P2p
 				}
 				catch(e)
 				{
-					loggerP2p.error(`P2p reconnect, connect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort}, ${e}`);
+					loggerP2p.error(`P2p reconnect, connect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort}, ${process[Symbol.for("getStackInfo")](e)}`);
 				}
 			}
 		}
@@ -185,7 +185,7 @@ class P2p
 				}
 				catch(e)
 				{
-					loggerP2p.error(`P2p reconnectAll, connect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort}, ${e}`);
+					loggerP2p.error(`P2p reconnectAll, connect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort}, ${process[Symbol.for("getStackInfo")](e)}`);
 				}
 			}	
 		}

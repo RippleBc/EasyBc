@@ -1,4 +1,3 @@
-const process = require("process");
 const child_process = require("child_process");
 const Transaction = require("../../depends/transaction");
 const Block = require("../../depends/block");
@@ -122,12 +121,12 @@ class Processor
 			}
 			else if(state === 3)
 			{
-				loggerConsensus.fatal(`Processor processBlock, block is invalid, ${msg}`);
+				loggerConsensus.fatal(`Processor processBlock, block is invalid, ${msg}, ${process[Symbol.for("getStackInfo")]()}`);
 				process.exit(1);
 			}
 			else
 			{
-				loggerConsensus.fatal(`Processor processBlock, invalid return state, ${state}`);
+				loggerConsensus.fatal(`Processor processBlock, invalid return state, ${state}, ${process[Symbol.for("getStackInfo")]()}`);
 				process.exit(1);
 			}
 		}

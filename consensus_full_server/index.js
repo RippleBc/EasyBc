@@ -1,4 +1,3 @@
-const process = require("process");
 const log4js= require("./logConfig");
 const logger = log4js.getLogger("consensus");
 const { fork } = require("child_process");
@@ -25,6 +24,36 @@ const Mysql = require("./mysql");
 
 process[Symbol.for("db")] = levelup(leveldown(BLOCK_CHAIN_DATA_DIR));
 process[Symbol.for("mysql")] = new Mysql();
+process[Symbol.for("getStackInfo")] = function(e) {
+
+    let err;
+
+    if(e)
+    {
+        err = e
+    } 
+    else
+    {
+        try
+        {
+            throw new Error('call stack')
+        }
+        catch(e)
+        {
+            err = e;
+        }
+    }
+    
+    if(err.stack.split('\r\n').length > 1)
+    {
+        return err.stack.split('\r\n').join('');
+    }
+    else
+    {
+        return err.stack.split('\n').join('');
+    }
+}
+
 
 const Buffer = utils.Buffer;
 const toBuffer = utils.toBuffer;
@@ -32,7 +61,8 @@ const bufferToInt = utils.bufferToInt;
 
 //
 process.on("uncaughtException", function(err) {
-    logger.fatal(err.stack);
+    logger.fatal(process[Symbol.for("getStackInfo")](err))
+    
     process.exit(1);
 });
 

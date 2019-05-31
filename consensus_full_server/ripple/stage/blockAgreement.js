@@ -2,7 +2,6 @@ const Block = require("../../../depends/block");
 const RippleBlock = require("../data/rippleBlock");
 const utils = require("../../../depends/utils");
 const Stage = require("./stage");
-const process = require("process");
 const async = require("async");
 const assert = require("assert");
 const { unl } = require("../../config.json");
@@ -85,7 +84,8 @@ class BlockAgreement extends Stage
 			})().then(() => {
 				logger.trace("BlockAgreement handler, process block success, new round begin")
 			}).catch(e => {
-				logger.fatal(`BlockAgreement handler, throw exception, ${e}`);
+				logger.fatal(`BlockAgreement handler, throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+
 				process.exit(1);
 			});
 
@@ -97,7 +97,7 @@ class BlockAgreement extends Stage
 		this.ripple.run(true).then(() => {
 			
 		}).catch(e => {
-			logger.error(`BlockAgreement handler, ripple.run throw exception, ${e}`);
+			logger.error(`BlockAgreement handler, ripple.run throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 		});
 
 		this.reset();
@@ -170,8 +170,8 @@ class BlockAgreement extends Stage
 		})().then(() => {
 			logger.trace('BlockAgreement run, success')
 		}).catch(e => {
-			logger.fatal(`BlockAgreement run, throw exception, ${e}`);
-
+			logger.fatal(`BlockAgreement run, throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+			
 			process.exit(1);
 		});
  	}

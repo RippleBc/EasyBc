@@ -5,6 +5,8 @@ const { unl } = require("../../config.json");
 const rlp = utils.rlp;
 const sha256 = utils.sha256;
 
+const logger = process[Symobl["loggerConsensus"]];
+
 class Base
 {
 	constructor()
