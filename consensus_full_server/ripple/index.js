@@ -1,7 +1,7 @@
 const Amalgamate = require("./stage/amalgamate");
 const CandidateAgreement = require("./stage/candidateAgreement");
 const BlockAgreement = require("./stage/blockAgreement");
-const { RIPPLE_STAGE_PERISH_NODE, RIPPLE_STAGE_EMPTY, STAGE_MAX_FINISH_RETRY_TIMES, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, RIPPLE_STATE_STAGE_CONSENSUS, RIPPLE_STATE_TRANSACTIONS_CONSENSUS, MAX_PROCESS_TRANSACTIONS_SIZE, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_MAX_ROUND } = require("../constant");
+const { RIPPLE_STATE_PERISH_NODE, RIPPLE_STAGE_EMPTY, STAGE_MAX_FINISH_RETRY_TIMES, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, RIPPLE_STATE_STAGE_CONSENSUS, RIPPLE_STATE_TRANSACTIONS_CONSENSUS, MAX_PROCESS_TRANSACTIONS_SIZE, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_MAX_ROUND } = require("../constant");
 const assert = require("assert");
 const Counter = require("./stage/counter");
 const Perish = require("./stage/perish");
@@ -120,11 +120,11 @@ class Ripple
 
 		if(cmd >= 100 && cmd < 200)
 		{
-			if(this.state === RIPPLE_STAGE_PERISH_NODE)
+			if(this.state === RIPPLE_STATE_PERISH_NODE)
 			{
 				if(this.perish.checkIfDataExchangeIsFinish())
 				{
-					loggerPerishNode.fatal("Ripple handleMessage, perish node success because of node notification");
+					loggerPerishNode.warn("Ripple handleMessage, perish node success because of node notification");
 
 					this.perish.handler(true);
 
@@ -135,7 +135,7 @@ class Ripple
 				}
 				else
 				{
-					loggerPerishNode.fatal("Ripple handleMessage, processor is perishing node, do not handle transaction consensus messages");
+					loggerPerishNode.warn("Ripple handleMessage, processor is perishing node, do not handle transaction consensus messages");
 				}
 
 				return
@@ -145,7 +145,7 @@ class Ripple
 			{
 				if(this.counter.checkIfDataExchangeIsFinish())
 				{
-					loggerStageConsensus.fatal("Ripple handleMessage, stage synchronize success because of node notification");
+					loggerStageConsensus.warn("Ripple handleMessage, stage synchronize success because of node notification");
 
 					this.counter.handler(true);
 
@@ -156,7 +156,7 @@ class Ripple
 				}
 				else
 				{
-					loggerStageConsensus.fatal("Ripple handleMessage, processor is synchronizing stage, do not handle transaction consensus messages");
+					loggerStageConsensus.warn("Ripple handleMessage, processor is synchronizing stage, do not handle transaction consensus messages");
 				}
 
 				return;
@@ -191,9 +191,9 @@ class Ripple
 		}
 		else if(cmd >= 200 && cmd < 300)
 		{
-			if(this.state === RIPPLE_STAGE_PERISH_NODE)
+			if(this.state === RIPPLE_STATE_PERISH_NODE)
 			{
-				return loggerPerishNode.fatal("Ripple handleMessage, processor is perishing node, do not handle transaction consensus messages");
+				return loggerPerishNode.warn("Ripple handleMessage, processor is perishing node, do not handle transaction consensus messages");
 			}
 
 			if(this.state === RIPPLE_STATE_STAGE_CONSENSUS)
@@ -221,9 +221,9 @@ class Ripple
 		}
 		else if(cmd >= 300 && cmd < 400)
 		{
-			if(this.state === RIPPLE_STAGE_PERISH_NODE)
+			if(this.state === RIPPLE_STATE_PERISH_NODE)
 			{
-				return loggerPerishNode.fatal("Ripple handleMessage, processor is perishing node, do not handle transaction consensus messages");
+				return loggerPerishNode.warn("Ripple handleMessage, processor is perishing node, do not handle transaction consensus messages");
 			}
 
 			if(this.state === RIPPLE_STATE_STAGE_CONSENSUS)
@@ -251,9 +251,9 @@ class Ripple
 		}
 		else if(cmd >= 400 && cmd < 500)
 		{
-			if(this.state === RIPPLE_STAGE_PERISH_NODE)
+			if(this.state === RIPPLE_STATE_PERISH_NODE)
 			{
-				return loggerPerishNode.fatal("Ripple handleMessage, processor is perishing node, do not handle stage synchronize messages");
+				return loggerPerishNode.warn("Ripple handleMessage, processor is perishing node, do not handle stage synchronize messages");
 			}
 
 			this.counter.handleMessage(address, cmd, data);

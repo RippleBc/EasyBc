@@ -39,9 +39,13 @@ class Counter extends Stage
 	{
 		if(ifSuccess)
 		{
-			logger.fatal("Counter handler, stage synchronize success")
+			logger.warn("Counter handler, stage synchronize success")
 
-			this.ripple.run(true);
+			this.ripple.run(true).then(() => {
+
+			}).catch(e => {
+				logger.error(`Counter handler, ripple.run throw exception, ${e}`)
+			});
 
 			this.reset();
 		}
@@ -49,7 +53,7 @@ class Counter extends Stage
 		{
 			this.reset();
 
-			logger.fatal(`Counter handleMessage, begin to synchronize stage actively again, stage: ${this.ripple.stage}`);
+			logger.warn(`Counter handleMessage, stage synchronize success because of timeout, begin to synchronize stage actively, stage: ${this.ripple.stage}`);
 
 			this.startStageSynchronize();
 		}
@@ -82,7 +86,7 @@ class Counter extends Stage
 				// begin stage synchronize
 				if(this.state === STAGE_STATE_EMPTY)
 				{
-					logger.fatal(`Counter handleMessage, begin to synchronize stage negatively, stage: ${this.ripple.stage}`);
+					logger.warn(`Counter handleMessage, begin to synchronize stage negatively, stage: ${this.ripple.stage}`);
 
 					this.startStageSynchronize();
 				}

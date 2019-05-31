@@ -4,7 +4,7 @@ const utils = require("../../../depends/utils");
 const process = require("process");
 const Sender = require("../sender");
 const Stage = require("./stage");
-const { TRANSACTIONS_CONSENSUS_THRESHOULD, PROTOCOL_CMD_KILL_NODE_FINISH_STATE_REQUEST, PROTOCOL_CMD_KILL_NODE_FINISH_STATE_RESPONSE, NEGATIVE_PERISH_DATA_PERIOD_OF_VALID, ACTIVE_PERISH_DATA_PERIOD_OF_VALID, STAGE_STATE_EMPTY, RIPPLE_STAGE_PERISH_NODE, PROTOCOL_CMD_KILL_NODE_REQUEST, PROTOCOL_CMD_KILL_NODE_RESPONSE } = require("../../constant");
+const { TRANSACTIONS_CONSENSUS_THRESHOULD, PROTOCOL_CMD_KILL_NODE_FINISH_STATE_REQUEST, PROTOCOL_CMD_KILL_NODE_FINISH_STATE_RESPONSE, NEGATIVE_PERISH_DATA_PERIOD_OF_VALID, ACTIVE_PERISH_DATA_PERIOD_OF_VALID, STAGE_STATE_EMPTY, RIPPLE_STATE_PERISH_NODE, PROTOCOL_CMD_KILL_NODE_REQUEST, PROTOCOL_CMD_KILL_NODE_RESPONSE } = require("../../constant");
 
 const bufferToInt = utils.bufferToInt;
 
@@ -32,11 +32,11 @@ class Perish extends Stage
 	{
 		if(ifSuccess)
 		{
-			logger.fatal("Perish handler, perish node success")
+			logger.warn("Perish handler, perish node success")
 		}
 		else
 		{	
-			logger.fatal("Perish handler, perish node success because of timeout")
+			logger.warn("Perish handler, perish node success because of timeout")
 		}
 
 		const perishDataMap = new Map();
@@ -66,7 +66,7 @@ class Perish extends Stage
 		{
 			const perishData = sortedPerishNodeAddresses[0][1].data
 
-			logger.fatal(`Perish handler, begin to handle vicious node, sponsor node: ${perishData.from.toString('hex')}, perish node: ${perishData.address.toString('hex')}`)
+			logger.warn(`Perish handler, begin to handle vicious node, sponsor node: ${perishData.from.toString('hex')}, perish node: ${perishData.address.toString('hex')}`)
 
 			this.ripple.handlePerishNode(perishData.from, perishData.address);
 
@@ -227,7 +227,7 @@ class Perish extends Stage
 		this.ripple.reset();
 		this.ripple.counter.reset();
 
-		this.ripple.state = RIPPLE_STAGE_PERISH_NODE;
+		this.ripple.state = RIPPLE_STATE_PERISH_NODE;
 		
 		p2p.sendAll(PROTOCOL_CMD_KILL_NODE_REQUEST, perishData.serialize());
 	}

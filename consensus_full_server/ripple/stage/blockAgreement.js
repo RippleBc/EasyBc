@@ -94,7 +94,7 @@ class BlockAgreement extends Stage
 			return;
 		}
 
-		this.ripple.run().then(() => {
+		this.ripple.run(true).then(() => {
 			
 		}).catch(e => {
 			logger.error(`BlockAgreement handler, ripple.run throw exception, ${e}`);

@@ -1,5 +1,5 @@
 const { unl } = require("../../config.json");
-const { RIPPLE_STAGE_PERISH_NODE, RIPPLE_STATE_STAGE_CONSENSUS, STAGE_DATA_EXCHANGE_TIMEOUT, STAGE_STAGE_SYNCHRONIZE_TIMEOUT, STAGE_MAX_FINISH_RETRY_TIMES, STAGE_STATE_EMPTY, STAGE_STATE_DATA_EXCHANGE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING } = require("../../constant");
+const { RIPPLE_STATE_PERISH_NODE, RIPPLE_STATE_TRANSACTIONS_CONSENSUS, RIPPLE_STATE_STAGE_CONSENSUS, STAGE_DATA_EXCHANGE_TIMEOUT, STAGE_STAGE_SYNCHRONIZE_TIMEOUT, STAGE_MAX_FINISH_RETRY_TIMES, STAGE_STATE_EMPTY, STAGE_STATE_DATA_EXCHANGE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING } = require("../../constant");
 const process = require("process");
 const utils = require("../../../depends/utils");
 const assert = require("assert");
@@ -11,15 +11,68 @@ const toBuffer = utils.toBuffer;
 const bufferToInt = utils.bufferToInt;
 const Buffer = utils.Buffer;
 
-const logger = process[Symbol.for("loggerStageConsensus")];
+const loggerPerishNode = process[Symbol.for("loggerPerishNode")];
+const loggerStageConsensus = process[Symbol.for("loggerStageConsensus")];
+const loggerConsensus = process[Symbol.for("loggerConsensus")];
 const p2p = process[Symbol.for("p2p")];
 const mysql = process[Symbol.for("mysql")];
+
+const loggerHandler = {
+	apply: (target, ctx, args) => {
+		switch(this.ripple.state)
+		{
+			case RIPPLE_STATE_TRANSACTIONS_CONSENSUS: 
+			{
+				Reflect.apply(target, loggerConsensus, args)
+			}
+			break;
+
+			case RIPPLE_STATE_STAGE_CONSENSUS:
+			{
+				Reflect.apply(target, loggerStageConsensus, args)
+			}
+			break;
+
+			case RIPPLE_STATE_PERISH_NODE:
+			{
+				Reflect.apply(target, loggerPerishNode, args)
+			}
+			break;
+		}
+	}
+}
 
 class Stage
 {
 	constructor(opts)
 	{
 		this.state = STAGE_STATE_EMPTY;
+
+		this.logger = {
+			trace: new Proxy(function(args) {
+				this.trace(args);
+			}, loggerHandler),
+
+			debug: new Proxy(function(args) {
+				this.debug(args);
+			}, loggerHandler),
+
+			info: new Proxy(function(args) {
+				this.info(args);
+			}, loggerHandler),
+
+			warn: new Proxy(function(args) {
+				this.warn(args);
+			}, loggerHandler),
+
+			error: new Proxy(function(args) {
+				this.error(args);
+			}, loggerHandler),
+
+			fatal: new Proxy(function(args) {
+				this.fatal(args);
+			}, loggerHandler),
+		}
 
 		// timeout nodes
 		this.otherTimeoutNodes = [];
@@ -39,12 +92,12 @@ class Stage
 		this.dataExchange = new Sender(result => {
 			// record data exchange time consume
 			mysql.saveDataExchangeTimeConsume(this.ripple.stage, this.dataExchange.consensusTimeConsume).catch(e => {
-				logger.error(`Stage dataExchange, ${this.ripple.state === RIPPLE_STATE_STAGE_CONSENSUS ? 'transaction consensus' : 'stage consensus'}, stage: ${this.ripple.stage}, saveDataExchangeTimeConsume throw exception, ${e}`);
+				this.logger.error(`Stage dataExchange, stage: ${this.ripple.stage}, saveDataExchangeTimeConsume throw exception, ${e}`);
 			});
 
 			if(result)
 			{
-				logger.info(`Stage, ${this.ripple.state === RIPPLE_STATE_STAGE_CONSENSUS ? 'transaction consensus' : 'stage consensus'}, stage: ${this.ripple.stage}, dataExchange is over success`);
+				this.logger.info(`Stage dataExchange, stage: ${this.ripple.stage}, dataExchange is over success`);
 
 				this.state = STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING;
 			}
@@ -59,12 +112,12 @@ class Stage
 					}
 				}
 
-				logger.fatal(`Stage, ${this.ripple.state === RIPPLE_STATE_STAGE_CONSENSUS ? 'transaction consensus' : 'stage consensus'}, stage: ${this.ripple.stage}, dataExchange is over because of timeout`);
+				this.logger.warn(`Stage dataExchange, stage: ${this.ripple.stage}, dataExchange is over because of timeout`);
 
 				// data exchange is failed, try to stage consensus
-				if(this.ripple.counter.checkIfTriggered() && this.ripple.state !== RIPPLE_STAGE_PERISH_NODE)
+				if(this.ripple.counter.checkIfTriggered() && this.ripple.state !== RIPPLE_STATE_PERISH_NODE)
 				{
-					logger.fatal(`Counter handleMessage, begin to synchronize stage actively, stage: ${this.ripple.stage}`);
+					loggerStageConsensus.warn(`Counter handleMessage, begin to synchronize stage actively, stage: ${this.ripple.stage}`);
 
 					this.ripple.counter.startStageSynchronize();
 
@@ -84,11 +137,11 @@ class Stage
 
 			if(result)
 			{
-				logger.info(`Stage, ${this.ripple.state === RIPPLE_STATE_STAGE_CONSENSUS ? 'transaction consensus' : 'stage consensus'}, stage: ${this.ripple.stage}, stage synchronize is over success`);
+				this.logger.info(`Stage stageSynchronize, stage: ${this.ripple.stage}, stage synchronize is over success`);
 
 				// record synchronize time consume
 				mysql.saveStageSynchronizeTimeConsume(this.ripple.stage, this.dataExchange.consensusTimeConsume).catch(e => {
-					logger.error(`Stage stageSynchronize, ${this.ripple.state === RIPPLE_STATE_STAGE_CONSENSUS ? 'transaction consensus' : 'stage consensus'}, stage: ${this.ripple.stage}, saveStageSynchronizeTimeConsume throw exception, ${e}`);
+					this.logger.error(`Stage stageSynchronize, stage: ${this.ripple.stage}, saveStageSynchronizeTimeConsume throw exception, ${e}`);
 				});
 
 				// handle abnormal nodes
@@ -110,7 +163,7 @@ class Stage
 
 				if(this.leftSynchronizeTryTimes > 0)
 				{
-					logger.info(`Stage, ${this.ripple.state === RIPPLE_STATE_STAGE_CONSENSUS ? 'transaction consensus' : 'stage consensus'}, stage: ${this.ripple.stage}, stage synchronize is failed, retry ${STAGE_MAX_FINISH_RETRY_TIMES - this.leftSynchronizeTryTimes + 1}`);
+					this.logger.info(`Stage stageSynchronize, stage: ${this.ripple.stage}, stage synchronize is failed, retry ${STAGE_MAX_FINISH_RETRY_TIMES - this.leftSynchronizeTryTimes + 1}`);
 
 					this.stageSynchronize.reset();
 					this.stageSynchronize.start();
@@ -127,11 +180,11 @@ class Stage
 				}
 				else
 				{
-					logger.fatal(`Stage, ${this.ripple.state === RIPPLE_STATE_STAGE_CONSENSUS ? 'transaction consensus' : 'stage consensus'}, stage: ${this.ripple.stage}, stage synchronize is over because of timeout`);
+					this.logger.warn(`Stage stageSynchronize, stage: ${this.ripple.stage}, stage synchronize is over because of timeout`);
 
 					// record synchronize time consume
 					mysql.saveStageSynchronizeTimeConsume(this.ripple.stage, this.dataExchange.consensusTimeConsume).catch(e => {
-						logger.error(`Stage, ${this.ripple.state === RIPPLE_STATE_STAGE_CONSENSUS ? 'transaction consensus' : 'stage consensus'}, stage: ${this.ripple.stage}, saveStageSynchronizeTimeConsume throw exception, ${e}`);
+						this.logger.error(`Stage stageSynchronize, stage: ${this.ripple.stage}, saveStageSynchronizeTimeConsume throw exception, ${e}`);
 					});
 
 					// handle abnormal nodes
@@ -139,9 +192,9 @@ class Stage
 					this.ripple.handleCheatedNodes(this.cheatedNodes);
 
 					// data exchange is failed, try to stage consensus
-					if(this.ripple.counter.checkIfTriggered() && this.ripple.state !== RIPPLE_STAGE_PERISH_NODE)
+					if(this.ripple.counter.checkIfTriggered() && this.ripple.state !== RIPPLE_STATE_PERISH_NODE)
 					{
-						logger.fatal(`Counter handleMessage, begin to synchronize stage actively again, stage: ${this.ripple.stage}`);
+						loggerStageConsensus.warn(`Counter handleMessage, begin to synchronize stage actively again, stage: ${this.ripple.stage}`);
 						
 						this.ripple.counter.startStageSynchronize();
 
@@ -256,7 +309,7 @@ class Stage
 				}
 				else
 				{
-					logger.fatal(`Stage handleMessage, ${this.ripple.state === RIPPLE_STATE_STAGE_CONSENSUS ? 'transaction consensus' : 'stage consensus'}, stage: ${this.ripple.stage}, stage state is empty, can not process messages`);
+					this.logger.warn(`Stage handleMessage, stage: ${this.ripple.stage}, stage state is empty, can not process messages`);
 
 					process.exit(1);
 				}
