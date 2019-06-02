@@ -151,6 +151,8 @@ class Counter extends Stage
 
 	checkIfTriggered()
 	{
+		return true;
+
 		const now = Date.now();
 
 		let stageInvalidFrequency = 0;
