@@ -30,7 +30,7 @@ class BlockAgreement extends Stage
 		this.rippleBlocks = [];
 	}
 
-	handler()
+	handler(ifSuccess)
 	{
 		if(ifSuccess)
 		{

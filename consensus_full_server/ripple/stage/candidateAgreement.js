@@ -26,7 +26,7 @@ class CandidateAgreement extends Stage
 		this.candidates = [];
 	}
 
-	handler()
+	handler(ifSuccess)
 	{
 		if(ifSuccess)
 		{
