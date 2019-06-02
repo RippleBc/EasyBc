@@ -72,7 +72,7 @@ class Sender
 			this.state = SENDER_STATE_FINISH;
 
 			clearTimeout(this.timeout);
-
+			logger.fatal("cccccccccccccccccccccccc: finish success")
 			this.handler(true);
 		}
 	}
