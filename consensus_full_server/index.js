@@ -44,13 +44,19 @@ process[Symbol.for("getStackInfo")] = function(e) {
         }
     }
     
-    if(err.stack.split('\r\n').length > 1)
+
+    if(err.stack)
     {
-        return err.stack.split('\r\n').join('');
+        err = err.stack;
+    }
+
+    if(err.split('\r\n').length > 1)
+    {
+        return err.split('\r\n').join('');
     }
     else
     {
-        return err.stack.split('\n').join('');
+        return err.split('\n').join('');
     }
 }
 

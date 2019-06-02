@@ -166,7 +166,6 @@ class Counter extends Stage
 			}
 		}
 
-
 		return this.state === STAGE_STATE_EMPTY && stageInvalidFrequency >= COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD * unl.length
 	}
 
