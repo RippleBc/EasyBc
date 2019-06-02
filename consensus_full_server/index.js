@@ -47,17 +47,20 @@ process[Symbol.for("getStackInfo")] = function(e) {
 
     if(err.stack)
     {
-        err = err.stack;
-    }
-
-    if(err.split('\r\n').length > 1)
-    {
-        return err.split('\r\n').join('');
+        if(err.stack.split('\r\n').length > 1)
+        {
+            return err.stack.split('\r\n').join('');
+        }
+        else
+        {
+            return err.stack.split('\n').join('');
+        }
     }
     else
     {
-        return err.split('\n').join('');
+        return err
     }
+    
 }
 
 

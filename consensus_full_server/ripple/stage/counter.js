@@ -45,10 +45,9 @@ class Counter extends Stage
 		}
 		else
 		{
-			this.reset();
-
 			logger.warn(`Counter handleMessage, stage synchronize success because of timeout, begin to synchronize stage actively, stage: ${this.ripple.stage}`);
-
+			
+			this.reset();
 			this.startStageSynchronize();
 		}
 	}
