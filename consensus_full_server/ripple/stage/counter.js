@@ -146,13 +146,11 @@ class Counter extends Stage
 			process.exit(1)
 		}
 
-		// this.stageSynchronizeTrigger = [];
+		this.stageSynchronizeTrigger = [];
 	}
 
 	checkIfTriggered()
 	{
-		return true;
-
 		const now = Date.now();
 
 		let stageInvalidFrequency = 0;
