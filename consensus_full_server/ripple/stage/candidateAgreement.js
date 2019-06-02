@@ -28,6 +28,15 @@ class CandidateAgreement extends Stage
 
 	handler()
 	{
+		if(ifSuccess)
+		{
+			logger.info("CandidateAgreement handler success")
+		}
+		else
+		{
+			logger.info("CandidateAgreement handler success becauseof timeout")
+		}
+		
 		const transactionCollsHash = new Map();
 		this.candidates.forEach(candidate => {
 			const key = sha256(candidate.transactions).toString('hex');

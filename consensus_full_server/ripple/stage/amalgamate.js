@@ -24,8 +24,17 @@ class Amalgamate extends Stage
 		this.candidates = [];
 	}
 
-	handler()
+	handler(ifSuccess)
 	{
+		if(ifSuccess)
+		{
+			logger.info("Amalgamate handler success")
+		}
+		else
+		{
+			logger.info("Amalgamate handler success becauseof timeout")
+		}
+		
 		const transactionRawsMap = new Map();
 		this.candidates.forEach(candidate => {
 			const rawTransactions = rlp.decode(candidate.transactions);

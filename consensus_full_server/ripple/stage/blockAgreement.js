@@ -32,6 +32,15 @@ class BlockAgreement extends Stage
 
 	handler()
 	{
+		if(ifSuccess)
+		{
+			logger.info("BlockAgreement handler success")
+		}
+		else
+		{
+			logger.info("BlockAgreement handler success becauseof timeout")
+		}
+		
 		const blocksHash = new Map();
 		this.rippleBlocks.forEach(rippleBlock => {
 			const key = sha256(rippleBlock.block).toString('hex');
