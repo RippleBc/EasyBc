@@ -45,6 +45,7 @@ class Sender
 
 		if(this.state !== SENDER_STATE_PROCESSING)
 		{
+			logger.fatal("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 			return;
 		}
 		if(this.finishAddresses.has(address))
@@ -52,6 +53,7 @@ class Sender
 			logger.error(`Sender recordFinishNode, address ${address} send the same consensus request`);
 			return;
 		}
+		logger.fatal("bbbbbbbbbbbbbbbbbbbbbbbbbbb: " + address)
 		this.finishAddresses.add(address);
 
 		// check if all nodes is active
