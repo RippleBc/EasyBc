@@ -51,7 +51,7 @@ log4js.configure({
     },
     categories: {
         default: { appenders: ["stdout", "consensus"], level: "warn" },
-        consensus: { appenders: ["stdout", "consensus"], level: "info" },
+        consensus: { appenders: ["stdout", "consensus"], level: "warn" },
         p2p: { appenders: ["stdout", "p2p"], level: "info" },
         net: { appenders: ["stdout", "net"], level: "info" },
         mysql: { appenders: ["stdout", "mysql"], level: "info" },
