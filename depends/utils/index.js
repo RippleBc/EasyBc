@@ -334,7 +334,7 @@ exports.intToBuffer = function(value)
 
   const hexString = exports.intToHex(value);
 
-  return new Buffer(exports.padToEven(hexString.slice(2)), "hex");
+  return Buffer.from(exports.padToEven(hexString.slice(2)), "hex");
 }
 
 /**
