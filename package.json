@@ -42,7 +42,8 @@
   },
   "devDependencies": {
     "chai": "^4.2.0",
-    "mocha": "^5.2.0"
+    "mocha": "^5.2.0",
+    "source-map-support": "^0.5.12"
   },
   "scripts": {
     "consensus_server": "pm2 start consensus_server/index.js --no-autorestart --name=consensus",
