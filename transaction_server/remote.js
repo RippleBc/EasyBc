@@ -1,7 +1,7 @@
-const utils = require("../../depends/utils")
-const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../../constant")
-const Account = require("../../depends/account");
-const Block = require("../../depends/block");
+const utils = require("../depends/utils")
+const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../constant")
+const Account = require("../depends/account");
+const Block = require("../depends/block");
 const rp = require("request-promise");
 const assert = require("assert");
 
