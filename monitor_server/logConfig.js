@@ -27,7 +27,7 @@ log4js.configure({
     },
     categories: {
         default: { appenders: ["stdout", "common"], level: "info" },
-        err: { appenders: ["stdout", "err"], level: "info" }
+        err: { appenders: ["stdout", "err"], level: "info" },
         db: { appenders: ["stdout", "db"], level: "info" }
     }
 })

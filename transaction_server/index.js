@@ -61,6 +61,12 @@ const models = process[Symbol.for("models")] = new Models();
   }));
   app.use("/", express.static(path.join(__dirname + "/dist")));
 
+  process.on('uncaughtException', err => {
+    printErrorStack(err);
+    
+    exit(1)
+  })
+  
   const server = app.listen(port, host, function() {
       logger.info(`server listening at http://${host}:${port}`);
   });
@@ -358,9 +364,6 @@ const models = process[Symbol.for("models")] = new Models();
 })().then(() => {
   logger.info("server init ok")
 }).catch(e => {
-
-  errLogger.error("server init failed, exit processor")
-
   printErrorStack(e);
 
   process.exit(1)

@@ -7,12 +7,8 @@ const cors = require('cors')
 const { host, port } = require('./config.json')
 const Models = require('./models');
 
-const log4js = require('./logConfig')
-const logger = log4js.getLogger()
-const dbLogger = log4js.getLogger('db')
-
-const printErrorStack = process[Symbol.for("printErrorStack")] = function(e) {
-  const errLogger = log4js.getLogger("err");
+const printErrorStack = process[Symbol.for("printErrorStack")] = e => {
+	const errLogger = process[Symbol.for('errLogger')];
 
   let err;
 
@@ -42,25 +38,28 @@ const printErrorStack = process[Symbol.for("printErrorStack")] = function(e) {
   }
 }
 
+const log4js = require('./logConfig')
+const logger = process[Symbol.for('logger')] = log4js.getLogger()
+const errLogger = process[Symbol.for('errLogger')] = log4js.getLogger("err");
+const dbLogger = process[Symbol.for('dbLogger')] = log4js.getLogger('db');
 const models = process[Symbol.for('models')] = new Models();
-
-process[Symbol.for('logger')] = logger;
-process[Symbol.for('dbLogger')] = dbLogger;
-process[Symbol.for('cookieSet')] = new Set()
-process[Symbol.for('app')] = app;
+process[Symbol.for('cookieSet')] = new Set();
 
 (async () => {
 	await models.init();
 
 	// express
 	const app = express()
+
+	// set app global
+	process[Symbol.for('app')] = app;
+
 	app.use(cookieParser())
 	app.use(bodyParser.urlencoded({
 	  extended: true
 	}))
 	app.use(bodyParser.json({ limit: '20mb' }))
 	app.use(passport.initialize())
-
 	app.use(cors({
 	  credentials: true, 
 	  origin: 'http://localhost:8080', // web前端服务器地址
@@ -71,7 +70,8 @@ process[Symbol.for('app')] = app;
 	log4js.useLogger(app, logger)
 
 	process.on('uncaughtException', err => {
-	  errlogger.error(err.stack)
+	  printErrorStack(err);
+
 	  exit(1)
 	})
 
@@ -80,19 +80,17 @@ process[Symbol.for('app')] = app;
 	});
 
 	// begin to load module
-	logger.info('begin to user module')
 	require('./user');
-
-	logger.info('begin to block module')
+	logger.info('load user module success')
+	
 	require('./block');
-
-	logger.info('begin to unl module')
+	logger.info('load block module success')
+	
 	require('./unl');
-}).then(e => {
+	logger.info('load unl module success')
+})().then(() => {
 	logger.info("server init success")
 }).catch(e => {
-	errLogger.error("server init failed, exit processor")
-
   printErrorStack(e);
 
   process.exit(1)

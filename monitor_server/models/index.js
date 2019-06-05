@@ -15,6 +15,7 @@ class Model
       host: mysqlConfig.host,
       port: mysqlConfig.port,
       dialect: 'mysql',
+      logging: false,
       pool: {
         max: 5,
         min: 0,
@@ -48,10 +49,6 @@ class Model
     if(created)
     {
       logger.info(`user ${user.username} created`);
-    }
-    else
-    {
-      logger.info(`user ${user.username} has exists`);
     }
   }
 }
