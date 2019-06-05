@@ -8,7 +8,6 @@ const app = process[Symbol.for('app')]
 const models = process[Symbol.for('models')]
 const logger = process[Symbol.for('logger')];
 
-
 setInterval(() => {
   models.Node.findAll().then(nodes => {
     for(let node of nodes.values())

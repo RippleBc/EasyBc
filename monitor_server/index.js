@@ -34,9 +34,11 @@ process[Symbol.for('logger')] = logger;
 process[Symbol.for('dbLogger')] = dbLogger;
 process[Symbol.for('cookieSet')] = new Set()
 process[Symbol.for('app')] = app;
-process[Symbol.for('models')] = new Models();
+const models = process[Symbol.for('models')] = new Models();
 
-process[Symbol.for('models')].init().then(() => {
+(async () => {
+	models.init().then(() => {
+
 	logger.info('begin to user module')
 	require('./user');
 
@@ -45,8 +47,10 @@ process[Symbol.for('models')].init().then(() => {
 
 	logger.info('begin to unl module')
 	require('./unl');
+})()
+
 }).catch(e => {
-	dbLogger.error(`init model throw exception, ${e}`);
+	
 });
 
 

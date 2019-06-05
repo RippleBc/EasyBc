@@ -6,10 +6,16 @@ log4js.configure({
         stdout: {
             type: "stdout"
         },
-        req: {
+        common: {
             type: "dateFile",
-            filename: "monitor_server/logs/req_log/",
-            pattern: "req-yyyy-MM-dd.log",
+            filename: "monitor_server/logs/common_log/",
+            pattern: "common-yyyy-MM-dd.log",
+            alwaysIncludePattern: true
+        },
+        err: {
+            type: "dateFile",
+            filename: "monitor_server/logs/err_log/",
+            pattern: "err-yyyy-MM-dd.log",
             alwaysIncludePattern: true
         },
         db: {
@@ -20,7 +26,8 @@ log4js.configure({
         }
     },
     categories: {
-        default: { appenders: ["stdout", "req"], level: "info" },
+        default: { appenders: ["stdout", "common"], level: "info" },
+        err: { appenders: ["stdout", "err"], level: "info" }
         db: { appenders: ["stdout", "db"], level: "info" }
     }
 })

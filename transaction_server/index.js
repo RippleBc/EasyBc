@@ -354,4 +354,10 @@ const models = process[Symbol.for("models")] = new Models();
       });
     });
   });
-})()
+})().then(() => {
+  logger.info("server init ok")
+}).catch(e => {
+  printErrorStack(`server init failed, ${e}, exit processor`);
+
+  process.exit(1)
+})
