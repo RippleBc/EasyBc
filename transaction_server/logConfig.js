@@ -8,13 +8,20 @@ log4js.configure({
         },
         common: {
             type: "dateFile",
-            filename: "transaction_server/logs/req_log/",
-            pattern: "req-yyyy-MM-dd.log",
+            filename: "transaction_server/logs/common_log/",
+            pattern: "common-yyyy-MM-dd.log",
+            alwaysIncludePattern: true
+        },
+        err: {
+            type: "dateFile",
+            filename: "transaction_server/logs/err_log/",
+            pattern: "err-yyyy-MM-dd.log",
             alwaysIncludePattern: true
         }
     },
     categories: {
-        default: { appenders: ["stdout", "common"], level: "info" }
+        default: { appenders: ["stdout", "common"], level: "info" },
+        err: { appenders: ["stdout", "err"], level: "info" }
     }
 })
  

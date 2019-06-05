@@ -150,7 +150,7 @@ exports.sendTransaction = async function(url, privateKey, from, to, value)
 		assert(typeof privateKey === "string", `sendTransaction, privateKey should be an String, now is ${typeof privateKey}`);
 		if(privateKey.length !== 64)
 		{
-			await Promise.reject("sendTransaction, invalid from address");
+			await Promise.reject("sendTransaction, invalid privateKey");
 		}
 	}
 	if(from)
@@ -193,13 +193,15 @@ exports.sendTransaction = async function(url, privateKey, from, to, value)
 		{
 			await Promise.reject(`sendTransaction, from ${from}'s corresponding privateKey is not exist`)
 		}
+
+		privateKey = privateKey.privateKey;
 	}
 	
 	// try to get from
 	if(from === undefined)
 	{
-		const public = util.privateToPublic(Buffer.from(privateKey, "hex"))
-		from = util.publicToAddress(public).toString("hex");
+		const public = utils.privateToPublic(Buffer.from(privateKey, "hex"))
+		from = utils.publicToAddress(public).toString("hex");
 	}
 
 	// get account
@@ -212,7 +214,7 @@ exports.sendTransaction = async function(url, privateKey, from, to, value)
 	tx.value = Buffer.from(value, "hex");
 	tx.data = "";
 	tx.to = Buffer.from(to, "hex");
-	tx.sign(Buffer.from(privateKey));
+	tx.sign(Buffer.from(privateKey, "hex"));
 
 	// save transaction history
 	await TransactionsHistoryModel.create({

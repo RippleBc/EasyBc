@@ -9,9 +9,39 @@ const Models = require("./models");
 
 const log4js= require("./logConfig");
 const logger = log4js.getLogger();
+const errLogger = log4js.getLogger("err");
 
 const Buffer = utils.Buffer;
 const BN = utils.BN;
+
+const printErrorStack = function(e) {
+    let err;
+
+    if(e)
+    {
+        err = e
+    } 
+    else
+    {
+        try
+        {
+            throw new Error('call stack')
+        }
+        catch(e)
+        {
+            err = e;
+        }
+    }
+    
+    if(e.stack)
+    {
+      errLogger.error(err.stack);
+    }
+    else
+    {
+      errLogger.error(e.toString());
+    }
+}
 
 const models = process[Symbol.for("models")] = new Models();
 
@@ -49,16 +79,13 @@ const models = process[Symbol.for("models")] = new Models();
           code: SUCCESS
       });
     }).catch(e => {
+      printErrorStack(e);
+
       res.send({
           code: OTH_ERR,
           msg: e.toString()
       });
-    }).catch(e => {
-      res.send({
-          code: OTH_ERR,
-          msg: e.toString()
-      });
-    });
+    })
   });
 
   app.get("/generateKeyPiar", function(req, res) {
@@ -71,6 +98,8 @@ const models = process[Symbol.for("models")] = new Models();
           }
       });
     }).catch(e => {
+      printErrorStack(e);
+
       res.send({
           code: OTH_ERR,
           msg: e.toString()
@@ -92,6 +121,8 @@ const models = process[Symbol.for("models")] = new Models();
           data: privateKey
       });
     }).catch(e => {
+      printErrorStack(e);
+      
       res.send({
           code: OTH_ERR,
           msg: e.toString()
@@ -113,6 +144,8 @@ const models = process[Symbol.for("models")] = new Models();
           data: accounts
       });
     }).catch(e => {
+      printErrorStack(e);
+      
       res.send({
           code: OTH_ERR,
           msg: e.toString()
@@ -134,6 +167,8 @@ const models = process[Symbol.for("models")] = new Models();
           data: fromHistory
       });
     }).catch(e => {
+      printErrorStack(e);
+      
       res.send({
           code: OTH_ERR,
           msg: e.toString()
@@ -155,6 +190,8 @@ const models = process[Symbol.for("models")] = new Models();
           data: toHistory
       });
     }).catch(e => {
+      printErrorStack(e);
+      
       res.send({
           code: OTH_ERR,
           msg: e.toString()
@@ -167,13 +204,6 @@ const models = process[Symbol.for("models")] = new Models();
       return res.send({
           code: PARAM_ERR,
           msg: "param error, need url"
-      });
-    }
-    
-    if(!req.query.from) {
-      return res.send({
-          code: PARAM_ERR,
-          msg: "param error, need from"
       });
     }
 
@@ -197,16 +227,13 @@ const models = process[Symbol.for("models")] = new Models();
           data: transactionHash
       });
     }).catch(e => {
+      printErrorStack(e);
+      
       res.send({
           code: OTH_ERR,
           msg: e.toString()
       });
-    }).catch(e => {
-      res.send({
-          code: OTH_ERR,
-          msg: e.toString()
-      });
-    });
+    })
   });
 
   app.get("/getTransactionState", function(req, res) {
@@ -232,6 +259,8 @@ const models = process[Symbol.for("models")] = new Models();
           data: state
       });
     }).catch(e => {
+      printErrorStack(e);
+      
       res.send({
           code: OTH_ERR,
           msg: e.toString()
@@ -254,6 +283,8 @@ const models = process[Symbol.for("models")] = new Models();
           data: transactions
       });
     }).catch(e => {
+      printErrorStack(e);
+      
       res.send({
           code: OTH_ERR,
           msg: e.toString()
@@ -288,6 +319,8 @@ const models = process[Symbol.for("models")] = new Models();
           }
       });
     }).catch(e => {
+      printErrorStack(e);
+      
       res.send({
           code: OTH_ERR,
           msg: e.toString()
@@ -313,6 +346,8 @@ const models = process[Symbol.for("models")] = new Models();
           }
       });
     }).catch(e => {
+      printErrorStack(e);
+      
       res.send({
           code: OTH_ERR,
           msg: e.toString()

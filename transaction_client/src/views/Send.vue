@@ -245,7 +245,7 @@ const TRANSACTION_STATE_NOT_EXISTS = 2
         	value: this.value
         }, response => {
           if (response.code === 0) {
-            this.transactionHashInfo = response.data;
+            this.transactionHash = this.transactionHashInfo = response.data;
             this.transactionInfoVisible = true;
 
             this.getFromHistory();
