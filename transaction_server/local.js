@@ -81,7 +81,7 @@ exports.getPrivateKey = async function(address)
 		}
 	})
 
-	if(privateKey === undefined)
+	if(privateKey === undefined || privateKey === null)
 	{
 		await Promise.reject(`address: ${address} has no corresponding privateKey`)
 	}
@@ -189,7 +189,7 @@ exports.sendTransaction = async function(url, privateKey, from, to, value)
 			}
 		})
 
-		if(privateKey === undefined)
+		if(privateKey === undefined || privateKey === null)
 		{
 			await Promise.reject(`sendTransaction, from ${from}'s corresponding privateKey is not exist`)
 		}
