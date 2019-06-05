@@ -1,5 +1,4 @@
 const mysqlConfig = require("../config.json").mysql;
-const process = require('process');
 const Sequelize = require('sequelize');
 const userModelConfig = require('./user');
 const nodeModelConfig = require('./node');

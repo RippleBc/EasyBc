@@ -9,38 +9,39 @@ const Models = require("./models");
 
 const log4js= require("./logConfig");
 const logger = log4js.getLogger();
-const errLogger = log4js.getLogger("err");
 
 const Buffer = utils.Buffer;
 const BN = utils.BN;
 
 const printErrorStack = function(e) {
-    let err;
+  const errLogger = log4js.getLogger("err");
 
-    if(e)
-    {
-        err = e
-    } 
-    else
-    {
-        try
-        {
-            throw new Error('call stack')
-        }
-        catch(e)
-        {
-            err = e;
-        }
-    }
-    
-    if(e.stack)
-    {
-      errLogger.error(err.stack);
-    }
-    else
-    {
-      errLogger.error(e.toString());
-    }
+  let err;
+
+  if(e)
+  {
+      err = e
+  } 
+  else
+  {
+      try
+      {
+          throw new Error('call stack')
+      }
+      catch(e)
+      {
+          err = e;
+      }
+  }
+  
+  if(e.stack)
+  {
+    errLogger.error(err.stack);
+  }
+  else
+  {
+    errLogger.error(e.toString());
+  }
 }
 
 const models = process[Symbol.for("models")] = new Models();
@@ -357,7 +358,10 @@ const models = process[Symbol.for("models")] = new Models();
 })().then(() => {
   logger.info("server init ok")
 }).catch(e => {
-  printErrorStack(`server init failed, ${e}, exit processor`);
+
+  errLogger.error("server init failed, exit processor")
+
+  printErrorStack(e);
 
   process.exit(1)
 })

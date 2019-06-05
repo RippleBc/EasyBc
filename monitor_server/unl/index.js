@@ -1,5 +1,4 @@
 const checkCookie = require('../user/checkCookie')
-const process = require('process')
 const { SUCCESS, PARAM_ERR, OTH_ERR } = require('../../constant')
 const rp = require("request-promise");
 const assert = require("assert");
