@@ -109,7 +109,7 @@ class Mysql
 
   /**
    * @param {Buffer} number
-   * @return {Block}
+   * @return {String}
    */
   async getBlockByNumber(number)
   {
@@ -124,7 +124,7 @@ class Mysql
   
     if(block)
     {
-      return new Block(Buffer.from(block.data, "hex"));
+      return block.data;
     }
   }
 
@@ -207,11 +207,11 @@ class Mysql
     {
       assert(typeof to === 'string', `Mysql getTransactions, to should be an String, now is ${typeof to}`);
     }
-    if(beginTime)
+    if(beginTime !== undefined)
     {
       assert(typeof beginTime === 'number', `Mysql getTransactions, beginTime should be an Number, now is ${typeof beginTime}`);
     }
-    if(endTime)
+    if(endTime !== undefined)
     {
       assert(typeof endTime === 'number', `Mysql getTransactions, endTime should be an Number, now is ${typeof endTime}`);
     }
@@ -219,8 +219,8 @@ class Mysql
     const now = new Date()
     const where = {
       createdAt: {
-        [Op.gt]: beginTime ? new Date(beginTime) : new Date(now - 24 * 60 * 60 * 1000),
-        [Op.lt]: endTime ? new Date(endTime) : now,
+        [Op.gt]: beginTime !== undefined ? new Date(beginTime) : new Date(now - 24 * 60 * 60 * 1000),
+        [Op.lt]: endTime !== undefined ? new Date(endTime) : now,
       }
     };
     if(hash)
@@ -267,7 +267,7 @@ class Mysql
    */
   async getLogs({offset, limit, type, title, beginTime, endTime})
   {
-    if(type)
+    if(type !== undefined)
     {
       assert(typeof type === 'string', `Mysql getLogs, type should be an String, now is ${typeof type}`);
     }
@@ -275,11 +275,11 @@ class Mysql
     {
       assert(typeof title === 'string', `Mysql getLogs, title should be an String, now is ${typeof title}`);
     }
-    if(beginTime)
+    if(beginTime !== undefined)
     {
       assert(typeof beginTime === 'number', `Mysql getLogs, beginTime should be an Number, now is ${typeof beginTime}`);
     }
-    if(endTime)
+    if(endTime !== undefined)
     {
       assert(typeof endTime === 'number', `Mysql getLogs, endTime should be an Number, now is ${typeof endTime}`);
     }
@@ -287,8 +287,8 @@ class Mysql
     const now = new Date()
     const where = {
       createdAt: {
-        [Op.gt]: beginTime ? new Date(beginTime) : new Date(now - 24 * 60 * 60 * 1000),
-        [Op.lt]: endTime ? new Date(endTime) : now,
+        [Op.gt]: beginTime !== undefined ? new Date(beginTime) : new Date(now - 24 * 60 * 60 * 1000),
+        [Op.lt]: endTime !== undefined ? new Date(endTime) : now,
       }
     };
     if(type)
@@ -315,7 +315,7 @@ class Mysql
    */
   async getTimeConsume({offset, limit, type, stage, beginTime, endTime})
   {
-    if(type)
+    if(type !== undefined)
     {
       assert(typeof type === 'number', `Mysql getTimeConsume, type should be an Number, now is ${typeof type}`);
     }
@@ -323,11 +323,11 @@ class Mysql
     {
       assert(typeof stage === 'number', `Mysql getTimeConsume, stage should be an Number, now is ${typeof stage}`);
     }
-    if(beginTime)
+    if(beginTime !== undefined)
     {
       assert(typeof beginTime === 'number', `Mysql getTimeConsume, beginTime should be an Number, now is ${typeof beginTime}`);
     }
-    if(endTime)
+    if(endTime !== undefined)
     {
       assert(typeof endTime === 'number', `Mysql getTimeConsume, endTime should be an Number, now is ${typeof endTime}`);
     }
@@ -335,8 +335,8 @@ class Mysql
     const now = new Date()
     const where = {
       createdAt: {
-        [Op.gt]: beginTime ? new Date(beginTime) : new Date(now - 24 * 60 * 60 * 1000),
-        [Op.lt]: endTime ? new Date(endTime) : now,
+        [Op.gt]: beginTime !== undefined ? new Date(beginTime) : new Date(now - 24 * 60 * 60 * 1000),
+        [Op.lt]: endTime !== undefined ? new Date(endTime) : now,
       }
     };
     if(type)
@@ -359,11 +359,11 @@ class Mysql
   {
     assert(typeof type === 'number', `Mysql getAbnormalNodes, type should be an Number, now is ${typeof type}`);
 
-    if(beginTime)
+    if(beginTime !== undefined)
     {
       assert(typeof beginTime === 'number', `Mysql getAbnormalNodes, beginTime should be an Number, now is ${typeof beginTime}`);
     }
-    if(endTime)
+    if(endTime !== undefined)
     {
       assert(typeof endTime === 'number', `Mysql getAbnormalNodes, endTime should be an Number, now is ${typeof endTime}`);
     }
@@ -371,8 +371,8 @@ class Mysql
     const now = new Date()
     const where = {
       createdAt: {
-        [Op.gt]: beginTime ? new Date(beginTime) : new Date(now - 24 * 60 * 60 * 1000),
-        [Op.lt]: endTime ? new Date(endTime) : now,
+        [Op.gt]: beginTime !== undefined ? new Date(beginTime) : new Date(now - 24 * 60 * 60 * 1000),
+        [Op.lt]: endTime !== undefined ? new Date(endTime) : now,
       }
     };
     if(type)

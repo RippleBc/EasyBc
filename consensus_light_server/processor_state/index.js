@@ -42,7 +42,7 @@ app.post('/status', (req, res) => {
 });
 
 app.post('/logs', (req, res) => {
-	if(!req.body.offset)
+	if(undefined === req.body.offset)
   {
       return res.json({
           code: PARAM_ERR,
@@ -50,7 +50,7 @@ app.post('/logs', (req, res) => {
       });
   }
 
-  if(!req.body.limit)
+  if(undefined === req.body.limit)
   {
       return res.json({
           code: PARAM_ERR,
@@ -92,7 +92,7 @@ app.post('/logs', (req, res) => {
 })
 
 app.post("/timeConsume", (req, res) => {
-	if(!req.body.offset)
+	if(undefined === req.body.offset)
   {
       return res.json({
           code: PARAM_ERR,
@@ -100,7 +100,7 @@ app.post("/timeConsume", (req, res) => {
       });
   }
 
-  if(!req.body.limit)
+  if(undefined === req.body.limit)
   {
       return res.json({
           code: PARAM_ERR,
@@ -139,7 +139,7 @@ app.post("/timeConsume", (req, res) => {
 })
 
 app.post("/abnormalNodes", (req, res) => {
-	if(!req.body.offset)
+	if(undefined === req.body.offset)
   {
       return res.json({
           code: PARAM_ERR,
@@ -147,7 +147,7 @@ app.post("/abnormalNodes", (req, res) => {
       });
   }
 
-  if(!req.body.limit)
+  if(undefined === req.body.limit)
   {
       return res.json({
           code: PARAM_ERR,

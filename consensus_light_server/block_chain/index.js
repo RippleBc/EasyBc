@@ -1,6 +1,7 @@
 const { QUERY_MAX_LIMIT, SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS } = require("../../constant");
 const app = process[Symbol.for('app')];
 const Transaction = require("../../depends/transaction");
+const Block = require("../../depends/block");
 
 const mysql = process[Symbol.for("mysql")];
 const printErrorStack = process[Symbol.for("printErrorStack")]
@@ -65,7 +66,8 @@ app.post("/getAccountInfo", function(req, res) {
             return;
         }
 
-        const block = await mysql.getBlockByNumber(blockChainHeight);
+        const blockRawData = await mysql.getBlockByNumber(blockChainHeight);
+        const block = new Block(Buffer.from(blockRawData, "hex"));
         const blockHeight = block.header.number.toString("hex");
         const stateRoot = block.header.stateRoot.toString("hex");
         
@@ -131,7 +133,7 @@ app.post("/getTransactionState", function(req, res) {
 });
 
 app.post("/getTransactions", function(req, res) {
-    if(!req.body.offset)
+    if(undefined === req.body.offset)
     {
         return res.json({
             code: PARAM_ERR,
@@ -139,7 +141,7 @@ app.post("/getTransactions", function(req, res) {
         });
     }
 
-    if(!req.body.limit)
+    if(undefined === req.body.limit)
     {
         return res.json({
             code: PARAM_ERR,
@@ -180,7 +182,7 @@ app.post("/getTransactions", function(req, res) {
 });
 
 app.post("/getBlockByNumber", function(req, res) {
-    if(!req.body.number) {
+    if(undefined === req.body.number) {
         return res.json({
             code: PARAM_ERR,
             msg: "getBlockByNumber, param error, need number"
@@ -193,7 +195,7 @@ app.post("/getBlockByNumber", function(req, res) {
             return res.json({
                 code: SUCCESS,
                 msg: "",
-                data: block.serialize().toString("hex")
+                data: block
             });
         }
        
@@ -224,7 +226,7 @@ app.post("/getLastestBlock", function(req, res) {
             return res.json({
                 code: SUCCESS,
                 msg: "",
-                data: block.serialize().toString("hex")
+                data: block
             });
         }
       
