@@ -139,14 +139,20 @@ module.exports.getLastestBlock = async function(url)
 	return promise;
 }
 
-module.exports.getTransactions = async function(url, hash, from, to, beginTime, endTime) {
+module.exports.getTransactions = async function(url, offset, limit, hash, from, to, beginTime, endTime) {
 	assert(typeof url === "string", `net getTransactions, url should be a String, now is ${typeof url}`);
+	assert(/^\d+$/.test(offset), `net getTransactions, url should be a String, now is ${typeof url}`);
+	assert(/^\d+$/.test(limit), `net getTransactions, url should be a String, now is ${typeof url}`);
+
+	offset = parseInt(offset)
+	limit = parseInt(limit)
 
 	const options = {
     method: "POST",
     uri: `${url}/getTransactions`,
     body: {
-			from: from
+			offset: offset,
+			limit: limit
 		},
     json: true
 	};

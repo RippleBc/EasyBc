@@ -284,7 +284,22 @@ const models = process[Symbol.for("models")] = new Models();
       return;
     }
 
-    getTransactions(req.query.url, req.query.hash, req.query.from, req.query.to, req.query.beginTime, req.query.endTime).then(transactions => {
+    if(!req.query.offset) {
+      res.send({
+          code: PARAM_ERR,
+          msg: "param error, need offset"
+      });
+      return;
+    }
+
+    if(!req.query.limit) {
+      res.send({
+          code: PARAM_ERR,
+          msg: "param error, need limit"
+      });
+      return;
+    }
+    getTransactions(req.query.url, req.query.offset, req.query.limit, req.query.hash, req.query.from, req.query.to, req.query.beginTime, req.query.endTime).then(transactions => {
       res.send({
           code: SUCCESS,
           data: transactions
