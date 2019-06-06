@@ -1,5 +1,6 @@
 const checkCookie = require('../user/checkCookie')
-const { SUCCESS, PARAM_ERR, OTH_ERR, GET_RESOURCE_TIME_INTERVAL, MAX_RESOURCE_NUM, UPDATE_NODES_TIME_INTERVAL } = require('../../constant')
+const { SUCCESS, PARAM_ERR, OTH_ERR } = require('../../constant')
+const { GET_RESOURCE_TIME_INTERVAL, MAX_RESOURCE_NUM, UPDATE_NODES_TIME_INTERVAL } = require('../constant')
 const rp = require("request-promise");
 const assert = require("assert");
 
@@ -10,32 +11,40 @@ const printErrorStack = process[Symbol.for("printErrorStack")]
 
 var nodes = [] 
 
-const updateNodes = async () => {
-  nodes = await Node.findAll();
-  
-  setTimeout(updateNodes, UPDATE_NODES_TIME_INTERVAL)
-}
+setInterval(() => {
+  Node.findAll().then(data => {
+    logger.info("updateNodes success")
 
-const getCpuAndMemoryConsume = async () => {
-  for(let node of nodes.values())
-  {
-    const response = await rp({
-      method: "POST",
-      uri: `${node.host}:${node.port}/status`,
-      json: true // Automatically stringifies the body to JSON
-    });
+    nodes = data;
+  }).catch(e => {
+    printErrorStack(e)
+  });
+}, UPDATE_NODES_TIME_INTERVAL).unref();
 
-    if(response.code !== SUCCESS)
+setInterval(() => {
+  (async () => {
+    for(let node of nodes.values())
     {
-        await Promise.reject(response.msg) 
+      const response = await rp({
+        method: "POST",
+        uri: `${node.host}:${node.port}/status`,
+        json: true // Automatically stringifies the body to JSON
+      });
+
+      if(response.code !== SUCCESS)
+      {
+          await Promise.reject(response.msg) 
+      }
+
+      await Cpu.create({address: node.address, consume: response.data.cpu});
+      await Memory.create({address: node.address, consume: response.data.memory});
     }
-
-    await Cpu.create({address: node.address, consume: response.data.cpu});
-    await Memory.create({address: node.address, consume: response.data.memory});
-  }
-
-  setTimeout(getCpuAndMemoryConsume, GET_RESOURCE_TIME_INTERVAL)
-}
+  })().then(() => {
+    logger.info("getCpuAndMemoryConsume success")
+  }).catch(e => {
+    printErrorStack(e);
+  })
+}, GET_RESOURCE_TIME_INTERVAL).unref();
 
 app.get('/nodes', checkCookie, (req, res) => {
 	Node.findAll().then(nodes => {
