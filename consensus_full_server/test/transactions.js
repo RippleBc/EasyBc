@@ -20,6 +20,10 @@ const tx = new Transaction({
 tx.sign(PRIVATE_KEY)
 const transactionRaw = tx.serialize().toString("hex")
 
+//
+let candidateRaw;
+
+//
 describe("test transactions speed", () => {
 	it("check pack transactions", done => {
 		console.time("pack transactions")
@@ -31,15 +35,39 @@ describe("test transactions speed", () => {
 		transactionRawSet = transactionRawSet.map(transactionRaw => {
 			return Buffer.from(transactionRaw, "hex");
 		})
-			
+		
+		console.time("pack transactions, encode")
 		// init candidate
 		const candidate = new Candidate({
 			transactions: rlp.encode(transactionRawSet)
 		});
 		candidate.sign(PRIVATE_KEY);
+		
+		console.timeEnd("pack transactions, encode")
+
+		candidateRaw = candidate.serialize().toString("hex")
 
 		console.timeEnd("pack transactions")
 
 		done();
+	})
+
+	it("check merge candidate", done => {
+		console.time("merge candidate")
+
+		const candidateSet = new Array(5).fill(new Candidate(Buffer.from(candidateRaw, "hex")))
+
+		const transactionRawsMap = new Map();
+		candidateSet.forEach(candidate => {
+			const rawTransactions = rlp.decode(candidate.transactions);
+
+			rawTransactions.forEach(rawTransaction => {
+				transactionRawsMap.set(rawTransaction.toString("hex"), rawTransaction);
+			});
+		});
+
+		console.timeEnd("merge candidate")
+
+		done()
 	})
 })
