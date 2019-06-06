@@ -132,7 +132,7 @@ class Mysql
    * @param number {String}
    * @param stateRoot {String}
    * @param address {String}
-   * @return {Account}
+   * @return {String}
    */
   async getAccount(number, stateRoot, address)
   {
@@ -160,7 +160,7 @@ class Mysql
 
     if(account)
     {
-      return new Account(Buffer.from(account.data, 'hex'))
+      return account.data
     }
   }
 
@@ -193,7 +193,7 @@ class Mysql
    *  @prop {Number} beginTime
    *  @prop {Number} endTime
    */
-  async getTransactions({hash, from, to, beginTime, endTime})
+  async getTransactions({offset, limit, hash, from, to, beginTime, endTime})
   {
     if(hash)
     {
@@ -237,7 +237,9 @@ class Mysql
     }
     return await this.Transaction.findAll({
       where: where,
-      order: [['id', 'DESC' ]]
+      order: [['id', 'DESC' ]],
+      offset: offset,
+      limit: limit
     });
   }
 
@@ -263,7 +265,7 @@ class Mysql
    *  @prop {Number} beginTime
    *  @prop {Number} endTime
    */
-  async getLogs({type, title, beginTime, endTime})
+  async getLogs({offset, limit, type, title, beginTime, endTime})
   {
     if(type)
     {
@@ -299,7 +301,8 @@ class Mysql
     }
     return await this.Log.findAndCountAll({
       where: where,
-      limit: 500,
+      limit: limit,
+      offset: offset,
       order: [['id', 'DESC' ]]
     });
   }
@@ -310,7 +313,7 @@ class Mysql
    *  @prop {Number} beginTime
    *  @prop {Number} endTime
    */
-  async getTimeConsume({type, stage, beginTime, endTime})
+  async getTimeConsume({offset, limit, type, stage, beginTime, endTime})
   {
     if(type)
     {
@@ -346,12 +349,13 @@ class Mysql
     }
     return await this.TimeConsume.findAll({
       where: where,
-      limit: 500,
+      limit: limit,
+      offset: offset,
       order: [['id', 'DESC' ]]
     });
   }
 
-  async getAbnormalNodes({type, beginTime, endTime})
+  async getAbnormalNodes({offset, limit, type, beginTime, endTime})
   {
     assert(typeof type === 'number', `Mysql getAbnormalNodes, type should be an Number, now is ${typeof type}`);
 
@@ -381,7 +385,8 @@ class Mysql
       raw: true,
       where: where,
       group: ['address'],
-      limit: 500
+      limit: limit,
+      offset: offset
     });
   }
 }

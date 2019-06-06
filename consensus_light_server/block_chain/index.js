@@ -1,17 +1,16 @@
-const { SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS } = require("../../constant");
-const process = require('process');
+const { QUERY_MAX_LIMIT, SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS } = require("../../constant");
 const app = process[Symbol.for('app')];
 const Transaction = require("../../depends/transaction");
 
 const mysql = process[Symbol.for("mysql")];
+const printErrorStack = process[Symbol.for("printErrorStack")]
 
 app.post("/sendTransaction", function(req, res) {
     if(!req.body.tx) {
-        res.json({
+        return res.json({
             code: PARAM_ERR,
             msg: "param error, need tx"
         });
-        return;
     }
 
     let transaction;
@@ -24,12 +23,12 @@ app.post("/sendTransaction", function(req, res) {
             let {state, msg} = transaction.validate();
             if(!state)
             {
-                return Promise.reject(`sendTransaction, transaction invalid failed, ${msg}`);
+                await Promise.reject(`sendTransaction, transaction invalid failed, ${msg}`);
             }
         }
         catch(e)
         {
-            return Promise.reject(`sendTransaction, new Transaction() failed, ${e}`)
+            await Promise.reject(`sendTransaction, new Transaction() failed, ${e}`)
         }
 
         await mysql.saveRawTransaction(transaction.hash().toString('hex'), req.body.tx);
@@ -39,6 +38,8 @@ app.post("/sendTransaction", function(req, res) {
             msg: ''
         });
     }).catch(e => {
+        printErrorStack(e)
+
         res.json({
             code: OTH_ERR,
             msg: `sendTransaction, throw exception, ${e}`
@@ -75,7 +76,7 @@ app.post("/getAccountInfo", function(req, res) {
             res.json({
                 code: SUCCESS,
                 msg: "",
-                data: account.serialize().toString("hex")
+                data: account
             });
         }
         else
@@ -86,6 +87,8 @@ app.post("/getAccountInfo", function(req, res) {
             });
         }
     }).catch(e => {
+        printErrorStack(e)
+
         res.json({
             code: OTH_ERR,
             msg: e.toString()
@@ -117,33 +120,63 @@ app.post("/getTransactionState", function(req, res) {
             msg: "",
             data: TRANSACTION_STATE_PACKED
         });
-    });
+    }).catch(e => {
+        printErrorStack(e)
+
+        res.json({
+            code: OTH_ERR,
+            msg: e.toString()
+        });
+    });;
 });
 
 app.post("/getTransactions", function(req, res) {
-    mysql.getTransactions({ 
+    if(!req.body.offset)
+    {
+        return res.json({
+            code: PARAM_ERR,
+            msg: "param error, need offset"
+        });
+    }
+
+    if(!req.body.limit)
+    {
+        return res.json({
+            code: PARAM_ERR,
+            msg: "param error, need limit"
+        });
+    }
+
+    if(req.body.limit >= QUERY_MAX_LIMIT)
+    {
+        return res.json({
+            code: PARAM_ERR,
+            msg: `param error, limit must little than ${QUERY_MAX_LIMIT}`
+        })
+    }
+
+    mysql.getTransactions({
+        offset: req.body.offset,
+        limit: req.body.limit,
         hash: req.body.hash, 
         from: req.body.from, 
         to: req.body.to, 
         beginTime: req.body.beginTime, 
         endTime: req.body.endTime
     }).then(transactions => {
-        return res.json({
+        res.json({
             code: SUCCESS,
             msg: "",
-            data: transactions.map(tx => {
-                return {
-                    id: tx.id,
-                    hash: tx.hash.toString('hex'),
-                    nonce: tx.nonce.toString('hex'),
-                    from: tx.from.toString('hex'),
-                    to: tx.to.toString('hex'),
-                    value: tx.value.toString('hex'),
-                    createdAt: tx.createdAt
-                }
-            })
+            data: transactions
         });
-    });
+    }).catch(e => {
+        printErrorStack(e)
+
+        res.json({
+            code: OTH_ERR,
+            msg: e.toString()
+        });
+    });;
 });
 
 app.post("/getBlockByNumber", function(req, res) {
@@ -164,11 +197,18 @@ app.post("/getBlockByNumber", function(req, res) {
             });
         }
        
-        return res.json({
+        res.json({
             code: OTH_ERR,
             msg: `getBlockByNumber, block not exist, number ${req.body.number}`
         });
-    });
+    }).catch(e => {
+        printErrorStack(e)
+
+        res.json({
+            code: OTH_ERR,
+            msg: e.toString()
+        });
+    });;
 });
 
 app.post("/getLastestBlock", function(req, res) {
@@ -187,15 +227,15 @@ app.post("/getLastestBlock", function(req, res) {
                 data: block.serialize().toString("hex")
             });
         }
-        else
-        {
-            return res.json({
-                code: SUCCESS,
-                msg: ""
-            });
-        }
+      
+        res.json({
+            code: SUCCESS,
+            msg: ""
+        });
     }).catch(e => {
-        return res.json({
+        printErrorStack(e)
+
+        res.json({
             code: OTH_ERR,
             msg: e.toString()
         });
