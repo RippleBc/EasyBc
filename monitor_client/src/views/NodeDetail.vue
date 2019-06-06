@@ -184,7 +184,9 @@
                 this.$axios.get("timeConsume", {
                     url: `${this.currentNode.host}:${this.currentNode.port}`,
                     beginTime: Date.now() - 2 * 60 * 60 * 1000,
-                    endTime: Date.now()
+                    endTime: Date.now(),
+                    offset: 0,
+                    limit: 499
                 }).then(res => {
                     if(res.code !== 0)
                     {
@@ -206,7 +208,9 @@
                     url: `${this.currentNode.host}:${this.currentNode.port}`,
                     type: 1,
                     beginTime: Date.now() - 2 * 60 * 60 * 1000,
-                    endTime: Date.now()
+                    endTime: Date.now(),
+                    offset: 0,
+                    limit: 499
                 }).then(res => {
                     if(res.code !== 0)
                     {
@@ -227,7 +231,9 @@
             getCheatedNodes() {
                 this.$axios.get("abnormalNodes", {
                     url: `${this.currentNode.host}:${this.currentNode.port}`,
-                    type: 2
+                    type: 2,
+                    offset: 0,
+                    limit: 499
                 }).then(res => {
                     if(res.code !== 0)
                     {

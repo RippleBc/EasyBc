@@ -293,6 +293,8 @@ app.get('/nodeStatus', checkCookie, (req, res) => {
 
 app.get('/logs', checkCookie, (req, res) => {
   const url = req.query.url;
+  let offset = req.query.offset;
+  let limit = req.query.limit;
   const type = req.query.type;
   const title = req.query.title;
   const beginTime = req.query.beginTime;
@@ -300,13 +302,20 @@ app.get('/logs', checkCookie, (req, res) => {
 
   assert(typeof url === 'string', `url should be a String, now is ${typeof url}`);
   assert(typeof type === 'string', `type should be a String, now is ${typeof type}`);
+  assert(/^\d+$/.test(offset), `offset should be a Number, now is ${typeof offset}`);
+  assert(/^\d+$/.test(limit), `limit should be a Number, now is ${typeof limit}`);
+
+  offset = parseInt(offset)
+  limit = parseInt(limit);
 
   (async function() {
     let options = {
       method: "POST",
       uri: `${url}/logs`,
       body: {
-        type: type
+        type: type,
+        offset: offset,
+        limit: limit
       },
       json: true // Automatically stringifies the body to JSON
     };
@@ -352,18 +361,27 @@ app.get('/logs', checkCookie, (req, res) => {
 
 app.get('/timeConsume', checkCookie, (req, res) => {
   const url = req.query.url;
+  let offset = req.query.offset;
+  let limit = req.query.limit;
   const type = req.query.type;
   const stage = req.query.stage;
   const beginTime = req.query.beginTime;
   const endTime = req.query.endTime;
 
   assert(typeof url === 'string', `url should be a String, now is ${typeof url}`);
+  assert(/^\d+$/.test(offset), `offset should be a Number, now is ${typeof offset}`)
+  assert(/^\d+$/.test(limit), `limit should be a Number, now is ${typeof limit}`);
+
+  offset = parseInt(offset);
+  limit = parseInt(limit);
 
   (async function() {
     let options = {
       method: "POST",
       uri: `${url}/timeConsume`,
       body: {
+        offset: offset,
+        limit: limit
       },
       json: true // Automatically stringifies the body to JSON
     };
@@ -414,17 +432,26 @@ app.get('/timeConsume', checkCookie, (req, res) => {
 
 app.get('/abnormalNodes', checkCookie, (req, res) => {
   const url = req.query.url;
+  let offset = req.query.offset;
+  let limit = req.query.limit;
   const type = req.query.type;
   const beginTime = req.query.beginTime;
   const endTime = req.query.endTime;
 
   assert(typeof url === 'string', `url should be a String, now is ${typeof url}`);
+  assert(/^\d+$/.test(offset), `offset should be a Number, now is ${typeof offset}`)
+  assert(/^\d+$/.test(limit), `limit should be a Number, now is ${typeof limit}`);
+
+  offset = parseInt(offset);
+  limit = parseInt(limit);
 
   (async function() {
     let options = {
       method: "POST",
       uri: `${url}/abnormalNodes`,
       body: {
+        offset: offset,
+        limit: limit
       },
       json: true // Automatically stringifies the body to JSON
     };

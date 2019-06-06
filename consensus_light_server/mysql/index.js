@@ -195,6 +195,9 @@ class Mysql
    */
   async getTransactions({offset, limit, hash, from, to, beginTime, endTime})
   {
+    assert(typeof offset === 'number', `Mysql getTransactions, offset should be an Number, now is ${typeof offset}`);
+    assert(typeof limit === 'number', `Mysql getTransactions, limit should be an Number, now is ${typeof limit}`);
+    
     if(hash)
     {
       assert(typeof hash === 'string', `Mysql getTransactions, hash should be an String, now is ${typeof hash}`);
@@ -267,6 +270,9 @@ class Mysql
    */
   async getLogs({offset, limit, type, title, beginTime, endTime})
   {
+    assert(typeof offset === 'number', `Mysql getLogs, offset should be an Number, now is ${typeof offset}`);
+    assert(typeof limit === 'number', `Mysql getLogs, limit should be an Number, now is ${typeof limit}`);
+
     if(type !== undefined)
     {
       assert(typeof type === 'string', `Mysql getLogs, type should be an String, now is ${typeof type}`);
@@ -315,6 +321,9 @@ class Mysql
    */
   async getTimeConsume({offset, limit, type, stage, beginTime, endTime})
   {
+    assert(typeof offset === 'number', `Mysql getTimeConsume, offset should be an Number, now is ${typeof offset}`);
+    assert(typeof limit === 'number', `Mysql getTimeConsume, limit should be an Number, now is ${typeof limit}`);
+
     if(type !== undefined)
     {
       assert(typeof type === 'number', `Mysql getTimeConsume, type should be an Number, now is ${typeof type}`);
@@ -358,6 +367,8 @@ class Mysql
   async getAbnormalNodes({offset, limit, type, beginTime, endTime})
   {
     assert(typeof type === 'number', `Mysql getAbnormalNodes, type should be an Number, now is ${typeof type}`);
+    assert(typeof offset === 'number', `Mysql getAbnormalNodes, offset should be an Number, now is ${typeof offset}`);
+    assert(typeof limit === 'number', `Mysql getAbnormalNodes, limit should be an Number, now is ${typeof limit}`);
 
     if(beginTime !== undefined)
     {
