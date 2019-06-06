@@ -11,3 +11,6 @@ module.exports.TRANSACTION_STATE_NOT_EXISTS = 2;
 
 //
 module.exports.BLOCK_CHAIN_DATA_DIR = path.join(__dirname, "./block_chain_data");
+
+//
+module.exports.QUERY_MAX_LIMIT = 500

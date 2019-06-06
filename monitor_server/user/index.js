@@ -1,4 +1,3 @@
-const process = require('process')
 const passport = require('passport')
 const LocalStrategy = require('passport-local').Strategy;
 const { users } = require('../constant')
@@ -11,7 +10,8 @@ const assert = require('assert')
 
 const app = process[Symbol.for('app')]
 const cookieSet = process[Symbol.for('cookieSet')];
-const models = process[Symbol.for('models')]
+const { User } = process[Symbol.for('models')]
+const printErrorStack = process[Symbol.for("printErrorStack")]
 
 // password
 passport.use(new LocalStrategy({
@@ -20,8 +20,7 @@ passport.use(new LocalStrategy({
   },
 
   function(username, password, done) {
-
-    models.User.findOne({
+    User.findOne({
       where: {
         username: username
       }
@@ -37,12 +36,14 @@ passport.use(new LocalStrategy({
       }
 
       done(null, null)
+    }).catch(e => {
+      done(e);
     })
   }
 ));
 
 app.get('/users', checkCookie, function(req, res) {
-  models.User.findAll().then(users => {
+  User.findAll().then(users => {
     const formattedUsers = users.map(user => {
       return { id: user.id, username: user.username, privilege: user.privilege, remarks: user.remarks, createdAt: user.createdAt, updatedAt: user.updatedAt }
     })
@@ -51,6 +52,13 @@ app.get('/users', checkCookie, function(req, res) {
       code: SUCCESS,
       data: formattedUsers
     });
+  }).catch(e => {
+    printErrorStack(e);
+
+    res.json({
+      code: OTH_ERR,
+      data: e.toString()
+    })
   })
 });
 
@@ -92,7 +100,7 @@ app.post('/addUser', checkCookie, function(req, res) {
     })
   }
 
-  models.User.findOrCreate({
+  User.findOrCreate({
     where: {
       username: username
     },
@@ -113,7 +121,14 @@ app.post('/addUser', checkCookie, function(req, res) {
     res.json({
       code: SUCCESS
     });
-  });
+  }).catch(e => {
+    printErrorStack(e);
+
+    res.json({
+      code: OTH_ERR,
+      data: e.toString()
+    })
+  })
 })
 
 app.post('/modifyUser', checkCookie, function(req, res) {
@@ -155,7 +170,7 @@ app.post('/modifyUser', checkCookie, function(req, res) {
   }
 
   (async () => {
-    const user = await models.User.findOne({where: {
+    const user = await User.findOne({where: {
       username: username
     }});
 
@@ -182,7 +197,14 @@ app.post('/modifyUser', checkCookie, function(req, res) {
     res.json({
       code: SUCCESS
     });
-  })();  
+  })().catch(e => {
+    printErrorStack(e);
+
+    res.json({
+      code: OTH_ERR,
+      data: e.toString()
+    })
+  })  
 })
 
 app.post('/deleteUser', checkCookie, function(req, res) {
@@ -205,7 +227,7 @@ app.post('/deleteUser', checkCookie, function(req, res) {
       })
     }
 
-    const user = await models.User.findOne({where: {
+    const user = await User.findOne({where: {
       username: username
     }});
 
@@ -222,16 +244,25 @@ app.post('/deleteUser', checkCookie, function(req, res) {
     res.json({
       code: SUCCESS
     });
-  })();
+  })().catch(e => {
+    printErrorStack(e);
+
+    res.json({
+      code: OTH_ERR,
+      data: e.toString()
+    })
+  })  
 })
 
 app.post('/login', function(req, res, next) {
   passport.authenticate('local', function(err, info) {
     if (err) 
-    { 
+    {
+      printErrorStack(err);
+
       return res.json({
         code: ERR_SERVER_INNER,
-        msg: `login failed, inner err, ${err}`
+        msg: `login failed, throw err, ${err.toString()}`
       });
     }
 

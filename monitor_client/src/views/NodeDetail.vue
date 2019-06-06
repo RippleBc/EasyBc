@@ -70,7 +70,7 @@
             timeoutNodesSettings:{
                 axisSite: { right: ['超时频率'] },
                 yAxisType: ['normal', 'normal'],
-                yAxisName: ['超时次数', '超时频率']
+                yAxisName: ['超时次数', '超时频率/小时                               ']
             },
             cheatedNodesData:{
                 columns: ['address', 'times', 'frequency'],
@@ -79,18 +79,18 @@
             cheatedNodesSettings:{
                 axisSite: { right: ['作弊频率'] },
                 yAxisType: ['normal', 'normal'],
-                yAxisName: ['作弊次数', '作弊频率']
+                yAxisName: ['作弊次数', '作弊频率/小时                                ']
             },
             timeConsume: {
-                columns: ['createTime', 'consume'],
+                columns: ['createdAt', 'consume'],
                 rows: []
             },
             cpuConsume:{
-                columns: ['createTime', 'cpu'],
+                columns: ['createdAt', 'consume'],
                 rows: []
             },
             memoryConsume:{
-                columns: ['createTime', 'memory'],
+                columns: ['createdAt', 'consume'],
                 rows: []
             }
         }),
@@ -167,14 +167,14 @@
                     {
                         this.cpuConsume.rows = res.data.cpus.map(n => {
                             return {
-                                createTime: new Date(n.createdAt).toLocaleString(),
-                                cpu: n.consume
+                                createdAt: new Date(n.createdAt).toLocaleString(),
+                                consume: n.consume
                             }
                         }).reverse();
                         this.memoryConsume.rows = res.data.memories.map(n => {
                             return {
-                                createTime: new Date(n.createdAt).toLocaleString(),
-                                memory: n.consume / 1024 / 1024
+                                createdAt: new Date(n.createdAt).toLocaleString(),
+                                consume: n.consume / 1024 / 1024
                             }
                         }).reverse();
                     }
@@ -184,7 +184,9 @@
                 this.$axios.get("timeConsume", {
                     url: `${this.currentNode.host}:${this.currentNode.port}`,
                     beginTime: Date.now() - 2 * 60 * 60 * 1000,
-                    endTime: Date.now()
+                    endTime: Date.now(),
+                    offset: 0,
+                    limit: 499
                 }).then(res => {
                     if(res.code !== 0)
                     {
@@ -194,7 +196,7 @@
                     {
                         this.timeConsume.rows = res.data.map(n => {
                             return {
-                                createTime: new Date(n.time).toLocaleString(),
+                                createdAt: new Date(n.createdAt).toLocaleString(),
                                 consume: n.data
                             }
                         }).reverse();
@@ -205,8 +207,10 @@
                 this.$axios.get("abnormalNodes", {
                     url: `${this.currentNode.host}:${this.currentNode.port}`,
                     type: 1,
-                    beginTime: Date.now() - 2 * 60 * 60 * 1000,
-                    endTime: Date.now()
+                    beginTime: Date.now() - 24 * 60 * 60 * 1000,
+                    endTime: Date.now(),
+                    offset: 0,
+                    limit: 499
                 }).then(res => {
                     if(res.code !== 0)
                     {
@@ -218,7 +222,7 @@
                             return {
                                 address: n.address,
                                 times: n.frequency,
-                                frequency: n.frequency / 2
+                                frequency: n.frequency / 24
                             }
                         });
                     }
@@ -227,7 +231,11 @@
             getCheatedNodes() {
                 this.$axios.get("abnormalNodes", {
                     url: `${this.currentNode.host}:${this.currentNode.port}`,
-                    type: 2
+                    type: 2,
+                    beginTime: Date.now() - 24 * 60 * 60 * 1000,
+                    endTime: Date.now(),
+                    offset: 0,
+                    limit: 499
                 }).then(res => {
                     if(res.code !== 0)
                     {
@@ -239,7 +247,7 @@
                             return {
                                 address: n.address,
                                 times: n.frequency,
-                                frequency: parseInt(n.frequency) / 2
+                                frequency: parseInt(n.frequency) / 24
                             }
                         });
                     }

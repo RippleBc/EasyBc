@@ -1,5 +1,4 @@
 const checkCookie = require('../user/checkCookie')
-const process = require('process')
 const { SUCCESS, PARAM_ERR, OTH_ERR } = require('../../constant')
 const Block = require("../../depends/block");
 const rp = require("request-promise");
@@ -11,6 +10,7 @@ const Buffer = utils.Buffer;
 const padToEven = utils.padToEven;
 
 const app = process[Symbol.for('app')]
+const printErrorStack = process[Symbol.for("printErrorStack")]
 
 const BLOCKS_MAX_NUM = 4;
 
@@ -64,6 +64,8 @@ app.get('/blocks', checkCookie, (req, res) => {
             data: blocks
         })
     }).catch(e => {
+        printErrorStack(e)
+
         res.json({
             code: OTH_ERR,
             msg: e.toString()

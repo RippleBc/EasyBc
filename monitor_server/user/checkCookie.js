@@ -1,4 +1,3 @@
-const process = require('process')
 const cookie = require('cookie');
 const { ERR_COOKIE_INVALID } = require('../constant')
 

@@ -109,7 +109,7 @@ class Mysql
 
   /**
    * @param {Buffer} number
-   * @return {Block}
+   * @return {String}
    */
   async getBlockByNumber(number)
   {
@@ -124,7 +124,7 @@ class Mysql
   
     if(block)
     {
-      return new Block(Buffer.from(block.data, "hex"));
+      return block.data;
     }
   }
 
@@ -132,7 +132,7 @@ class Mysql
    * @param number {String}
    * @param stateRoot {String}
    * @param address {String}
-   * @return {Account}
+   * @return {String}
    */
   async getAccount(number, stateRoot, address)
   {
@@ -160,7 +160,7 @@ class Mysql
 
     if(account)
     {
-      return new Account(Buffer.from(account.data, 'hex'))
+      return account.data
     }
   }
 
@@ -193,8 +193,11 @@ class Mysql
    *  @prop {Number} beginTime
    *  @prop {Number} endTime
    */
-  async getTransactions({hash, from, to, beginTime, endTime})
+  async getTransactions({offset, limit, hash, from, to, beginTime, endTime})
   {
+    assert(typeof offset === 'number', `Mysql getTransactions, offset should be an Number, now is ${typeof offset}`);
+    assert(typeof limit === 'number', `Mysql getTransactions, limit should be an Number, now is ${typeof limit}`);
+    
     if(hash)
     {
       assert(typeof hash === 'string', `Mysql getTransactions, hash should be an String, now is ${typeof hash}`);
@@ -207,11 +210,11 @@ class Mysql
     {
       assert(typeof to === 'string', `Mysql getTransactions, to should be an String, now is ${typeof to}`);
     }
-    if(beginTime)
+    if(beginTime !== undefined)
     {
       assert(typeof beginTime === 'number', `Mysql getTransactions, beginTime should be an Number, now is ${typeof beginTime}`);
     }
-    if(endTime)
+    if(endTime !== undefined)
     {
       assert(typeof endTime === 'number', `Mysql getTransactions, endTime should be an Number, now is ${typeof endTime}`);
     }
@@ -219,8 +222,8 @@ class Mysql
     const now = new Date()
     const where = {
       createdAt: {
-        [Op.gt]: beginTime ? new Date(beginTime) : new Date(now - 24 * 60 * 60 * 1000),
-        [Op.lt]: endTime ? new Date(endTime) : now,
+        [Op.gt]: beginTime !== undefined ? new Date(beginTime) : new Date(now - 24 * 60 * 60 * 1000),
+        [Op.lt]: endTime !== undefined ? new Date(endTime) : now,
       }
     };
     if(hash)
@@ -237,7 +240,9 @@ class Mysql
     }
     return await this.Transaction.findAll({
       where: where,
-      order: [['id', 'DESC' ]]
+      order: [['id', 'DESC' ]],
+      offset: offset,
+      limit: limit
     });
   }
 
@@ -263,9 +268,12 @@ class Mysql
    *  @prop {Number} beginTime
    *  @prop {Number} endTime
    */
-  async getLogs({type, title, beginTime, endTime})
+  async getLogs({offset, limit, type, title, beginTime, endTime})
   {
-    if(type)
+    assert(typeof offset === 'number', `Mysql getLogs, offset should be an Number, now is ${typeof offset}`);
+    assert(typeof limit === 'number', `Mysql getLogs, limit should be an Number, now is ${typeof limit}`);
+
+    if(type !== undefined)
     {
       assert(typeof type === 'string', `Mysql getLogs, type should be an String, now is ${typeof type}`);
     }
@@ -273,11 +281,11 @@ class Mysql
     {
       assert(typeof title === 'string', `Mysql getLogs, title should be an String, now is ${typeof title}`);
     }
-    if(beginTime)
+    if(beginTime !== undefined)
     {
       assert(typeof beginTime === 'number', `Mysql getLogs, beginTime should be an Number, now is ${typeof beginTime}`);
     }
-    if(endTime)
+    if(endTime !== undefined)
     {
       assert(typeof endTime === 'number', `Mysql getLogs, endTime should be an Number, now is ${typeof endTime}`);
     }
@@ -285,8 +293,8 @@ class Mysql
     const now = new Date()
     const where = {
       createdAt: {
-        [Op.gt]: beginTime ? new Date(beginTime) : new Date(now - 24 * 60 * 60 * 1000),
-        [Op.lt]: endTime ? new Date(endTime) : now,
+        [Op.gt]: beginTime !== undefined ? new Date(beginTime) : new Date(now - 24 * 60 * 60 * 1000),
+        [Op.lt]: endTime !== undefined ? new Date(endTime) : now,
       }
     };
     if(type)
@@ -299,7 +307,8 @@ class Mysql
     }
     return await this.Log.findAndCountAll({
       where: where,
-      limit: 500,
+      limit: limit,
+      offset: offset,
       order: [['id', 'DESC' ]]
     });
   }
@@ -310,9 +319,12 @@ class Mysql
    *  @prop {Number} beginTime
    *  @prop {Number} endTime
    */
-  async getTimeConsume({type, stage, beginTime, endTime})
+  async getTimeConsume({offset, limit, type, stage, beginTime, endTime})
   {
-    if(type)
+    assert(typeof offset === 'number', `Mysql getTimeConsume, offset should be an Number, now is ${typeof offset}`);
+    assert(typeof limit === 'number', `Mysql getTimeConsume, limit should be an Number, now is ${typeof limit}`);
+
+    if(type !== undefined)
     {
       assert(typeof type === 'number', `Mysql getTimeConsume, type should be an Number, now is ${typeof type}`);
     }
@@ -320,11 +332,11 @@ class Mysql
     {
       assert(typeof stage === 'number', `Mysql getTimeConsume, stage should be an Number, now is ${typeof stage}`);
     }
-    if(beginTime)
+    if(beginTime !== undefined)
     {
       assert(typeof beginTime === 'number', `Mysql getTimeConsume, beginTime should be an Number, now is ${typeof beginTime}`);
     }
-    if(endTime)
+    if(endTime !== undefined)
     {
       assert(typeof endTime === 'number', `Mysql getTimeConsume, endTime should be an Number, now is ${typeof endTime}`);
     }
@@ -332,8 +344,8 @@ class Mysql
     const now = new Date()
     const where = {
       createdAt: {
-        [Op.gt]: beginTime ? new Date(beginTime) : new Date(now - 24 * 60 * 60 * 1000),
-        [Op.lt]: endTime ? new Date(endTime) : now,
+        [Op.gt]: beginTime !== undefined ? new Date(beginTime) : new Date(now - 24 * 60 * 60 * 1000),
+        [Op.lt]: endTime !== undefined ? new Date(endTime) : now,
       }
     };
     if(type)
@@ -346,20 +358,23 @@ class Mysql
     }
     return await this.TimeConsume.findAll({
       where: where,
-      limit: 500,
+      limit: limit,
+      offset: offset,
       order: [['id', 'DESC' ]]
     });
   }
 
-  async getAbnormalNodes({type, beginTime, endTime})
+  async getAbnormalNodes({offset, limit, type, beginTime, endTime})
   {
     assert(typeof type === 'number', `Mysql getAbnormalNodes, type should be an Number, now is ${typeof type}`);
+    assert(typeof offset === 'number', `Mysql getAbnormalNodes, offset should be an Number, now is ${typeof offset}`);
+    assert(typeof limit === 'number', `Mysql getAbnormalNodes, limit should be an Number, now is ${typeof limit}`);
 
-    if(beginTime)
+    if(beginTime !== undefined)
     {
       assert(typeof beginTime === 'number', `Mysql getAbnormalNodes, beginTime should be an Number, now is ${typeof beginTime}`);
     }
-    if(endTime)
+    if(endTime !== undefined)
     {
       assert(typeof endTime === 'number', `Mysql getAbnormalNodes, endTime should be an Number, now is ${typeof endTime}`);
     }
@@ -367,8 +382,8 @@ class Mysql
     const now = new Date()
     const where = {
       createdAt: {
-        [Op.gt]: beginTime ? new Date(beginTime) : new Date(now - 24 * 60 * 60 * 1000),
-        [Op.lt]: endTime ? new Date(endTime) : now,
+        [Op.gt]: beginTime !== undefined ? new Date(beginTime) : new Date(now - 24 * 60 * 60 * 1000),
+        [Op.lt]: endTime !== undefined ? new Date(endTime) : now,
       }
     };
     if(type)
@@ -381,7 +396,8 @@ class Mysql
       raw: true,
       where: where,
       group: ['address'],
-      limit: 500
+      limit: limit,
+      offset: offset
     });
   }
 }

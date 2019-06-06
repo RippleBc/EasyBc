@@ -118,7 +118,9 @@
             {
                 this.$axios.get('/logs', {
                     url: `${this.currentNode.host}:${this.currentNode.port}`,
-                    type: type
+                    type: type,
+                    offset: 0,
+                    limit: 499
                 }).then(res => {
                     if(res.code !== 0)
                     {

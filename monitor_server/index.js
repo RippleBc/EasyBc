@@ -1,4 +1,3 @@
-const process = require('process')
 const express = require('express')
 const bodyParser = require('body-parser')
 const path = require('path')
@@ -8,55 +7,91 @@ const cors = require('cors')
 const { host, port } = require('./config.json')
 const Models = require('./models');
 
+const printErrorStack = process[Symbol.for("printErrorStack")] = e => {
+	const errLogger = process[Symbol.for('errLogger')];
+
+  let err;
+
+  if(e)
+  {
+      err = e
+  } 
+  else
+  {
+      try
+      {
+          throw new Error('call stack')
+      }
+      catch(e)
+      {
+          err = e;
+      }
+  }
+  
+  if(e.stack)
+  {
+    errLogger.error(err.stack);
+  }
+  else
+  {
+    errLogger.error(e.toString());
+  }
+}
+
 const log4js = require('./logConfig')
-const logger = log4js.getLogger()
-const dbLogger = log4js.getLogger('db')
+const logger = process[Symbol.for('logger')] = log4js.getLogger()
+const errLogger = process[Symbol.for('errLogger')] = log4js.getLogger("err");
+const dbLogger = process[Symbol.for('dbLogger')] = log4js.getLogger('db');
+const models = process[Symbol.for('models')] = new Models();
+process[Symbol.for('cookieSet')] = new Set();
 
-// express
-const app = express()
-app.use(cookieParser())
-app.use(bodyParser.urlencoded({
-  extended: true
-}))
-app.use(bodyParser.json({ limit: '20mb' }))
-app.use(passport.initialize())
+(async () => {
+	await models.init();
 
-app.use(cors({
-  credentials: true, 
-  origin: 'http://localhost:8080', // web前端服务器地址
-}));
-app.use("/", express.static(path.join(__dirname + "/dist")));
+	// express
+	const app = express()
 
-// logger
-log4js.useLogger(app, logger)
+	// set app global
+	process[Symbol.for('app')] = app;
 
-process[Symbol.for('logger')] = logger;
-process[Symbol.for('dbLogger')] = dbLogger;
-process[Symbol.for('cookieSet')] = new Set()
-process[Symbol.for('app')] = app;
-process[Symbol.for('models')] = new Models();
+	app.use(cookieParser())
+	app.use(bodyParser.urlencoded({
+	  extended: true
+	}))
+	app.use(bodyParser.json({ limit: '20mb' }))
+	app.use(passport.initialize())
+	app.use(cors({
+	  credentials: true, 
+	  origin: 'http://localhost:8080', // web前端服务器地址
+	}));
+	app.use("/", express.static(path.join(__dirname + "/dist")));
 
-process[Symbol.for('models')].init().then(() => {
-	logger.info('begin to user module')
+	// logger
+	log4js.useLogger(app, logger)
+
+	process.on('uncaughtException', err => {
+	  printErrorStack(err);
+
+	  exit(1)
+	})
+
+	const server = app.listen(port, host, function() {
+	    logger.info(`server listening at http://${host}:${port}`);
+	});
+
+	// begin to load module
 	require('./user');
-
-	logger.info('begin to block module')
+	logger.info('load user module success')
+	
 	require('./block');
-
-	logger.info('begin to unl module')
+	logger.info('load block module success')
+	
 	require('./unl');
+	logger.info('load unl module success')
+})().then(() => {
+	logger.info("server init success")
 }).catch(e => {
-	dbLogger.error(`init model throw exception, ${e}`);
-});
+  printErrorStack(e);
 
-
-//
-process.on('uncaughtException', err => {
-  errlogger.error(err.stack)
-  exit(1)
-})
-
-
-const server = app.listen(port, host, function() {
-    logger.info(`server listening at http://${host}:${port}`);
+  process.exit(1)
 });

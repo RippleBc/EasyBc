@@ -1,14 +1,16 @@
-const process = require('process');
 const pm2 = require('pm2');
-const { SUCCESS, PARAM_ERR, OTH_ERR } = require("../../constant");
+const { QUERY_MAX_LIMIT, SUCCESS, PARAM_ERR, OTH_ERR } = require("../../constant");
 
 const app =  process[Symbol.for('app')];
 const mysql = process[Symbol.for("mysql")];
+const printErrorStack = process[Symbol.for("printErrorStack")]
 
 app.post('/status', (req, res) => {
 	pm2.list((err, processDescriptionList) => {
 		if(!!err)
 		{
+			printErrorStack(err);
+
 			return res.json({
 				code: OTH_ERR,
 				msg: `pm2.list throw error, ${err.toString()}`
@@ -36,70 +38,148 @@ app.post('/status', (req, res) => {
 			code: OTH_ERR,
 			msg: 'cpu and memory info is can not get'
 		})
-	});
+	})
 });
 
 app.post('/logs', (req, res) => {
-	const type = req.body.type;
-	const title = req.body.title;
-	const beginTime = req.body.beginTime;
-	const endTime = req.body.endTime;
+	if(undefined === req.body.offset)
+  {
+      return res.json({
+          code: PARAM_ERR,
+          msg: "param error, need offset"
+      });
+  }
 
-	mysql.getLogs({ type, title, beginTime, endTime }).then(result => {
+  if(undefined === req.body.limit)
+  {
+      return res.json({
+          code: PARAM_ERR,
+          msg: "param error, need limit"
+      });
+  }
+
+  if(req.body.limit >= QUERY_MAX_LIMIT)
+  {
+      return res.json({
+          code: PARAM_ERR,
+          msg: `param error, limit must little than ${QUERY_MAX_LIMIT}`
+      })
+  }
+
+	mysql.getLogs({
+		offset: req.body.offset,
+		limit: req.body.limit,
+		type: req.body.type, 
+		title: req.body.title, 
+		beginTime: req.body.beginTime, 
+		endTime: req.body.endTime 
+	}).then(logs => {
 		res.json({
 			code: SUCCESS,
 			data: {
-				count: result.count,
-				logs: result.rows.map(log => {
-					return {
-						id: log.id,
-						time: log.time,
-						type: log.type,
-						title: log.title,
-						data: log.data
-					}
-				})
+				count: logs.count,
+				logs: logs.rows
 			}
 		})
-	});
+	}).catch(e => {
+		printErrorStack(e)
+
+    res.json({
+      code: OTH_ERR,
+      msg: e.toString()
+    });
+  });
 })
 
 app.post("/timeConsume", (req, res) => {
-	const type = req.body.type;
-	const stage = req.body.stage;
-	const beginTime = req.body.beginTime;
-	const endTime = req.body.endTime;
+	if(undefined === req.body.offset)
+  {
+      return res.json({
+          code: PARAM_ERR,
+          msg: "param error, need offset"
+      });
+  }
 
-	mysql.getTimeConsume({ type, stage, beginTime, endTime }).then(result => {
+  if(undefined === req.body.limit)
+  {
+      return res.json({
+          code: PARAM_ERR,
+          msg: "param error, need limit"
+      });
+  }
+
+  if(req.body.limit >= QUERY_MAX_LIMIT)
+  {
+      return res.json({
+          code: PARAM_ERR,
+          msg: `param error, limit must little than ${QUERY_MAX_LIMIT}`
+      })
+  }
+
+	mysql.getTimeConsume({ 
+		offset: req.body.offset,
+		limit: req.body.limit,
+		type: req.body.type,
+		stage: req.body.stage,
+		beginTime: req.body.beginTime,
+		endTime: req.body.endTime
+	}).then(timeConsume => {
 		res.json({
 			code: SUCCESS,
-			data: result.map(ele => {
-				return {
-					id: ele.id,
-					time: ele.createdAt,
-					stage: ele.stage,
-					type: ele.type,
-					data: ele.data
-				}
-			})
+			data: timeConsume
 		})
-	});
+	}).catch(e => {
+		printErrorStack(e)
+
+    res.json({
+      code: OTH_ERR,
+      msg: e.toString()
+    });
+  });
 })
 
 app.post("/abnormalNodes", (req, res) => {
-	const type = req.body.type || 1;
-	const beginTime = req.body.beginTime;
-	const endTime = req.body.endTime;
+	if(undefined === req.body.offset)
+  {
+      return res.json({
+          code: PARAM_ERR,
+          msg: "param error, need offset"
+      });
+  }
 
-	mysql.getAbnormalNodes({ type, beginTime, endTime }).then(result => {
+  if(undefined === req.body.limit)
+  {
+      return res.json({
+          code: PARAM_ERR,
+          msg: "param error, need limit"
+      });
+  }
+
+  if(req.body.limit >= QUERY_MAX_LIMIT)
+  {
+      return res.json({
+          code: PARAM_ERR,
+          msg: `param error, limit must little than ${QUERY_MAX_LIMIT}`
+      })
+  }
+
+	mysql.getAbnormalNodes({ 
+		offset: req.body.offset,
+		limit: req.body.limit,
+		type: req.body.type,
+		beginTime: req.body.beginTime,
+		endTime: req.body.endTime
+	}).then(abnormalNodes => {
 		res.json({
 			code: SUCCESS,
-			data: result.map(ele => {
-				return {
-					address: ele.address,
-					frequency: ele.frequency
-				}
-			})
+			data: abnormalNodes
 		});
-	})
+	}).catch(e => {
+		printErrorStack(e)
+
+    res.json({
+      code: OTH_ERR,
+      msg: e.toString()
+    });
+  });
 })

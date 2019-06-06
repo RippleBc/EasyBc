@@ -30,6 +30,24 @@
         </div>
       </div>
     </div>
+    <div style="flex-direction:row;">
+      <div class="border" style="height: 500px;justify-content:start;align-items:start;padding:20px;margin:20px 20px 20px 0px;">
+        <span>账户列表</span>
+        <div style="overflow: auto;justify-content: start;">
+          <div v-for="account in accounts">
+            <div>
+              <p style="cursor:pointer;width:100%;text-align:left;">{{account}}</p>
+              <div style="flex-direction:row;justify-content:end;">
+                <el-button type="primary" @click="getTransactions(account)">获取交易记录</el-button>
+                <el-button type="primary" @click="getAccountInfo(account)">获取账户信息</el-button>
+                <el-button type="primary" @click="getPrivateKey(account)">获取私钥</el-button>
+              </div>
+            </div>
+            <HR style="FILTER: alpha(opacity=100,finishopacity=0,style=3)" width="99%" color=#C0C4CC SIZE=1></HR>
+          </div>  
+        </div>
+      </div>
+    </div>
 		<div style="flex-direction:row;">
 			<div class="border" style="height: 500px;justify-content:start;align-items:start;padding:20px;margin:20px 20px 20px 0px;">
         <span>发送者记录</span>
@@ -111,6 +129,7 @@ const TRANSACTION_STATE_NOT_EXISTS = 2
 
     data () {
       return {
+        accounts: ["test", "test"],
       	froms: ["test", "test"],
       	tos: ["test", "test"],
       	from: '',
@@ -133,25 +152,24 @@ const TRANSACTION_STATE_NOT_EXISTS = 2
     created () {
       this.getFromHistory()
       this.getToHistory()
+      this.getAccounts()
     },
 
     methods:
     {
     	importAccount () {
-      	const self = this
-
         axios.get('importAccount', {
           privateKey: this.privateKey
         }, response => {
           if (response.code === 0) {
-            self.getFromHistory();
+            this.getAccounts();
 
-            self.$notify.success({
+            this.$notify.success({
               title: 'importAccount',
               message: "import success"
             });
           } else {
-            self.$notify.error({
+            this.$notify.error({
               title: 'importAccount',
               message: response.msg
             });
@@ -168,13 +186,11 @@ const TRANSACTION_STATE_NOT_EXISTS = 2
     	},
 
     	generateKeyPiar: function () {
-    		const self = this;
-
     		axios.get('generateKeyPiar', {}, response => {
           if (response.code === 0) {
-            self.getFromHistory();
+            this.getAccounts()
           } else {
-            self.$notify.error({
+            this.$notify.error({
               title: 'generateKeyPiar',
               message: response.msg
             });
@@ -182,14 +198,25 @@ const TRANSACTION_STATE_NOT_EXISTS = 2
         })
     	},
 
-      getFromHistory: function () {
-      	const self = this
-
-      	axios.get('getFromHistory', {}, response => {
+      getAccounts: function() {
+        axios.get('getAccounts', {offset: 0}, response => {
           if (response.code === 0) {
-            self.froms = response.data
+            this.accounts = response.data
           } else {
-            self.$notify.error({
+            this.$notify.error({
+              title: 'getAccounts',
+              message: response.msg
+            });
+          }
+        })
+      },
+
+      getFromHistory: function () {
+      	axios.get('getFromHistory', {offset: 0}, response => {
+          if (response.code === 0) {
+            this.froms = response.data
+          } else {
+            this.$notify.error({
               title: 'getFromHistory',
               message: response.msg
             });
@@ -198,13 +225,11 @@ const TRANSACTION_STATE_NOT_EXISTS = 2
       },
 
       getToHistory: function () {
-      	const self = this
-
-      	axios.get('getToHistory', {}, response => {
+      	axios.get('getToHistory', {offset: 0}, response => {
           if (response.code === 0) {
-            self.tos = response.data
+            this.tos = response.data
           } else {
-            self.$notify.error({
+            this.$notify.error({
               title: 'getToHistory',
               message: response.msg
             });
@@ -213,21 +238,20 @@ const TRANSACTION_STATE_NOT_EXISTS = 2
       },
 
       sendTransaction: function () {
-      	const self = this
-
         axios.get('sendTransaction', {
-        	url: self.currentNode.url,
-        	from: self.from,
-        	to: self.to,
-        	value: self.value
+        	url: this.currentNode.url,
+        	from: this.from,
+        	to: this.to,
+        	value: this.value
         }, response => {
           if (response.code === 0) {
-            this.transactionHashInfo = response.data;
+            this.transactionHash = this.transactionHashInfo = response.data;
             this.transactionInfoVisible = true;
 
-            self.getToHistory();
+            this.getFromHistory();
+            this.getToHistory();
           } else {
-            self.$notify.error({
+            this.$notify.error({
               title: 'sendTransaction',
               message: response.msg
             });
@@ -236,31 +260,29 @@ const TRANSACTION_STATE_NOT_EXISTS = 2
       },
 
       getTransactionState: function () {
-      	const self = this
-
         axios.get('getTransactionState', {
-        	url: self.currentNode.url,
-        	hash: self.transactionHash
+        	url: this.currentNode.url,
+        	hash: this.transactionHash
         }, response => {
           if (response.code === 0) {
             if (response.data === TRANSACTION_STATE_PACKED) {
-              self.$notify.warn({
+              this.$notify.warn({
                 title: 'getTransactionState',
                 message: 'transaction has packed'
               });
             } else if (response.data === TRANSACTION_STATE_NOT_EXISTS) {
-              self.$notify.warn({
+              this.$notify.warn({
                 title: 'getTransactionState',
                 message: 'transaction not packet for now'
               });
             } else {
-              self.$notify.error({
+              this.$notify.error({
                 title: 'getTransactionState',
                 message: 'getTransactionState failed, get a invalid code'
               });
             }
           } else {
-            self.$notify.error({
+            this.$notify.error({
               title: 'getTransactionState',
               message: response
             });
@@ -269,19 +291,17 @@ const TRANSACTION_STATE_NOT_EXISTS = 2
       },
 
       getAccountInfo: function (address) {
-      	const self = this
-
         axios.get('getAccountInfo', {
-        	url: self.currentNode.url,
+        	url: this.currentNode.url,
         	address: address
         }, response => {
           if (response.code === 0) {
-            self.address = address;
-            self.nonce = response.data.nonce;
-            self.balance = response.data.balance;
-            self.accontInfoVisisble = true;
+            this.address = address;
+            this.nonce = response.data.nonce;
+            this.balance = response.data.balance;
+            this.accontInfoVisisble = true;
           } else {
-            self.$notify.error({
+            this.$notify.error({
               title: 'getAccountInfo',
               message: response.msg
             });
@@ -290,8 +310,6 @@ const TRANSACTION_STATE_NOT_EXISTS = 2
       },
 
       getPrivateKey: function (address) {
-      	const self = this
-
         axios.get('getPrivateKey', {
         	address: address
         }, response => {
@@ -299,7 +317,7 @@ const TRANSACTION_STATE_NOT_EXISTS = 2
             this.privateKeyInfo = response.data;
             this.privateKeyInfoVisible = true;
           } else {
-            self.$notify.error({
+            this.$notify.error({
               title: 'getPrivateKey',
               message: response.msg
             });

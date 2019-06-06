@@ -123,6 +123,8 @@ import axios from '../net/axios.js'
 	  {
 	  	search: function() {
 	  		axios.get('/getTransactions', {
+	  			offset: 0,
+	  			limit: 100,
 	  			url: this.currentNode.url,
 	  			hash: this.hash,
 	  			from: this.from,

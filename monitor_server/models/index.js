@@ -1,5 +1,4 @@
 const mysqlConfig = require("../config.json").mysql;
-const process = require('process');
 const Sequelize = require('sequelize');
 const userModelConfig = require('./user');
 const nodeModelConfig = require('./node');
@@ -16,6 +15,7 @@ class Model
       host: mysqlConfig.host,
       port: mysqlConfig.port,
       dialect: 'mysql',
+      logging: false,
       pool: {
         max: 5,
         min: 0,
@@ -49,10 +49,6 @@ class Model
     if(created)
     {
       logger.info(`user ${user.username} created`);
-    }
-    else
-    {
-      logger.info(`user ${user.username} has exists`);
     }
   }
 }

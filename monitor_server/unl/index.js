@@ -1,53 +1,65 @@
 const checkCookie = require('../user/checkCookie')
-const process = require('process')
 const { SUCCESS, PARAM_ERR, OTH_ERR } = require('../../constant')
+const { GET_RESOURCE_TIME_INTERVAL, MAX_RESOURCE_NUM, UPDATE_NODES_TIME_INTERVAL } = require('../constant')
 const rp = require("request-promise");
 const assert = require("assert");
 
 const app = process[Symbol.for('app')]
-const models = process[Symbol.for('models')]
+const { Node, Cpu, Memory } = process[Symbol.for('models')]
 const logger = process[Symbol.for('logger')];
+const printErrorStack = process[Symbol.for("printErrorStack")]
 
+var nodes = [] 
 
 setInterval(() => {
-  models.Node.findAll().then(nodes => {
+  Node.findAll().then(data => {
+    logger.info("updateNodes success")
+
+    nodes = data;
+  }).catch(e => {
+    printErrorStack(e)
+  });
+}, UPDATE_NODES_TIME_INTERVAL).unref();
+
+setInterval(() => {
+  (async () => {
     for(let node of nodes.values())
     {
-      let options = {
+      const response = await rp({
         method: "POST",
         uri: `${node.host}:${node.port}/status`,
         json: true // Automatically stringifies the body to JSON
-      };
-
-      (async function() {
-        const response = await rp(options);
-
-        if(response.code !== SUCCESS)
-        {
-            await Promise.reject(response.msg) 
-        }
-
-        await models.Cpu.create({address: node.address, consume: response.data.cpu});
-        await models.Memory.create({address: node.address, consume: response.data.memory});
-      })().then(() => {
-        logger.info(`get cpu and memory success`);
-      }).catch(e => {
-        logger.error(`get cpu and memory throw exception, ${e}`);
       });
+
+      if(response.code !== SUCCESS)
+      {
+          await Promise.reject(response.msg) 
+      }
+
+      await Cpu.create({address: node.address, consume: response.data.cpu});
+      await Memory.create({address: node.address, consume: response.data.memory});
     }
+  })().then(() => {
+    logger.info("getCpuAndMemoryConsume success")
   }).catch(e => {
-    logger.error(`get nodes info throw exception, ${e}`);
-  });
-}, 5000);
+    printErrorStack(e);
+  })
+}, GET_RESOURCE_TIME_INTERVAL).unref();
 
 app.get('/nodes', checkCookie, (req, res) => {
-
-	models.Node.findAll().then(nodes => {
+	Node.findAll().then(nodes => {
 		res.json({
 	    code: SUCCESS,
 	    data: nodes
 	  })
-	})
+	}).catch(e => {
+    printErrorStack(e)
+
+    res.json({
+      code: OTH_ERR,
+      msg: e.toString()
+    })
+  })
 });
 
 
@@ -98,7 +110,7 @@ app.post('/addNode', checkCookie, (req, res) => {
     })
   }
 
-	models.Node.findOrCreate({
+	Node.findOrCreate({
 		where: {
 			address: address
 		},
@@ -121,7 +133,14 @@ app.post('/addNode', checkCookie, (req, res) => {
     res.json({
       code: SUCCESS
     });
-  });
+  }).catch(e => {
+    printErrorStack(e)
+
+    res.json({
+      code: OTH_ERR,
+      msg: e.toString()
+    })
+  })
 });
 
 app.post('/modifyNode', checkCookie, (req, res) => {
@@ -172,7 +191,7 @@ app.post('/modifyNode', checkCookie, (req, res) => {
   }
 
   (async () => {
-  	const node = await models.Node.findOne({
+  	const node = await Node.findOne({
 	  	where: {
 	  		id: id
 	  	}
@@ -193,7 +212,14 @@ app.post('/modifyNode', checkCookie, (req, res) => {
 		res.json({
       code: SUCCESS
     });
-  })()
+  })().catch(e => {
+    printErrorStack(e)
+
+    res.json({
+      code: OTH_ERR,
+      msg: e.toString()
+    })
+  })
 });
 
 app.post('/deleteNode', checkCookie, (req, res) => {
@@ -208,7 +234,7 @@ app.post('/deleteNode', checkCookie, (req, res) => {
   }
 
  	(async () => {
-  	const node = await models.Node.findOne({
+  	const node = await Node.findOne({
 	  	where: {
 	  		id: id
 	  	}
@@ -227,7 +253,14 @@ app.post('/deleteNode', checkCookie, (req, res) => {
 		res.json({
       code: SUCCESS
     });
-  })()
+  })().catch(e => {
+    printErrorStack(e)
+
+    res.json({
+      code: OTH_ERR,
+      msg: e.toString()
+    })
+  })
 });
 
 app.get('/nodeStatus', checkCookie, (req, res) => {
@@ -235,7 +268,7 @@ app.get('/nodeStatus', checkCookie, (req, res) => {
   const address = req.query.address;
 
   (async function(){
-    const cpus = await models.Cpu.findAll({
+    const cpus = await Cpu.findAll({
       limit: 10,
       order: [['id', 'DESC']],
       where: {
@@ -243,7 +276,7 @@ app.get('/nodeStatus', checkCookie, (req, res) => {
       }
     });
 
-    const memories = await models.Memory.findAll({
+    const memories = await Memory.findAll({
       limit: 10,
       order: [['id', 'DESC']],
       where: {
@@ -258,15 +291,19 @@ app.get('/nodeStatus', checkCookie, (req, res) => {
       data: { cpus, memories }
     });
   }).catch(e => {
+    printErrorStack(e)
+
     res.json({
       code: PARAM_ERR,
-      msg: e
+      msg: e.toString()
     });
   });
 });
 
 app.get('/logs', checkCookie, (req, res) => {
   const url = req.query.url;
+  let offset = req.query.offset;
+  let limit = req.query.limit;
   const type = req.query.type;
   const title = req.query.title;
   const beginTime = req.query.beginTime;
@@ -274,13 +311,20 @@ app.get('/logs', checkCookie, (req, res) => {
 
   assert(typeof url === 'string', `url should be a String, now is ${typeof url}`);
   assert(typeof type === 'string', `type should be a String, now is ${typeof type}`);
+  assert(/^\d+$/.test(offset), `offset should be a Number, now is ${typeof offset}`);
+  assert(/^\d+$/.test(limit), `limit should be a Number, now is ${typeof limit}`);
+
+  offset = parseInt(offset)
+  limit = parseInt(limit);
 
   (async function() {
     let options = {
       method: "POST",
       uri: `${url}/logs`,
       body: {
-        type: type
+        type: type,
+        offset: offset,
+        limit: limit
       },
       json: true // Automatically stringifies the body to JSON
     };
@@ -314,6 +358,8 @@ app.get('/logs', checkCookie, (req, res) => {
       data: results
     })
   }).catch(e => {
+    printErrorStack(e);
+
     res.json({
       code: OTH_ERR,
       msg: e.toString()
@@ -324,18 +370,27 @@ app.get('/logs', checkCookie, (req, res) => {
 
 app.get('/timeConsume', checkCookie, (req, res) => {
   const url = req.query.url;
+  let offset = req.query.offset;
+  let limit = req.query.limit;
   const type = req.query.type;
   const stage = req.query.stage;
   const beginTime = req.query.beginTime;
   const endTime = req.query.endTime;
 
   assert(typeof url === 'string', `url should be a String, now is ${typeof url}`);
+  assert(/^\d+$/.test(offset), `offset should be a Number, now is ${typeof offset}`)
+  assert(/^\d+$/.test(limit), `limit should be a Number, now is ${typeof limit}`);
+
+  offset = parseInt(offset);
+  limit = parseInt(limit);
 
   (async function() {
     let options = {
       method: "POST",
       uri: `${url}/timeConsume`,
       body: {
+        offset: offset,
+        limit: limit
       },
       json: true // Automatically stringifies the body to JSON
     };
@@ -375,6 +430,8 @@ app.get('/timeConsume', checkCookie, (req, res) => {
       data: results
     })
   }).catch(e => {
+    printErrorStack(e)
+
     res.json({
       code: OTH_ERR,
       msg: e.toString()
@@ -384,17 +441,26 @@ app.get('/timeConsume', checkCookie, (req, res) => {
 
 app.get('/abnormalNodes', checkCookie, (req, res) => {
   const url = req.query.url;
+  let offset = req.query.offset;
+  let limit = req.query.limit;
   const type = req.query.type;
   const beginTime = req.query.beginTime;
   const endTime = req.query.endTime;
 
   assert(typeof url === 'string', `url should be a String, now is ${typeof url}`);
+  assert(/^\d+$/.test(offset), `offset should be a Number, now is ${typeof offset}`)
+  assert(/^\d+$/.test(limit), `limit should be a Number, now is ${typeof limit}`);
+
+  offset = parseInt(offset);
+  limit = parseInt(limit);
 
   (async function() {
     let options = {
       method: "POST",
       uri: `${url}/abnormalNodes`,
       body: {
+        offset: offset,
+        limit: limit
       },
       json: true // Automatically stringifies the body to JSON
     };
@@ -429,6 +495,8 @@ app.get('/abnormalNodes', checkCookie, (req, res) => {
       data: results
     })
   }).catch(e => {
+    printErrorStack(e)
+
     res.json({
       code: OTH_ERR,
       msg: e.toString()
