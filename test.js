@@ -1,7 +1,3 @@
-const a = {
-    a: 'b', 
-    b: 'd'
-}
+const a = [1, 2, 3, 4, 5, 6]
 
-const {a: aa, b: bb} = a
-console.log(aa + ", " + bb)
+console.log(a.slice(0, -3))

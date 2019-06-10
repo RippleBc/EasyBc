@@ -42,7 +42,7 @@ class Base
     }
     else
     {
-      items = this.raw.slice(0, 1);
+      items = this.raw.slice(0, -3);
     }
 
     // create hash
