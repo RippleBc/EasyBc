@@ -102,11 +102,10 @@ class Processor
 			}
 			else if(state === 1)
 			{
-				loggerConsensus.error(`Processor processBlock, some transactions are invalid: `)
 				for(let i = 0; i < transactions.length; i++)
 				{
 					const transaction = transactions[i];
-					loggerConsensus.error(`hash: ${transaction.hash().toString("hex")}, from: ${transaction.from.toString("hex")}, to: ${transaction.to.toString("hex")}, value: ${transaction.value.toString("hex")}, nonce: ${transaction.nonce.toString("hex")}`);
+					loggerConsensus.error(`Processor processBlock, some transactions are invalid: hash: ${transaction.hash().toString("hex")}, from: ${transaction.from.toString("hex")}, to: ${transaction.to.toString("hex")}, value: ${transaction.value.toString("hex")}, nonce: ${transaction.nonce.toString("hex")}`);
 				}
 
 				// del invalid transactions
