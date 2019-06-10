@@ -11,19 +11,19 @@ program
   .version("0.1.0")
   .option("-p, --public", "generate public key")
   .option("-a, --address", "generate address")
-  .action(cmd => {
+  .action(options => {
     const privateKey = createPrivateKey();
     console.warn(`privateKey: ${privateKey.toString("hex")}`);
 
     const publicKey = privateToPublic(privateKey);
     const address = publicToAddress(publicKey);
 
-    if(cmd.public)
+    if(options.public)
     {
       return console.warn(`publicKey: ${publicKey.toString("hex")}`);
     }
 
-    if(cmd.address)
+    if(options.address)
     {
       return console.warn(`address: ${address.toString("hex")}`);
     }
