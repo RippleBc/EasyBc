@@ -57,6 +57,7 @@ class Amalgamate extends Stage
 		assert(Array.isArray(transactionRaws), `Amalgamate run, transactionRaws should be an Array, now is ${typeof transactionRaws}`);
 
 		this.ripple.stage = RIPPLE_STAGE_AMALGAMATE;
+		this.start();
 		
 		// init candidate
 		const candidate = new Candidate({
@@ -69,9 +70,6 @@ class Amalgamate extends Stage
 
 		//
 		this.candidates.push(candidate);
-
-		// 
-		this.start();
 	}
 
 	/**

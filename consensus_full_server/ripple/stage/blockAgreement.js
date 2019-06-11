@@ -63,6 +63,11 @@ class BlockAgreement extends Stage
 			}
 		});
 
+		// debug candidate
+		for (let [key, value] of blocksHash) {
+		  logger.trace(`BlockAgreement handler, candidate hash: ${key}, count: ${value.count}`);
+		}
+
 		const sortedBlocks = [...blocksHash].sort(block => {
 			return -block[1].count;
 		});
@@ -115,7 +120,8 @@ class BlockAgreement extends Stage
  		assert(Buffer.isBuffer(transactions), `BlockAgreement run, transactions should be an Buffer, now is ${typeof transactions}`);
 
  		this.ripple.stage = RIPPLE_STAGE_BLOCK_AGREEMENT;
-
+ 		this.start();
+ 		
  		// init block trasactions
 		const block = new Block({
 			transactions: transactions
@@ -190,8 +196,6 @@ class BlockAgreement extends Stage
 			logger.fatal(`BlockAgreement run, throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 			
 			process.exit(1);
-		}).finally(() => {
-			this.start();
 		});
  	}
 
