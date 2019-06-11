@@ -5,8 +5,6 @@ const Transaction = require("../../depends/transaction")
 const Candidate = require("../ripple/data/candidate");
 const RippleBlock = require("../ripple/data/rippleBlock");
 
-const BLOCK_AGREEMENT_TIMESTAMP_MAX_OFFSET = require("../constant");
-
 const Buffer = utils.Buffer;
 const rlp = utils.rlp;
 const sha256 = utils.sha256;
