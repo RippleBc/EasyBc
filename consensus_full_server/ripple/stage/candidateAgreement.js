@@ -60,7 +60,7 @@ class CandidateAgreement extends Stage
 		});
 
 		// debug candidate
-		for (let [key, count] of map) {
+		for (let [key, count] of transactionCollsHash) {
 		  logger.trace(`CandidateAgreement handler, candidate hash: ${key}, count: ${count}`);
 		}
 
