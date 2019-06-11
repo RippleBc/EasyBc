@@ -58,6 +58,16 @@ class Ripple
 	}
 
 	/**
+	 * @param {Array}
+	 */
+	setProcessingTransactions(transactions)
+	{
+		assert(Array.isArray(transactions), `Ripple setProcessingTransactions, transactions should be an Array, now is ${typeof transactions}`);
+
+		this.processingTransactions = transactions;
+	}
+
+	/**
 	 * @param {Buffer} sponsorNode
 	 * @param {Buffer} perishNode
 	 */

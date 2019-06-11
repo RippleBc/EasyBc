@@ -38,7 +38,7 @@ class BlockAgreement extends Stage
 		}
 		else
 		{
-			logger.info("BlockAgreement handler success becauseof timeout")
+			logger.info("BlockAgreement handler success because of timeout")
 		}
 		
 		const blocksHash = new Map();
@@ -118,7 +118,7 @@ class BlockAgreement extends Stage
  	run(transactions)
  	{
  		assert(Buffer.isBuffer(transactions), `BlockAgreement run, transactions should be an Buffer, now is ${typeof transactions}`);
-
+ 		
  		this.ripple.stage = RIPPLE_STAGE_BLOCK_AGREEMENT;
  		this.start();
  		

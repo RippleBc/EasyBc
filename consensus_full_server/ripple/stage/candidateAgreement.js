@@ -12,6 +12,7 @@ const rlp = utils.rlp;
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
 const privateKey = process[Symbol.for("privateKey")];
+const getStackInfo = process[Symbol.for("getStackInfo")];
 
 class CandidateAgreement extends Stage
 {
@@ -34,7 +35,7 @@ class CandidateAgreement extends Stage
 		}
 		else
 		{
-			logger.info("CandidateAgreement handler success becauseof timeout")
+			logger.info("CandidateAgreement handler success because of timeout")
 		}
 		
 		const transactionCollsHash = new Map();
@@ -73,17 +74,38 @@ class CandidateAgreement extends Stage
 		{
 			logger.trace("CandidateAgreement handler, candidate agreement success, go to next stage");
 
-			this.ripple.blockAgreement.run(sortedTransactionColls[0][1].data);
+			const transactionNum = rlp.decode(sortedTransactionColls[0][1].data).length;
 
-			this.reset();
+			if(transactionNum > 0)
+			{
+				this.ripple.blockAgreement.run(sortedTransactionColls[0][1].data);
 
-			return;
+				this.reset();
+
+				return;
+			}
+			else
+			{
+				// begin to synchronize stage and start a new round
+				if(this.ripple.counter.state !== STAGE_STATE_EMPTY)
+				{
+					logger.fatal(`CandidateAgreement handler, candidate agreement failed, prepare to stage synchronize, but counter state is not STAGE_STATE_EMPTY, ${getStackInfo()}`);
+				}
+				if(this.ripple.state === RIPPLE_STATE_PERISH_NODE)
+				{
+					logger.fatal(`CandidateAgreement handler, candidate agreement failed, prepare to stage synchronize, but counter state is not STAGE_STATE_EMPTY, ${getStackInfo()}`);
+				}
+				this.ripple.counter.startStageSynchronize(false);
+
+				//
+				this.reset();
+			}
 		}
 		
 		// return to amalgamate stage
 		logger.trace("CandidateAgreement handler, candidate agreement failed, go to stage amalgamate");
 
-		// mixed all transactions, and begin to amalgamate
+		// mixed all transactions
 		const transactionRawsMap = new Map();
 		this.candidates.forEach(candidate => {
 			const rawTransactions = rlp.decode(candidate.transactions);
@@ -93,8 +115,21 @@ class CandidateAgreement extends Stage
 			});
 		});
 
-		this.ripple.amalgamate.run([...transactionRawsMap.values()]);
+		// set processing transactions
+		this.ripple.setProcessingTransactions([...transactionRawsMap.values()])
 
+		// begin to synchronize stage and start a new round
+		if(this.ripple.counter.state !== STAGE_STATE_EMPTY)
+		{
+			logger.fatal(`CandidateAgreement handler, candidate agreement failed, prepare to stage synchronize, but counter state is not STAGE_STATE_EMPTY, ${getStackInfo()}`);
+		}
+		if(this.ripple.state === RIPPLE_STATE_PERISH_NODE)
+		{
+			logger.fatal(`CandidateAgreement handler, candidate agreement failed, prepare to stage synchronize, but counter state is not STAGE_STATE_EMPTY, ${getStackInfo()}`);
+		}
+		this.ripple.counter.startStageSynchronize(false);
+
+		//
 		this.reset();
 	}
 

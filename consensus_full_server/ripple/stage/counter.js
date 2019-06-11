@@ -25,6 +25,7 @@ class Counter extends Stage
 		this.ripple = ripple;
 
 		this.stageSynchronizeTrigger = [];
+		this.ifKeepTransactions = true;
 	}
 
 	reset()
@@ -32,6 +33,7 @@ class Counter extends Stage
 		super.reset();
 
 		this.stageSynchronizeTrigger = [];
+		this.ifKeepTransactions = true;
 	}
 
 	handler(ifSuccess)
@@ -168,8 +170,10 @@ class Counter extends Stage
 		return this.state === STAGE_STATE_EMPTY && stageInvalidFrequency >= COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD * unl.length
 	}
 
-	startStageSynchronize()
+	startStageSynchronize(ifKeepTransactions = true)
 	{
+		this.ifKeepTransactions = ifKeepTransactions;
+
 		this.start();
 
 		this.ripple.reset();

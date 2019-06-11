@@ -32,7 +32,7 @@ class Amalgamate extends Stage
 		}
 		else
 		{
-			logger.info("Amalgamate handler success becauseof timeout")
+			logger.info("Amalgamate handler success because of timeout")
 		}
 		
 		const transactionRawsMap = new Map();
