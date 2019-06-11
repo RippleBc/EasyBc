@@ -59,7 +59,12 @@ class CandidateAgreement extends Stage
 			}
 		});
 
-		
+		// debug candidate
+		for (let [key, count] of map) {
+		  logger.trace(`CandidateAgreement handler, candidate hash: ${key}, count: ${count}`);
+		}
+
+		// statistic vote result
 		const sortedTransactionColls = [...transactionCollsHash].sort(transactionColl => {
 			return -transactionColl[1].count;
 		});
@@ -112,7 +117,7 @@ class CandidateAgreement extends Stage
 			let transaction = new Transaction(transactions[i])
 			logger.trace(`CandidateAgreement run, transaction hash: ${transaction.hash().toString("hex")}, from: ${transaction.from.toString("hex")}, to: ${transaction.to.toString("hex")}, value: ${transaction.value.toString("hex")}, nonce: ${transaction.nonce.toString("hex")}`);
 		}
-		
+
 		// init candidate
 		const candidate = new Candidate({
 			transactions: rlp.encode(transactions)
