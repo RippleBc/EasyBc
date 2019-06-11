@@ -94,7 +94,7 @@ class CandidateAgreement extends Stage
 	}
 
 	/**
-	 * @param {Array} transactions
+	 * @param {Array/Buffer} transactions
 	 */
 	run(transactions)
 	{
@@ -103,11 +103,8 @@ class CandidateAgreement extends Stage
 		this.ripple.stage = RIPPLE_STAGE_CANDIDATE_AGREEMENT;
 		this.start();
 
-		for(let i = 0; i < transactions.length; i++)
-		{
-			let transaction = new Transaction(transactions[i])
-			logger.trace(`CandidateAgreement run, transaction hash: ${transaction.hash().toString("hex")}, from: ${transaction.from.toString("hex")}, to: ${transaction.to.toString("hex")}, value: ${transaction.value.toString("hex")}, nonce: ${transaction.nonce.toString("hex")}`);
-		}
+		// sort transactions
+		transactions = transactions.sort(tx => tx.toString("hex"));
 
 		// init candidate
 		const candidate = new Candidate({
