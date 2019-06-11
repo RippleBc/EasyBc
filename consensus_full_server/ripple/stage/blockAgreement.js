@@ -5,7 +5,7 @@ const Stage = require("./stage");
 const async = require("async");
 const assert = require("assert");
 const { unl } = require("../../config.json");
-const { TRANSACTIONS_CONSENSUS_THRESHOULD, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_BLOCK_AGREEMENT, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_REQUEST, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE } = require("../../constant");
+const { BLOCK_AGREEMENT_TIMESTAMP_MAX_OFFSET, TRANSACTIONS_CONSENSUS_THRESHOULD, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_BLOCK_AGREEMENT, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_REQUEST, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE } = require("../../constant");
 
 const sha256 = utils.sha256;
 const Buffer = utils.Buffer;
@@ -52,7 +52,7 @@ class BlockAgreement extends Stage
 				blocksHash.set(key, {
 					count: count + 1,
 					data: rippleBlock.block
-				})
+				});
 			}
 			else
 			{
@@ -135,8 +135,13 @@ class BlockAgreement extends Stage
 
 			logger.trace(`BlockAgreement run, transaction hash: ${transaction.hash().toString("hex")}, from: ${transaction.from.toString("hex")}, to: ${transaction.to.toString("hex")}, value: ${transaction.value.toString("hex")}, nonce: ${transaction.nonce.toString("hex")}`);
 		}
+		const now = Date.now();
+		while(now - timestamp > BLOCK_AGREEMENT_TIMESTAMP_MAX_OFFSET)
+		{
+			timestamp += BLOCK_AGREEMENT_TIMESTAMP_MAX_OFFSET
+		}
 		block.header.timestamp = timestamp;
-
+		
 		// init oth property
 		(async () => {
 			const height = await this.ripple.processor.blockChain.getBlockChainHeight();
