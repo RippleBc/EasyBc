@@ -115,7 +115,6 @@ class BlockAgreement extends Stage
  		assert(Buffer.isBuffer(transactions), `BlockAgreement run, transactions should be an Buffer, now is ${typeof transactions}`);
 
  		this.ripple.stage = RIPPLE_STAGE_BLOCK_AGREEMENT;
-		this.start();
 
  		// init block trasactions
 		const block = new Block({
@@ -123,6 +122,7 @@ class BlockAgreement extends Stage
 		});
 
 		// init timestamp, drag timestamp to make sure it is will not too litte than current time
+		console.time("first init timestamp")
 		let timestamp = 0;
 		for(let i = 0; i < block.transactions.length; i++)
 		{
@@ -140,6 +140,7 @@ class BlockAgreement extends Stage
 		{
 			timestamp += BLOCK_AGREEMENT_TIMESTAMP_MAX_OFFSET
 		}
+		console.timeEnd("first init timestamp")
 
 		// init oth property
 		(async () => {
@@ -163,12 +164,14 @@ class BlockAgreement extends Stage
 			block.header.transactionsTrie = await block.genTxTrie();
 
 			// init itemstamp, drag timestamp to make sure it is bigger than parent block's timestamp
+			console.time("second init timestamp")
 			const parentBlock = await this.ripple.processor.blockChain.getBlockByHash(parentHash);
 			while(timestamp <= bufferToInt(parentBlock.header.timestamp))
 			{
 				timestamp += BLOCK_AGREEMENT_TIMESTAMP_JUMP_LENGTH;
 			}
 			block.header.timestamp = timestamp;
+			console.timeEnd("second init timestamp")
 
 			// sign
 			const rippleBlock = new RippleBlock({
@@ -187,6 +190,8 @@ class BlockAgreement extends Stage
 			logger.fatal(`BlockAgreement run, throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 			
 			process.exit(1);
+		}).finally(() => {
+			this.start();
 		});
  	}
 

@@ -106,7 +106,6 @@ class CandidateAgreement extends Stage
 		assert(Array.isArray(transactions), `CandidateAgreement run, transactions should be an Array, now is ${typeof transactions}`);
 
 		this.ripple.stage = RIPPLE_STAGE_CANDIDATE_AGREEMENT;
-		this.start();
 
 		// sort transactions
 		transactions = transactions.sort(tx => tx.toString("hex"));
@@ -129,6 +128,9 @@ class CandidateAgreement extends Stage
 
 		//
 		this.candidates.push(candidate);
+
+		//
+		this.start();
 	}
 
 	/**
