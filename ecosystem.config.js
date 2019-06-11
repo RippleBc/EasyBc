@@ -11,7 +11,6 @@ module.exports = {
     merge_logs: true,
     output: '/dev/null',
     error: '/dev/null',
-    log_type: 'json',
     env: {
       NODE_ENV: 'development'
     },
@@ -30,7 +29,6 @@ module.exports = {
     merge_logs: true,
     output: '/dev/null',
     error: '/dev/null',
-    log_type: 'json',
     env: {
       NODE_ENV: 'development'
     },
@@ -49,7 +47,6 @@ module.exports = {
     merge_logs: true,
     output: '/dev/null',
     error: '/dev/null',
-    log_type: 'json',
     env: {
       NODE_ENV: 'development'
     },
