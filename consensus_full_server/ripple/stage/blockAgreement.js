@@ -5,7 +5,7 @@ const Stage = require("./stage");
 const async = require("async");
 const assert = require("assert");
 const { unl } = require("../../config.json");
-const { BLOCK_AGREEMENT_TIMESTAMP_MAX_OFFSET, TRANSACTIONS_CONSENSUS_THRESHOULD, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_BLOCK_AGREEMENT, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_REQUEST, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE } = require("../../constant");
+const { BLOCK_AGREEMENT_TIMESTAMP_JUMP_LENGTH, BLOCK_AGREEMENT_TIMESTAMP_MAX_OFFSET, TRANSACTIONS_CONSENSUS_THRESHOULD, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_BLOCK_AGREEMENT, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_REQUEST, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE } = require("../../constant");
 
 const sha256 = utils.sha256;
 const Buffer = utils.Buffer;
@@ -122,7 +122,7 @@ class BlockAgreement extends Stage
 			transactions: transactions
 		});
 
-		// init timestamp
+		// init timestamp, drag timestamp to make sure it is will not too litte than current time
 		let timestamp = 0;
 		for(let i = 0; i < block.transactions.length; i++)
 		{
@@ -140,17 +140,15 @@ class BlockAgreement extends Stage
 		{
 			timestamp += BLOCK_AGREEMENT_TIMESTAMP_MAX_OFFSET
 		}
-		block.header.timestamp = timestamp;
-		
+
 		// init oth property
 		(async () => {
+			// init number
 			const height = await this.ripple.processor.blockChain.getBlockChainHeight();
-
 			if(!height)
 			{
 				await Promise.reject(`BlockAgreement run, getBlockChainHeight(${height.toString("hex")}) should not return undefined`)
 			}
-			
 			block.header.number = (new BN(height).addn(1)).toArrayLike(Buffer);
 			const parentHash = await this.ripple.processor.blockChain.getBlockHashByNumber(height);
 			if(!parentHash)
@@ -158,9 +156,21 @@ class BlockAgreement extends Stage
 				await Promise.reject(`BlockAgreement run, getBlockHashByNumber(${height.toString("hex")}) should not return undefined`);
 			}
 
+			// init parentHash
 			block.header.parentHash = parentHash;
+
+			// init txTrie
 			block.header.transactionsTrie = await block.genTxTrie();
 
+			// init itemstamp, drag timestamp to make sure it is bigger than parent block's timestamp
+			const parentBlock = await this.ripple.processor.blockChain.getBlockByHash(parentHash);
+			while(timestamp <= bufferToInt(parentBlock.header.timestamp))
+			{
+				timestamp += BLOCK_AGREEMENT_TIMESTAMP_JUMP_LENGTH;
+			}
+			block.header.timestamp = timestamp;
+
+			// sign
 			const rippleBlock = new RippleBlock({
 				block: block.serialize()
 			});
