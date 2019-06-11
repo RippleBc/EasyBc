@@ -70,6 +70,7 @@ module.exports.generateTx = (privateKey, nonce, to, value) => {
 
   // init tx
   const transaction = new Transaction({
+    timestamp: Date.now(),
     nonce: Buffer.from(nonce, "hex"),
     to: Buffer.from(to, "hex"),
     value: Buffer.from(value, "hex")
@@ -94,9 +95,10 @@ module.exports.generateRandomTx = () => {
   const addressTo = publicToAddress(publicKeyTo);
 
   // init tx
-  const nonce = randomBytes(1) | 0x01;
-  const value = randomBytes(1) | 0x01;
+  const nonce = genRandomNumber(1);
+  const value = genRandomNumber(1);
   const transaction = new Transaction({
+    timestamp: Date.now(),
     nonce: nonce,
     to: addressTo,
     value: value
@@ -154,4 +156,19 @@ module.exports.sendTransaction = async (url, tx) => {
   })
   
   return await promise;
+}
+
+function genRandomNumber(size) {
+
+  assert(typeof size === 'number', `genRandomNumber, size should be a Number, now is typeof ${size}`);
+
+  if(size < 1)
+  {
+    throw new Error(`genRandomNumber, size should bigger than 0, now is ${size}`);
+  }
+
+  const random = randomBytes(size);
+  random[size - 1] |= 0x01;
+
+  return random;
 }
