@@ -107,9 +107,11 @@ class CandidateAgreement extends Stage
 
 		this.ripple.stage = RIPPLE_STAGE_CANDIDATE_AGREEMENT;
 		this.start();
-		
+
 		// sort transactions
-		transactions = transactions.sort(tx => tx.toString("hex"));
+		transactions = transactions.sort((a, b) => {
+			return a.toString("hex") > b.toString("hex");
+		});
 
 		// debug transaction
 		for(let i = 0; i < transactions.length; i++)
