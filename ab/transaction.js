@@ -2,7 +2,7 @@
 
 const assert = require("assert");
 const { spawn } = require("child_process");
-var ProgressBar = require('../depends/progress_bar');
+const ProgressBar = require('../depends/progress_bar');
 
 /*
  * @param {String} url
