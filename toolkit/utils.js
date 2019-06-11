@@ -94,8 +94,8 @@ module.exports.generateRandomTx = () => {
   const addressTo = publicToAddress(publicKeyTo);
 
   // init tx
-  const nonce = randomBytes(1);
-  const value = randomBytes(1);
+  const nonce = randomBytes(1) | 0x01;
+  const value = randomBytes(1) | 0x01;
   const transaction = new Transaction({
     nonce: nonce,
     to: addressTo,
@@ -123,8 +123,6 @@ module.exports.generateRandomTx = () => {
 module.exports.sendTransaction = async (url, tx) => {
   assert(typeof url === "string", `sendTransaction, url should be a String, now is ${typeof url}`);
   assert(typeof tx === "string", `sendTransaction, tx should be a String, now is ${typeof tx}`);
- 
-  return;
 
   const curl = spawn("curl", ["-H", "Content-Type:application/json", "-X", "POST", "--data", `{"tx": "${tx}"}`, `${url}/sendTransaction`]);
 
