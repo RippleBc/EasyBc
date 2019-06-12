@@ -125,7 +125,7 @@ class Stage
 				{
 					loggerStageConsensus.warn(`Counter handleMessage, begin to synchronize stage actively, stage: ${this.ripple.stage}`);
 
-					this.ripple.counter.startStageSynchronize();
+					this.ripple.counter.startStageSynchronize(true);
 
 					return;
 				}
@@ -208,7 +208,7 @@ class Stage
 					{
 						loggerStageConsensus.warn(`Counter handleMessage, begin to synchronize stage actively again, stage: ${this.ripple.stage}`);
 						
-						this.ripple.counter.startStageSynchronize();
+						this.ripple.counter.startStageSynchronize(true);
 
 						return
 					}

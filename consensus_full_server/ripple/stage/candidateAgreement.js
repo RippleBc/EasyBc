@@ -128,7 +128,7 @@ class CandidateAgreement extends Stage
 			logger.fatal(`CandidateAgreement handler, candidate agreement failed, prepare to stage synchronize, but counter state is not STAGE_STATE_EMPTY, ${getStackInfo()}`);
 			process.exit(1);
 		}
-		this.ripple.counter.startStageSynchronize();
+		this.ripple.counter.startStageSynchronize(true);
 
 		//
 		this.reset();

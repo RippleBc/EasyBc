@@ -3,6 +3,7 @@ const { unl } = require("../../config.json");
 const utils = require("../../../depends/utils");
 const { RIPPLE_STATE_PERISH_NODE, COUNTER_CONSENSUS_STAGE_TRIGGER_MAX_SIZE, PROTOCOL_CMD_COUNTER_FINISH_STATE_REQUEST, PROTOCOL_CMD_COUNTER_FINISH_STATE_RESPONSE, RIPPLE_STATE_STAGE_CONSENSUS, COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD, COUNTER_HANDLER_TIME_DETAY, COUNTER_INVALID_STAGE_TIME_SECTION, STAGE_STATE_EMPTY, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_STAGE_INFO_REQUEST, PROTOCOL_CMD_STAGE_INFO_RESPONSE } = require("../../constant");
 const Stage = require("./stage");
+const assert = require("assert");
 
 const rlp = utils.rlp;
 const sha3 = utils.sha3;
@@ -25,7 +26,6 @@ class Counter extends Stage
 		this.ripple = ripple;
 
 		this.stageSynchronizeTrigger = [];
-		this.ifKeepTransactions = true;
 	}
 
 	reset()
@@ -33,7 +33,6 @@ class Counter extends Stage
 		super.reset();
 
 		this.stageSynchronizeTrigger = [];
-		this.ifKeepTransactions = true;
 	}
 
 	handler(ifSuccess)
@@ -42,17 +41,15 @@ class Counter extends Stage
 		{
 			logger.warn("Counter handler, stage synchronize success")
 
-			const ifRetry = this.ifKeepTransactions;
-
 			this.reset();
-			this.ripple.run(ifRetry);
+			this.ripple.run(this.ifKeepTransactions);
 		}
 		else
 		{
 			logger.warn(`Counter handleMessage, stage synchronize success because of timeout, begin to synchronize stage actively, stage: ${this.ripple.stage}`);
 			
 			this.reset();
-			this.startStageSynchronize();
+			this.startStageSynchronize(true);
 		}
 	}
 
@@ -85,7 +82,7 @@ class Counter extends Stage
 				{
 					logger.warn(`Counter handleMessage, begin to synchronize stage negatively, stage: ${this.ripple.stage}`);
 
-					this.startStageSynchronize();
+					this.startStageSynchronize(true);
 				}
 				
 				const counterData = new CounterData();
@@ -172,8 +169,13 @@ class Counter extends Stage
 		return this.state === STAGE_STATE_EMPTY && stageInvalidFrequency >= COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD * unl.length
 	}
 
-	startStageSynchronize(ifKeepTransactions = true)
+	/**
+	 * @param {Boolean} ifKeepTransactions
+	 */
+	startStageSynchronize(ifKeepTransactions)
 	{
+		assert(typeof ifKeepTransactions === "boolean", `Counter startStageSynchronize, ifKeepTransactions should be an Boolean, now is ${typeof ifKeepTransactions}`);
+
 		this.ifKeepTransactions = ifKeepTransactions;
 
 		this.start();
