@@ -1,3 +1,5 @@
-const a = [1, 2, 3, 4, 5, 6]
+const utils = require("./depends/utils");
 
-console.log(a.slice(0, -3))
+const rlp = utils.rlp;
+
+console.log(rlp.decode(Buffer.from([0xc0])))

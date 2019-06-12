@@ -72,34 +72,34 @@ class CandidateAgreement extends Stage
 
 		if(sortedTransactionColls[0] && sortedTransactionColls[0][1].count / (unl.length + 1) >= TRANSACTIONS_CONSENSUS_THRESHOULD)
 		{
-			logger.trace("CandidateAgreement handler, candidate agreement success, go to next stage");
-
-			const transactionNum = rlp.decode(sortedTransactionColls[0][1].data).length;
-
-			if(transactionNum > 0)
+			// check if transactions num is zero
+			if(sortedTransactionColls[0][1].data.length === 1 &&  sortedTransactionColls[0][1].data[0] === 0xc0)
 			{
+				logger.trace("CandidateAgreement handler, candidate agreement success, go to next stage");
+
 				this.ripple.blockAgreement.run(sortedTransactionColls[0][1].data);
-
-				this.reset();
-
-				return;
 			}
 			else
 			{
+				logger.trace("CandidateAgreement handler, candidate agreement success, but there is no transactions in this candidate, go to stage amalgamate");
+
 				// begin to synchronize stage and start a new round
 				if(this.ripple.counter.state !== STAGE_STATE_EMPTY)
 				{
 					logger.fatal(`CandidateAgreement handler, candidate agreement failed, prepare to stage synchronize, but counter state is not STAGE_STATE_EMPTY, ${getStackInfo()}`);
+					process.exit(1);
 				}
 				if(this.ripple.state === RIPPLE_STATE_PERISH_NODE)
 				{
 					logger.fatal(`CandidateAgreement handler, candidate agreement failed, prepare to stage synchronize, but counter state is not STAGE_STATE_EMPTY, ${getStackInfo()}`);
+					process.exit(1);
 				}
 				this.ripple.counter.startStageSynchronize(false);
-
-				//
-				this.reset();
 			}
+
+			this.reset();
+			
+			return;
 		}
 		
 		// return to amalgamate stage
@@ -122,12 +122,14 @@ class CandidateAgreement extends Stage
 		if(this.ripple.counter.state !== STAGE_STATE_EMPTY)
 		{
 			logger.fatal(`CandidateAgreement handler, candidate agreement failed, prepare to stage synchronize, but counter state is not STAGE_STATE_EMPTY, ${getStackInfo()}`);
+			process.exit(1);
 		}
 		if(this.ripple.state === RIPPLE_STATE_PERISH_NODE)
 		{
 			logger.fatal(`CandidateAgreement handler, candidate agreement failed, prepare to stage synchronize, but counter state is not STAGE_STATE_EMPTY, ${getStackInfo()}`);
+			process.exit(1);
 		}
-		this.ripple.counter.startStageSynchronize(false);
+		this.ripple.counter.startStageSynchronize();
 
 		//
 		this.reset();
