@@ -42,8 +42,10 @@ class Counter extends Stage
 		{
 			logger.warn("Counter handler, stage synchronize success")
 
+			const ifRetry = this.ifKeepTransactions;
+
 			this.reset();
-			this.ripple.run(this.ifKeepTransactions);
+			this.ripple.run(ifRetry);
 		}
 		else
 		{

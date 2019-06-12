@@ -9,6 +9,7 @@ const { randomBytes } = require("crypto");
 const createPrivateKey = utils.createPrivateKey;
 const publicToAddress = utils.publicToAddress;
 const privateToPublic = utils.privateToPublic;
+const padToEven = utils.padToEven;
 
 /*
  * @param {String} url ex "http://123.157.68.243:10011"
@@ -46,7 +47,15 @@ module.exports.getAccountInfo = async (url, address) => {
         reject(`getAccountInfo, throw exception, ${msg}`)
       }
 
-      const account = new Account(Buffer.from(data, "hex"));
+      let account;
+      if(data)
+      {
+        account = new Account(Buffer.from(data, "hex"));
+      }
+      else
+      {
+        account = new Account();
+      }
 
       resolve({nonce: account.nonce, balance: account.balance});
     });
@@ -71,11 +80,10 @@ module.exports.generateTx = (privateKey, nonce, to, value) => {
   // init tx
   const transaction = new Transaction({
     timestamp: Date.now(),
-    nonce: Buffer.from(nonce, "hex"),
+    nonce: Buffer.from(padToEven(nonce), "hex"),
     to: Buffer.from(to, "hex"),
     value: Buffer.from(value, "hex")
   })
-
   // sign
   transaction.sign(Buffer.from(privateKey, "hex"));
 
@@ -145,10 +153,18 @@ module.exports.sendTransaction = async (url, tx) => {
         reject(`sendTransaction close abnormally, ${exitCode}`);
       }
 
-      const { code, data, msg } = JSON.parse(Buffer.concat(sucDataArray).toString());
-      if(code !== SUCCESS)
+      try
       {
-        reject(`sendTransaction, throw exception, ${msg}`)
+        const { code, data, msg } = JSON.parse(Buffer.concat(sucDataArray).toString());
+
+        if(code !== SUCCESS)
+        {
+          reject(`sendTransaction, throw exception, ${url}, ${msg}`)
+        }
+      }
+      catch(e)
+      {
+        reject(`sendTransaction, throw exception, ${url}, ${e}`)
       }
 
       resolve();
