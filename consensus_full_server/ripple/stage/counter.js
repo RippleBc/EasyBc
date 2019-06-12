@@ -46,7 +46,7 @@ class Counter extends Stage
 			this.reset();
 			if(this.action === COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE)
 			{
-				this.ripple.run(false);
+				return this.ripple.run(false);
 			}
 			else if(this.action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE)
 			{

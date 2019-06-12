@@ -160,7 +160,14 @@ class Stage
 					this.ripple.counter.resetTrigger();
 				}
 				
-				this.handler(true);
+				//
+				const handlerResult = this.handler(true);
+				if(handlerResult && handlerResult instanceof Promise)
+				{
+					handlerResult.catch(e => {
+						this.logger.error(`Stage stageSynchronize, stage: ${this.ripple.stage}, handler throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+					})
+				}
 			}
 			else
 			{
@@ -213,7 +220,13 @@ class Stage
 						return
 					}
 
-					this.handler(false);
+					const handlerResult = this.handler(false);
+					if(handlerResult && handlerResult instanceof Promise)
+					{
+						handlerResult.catch(e => {
+							this.logger.error(`Stage stageSynchronize, stage: ${this.ripple.stage}, handler throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+						})
+					}
 				}
 			}
 		}, STAGE_STAGE_SYNCHRONIZE_TIMEOUT);

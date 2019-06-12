@@ -86,7 +86,7 @@ class BlockAgreement extends Stage
 
 				logger.info("BlockAgreement handler, block agreement success, process block is over");
 
-				await this.ripple.run();
+				await this.ripple.run(false);
 
 				for(let i = 0; i < this.ripple.amalgamateMessagesCache.length; i++)
 				{
