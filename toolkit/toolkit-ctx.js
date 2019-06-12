@@ -19,7 +19,7 @@ program
     const num = parseInt(options.num);
 
     let completed = 0;
-    const total = num;
+    const total = num * urls.length;
     const pb = new ProgressBar("tx comsensus limit test", 50);
 
     (async () => {
@@ -34,19 +34,19 @@ program
 
       for(let i = 0; i < num - 1; i++)
       {
-        // generate tx raw
-        const txRaw = generateRandomTx(); 
-
         // send transaction
         let sendTransactionPromises = [];
         for(let url of urls)
         {
-          sendTransactionPromises.push(sendTransaction(url, txRaw));
+          // generate tx raw
+          const txRaw = generateRandomTx(); 
+          sendTransaction(url, txRaw).then(() => {
+            // update progress
+            pb.render(++completed, total);
+          }).catch(e => {
+            console.error(`sendTransaction throw exception, ${e}`);
+          });
         }
-        await Promise.all(sendTransactionPromises);
-
-        // update progress
-        pb.render(++completed, total);
       }
 
       // init tx
@@ -64,7 +64,8 @@ program
       await Promise.all(sendTransactionPromises);
 
       // update progress
-      pb.render(++completed, total);
+      completed += 4;
+      pb.render(completed, total);
     })().then(() => {
     }).catch(e => {
       console.error(`calculate transaction consensus limit failed, ${e}`)
