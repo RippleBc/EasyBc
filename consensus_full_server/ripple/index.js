@@ -157,14 +157,18 @@ class Ripple
 				{
 					loggerStageConsensus.warn("Ripple handleMessage, stage synchronize success because of node notification");
 
-					this.counter.handler(true).then(() => {
-						if(this.state === RIPPLE_STATE_TRANSACTIONS_CONSENSUS)
-						{
-							this.amalgamate.handleMessage(address, cmd, data);
-						}
-					}).catch(e => {
-						loggerStageConsensus.error(`Ripple handleMessage, stage: ${this.stage}, handler throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
-					});	
+					const counterHanlderResult = this.counter.handler(true);
+					if(counterHanlderResult && counterHanlderResult instanceof Promise)
+					{
+						counterHanlderResult.then(() => {
+							if(this.state === RIPPLE_STATE_TRANSACTIONS_CONSENSUS)
+							{
+								this.amalgamate.handleMessage(address, cmd, data);
+							}
+						}).catch(e => {
+							loggerStageConsensus.error(`Ripple handleMessage, stage: ${this.stage}, handler throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+						});	
+					}
 				}
 				else
 				{
