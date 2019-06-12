@@ -146,6 +146,7 @@ class BlockAgreement extends Stage
 		{
 			timestamp += BLOCK_AGREEMENT_TIMESTAMP_MAX_OFFSET
 		}
+		console.log(`first timestamp: ${timestamp}`)
 		console.timeEnd("first init timestamp");
 
 		// init oth property
@@ -177,6 +178,7 @@ class BlockAgreement extends Stage
 				timestamp += BLOCK_AGREEMENT_TIMESTAMP_JUMP_LENGTH;
 			}
 			block.header.timestamp = timestamp;
+			console.log(`second timestamp: ${timestamp}`)
 			console.timeEnd("second init timestamp");
 
 			// sign
