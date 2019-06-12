@@ -20,6 +20,12 @@ class Counter extends Base
 
 		// Define Properties
     const fields = [{
+      name: "action",
+      length: 4,
+      allowZero: true,
+      allowLess: true,
+      default: Buffer.alloc(0)
+    },{
       name: "timestamp",
       length: 32,
       allowZero: true,

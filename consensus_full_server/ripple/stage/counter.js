@@ -1,7 +1,7 @@
 const CounterData = require("../data/counter");
 const { unl } = require("../../config.json");
 const utils = require("../../../depends/utils");
-const { RIPPLE_STATE_PERISH_NODE, COUNTER_CONSENSUS_STAGE_TRIGGER_MAX_SIZE, PROTOCOL_CMD_COUNTER_FINISH_STATE_REQUEST, PROTOCOL_CMD_COUNTER_FINISH_STATE_RESPONSE, RIPPLE_STATE_STAGE_CONSENSUS, COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD, COUNTER_HANDLER_TIME_DETAY, COUNTER_INVALID_STAGE_TIME_SECTION, STAGE_STATE_EMPTY, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_STAGE_INFO_REQUEST, PROTOCOL_CMD_STAGE_INFO_RESPONSE } = require("../../constant");
+const { COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE, RIPPLE_STATE_PERISH_NODE, COUNTER_CONSENSUS_STAGE_TRIGGER_MAX_SIZE, PROTOCOL_CMD_COUNTER_FINISH_STATE_REQUEST, PROTOCOL_CMD_COUNTER_FINISH_STATE_RESPONSE, RIPPLE_STATE_STAGE_CONSENSUS, COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD, COUNTER_HANDLER_TIME_DETAY, COUNTER_INVALID_STAGE_TIME_SECTION, STAGE_STATE_EMPTY, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_STAGE_INFO_REQUEST, PROTOCOL_CMD_STAGE_INFO_RESPONSE } = require("../../constant");
 const Stage = require("./stage");
 const assert = require("assert");
 
@@ -25,6 +25,7 @@ class Counter extends Stage
 
 		this.ripple = ripple;
 
+		this.actions = [];
 		this.stageSynchronizeTrigger = [];
 	}
 
@@ -32,6 +33,7 @@ class Counter extends Stage
 	{
 		super.reset();
 
+		this.actions = [];
 		this.stageSynchronizeTrigger = [];
 	}
 
@@ -42,14 +44,27 @@ class Counter extends Stage
 			logger.warn("Counter handler, stage synchronize success")
 
 			this.reset();
-			this.ripple.run(this.ifKeepTransactions);
+			if(this.action === COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE)
+			{
+				this.ripple.run(false);
+			}
+			else if(this.action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE)
+			{
+				this.ripple.run(true);
+			}
+			else
+			{
+				logger.fatal(`Counter handler, invalid action, ${this.action}`);
+
+				process.exit(1);
+			}
 		}
 		else
 		{
 			logger.warn(`Counter handleMessage, stage synchronize success because of timeout, begin to synchronize stage actively, stage: ${this.ripple.stage}`);
 			
 			this.reset();
-			this.startStageSynchronize(true);
+			this.startStageSynchronize(this.action);
 		}
 	}
 
@@ -82,10 +97,13 @@ class Counter extends Stage
 				{
 					logger.warn(`Counter handleMessage, begin to synchronize stage negatively, stage: ${this.ripple.stage}`);
 
-					this.startStageSynchronize(true);
+					const action = bufferToInt(data);
+
+					this.startStageSynchronize(action);
 				}
 				
 				const counterData = new CounterData();
+				counterData.action = this.action;
 				counterData.timestamp = Date.now();
 				counterData.sign(privateKey);
 
@@ -112,7 +130,18 @@ class Counter extends Stage
 					}
 					else
 					{
-						// check timestamp
+						if(this.checkIfNodeFinishDataExchange(address.toString("hex")))
+						{
+							logger.info(`Counter handleMessage, address: ${address.toString("hex")}, send the same exchange data`);
+							
+							this.cheatedNodes.push(address.toString('hex'));
+						}
+						else
+						{
+							const action = bufferToInt(counterData.action);
+
+							this.actions.push(action);
+						}
 					}
 				}
 				else
@@ -170,20 +199,22 @@ class Counter extends Stage
 	}
 
 	/**
-	 * @param {Boolean} ifKeepTransactions
+	 * @param {Number} action
 	 */
-	startStageSynchronize(ifKeepTransactions)
+	startStageSynchronize(action)
 	{
-		assert(typeof ifKeepTransactions === "boolean", `Counter startStageSynchronize, ifKeepTransactions should be an Boolean, now is ${typeof ifKeepTransactions}`);
+		assert(typeof action === "number", `Counter startStageSynchronize, action should be a Number, now is ${typeof action}`);
 
-		this.ifKeepTransactions = ifKeepTransactions;
+		this.action = action;
 
 		this.start();
 
 		this.ripple.reset();
 		this.ripple.state = RIPPLE_STATE_STAGE_CONSENSUS;
 
-		p2p.sendAll(PROTOCOL_CMD_STAGE_INFO_REQUEST);
+		this.actions.push(action);
+
+		p2p.sendAll(PROTOCOL_CMD_STAGE_INFO_REQUEST, action);
 	}
 }
 
