@@ -7,7 +7,7 @@ const rp = require("request-promise");
 const { SUCCESS } = require("../../constant");
 const { genesis } = require("../config.json");
 const { TRANSACTIONS_CONSENSUS_THRESHOULD } = require('../constant');
-const _ = require("underscore");=
+const _ = require("underscore");
 const { unl } = require("../config.json");
 
 const db = process[Symbol.for("db")];
