@@ -73,13 +73,7 @@ class CandidateAgreement extends Stage
 		if(sortedTransactionColls[0] && sortedTransactionColls[0][1].count / (unl.length + 1) >= TRANSACTIONS_CONSENSUS_THRESHOULD)
 		{
 			// check if transactions num is zero
-			if(sortedTransactionColls[0][1].data.length === 1 &&  sortedTransactionColls[0][1].data[0] === 0xc0)
-			{
-				logger.trace("CandidateAgreement handler, candidate agreement success, go to next stage");
-
-				this.ripple.blockAgreement.run(sortedTransactionColls[0][1].data);
-			}
-			else
+			if(sortedTransactionColls[0][1].data.length === 1 && sortedTransactionColls[0][1].data[0] === 0xc0)
 			{
 				logger.trace("CandidateAgreement handler, candidate agreement success, but there is no transactions in this candidate, go to stage amalgamate");
 
@@ -95,6 +89,12 @@ class CandidateAgreement extends Stage
 					process.exit(1);
 				}
 				this.ripple.counter.startStageSynchronize(false);
+			}
+			else
+			{
+				logger.trace("CandidateAgreement handler, candidate agreement success, go to next stage");
+
+				this.ripple.blockAgreement.run(sortedTransactionColls[0][1].data);
 			}
 
 			this.reset();
