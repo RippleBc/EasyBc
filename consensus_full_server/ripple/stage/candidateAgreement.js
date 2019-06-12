@@ -4,7 +4,7 @@ const Stage = require("./stage");
 const { unl } = require("../../config.json");
 const assert = require("assert");
 const Transaction = require("../../../depends/transaction");
-const { TRANSACTIONS_CONSENSUS_THRESHOULD, RIPPLE_STAGE_CANDIDATE_AGREEMENT, PROTOCOL_CMD_CANDIDATE_AGREEMENT, PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_REQUEST, PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_RESPONSE } = require("../../constant");
+const { RIPPLE_STATE_PERISH_NODE, STAGE_STATE_EMPTY, TRANSACTIONS_CONSENSUS_THRESHOULD, RIPPLE_STAGE_CANDIDATE_AGREEMENT, PROTOCOL_CMD_CANDIDATE_AGREEMENT, PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_REQUEST, PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_RESPONSE } = require("../../constant");
 
 const sha256 = utils.sha256;
 const rlp = utils.rlp;
@@ -98,7 +98,7 @@ class CandidateAgreement extends Stage
 			}
 
 			this.reset();
-			
+
 			return;
 		}
 		
