@@ -5,6 +5,7 @@ const { unl } = require("../../config.json");
 const assert = require("assert");
 const Transaction = require("../../../depends/transaction");
 const { RIPPLE_STATE_PERISH_NODE, STAGE_STATE_EMPTY, TRANSACTIONS_CONSENSUS_THRESHOULD, RIPPLE_STAGE_CANDIDATE_AGREEMENT, PROTOCOL_CMD_CANDIDATE_AGREEMENT, PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_REQUEST, PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_RESPONSE } = require("../../constant");
+const _ = require("underscore");
 
 const sha256 = utils.sha256;
 const rlp = utils.rlp;
@@ -66,9 +67,7 @@ class CandidateAgreement extends Stage
 		}
 
 		// statistic vote result
-		const sortedTransactionColls = [...transactionCollsHash].sort(transactionColl => {
-			return -transactionColl[1].count;
-		});
+		const sortedTransactionColls = _.sortBy([...transactionCollsHash], transactionColl => -transactionColl[1].count);
 
 		if(sortedTransactionColls[0] && sortedTransactionColls[0][1].count / (unl.length + 1) >= TRANSACTIONS_CONSENSUS_THRESHOULD)
 		{
@@ -146,9 +145,7 @@ class CandidateAgreement extends Stage
 		this.start();
 
 		// sort transactions
-		transactions = transactions.sort((a, b) => {
-			return a.toString("hex") > b.toString("hex");
-		});
+		transactions = _.sortBy(transactions, tx => tx.toString("hex"));
 
 		// debug transaction
 		for(let i = 0; i < transactions.length; i++)

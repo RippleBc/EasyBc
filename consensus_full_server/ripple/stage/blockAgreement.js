@@ -6,6 +6,7 @@ const async = require("async");
 const assert = require("assert");
 const { unl } = require("../../config.json");
 const { BLOCK_AGREEMENT_TIMESTAMP_JUMP_LENGTH, BLOCK_AGREEMENT_TIMESTAMP_MAX_OFFSET, TRANSACTIONS_CONSENSUS_THRESHOULD, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_BLOCK_AGREEMENT, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_REQUEST, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE } = require("../../constant");
+const _ = require("underscore");
 
 const sha256 = utils.sha256;
 const Buffer = utils.Buffer;
@@ -68,9 +69,7 @@ class BlockAgreement extends Stage
 		  logger.trace(`BlockAgreement handler, candidate hash: ${key}, count: ${value.count}`);
 		}
 
-		const sortedBlocks = [...blocksHash].sort(block => {
-			return -block[1].count;
-		});
+		const sortedBlocks = _.sortBy([...blocksHash], block => -block[1].count);
 
 		if(sortedBlocks[0] && sortedBlocks[0][1].count / (unl.length + 1) >= TRANSACTIONS_CONSENSUS_THRESHOULD)
 		{

@@ -7,8 +7,8 @@ const rp = require("request-promise");
 const { SUCCESS } = require("../../constant");
 const { genesis } = require("../config.json");
 const { TRANSACTIONS_CONSENSUS_THRESHOULD } = require('../constant');
-
-let { unl } = require("../config.json");
+const _ = require("underscore");=
+const { unl } = require("../config.json");
 
 const db = process[Symbol.for("db")];
 const logger = process[Symbol.for("loggerUpdate")];
@@ -171,9 +171,7 @@ class Update
 				}
 			}
 
-			const sortedBlocks = [...blocks].sort(ele => {
-				return -ele[1];
-			});
+			const sortedBlocks = _.sortBy([...blocks], ele => -ele[1]);
 			if(sortedBlocks[0])
 			{
 				const [majorityBlock, count] = sortedBlocks[0];

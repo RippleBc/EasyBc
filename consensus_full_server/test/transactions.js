@@ -4,6 +4,7 @@ const Block = require("../../depends/block")
 const Transaction = require("../../depends/transaction")
 const Candidate = require("../ripple/data/candidate");
 const RippleBlock = require("../ripple/data/rippleBlock");
+const _ = require("underscore");
 
 const Buffer = utils.Buffer;
 const rlp = utils.rlp;
@@ -140,9 +141,7 @@ describe("test transactions speed", () => {
 
 		//
 		console.time("vote candidate, sort")
-		const sortedTransactionColls = [...transactionCollsHash].sort(transactionColl => {
-			return -transactionColl[1].count;
-		});
+		const sortedTransactionColls = _.sortBy([...transactionCollsHash], transactionColl => -transactionColl[1].count);
 		console.timeEnd("vote candidate, sort")
 
 		// mixed all transactions, and begin to amalgamate

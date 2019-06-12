@@ -45,7 +45,8 @@
     "chai": "^4.2.0",
     "mocha": "^5.2.0",
     "single-line-log": "^1.1.2",
-    "source-map-support": "^0.5.12"
+    "source-map-support": "^0.5.12",
+    "underscore": "^1.9.1"
   },
   "scripts": {
     "consensus_server": "pm2 start consensus_server/index.js --no-autorestart --name=consensus",

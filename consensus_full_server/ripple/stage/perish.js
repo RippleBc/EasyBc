@@ -4,6 +4,7 @@ const utils = require("../../../depends/utils");
 const Sender = require("../sender");
 const Stage = require("./stage");
 const { TRANSACTIONS_CONSENSUS_THRESHOULD, PROTOCOL_CMD_KILL_NODE_FINISH_STATE_REQUEST, PROTOCOL_CMD_KILL_NODE_FINISH_STATE_RESPONSE, NEGATIVE_PERISH_DATA_PERIOD_OF_VALID, ACTIVE_PERISH_DATA_PERIOD_OF_VALID, STAGE_STATE_EMPTY, RIPPLE_STATE_PERISH_NODE, PROTOCOL_CMD_KILL_NODE_REQUEST, PROTOCOL_CMD_KILL_NODE_RESPONSE } = require("../../constant");
+const _ = require("underscore");
 
 const bufferToInt = utils.bufferToInt;
 
@@ -60,7 +61,7 @@ class Perish extends Stage
 				})
 			}
 		}
-		const sortedPerishNodeAddresses = [...perishDataMap].sort(perishData => -perishData[1].count);
+		const sortedPerishNodeAddresses = _.sortBy([...perishDataMap], perishData => -perishData[1].count);
 		if(sortedPerishNodeAddresses[0] && sortedPerishNodeAddresses[0][1].count / (unl.length + 1) >= TRANSACTIONS_CONSENSUS_THRESHOULD)
 		{
 			const perishData = sortedPerishNodeAddresses[0][1].data
