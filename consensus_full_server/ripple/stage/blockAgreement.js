@@ -75,7 +75,7 @@ class BlockAgreement extends Stage
 		{
 			logger.info("BlockAgreement handler, block agreement success, begin to process block");
 
-			this.ripple.state = RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK;
+			this.ripple.stage = RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK;
 
 			this.reset();
 			
@@ -275,7 +275,7 @@ class BlockAgreement extends Stage
 
 	checkIfIsProcessingBlock()
 	{
-		return this.ripple.state === RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK;
+		return this.ripple.stage === RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK;
 	}
 }
 

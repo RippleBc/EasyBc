@@ -157,25 +157,14 @@ class Ripple
 				{
 					loggerStageConsensus.warn("Ripple handleMessage, stage synchronize success because of node notification");
 
-					const counterHanlderResult = this.counter.handler(true);
-					if(counterHanlderResult && counterHanlderResult instanceof Promise)
-					{
-						counterHanlderResult.then(() => {
-							if(this.state === RIPPLE_STATE_TRANSACTIONS_CONSENSUS)
-							{
-								this.amalgamate.handleMessage(address, cmd, data);
-							}
-						}).catch(e => {
-							loggerStageConsensus.error(`Ripple handleMessage, stage: ${this.stage}, handler throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
-						});	
-					}
+					this.counter.handler(true);
 				}
 				else
 				{
-					loggerStageConsensus.warn("Ripple handleMessage, processor is synchronizing stage, do not handle transaction consensus messages");
+					loggerStageConsensus.warn("Ripple handleMessage, processor is synchronizing stage, do not transactions amalgamate messages");
+					
+					return;
 				}
-
-				return;
 			}
 
 			if(this.blockAgreement.checkIfDataExchangeIsFinish())
@@ -185,8 +174,15 @@ class Ripple
 				this.blockAgreement.handler(true);
 			}
 
-			// block agreement is over but, block is still processing, record the messages and process them later
 			if(this.blockAgreement.checkIfIsProcessingBlock())
+			{
+				this.amalgamateMessagesCache.push({
+					address: address,
+					cmd: cmd,
+					data: data
+				});
+			}
+			else if(this.counter.checkIfFetchingNewTransactions())
 			{
 				this.amalgamateMessagesCache.push({
 					address: address,
@@ -214,7 +210,7 @@ class Ripple
 
 			if(this.state === RIPPLE_STATE_STAGE_CONSENSUS)
 			{
-				return logger.info(`Ripple handleMessage, processor is synchronizing stage, do not handle transaction consensus messages`);
+				return logger.info(`Ripple handleMessage, processor is synchronizing stage, do not handle candidates agreement messages`);
 			}
 
 			if(this.amalgamate.checkIfDataExchangeIsFinish())
@@ -244,7 +240,7 @@ class Ripple
 
 			if(this.state === RIPPLE_STATE_STAGE_CONSENSUS)
 			{
-				return logger.info(`Ripple handleMessage, processor is synchronizing stage, do not handle transaction consensus messages`);
+				return logger.info(`Ripple handleMessage, processor is synchronizing stage, do not handle blocks agreement messages`);
 			}
 
 			if(this.candidateAgreement.checkIfDataExchangeIsFinish())
