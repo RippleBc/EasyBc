@@ -20,11 +20,14 @@ const mysql = new Mysql();
 	for(let ld of logDirs)
 	{
 		run(path.join(logDir, ld), logsBufferMaxSize).catch(e => {
-			logger.fatal(`run, throw exception, ${e}`);
+			logger.fatal(`run, throw exception, ${e.stack ? e.stack : e.toString("hex")}`);
 			process.exit(1);
 		})
 	}
-})()
+})().catch(e => {
+	logger.fatal(`log parser throw exception, ${e.stack ? e.statck : e.toString("hex")}`);
+	process.exit(1);
+})
 
 /**
  * @param {String} dir
