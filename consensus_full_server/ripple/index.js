@@ -137,18 +137,13 @@ class Ripple
 					loggerPerishNode.warn("Ripple handleMessage, perish node success because of node notification");
 
 					this.perish.handler(true);
-
-					if(this.state === RIPPLE_STATE_TRANSACTIONS_CONSENSUS)
-					{
-						this.amalgamate.handleMessage(address, cmd, data);
-					}
 				}
 				else
 				{
 					loggerPerishNode.warn("Ripple handleMessage, processor is perishing node, do not handle transaction consensus messages");
-				}
 
-				return
+					return;
+				}
 			}
 
 			if(this.state === RIPPLE_STATE_STAGE_CONSENSUS)
@@ -162,7 +157,7 @@ class Ripple
 				else
 				{
 					loggerStageConsensus.warn("Ripple handleMessage, processor is synchronizing stage, do not transactions amalgamate messages");
-					
+
 					return;
 				}
 			}
