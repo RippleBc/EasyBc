@@ -45,7 +45,7 @@ class Counter extends Stage
 
 			if(this.action === COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE)
 			{
-				logger.warn("Counter handler, stage synchronize success, begin to fetch new transaction and amalgamate")
+				logger.info("Counter handler, stage synchronize success, begin to fetch new transaction and amalgamate")
 
 				this.ripple.stage = RIPPLE_STAGE_AMALGAMATE_FETCHING_NEW_TRANSACTIONS;
 
@@ -221,6 +221,16 @@ class Counter extends Stage
 	checkIfFetchingNewTransactions()
 	{
 		return this.ripple.stage === RIPPLE_STAGE_AMALGAMATE_FETCHING_NEW_TRANSACTIONS;
+	}
+
+	checkActionIfFetchingNewTransactionsAndAmalgamate()
+	{
+		return this.action === COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE;
+	}
+
+	checkActionIfReuseCachedTransactionsAndAmalgamate()
+	{
+		return this.action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE;
 	}
 
 	/**

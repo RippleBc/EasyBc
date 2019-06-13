@@ -146,7 +146,20 @@ class Ripple
 			{
 				if(this.counter.checkIfDataExchangeIsFinish())
 				{
-					loggerStageConsensus.warn("Ripple handleMessage, stage synchronize success because of node notification");
+					if(this.counter.checkActionIfFetchingNewTransactionsAndAmalgamate())
+					{
+						loggerStageConsensus.info("Ripple handleMessage, stage synchronize success because of node notification, begin to fetch new transactions and start amalgamate");
+					}
+					else if(this.counter.checkActionIfReuseCachedTransactionsAndAmalgamate())
+					{
+						loggerStageConsensus.warn("Ripple handleMessage, stage synchronize success because of node notification, begin to amalgamate use cached transactions");
+					}
+					else
+					{
+						loggerStageConsensus.fatal("Ripple handleMessage, invalid counter action");
+
+						process.exit(1);
+					}
 
 					this.counter.handler(true);
 				}
