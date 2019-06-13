@@ -115,9 +115,24 @@ class Counter extends Stage
 				// begin stage synchronize
 				if(this.state === STAGE_STATE_EMPTY && this.ripple.state !== RIPPLE_STATE_PERISH_NODE)
 				{
-					logger.warn(`Counter handleMessage, begin to synchronize stage negatively, stage: ${this.ripple.stage}`);
-
 					const action = bufferToInt(data);
+
+					if(action === COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE)
+					{
+						logger.info(`Counter handleMessage, begin to synchronize stage negatively, stage: ${this.ripple.stage}, begin to fetch new transactions and amalgamate`);
+					}
+					else if(action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE)
+					{
+						logger.warn(`Counter handleMessage, begin to synchronize stage negatively, stage: ${this.ripple.stage}, begin to use cached tranasctions and amalgamate`);
+					}
+					else
+					{
+						logger.error(`Counter handleMessage, invalid action, ${action}`)
+
+						this.cheatedNodes.push(address.toString('hex'))
+
+						return;
+					}
 
 					this.startStageSynchronize(action);
 				}
