@@ -2,7 +2,7 @@ const assert = require("assert");
 const stream = require('stream');
 const log4js= require("./logConfig");
 
-const READ_SIZE = 100;
+const READ_SIZE = 1000;
 
 const logger = log4js.getLogger("logParse");
 
