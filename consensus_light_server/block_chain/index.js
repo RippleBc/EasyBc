@@ -1,4 +1,9 @@
 const { QUERY_MAX_LIMIT, SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS } = require("../../constant");
+const { MAX_TX_TIMESTAMP_GAP } = require("../constant");
+const utils = require("../../depends/utils");
+
+const bufferToInt = utils.bufferToInt;
+
 const app = process[Symbol.for('app')];
 const Transaction = require("../../depends/transaction");
 const Block = require("../../depends/block");
@@ -32,6 +37,19 @@ app.post("/sendTransaction", function(req, res) {
             await Promise.reject(`sendTransaction, new Transaction() failed, ${e}`)
         }
 
+        // check timestamp
+        const now = Date.now();
+        const txTimestamp = bufferToInt(transaction.timestamp);
+        if(txTimestamp > now)
+        {
+            await Promise.reject(`sendTransaction, timestamp should litter than or equal to ${now}, now is ${txTimestamp}`)
+        }
+        if(txTimestamp < now - MAX_TX_TIMESTAMP_GAP)
+        {
+            await Promise.reject(`sendTransaction, timestamp should bigger than ${now - MAX_TX_TIMESTAMP_GAP}, now is ${txTimestamp}`)
+        }
+
+        // record
         await mysql.saveRawTransaction(transaction.hash().toString('hex'), req.body.tx);
     })().then(() => {
         res.json({
