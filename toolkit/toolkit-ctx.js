@@ -66,8 +66,35 @@ program
       // update progress
       completed += 4;
       pb.render(completed, total);
-    })().then(() => {
-    }).catch(e => {
+
+      console.time("\n\n100txs time consume: ");
+
+      // check balance
+      await (async () => {
+        let index = 0;
+        while(index ++ < 800)
+        {
+          const { nonce: nonceFromNew, balance: balanceFromNew } = await getAccountInfo(urls[0], tx_from)
+          const { nonce: nonceToNew, balance: balanceToNew } = await getAccountInfo(urls[0], tx_to)
+
+          if(new BN(nonceFromNew).toString("hex") === new BN(nonceFrom).addn(1).toString("hex") &&
+            new BN(balanceFromNew).toString("hex") === new BN(balanceFrom).subn(1).toString("hex") &&
+            new BN(balanceToNew).toString("hex") === new BN(balanceTo).addn(1).toString("hex"))
+          {
+            console.timeEnd("\n\n100txs time consume: ");
+            return;
+          }
+
+          await new Promise((resolve, reject) => {
+            setTimeout(() => {
+              resolve();
+            }, 100);
+          })
+        }
+
+        console.log("\n\ntxs consensus is too slow, please find the reason");
+      })();
+    })().catch(e => {
       console.error(`calculate transaction consensus limit failed, ${e}`)
     })
   });
