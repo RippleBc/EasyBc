@@ -28,33 +28,26 @@ class ReadLine {
 	}
 
 	/**
-	 * @return {String} null表示流已经结束
+	 * @return {Object} null表示流已经结束
+	 *   @prop {String} line
+	 *   @prop {String} remain
 	 */
 	async readLine() {
-		let { line, remain } = getLineAndRemain(this.stringBuffer)
-
-		if(line)
+		do
 		{
-			this.stringBuffer = remain;
+			let { line, remain } = getLineAndRemain(this.stringBuffer)
 
-			return line;
-		}
+			if(line) {
+				this.stringBuffer = remain;
 
-		while(true)
-		{
+				return line;
+			}
+
 			const chunkString = this.input.read(READ_SIZE);
 			if(chunkString === null)
 			{
 				if(this.end)
 				{
-					if(this.stringBuffer.length)
-					{
-						let line = this.stringBuffer;
-
-						this.stringBuffer = '';
-
-						return line;
-					}
 					return null;
 				}
 				else
@@ -69,22 +62,15 @@ class ReadLine {
 			}
 
 			this.stringBuffer += chunkString;
-
-			let { line, remain } = getLineAndRemain(this.stringBuffer)
-
-			if(line) {
-				this.stringBuffer = remain;
-
-				return line;
-			}
-		}
+		} 
+		while(true);
 	}
 }
 
 /**
- * @param
+ * @param {String} content
  */
-const getLineAndRemain = (content) => {
+const getLineAndRemain = content => {
 	assert(typeof content === 'string', `ReadLine getLineAndRemain, content should be a String, now is ${typeof content}`)
 
 	let newLineIndex = content.indexOf("\r\n")

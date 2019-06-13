@@ -66,8 +66,15 @@ const run = async function(dir, logsBufferMaxSize)
 	assert(typeof dir === 'string', `logParser readDir, dir should be a String, now is ${typeof dir}`)
 	assert(typeof logsBufferMaxSize === 'number', `logParser readDir, logsBufferMaxSize should be a Number, now is ${typeof logsBufferMaxSize}`)
 
-	var logFile = await getLogFile(dir)
-	var offset = await getOffset(dir)
+	// fetch current log file
+	let logFile = await getLogFile(dir);
+
+	// fetch log file offset
+	let offset = await getOffset(dir);
+
+	// 
+	let files = [];
+	let index = 0;
 
 	logger.trace(`logParser run, init logFile: ${logFile}, offset: ${offset}`);
 
@@ -83,7 +90,6 @@ const run = async function(dir, logsBufferMaxSize)
 		}
 
 		let logs = [];
-		let counter = 0;
 
 		logger.trace(`logParser run, start to readLogs, logFile: ${logFile}, offset: ${offset}`);
 
@@ -104,7 +110,7 @@ const run = async function(dir, logsBufferMaxSize)
 
 				if(index < files.length - 1)
 				{
-					// del log file
+					// read log file has finished and there will not have new logs to writed in, then del log file and read next file
 					fs.unlinkSync(path.join(dir, files[index]))
 					logger.trace(`logParser run, delete log file ${path.join(dir, files[index])} success`)
 
@@ -112,6 +118,7 @@ const run = async function(dir, logsBufferMaxSize)
 				}
 				else if(Date.now() - new Date(files[index].match(/(?<=\-)[\d-]+/g)).valueOf() < 24 * 60 * 60 * 1000)
 				{
+					// read log file has finished and may be there will have new logs to write in, wait a moment and try to read this log file again
 					return new Promise((resolve, reject) => {
 						setTimeout(() => {
 							resolve('repeat');
@@ -120,7 +127,7 @@ const run = async function(dir, logsBufferMaxSize)
 				}
 				else
 				{
-					// del log file
+					// read log file has finished and there will not have new logs to write in, then del log file and refresh files
 					fs.unlinkSync(path.join(dir, files[index]))
 					logger.trace(`logParser run, delete log file ${path.join(dir, files[index])} success`)
 
@@ -130,7 +137,6 @@ const run = async function(dir, logsBufferMaxSize)
 
 			//
 			offset += line.length;
-			counter += 1;
 
 	  	const [timeStr] = line.match(/(?<=\[)[\d-:\.T]+(?=\])/g) || []
 	  	const time = new Date(timeStr).valueOf();
@@ -143,55 +149,23 @@ const run = async function(dir, logsBufferMaxSize)
 	  		logs.push({time, type, title, data});
 	  	}
 
-	  	if(counter >= logsBufferMaxSize)
+	  	if(logs.length >= logsBufferMaxSize)
 	  	{
 	  		await mysql.saveLogs(logs);
 				await saveOffset(dir, offset);
 	  		
-	  		counter = 0;
 	  		logs = [];
 	  	}
 		}
 	}
 
-	let files;
-
 	while(true)
 	{
-		files = await readDir(dir);
-		if(files.length <= 0)
+		// check if all log files is finished
+		if(index >= files.length)
 		{
-			await new Promise((resolve, reject) => {
-				setTimeout(() => {
-					resolve()
-				}, 2000)
-			})
-		}
-		else
-		{
-			break;
-		}
-	}
-
-	let index = 0;
-	while(index < files.length)
-	{
-		const result = await readLogs(index);
-		if(result === 'next')
-		{
-			index ++;
-
-			continue;
-		}
-
-		if(result === 'repeat')
-		{
-			continue;
-		}
-		else
-		{
-			index = 0;
-			while(true) 
+			// try to fetch new log files
+			while(true)
 			{
 				files = await readDir(dir);
 				if(files.length <= 0)
@@ -204,10 +178,27 @@ const run = async function(dir, logsBufferMaxSize)
 				}
 				else
 				{
+					index = 0;
+
 					break;
 				}
 			}
+		}
 
+		// read log file
+		const result = await readLogs(index);
+
+		// read log file finish, turn to next log file
+		if(result === 'next')
+		{
+			index ++;
+
+			continue;
+		}
+
+		// read log file finish, repeat to read
+		if(result === 'repeat')
+		{
 			continue;
 		}
 	}
