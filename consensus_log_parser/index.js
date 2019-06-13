@@ -108,30 +108,22 @@ const run = async function(dir, logsBufferMaxSize)
 				await mysql.saveLogs(logs);
 				await saveOffset(dir, offset);
 
-				if(index < files.length - 1)
-				{
-					// read log file has finished and there will not have new logs to writed in, then del log file and read next file
-					fs.unlinkSync(path.join(dir, files[index]))
-					logger.trace(`logParser run, delete log file ${path.join(dir, files[index])} success`)
-
-					return 'next';
-				}
-				else if(Date.now() - new Date(files[index].match(/(?<=\-)[\d-]+/g)).valueOf() < 24 * 60 * 60 * 1000)
+				if(index === (files.length - 1) && Date.now() - new Date(files[index].match(/(?<=\-)[\d-]+/g)).valueOf() < (24 * 60 * 60 * 1000 + 5000))
 				{
 					// read log file has finished and may be there will have new logs to write in, wait a moment and try to read this log file again
 					return new Promise((resolve, reject) => {
 						setTimeout(() => {
 							resolve('repeat');
 						}, 2000); 
-					});;
+					});
 				}
 				else
 				{
-					// read log file has finished and there will not have new logs to write in, then del log file and refresh files
+					// read log file has finished and there will not have new logs to write in, then del log file and read next log file
 					fs.unlinkSync(path.join(dir, files[index]))
 					logger.trace(`logParser run, delete log file ${path.join(dir, files[index])} success`)
 
-					return 'refresh';
+					return 'next';
 				}
 			}
 
@@ -193,12 +185,16 @@ const run = async function(dir, logsBufferMaxSize)
 		{
 			index ++;
 
+			logger.info(`logParser run, try to read next file, ${index >= files.length ? 'wait to be refresh' : files[index]}`);
+
 			continue;
 		}
 
 		// read log file finish, repeat to read
 		if(result === 'repeat')
 		{
+			logger.info(`logParser run, try to read the same log file, ${files[index]}`);
+
 			continue;
 		}
 	}
