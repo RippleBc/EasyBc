@@ -146,7 +146,7 @@ class Stage
 				this.logger.info(`Stage stageSynchronize, stage: ${this.ripple.stage}, stage synchronize is over success`);
 
 				// record synchronize time consume
-				mysql.saveStageSynchronizeTimeConsume(this.ripple.stage, this.dataExchange.consensusTimeConsume).catch(e => {
+				mysql.saveStageSynchronizeTimeConsume(this.ripple.stage, this.stageSynchronize.consensusTimeConsume).catch(e => {
 					this.logger.error(`Stage stageSynchronize, stage: ${this.ripple.stage}, saveStageSynchronizeTimeConsume throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 				});
 
@@ -196,7 +196,7 @@ class Stage
 					this.logger.warn(`Stage stageSynchronize, stage: ${this.ripple.stage}, stage synchronize is over because of timeout`);
 
 					// record synchronize time consume
-					mysql.saveStageSynchronizeTimeConsume(this.ripple.stage, this.dataExchange.consensusTimeConsume).catch(e => {
+					mysql.saveStageSynchronizeTimeConsume(this.ripple.stage, this.stageSynchronize.consensusTimeConsume).catch(e => {
 						this.logger.error(`Stage stageSynchronize, stage: ${this.ripple.stage}, saveStageSynchronizeTimeConsume throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 					});
 
