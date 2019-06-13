@@ -12,6 +12,13 @@ const logger = log4js.getLogger("logParse");
 
 const mysql = new Mysql();
 
+//
+process.on("uncaughtException", function(err) {
+    logger.fatal(`log parser, throw exception, ${err.stack}`);
+    
+    process.exit(1);
+});
+
 (async () => {
 	await mysql.init();
 
