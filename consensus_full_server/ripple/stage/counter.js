@@ -41,15 +41,17 @@ class Counter extends Stage
 	{
 		if(ifSuccess)
 		{
-			logger.warn("Counter handler, stage synchronize success")
-
 			this.reset();
 			if(this.action === COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE)
 			{
+				logger.warn("Counter handler, stage synchronize success, begin to fetch new transaction and amalgamate")
+
 				return this.ripple.run(false);
 			}
 			else if(this.action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE)
 			{
+				logger.warn("Counter handler, stage synchronize success, begin to reuse cached transactions and amalgamate")
+
 				this.ripple.run(true);
 			}
 			else
