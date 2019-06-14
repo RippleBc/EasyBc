@@ -21,6 +21,8 @@ class Stage extends AsyncEventEmitter
 {
 	constructor(opts)
 	{
+		super();
+
 		this.state = STAGE_STATE_EMPTY;
 
 		const loggerHandler = {
