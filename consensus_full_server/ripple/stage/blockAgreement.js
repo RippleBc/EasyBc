@@ -145,8 +145,6 @@ class BlockAgreement extends Stage
 			{
 				timestamp = bufferToInt(transaction.timestamp)
 			}
-
-			logger.trace(`BlockAgreement run, transaction hash: ${transaction.hash().toString("hex")}, from: ${transaction.from.toString("hex")}, to: ${transaction.to.toString("hex")}, value: ${transaction.value.toString("hex")}, nonce: ${transaction.nonce.toString("hex")}`);
 		}
 		const now = Date.now();
 		while(now - timestamp > BLOCK_AGREEMENT_TIMESTAMP_MAX_OFFSET)

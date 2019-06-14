@@ -154,13 +154,6 @@ class CandidateAgreement extends Stage
 		// sort transactions
 		transactions = _.sortBy(transactions, tx => tx.toString("hex"));
 
-		// debug transaction
-		for(let i = 0; i < transactions.length; i++)
-		{
-			let transaction = new Transaction(transactions[i])
-			logger.trace(`CandidateAgreement run, transaction hash: ${transaction.hash().toString("hex")}, from: ${transaction.from.toString("hex")}, to: ${transaction.to.toString("hex")}, value: ${transaction.value.toString("hex")}, nonce: ${transaction.nonce.toString("hex")}`);
-		}
-
 		// init candidate
 		const candidate = new Candidate({
 			transactions: rlp.encode(transactions)
