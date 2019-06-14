@@ -30,6 +30,8 @@ class CandidateAgreement extends Stage
 
 	handler(ifSuccess)
 	{
+		console.time(`CandidateAgreement handler`);
+
 		if(ifSuccess)
 		{
 			logger.info("CandidateAgreement handler success")
@@ -71,6 +73,8 @@ class CandidateAgreement extends Stage
 
 		if(sortedTransactionColls[0] && sortedTransactionColls[0][1].count / (unl.length + 1) >= TRANSACTIONS_CONSENSUS_THRESHOULD)
 		{
+			console.timeEnd(`CandidateAgreement handler`);
+
 			// check if transactions num is zero
 			if(sortedTransactionColls[0][1].data.length === 1 && sortedTransactionColls[0][1].data[0] === 0xc0)
 			{
@@ -97,7 +101,6 @@ class CandidateAgreement extends Stage
 			}
 
 			this.reset();
-
 			return;
 		}
 		
@@ -116,6 +119,8 @@ class CandidateAgreement extends Stage
 
 		// set processing transactions
 		this.ripple.setProcessingTransactions([...transactionRawsMap.values()])
+
+		console.timeEnd(`CandidateAgreement handler`);
 
 		// begin to synchronize stage and start a new round
 		if(this.ripple.counter.state !== STAGE_STATE_EMPTY)
@@ -139,6 +144,8 @@ class CandidateAgreement extends Stage
 	 */
 	run(transactions)
 	{
+		console.time(`CandidateAgreement run`);
+
 		assert(Array.isArray(transactions), `CandidateAgreement run, transactions should be an Array, now is ${typeof transactions}`);
 
 		this.ripple.stage = RIPPLE_STAGE_CANDIDATE_AGREEMENT;
@@ -165,6 +172,8 @@ class CandidateAgreement extends Stage
 
 		//
 		this.candidates.push(candidate);
+
+		console.timeEnd(`CandidateAgreement run`);
 	}
 
 	/**

@@ -33,6 +33,8 @@ class BlockAgreement extends Stage
 
 	handler(ifSuccess)
 	{
+		console.time(`BlockAgreement handler`);
+
 		if(ifSuccess)
 		{
 			logger.info("BlockAgreement handler success")
@@ -86,6 +88,8 @@ class BlockAgreement extends Stage
 
 				logger.info("BlockAgreement handler, block agreement success, process block is over");
 
+				console.timeEnd(`BlockAgreement handler`);
+
 				await this.ripple.run(false);
 
 				for(let i = 0; i < this.ripple.amalgamateMessagesCache.length; i++)
@@ -107,8 +111,10 @@ class BlockAgreement extends Stage
 			return;
 		}
 
+		console.timeEnd(`BlockAgreement handler`);
+
 		this.reset();
-		this.ripple.run(true)
+		this.ripple.run(true);
 	}
 
 	/**
@@ -116,6 +122,8 @@ class BlockAgreement extends Stage
 	 */
  	run(transactions)
  	{
+ 		console.time(`BlockAgreement run`);
+
  		assert(Buffer.isBuffer(transactions), `BlockAgreement run, transactions should be an Buffer, now is ${typeof transactions}`);
  		
  		this.ripple.stage = RIPPLE_STAGE_BLOCK_AGREEMENT;
@@ -198,6 +206,8 @@ class BlockAgreement extends Stage
 			
 			process.exit(1);
 		}).finally(() => {
+			console.timeEnd(`BlockAgreement run`);
+
 			this.emit("runBlockFinished");
 		});
  	}
