@@ -6,6 +6,8 @@ program.version("1.0.0")
 	.usage("<command>")
 	.command("gpr", "生成私钥，公钥，地址")
 	.command("gpua <privateKey>", "根据私钥生成公钥和地址")
-  .command("gtx", "generate transaction's hex string")
-  .command("ctx", "calculate transaction consensus threshould")
-	.parse(process.argv);
+  .command("profile", "calculate transaction consensus threshould")
+  .command("ab", "ab test")
+  .command("benchmark", "benchmark test")
+  .parse(process.argv)
+	
