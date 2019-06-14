@@ -1,9 +1,9 @@
 const { assert, expect, should } = require("chai"); 
-const utils = require("../../depends/utils")
-const Block = require("../../depends/block")
-const Transaction = require("../../depends/transaction")
-const Candidate = require("../ripple/data/candidate");
-const RippleBlock = require("../ripple/data/rippleBlock");
+const utils = require("../depends/utils")
+const Block = require("../depends/block")
+const Transaction = require("../depends/transaction")
+const Candidate = require("../consensus_full_server/ripple/data/candidate");
+const RippleBlock = require("../consensus_full_server/ripple/data/rippleBlock");
 const _ = require("underscore");
 
 const Buffer = utils.Buffer;
@@ -46,21 +46,21 @@ describe("test transactions speed", () => {
 		console.timeEnd("pack transactions, transfer to Buffer")
 
 		// init candidate
-		console.time("pack transactions, init candidate")
+		console.time("pack transactions, encode")
 		const candidate = new Candidate({
 			transactions: rlp.encode(transactionRawArray)
 		});
-		console.timeEnd("pack transactions, init candidate");
+		console.timeEnd("pack transactions, encode");
 
 		// sign
-		console.time("pack transactions, candidate sign");
+		console.time("pack transactions, sign");
 		candidate.sign(PRIVATE_KEY);
-		console.timeEnd("pack transactions, candidate sign");
+		console.timeEnd("pack transactions, sign");
 		
 		//
-		console.time("pack transactions, candidate serialize")
+		console.time("pack transactions, serialize")
 		candidateRaw = candidate.serialize().toString("hex")
-		console.timeEnd("pack transactions, candidate serialize")
+		console.timeEnd("pack transactions, serialize")
 
 		console.groupEnd();
 		console.timeEnd("pack transactions, total")
@@ -68,7 +68,7 @@ describe("test transactions speed", () => {
 		done();
 	})
 
-	it("check merge candidate", done => {
+	it("check merge transactions", done => {
 		console.log("\n\n")
 
 		console.group();

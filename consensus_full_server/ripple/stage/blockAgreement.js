@@ -197,6 +197,8 @@ class BlockAgreement extends Stage
 			logger.fatal(`BlockAgreement run, throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 			
 			process.exit(1);
+		}).finally(() => {
+			this.emit("runBlockFinished");
 		});
  	}
 
@@ -270,6 +272,8 @@ class BlockAgreement extends Stage
 	reset()
 	{
 		super.reset();
+
+		this.removeAllListeners("runBlockFinished");
 		this.rippleBlocks = [];
 	}
 

@@ -1,8 +1,9 @@
 const { unl } = require("../../config.json");
-const { COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE, RIPPLE_STATE_PERISH_NODE, RIPPLE_STATE_TRANSACTIONS_CONSENSUS, RIPPLE_STATE_STAGE_CONSENSUS, STAGE_DATA_EXCHANGE_TIMEOUT, STAGE_STAGE_SYNCHRONIZE_TIMEOUT, STAGE_MAX_FINISH_RETRY_TIMES, STAGE_STATE_EMPTY, STAGE_STATE_DATA_EXCHANGE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING } = require("../../constant");
+const { RIPPLE_STAGE_BLOCK_AGREEMENT, COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE, RIPPLE_STATE_PERISH_NODE, RIPPLE_STATE_TRANSACTIONS_CONSENSUS, RIPPLE_STATE_STAGE_CONSENSUS, STAGE_DATA_EXCHANGE_TIMEOUT, STAGE_STAGE_SYNCHRONIZE_TIMEOUT, STAGE_MAX_FINISH_RETRY_TIMES, STAGE_STATE_EMPTY, STAGE_STATE_DATA_EXCHANGE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING } = require("../../constant");
 const utils = require("../../../depends/utils");
 const assert = require("assert");
 const Sender = require("../sender");
+const AsyncEventEmitter = require('async-eventemitter');
 
 const stripHexPrefix = utils.stripHexPrefix;
 const rlp = utils.rlp;
@@ -16,7 +17,7 @@ const loggerConsensus = process[Symbol.for("loggerConsensus")];
 const p2p = process[Symbol.for("p2p")];
 const mysql = process[Symbol.for("mysql")];
 
-class Stage
+class Stage extends AsyncEventEmitter
 {
 	constructor(opts)
 	{
@@ -223,7 +224,28 @@ class Stage
 	start()
 	{
 		this.state = STAGE_STATE_DATA_EXCHANGE_PROCEEDING;
-		this.dataExchange.start();
+		
+		if(unl.length > 0)
+		{
+			this.dataExchange.start();
+		}
+		else 
+		{
+			if(this.ripple.stage === RIPPLE_STAGE_BLOCK_AGREEMENT)
+			{
+				// wait for block agreement run finished
+				this.on("runBlockFinished", () => {
+					this.handler(true);
+				});
+			}
+			else
+			{
+				// wait for amalgamate run or candidate agreement run finished
+				process.nextTick(() => {
+					this.handler(true);
+				})
+			}
+		}
 	}
 
 	/**
