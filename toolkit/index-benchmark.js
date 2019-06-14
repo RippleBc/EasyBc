@@ -5,8 +5,9 @@ const benchmark = require("./benchmark");
 
 program
   .version("0.1.0")
+  .option("-n, --num <num>", "content size(bytes), default is 250")
   .action(options => {
-    benchmark();
+    benchmark(options.num ? parseInt(options.num) : 250);
   });
 
 program.parse(process.argv);

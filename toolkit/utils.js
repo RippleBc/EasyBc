@@ -13,6 +13,11 @@ class FormatResult
     this.contents = [];
   }
 
+  /**
+   * @param {Object} content
+   *   @prop {String} name
+   *   @prop {String} count
+   */
   writeContent(content)
   {
     this.contents.push({
@@ -24,9 +29,7 @@ class FormatResult
   }
 
   printFormatedContent()
-  {
-    console.log("\n\n");
-    
+  { 
     this.contents = _.sortBy(this.contents, content => {
       return content.count;
     });
@@ -41,7 +44,7 @@ class FormatResult
         formattedContent += '█';
       }
       formattedContent += `  ${countent.name}  ${countent.count}`
-      console.log(formattedContent);
+      console.log(`\n${formattedContent}`);
     }
   }
 }

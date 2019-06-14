@@ -2,6 +2,7 @@ const Benchmark = require("benchmark");
 const utils = require("../../depends/utils")
 const { randomBytes } = require("crypto");
 const { FormatResult, LoadingBar } = require("../utils");
+const assert = require("assert");
 
 const Buffer = utils.Buffer;
 const rlp = utils.rlp;
@@ -18,13 +19,19 @@ const PRIVATE_KEY = Buffer.from("7d4d01cae0cc51fcae5aff8b108e5fd6de5fdd024185f65
 const PUBLIC_KEY = privateToPublic(PRIVATE_KEY);
 const ADDRESS = publicToAddress(PUBLIC_KEY);
 
-const CONTENT = randomBytes(250);
-const HASHED_CONTENT = sha256(CONTENT);
-const ENCODED_CONTENT = rlp.encode([CONTENT]);
-const {r: R, s: S, v: V} = ecsign(HASHED_CONTENT, PRIVATE_KEY);
 
+/**
+ * @param {String} num
+ */
+module.exports = num => {
+  assert(typeof num === "number", `benchmark, num should be a Number, now is ${typeof num}`)
 
-module.exports = () => {
+  console.log(`test content size ${num}`);
+
+  const CONTENT = randomBytes(num);
+  const HASHED_CONTENT = sha256(CONTENT);
+  const ENCODED_CONTENT = rlp.encode([CONTENT]);
+  const {r: R, s: S, v: V} = ecsign(HASHED_CONTENT, PRIVATE_KEY);
 
   const formatResult = new FormatResult(50);
   const loadBar = new LoadingBar();
