@@ -51,17 +51,17 @@ describe("block test", function() {
 			header: {
 				number: 1,
 				timestamp: timeNow,
-				transactionsTrie: "0x57fdab0bfdd14f7e8f9f7bb8a328fa9527550fca063b2abb84cf86a81569bc65"
+				transactionsTrie: "0x0331622c3494d4fe829e1f31038b83270a0a5894b6715b13aa41c4a3859d2cbc"
 			},
 			transactions: [transaction, transaction, transaction]
 		});
-		
+
 		const block = new Block({
 			header: {
-				parentHash: "0x5daaa848a9239e8b36fae3c24f4820b293bf7b3cc028b7adca6c3d2a7c3ea701",
+				parentHash: "0x43c0c682c23b5f6e216764fa84a0e85c026dc0534879020e5d2ce77f083ceb6e",
 				number: 2,
 				timestamp: timeNow + 2,
-				transactionsTrie: "0x57fdab0bfdd14f7e8f9f7bb8a328fa9527550fca063b2abb84cf86a81569bc65"
+				transactionsTrie: "0x0331622c3494d4fe829e1f31038b83270a0a5894b6715b13aa41c4a3859d2cbc"
 			},
 			transactions: [transaction, transaction, transaction, transaction]
 		});
@@ -133,10 +133,10 @@ describe("block test", function() {
 			}
 		}
 		
-		checkBlock().then(value => {
+		checkBlock().then(() => {
 			done();
 		}).catch(e => {
-			done(e);
+			done(e.stack ? e.stack : e.toString());
 		});
 		
 	});

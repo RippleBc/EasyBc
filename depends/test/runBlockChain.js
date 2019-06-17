@@ -126,7 +126,7 @@ describe("run block chain test", function() {
 		});
 	});
 
-	it("check run block", function(done) {
+	it("check run block 1", function(done) {
 		const transaction1 = new Transaction({
 			nonce: 1,
 			to: to,
@@ -151,7 +151,7 @@ describe("run block chain test", function() {
 			header: {
 				number: 1,
 				timestamp: timeNow,
-				transactionsTrie: "0x57fdab0bfdd14f7e8f9f7bb8a328fa9527550fca063b2abb84cf86a81569bc65"
+				transactionsTrie: "0x263f7bb49a1de9a812622ba15adcb0483756feaa37028989f945169eb6a4251b"
 			},
 			transactions: [transaction1, transaction2]
 		});
@@ -161,7 +161,7 @@ describe("run block chain test", function() {
 				parentHash: "0x5daaa848a9239e8b36fae3c24f4820b293bf7b3cc028b7adca6c3d2a7c3ea701",
 				number: 2,
 				timestamp: timeNow + 2,
-				transactionsTrie: "0x57fdab0bfdd14f7e8f9f7bb8a328fa9527550fca063b2abb84cf86a81569bc65"
+				transactionsTrie: "0x4fb282117806ad436cd26ee13c0504694cc4f63e6d44acf6d82ac43d9aa8dd49"
 			},
 			transactions: [transaction1, transaction1]
 		});
@@ -186,7 +186,7 @@ describe("run block chain test", function() {
 			{
 				if(err.indexOf("property from is invalid") === -1)
 				{
-					await Promise.reject("run parent block should be failed");
+					await Promise.reject("run block should be failed");
 				}
 			}
 
@@ -258,7 +258,7 @@ describe("run block chain test", function() {
 		});
 	});
 
-	it("check run blockChain", function(done) {
+	it("check run blockChain 2", function(done) {
 		// init txs
 		const transaction1 = new Transaction({
 			nonce: 1,
@@ -289,17 +289,17 @@ describe("run block chain test", function() {
 			header: {
 				number: 1,
 				timestamp: timeNow,
-				transactionsTrie: "0xec9554dcc2796f2c493b5f1782bf2eab646a458db1eaceb0d4a15deb67b8a267"
+				transactionsTrie: "0x1d2ab7c0e11ebdce8f63762da0bdbf562d38058faae99e3b9de91a762bf707b5"
 			},
 			transactions: [transaction1]
 		});
 
 		const block = new Block({
 			header: {
-				parentHash: "0xa2b6c509506e8e53d457fdfe309ca48edf55e032d463128ffd819b8498c27d9e",
+				parentHash: "0x77e35de5e20847ea7f9650ab50c24afe7120fb4fcaa17e2f9af3e6fb8bc0534d",
 				number: 2,
 				timestamp: timeNow + 2,
-				transactionsTrie: "0xa63280a882356c733cf44030e7759e54d3f42aaf74e7a5ece70849845dd44dae"
+				transactionsTrie: "0x263f7bb49a1de9a812622ba15adcb0483756feaa37028989f945169eb6a4251b"
 			},
 			transactions: [transaction2]
 		});

@@ -157,6 +157,7 @@ class BlockAgreement extends Stage
 		// init oth property
 		(async () => {
 			// init number
+			console.time("init number")
 			const height = await this.ripple.processor.blockChain.getBlockChainHeight();
 			if(!height)
 			{
@@ -168,12 +169,15 @@ class BlockAgreement extends Stage
 			{
 				await Promise.reject(`BlockAgreement run, getBlockHashByNumber(${height.toString("hex")}) should not return undefined`);
 			}
+			console.timeEnd("init number")
 
 			// init parentHash
 			block.header.parentHash = parentHash;
 
 			// init txTrie
+			console.time("init txTrie")
 			block.header.transactionsTrie = await block.genTxTrie();
+			console.timeEnd("init txTrie")
 
 			// init itemstamp, drag timestamp to make sure it is bigger than parent block's timestamp
 			console.time("second init timestamp");
