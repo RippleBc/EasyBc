@@ -238,7 +238,7 @@ module.exports = async (urls, num) => {
   }
   await Promise.all(sendTransactionPromises);
 
-  console.time("\n\n100txs time consume: ");
+  console.time(`\n\n${num} txs time consume: `);
 
   // check balance
   await (async () => {
@@ -252,7 +252,7 @@ module.exports = async (urls, num) => {
         new BN(balanceFromNew).toString("hex") === new BN(balanceFrom).subn(1).toString("hex") &&
         new BN(balanceToNew).toString("hex") === new BN(balanceTo).addn(1).toString("hex"))
       {
-        console.timeEnd("\n\n100txs time consume: ");
+        console.timeEnd(`\n\n${num} txs time consume: `);
         return;
       }
 

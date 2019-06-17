@@ -1,5 +1,5 @@
 const { QUERY_MAX_LIMIT, SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS } = require("../../constant");
-const { MAX_TX_TIMESTAMP_GAP } = require("../constant");
+const { MAX_TX_TIMESTAMP_LEFT_GAP, MAX_TX_TIMESTAMP_RIGHT_GAP } = require("../constant");
 const utils = require("../../depends/utils");
 
 const bufferToInt = utils.bufferToInt;
@@ -40,13 +40,13 @@ app.post("/sendTransaction", function(req, res) {
         // check timestamp
         const now = Date.now();
         const txTimestamp = bufferToInt(transaction.timestamp);
-        if(txTimestamp > now)
+        if(txTimestamp > now + MAX_TX_TIMESTAMP_RIGHT_GAP)
         {
-            await Promise.reject(`sendTransaction, timestamp should litter than or equal to ${now}, now is ${txTimestamp}`)
+            await Promise.reject(`sendTransaction, timestamp should litter than or equal to ${now + MAX_TX_TIMESTAMP_RIGHT_GAP}, now is ${txTimestamp}`)
         }
-        if(txTimestamp < now - MAX_TX_TIMESTAMP_GAP)
+        if(txTimestamp < now - MAX_TX_TIMESTAMP_LEFT_GAP)
         {
-            await Promise.reject(`sendTransaction, timestamp should bigger than ${now - MAX_TX_TIMESTAMP_GAP}, now is ${txTimestamp}`)
+            await Promise.reject(`sendTransaction, timestamp should bigger than ${now - MAX_TX_TIMESTAMP_LEFT_GAP}, now is ${txTimestamp}`)
         }
 
         // record
