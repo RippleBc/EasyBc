@@ -208,6 +208,21 @@ module.exports = async (urls, num) => {
   console.info(`tx_from: ${tx_from}, nonce: ${nonceFrom.toString("hex")}, balance: ${balanceFrom.toString("hex")}`)
   console.info(`tx_from: ${tx_to}, nonce: ${nonceTo.toString("hex")}, balance: ${balanceTo.toString("hex")}`)
 
+  // init first anchor transaction
+  const tx_privateKeyFrom = "ed09a7280c5a0d3c04839ca5603fe507b4d1d4572601e62aadafd923f55f7bf9";
+  let tx_nonce = (new BN(nonceFrom).iaddn(1)).toString("hex");
+  let tx_value = "01"
+  let txRaw = generateTx(tx_privateKeyFrom, tx_nonce, tx_to, tx_value);
+
+  // send first anchor transaction
+  let sendTransactionPromises = [];
+  for(let url of urls)
+  {
+    sendTransactionPromises.push(sendTransaction(url, txRaw));
+  }
+  await Promise.all(sendTransactionPromises);
+
+  // batch send txs
   for(let i = 0; i < num - 1; i++)
   {
     // send transaction
@@ -224,14 +239,13 @@ module.exports = async (urls, num) => {
     }
   }
 
-  // init tx
-  const tx_privateKeyFrom = "ed09a7280c5a0d3c04839ca5603fe507b4d1d4572601e62aadafd923f55f7bf9";
-  const tx_nonce = (new BN(nonceFrom).iaddn(1)).toString("hex");
-  const tx_value = "01"
-  const txRaw = generateTx(tx_privateKeyFrom, tx_nonce, tx_to, tx_value);
+  // init second anchor transaction
+  tx_nonce = (new BN(nonceFrom).iaddn(2)).toString("hex");
+  tx_value = "01"
+  txRaw = generateTx(tx_privateKeyFrom, tx_nonce, tx_to, tx_value);
 
-  // send transaction
-  let sendTransactionPromises = [];
+  // send second anchor transaction
+  sendTransactionPromises = [];
   for(let url of urls)
   {
     sendTransactionPromises.push(sendTransaction(url, txRaw));
@@ -248,9 +262,9 @@ module.exports = async (urls, num) => {
       const { nonce: nonceFromNew, balance: balanceFromNew } = await getAccountInfo(urls[0], tx_from)
       const { nonce: nonceToNew, balance: balanceToNew } = await getAccountInfo(urls[0], tx_to)
 
-      if(new BN(nonceFromNew).toString("hex") === new BN(nonceFrom).addn(1).toString("hex") &&
-        new BN(balanceFromNew).toString("hex") === new BN(balanceFrom).subn(1).toString("hex") &&
-        new BN(balanceToNew).toString("hex") === new BN(balanceTo).addn(1).toString("hex"))
+      if(new BN(nonceFromNew).toString("hex") === new BN(nonceFrom).addn(2).toString("hex") &&
+        new BN(balanceFromNew).toString("hex") === new BN(balanceFrom).subn(2).toString("hex") &&
+        new BN(balanceToNew).toString("hex") === new BN(balanceTo).addn(2).toString("hex"))
       {
         console.timeEnd(`\n\n${num} txs time consume: `);
         return;
