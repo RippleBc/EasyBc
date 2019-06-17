@@ -125,7 +125,7 @@ describe("block test", function() {
 			{
 				await Promise.reject(`change parentHash, block validate should failed, and the failed reason should be invalid number, now is ${validateResult.msg}`);
 			}
-			block.header.parentHash = "0x5daaa848a9239e8b36fae3c24f4820b293bf7b3cc028b7adca6c3d2a7c3ea701";
+			block.header.parentHash = "0x43c0c682c23b5f6e216764fa84a0e85c026dc0534879020e5d2ce77f083ceb6e";
 			validateResult = await block.validate(parentBlock);
 			if(!validateResult.state)
 			{

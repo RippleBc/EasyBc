@@ -158,7 +158,7 @@ describe("run block chain test", function() {
 
 		const block = new Block({
 			header: {
-				parentHash: "0x5daaa848a9239e8b36fae3c24f4820b293bf7b3cc028b7adca6c3d2a7c3ea701",
+				parentHash: "0x8bc429923a2685fe10b31d40e0ec615640806a0d37fb4d7554560144c4825b15",
 				number: 2,
 				timestamp: timeNow + 2,
 				transactionsTrie: "0x4fb282117806ad436cd26ee13c0504694cc4f63e6d44acf6d82ac43d9aa8dd49"
@@ -296,7 +296,7 @@ describe("run block chain test", function() {
 
 		const block = new Block({
 			header: {
-				parentHash: "0x77e35de5e20847ea7f9650ab50c24afe7120fb4fcaa17e2f9af3e6fb8bc0534d",
+				parentHash: "0x8bc429923a2685fe10b31d40e0ec615640806a0d37fb4d7554560144c4825b15",
 				number: 2,
 				timestamp: timeNow + 2,
 				transactionsTrie: "0x263f7bb49a1de9a812622ba15adcb0483756feaa37028989f945169eb6a4251b"
@@ -334,23 +334,23 @@ describe("run block chain test", function() {
 
 			// check number 1 block
 			const parentBlockTmp = await blockChain.getBlockByNumber(toBuffer(1));
-			assert.equal(parentBlockTmp.hash().toString("hex"), "a2b6c509506e8e53d457fdfe309ca48edf55e032d463128ffd819b8498c27d9e", `parent block hash should be a2b6c509506e8e53d457fdfe309ca48edf55e032d463128ffd819b8498c27d9e, now is ${parentBlockTmp.hash().toString("hex")}`);
+			assert.equal(parentBlockTmp.hash().toString("hex"), "8bc429923a2685fe10b31d40e0ec615640806a0d37fb4d7554560144c4825b15", `parent block hash should be 8bc429923a2685fe10b31d40e0ec615640806a0d37fb4d7554560144c4825b15, now is ${parentBlockTmp.hash().toString("hex")}`);
 			assert.equal(bufferToInt(parentBlockTmp.header.number), 1, `parent block number should be 1, now is ${bufferToInt(parentBlockTmp.header.number)}`);
 			assert.equal(bufferToInt(parentBlockTmp.header.timestamp), timeNow, `parent block timestamp should be ${timeNow}, now is ${bufferToInt(parentBlockTmp.header.timestamp)}`);
-			assert.equal(parentBlockTmp.header.transactionsTrie.toString("hex"), "ec9554dcc2796f2c493b5f1782bf2eab646a458db1eaceb0d4a15deb67b8a267", `parent block transactionsTrie should be ec9554dcc2796f2c493b5f1782bf2eab646a458db1eaceb0d4a15deb67b8a267, now is ${bufferToInt(parentBlockTmp.header.number)}`);
+			assert.equal(parentBlockTmp.header.transactionsTrie.toString("hex"), "1d2ab7c0e11ebdce8f63762da0bdbf562d38058faae99e3b9de91a762bf707b5", `parent block transactionsTrie should be 1d2ab7c0e11ebdce8f63762da0bdbf562d38058faae99e3b9de91a762bf707b5, now is ${bufferToInt(parentBlockTmp.header.number)}`);
 
 			// check number 2 block
 			const blockTmp = await blockChain.getBlockByNumber(toBuffer(2));
-			assert.equal(blockTmp.hash().toString("hex"), "2f07c1a80ad3c9dbd761da679126f10a95ea99710ac52002a36aff657b66bf89", `block hash should be 2f07c1a80ad3c9dbd761da679126f10a95ea99710ac52002a36aff657b66bf89, now is ${blockTmp.hash().toString("hex")}`);
+			assert.equal(blockTmp.hash().toString("hex"), "a3b5f6267888c82ca9b0d9c8e0c8f844b6708dcad48acaae4532f57e486374ad", `block hash should be a3b5f6267888c82ca9b0d9c8e0c8f844b6708dcad48acaae4532f57e486374ad, now is ${blockTmp.hash().toString("hex")}`);
 			assert.equal(bufferToInt(blockTmp.header.number), 2, `block number should be 2, now is ${bufferToInt(blockTmp.header.number)}`);
 			assert.equal(bufferToInt(blockTmp.header.timestamp), timeNow + 2, `block timestamp should be ${timeNow + 2}, now is ${bufferToInt(blockTmp.header.timestamp)}`);
-			assert.equal(blockTmp.header.transactionsTrie.toString("hex"), "a63280a882356c733cf44030e7759e54d3f42aaf74e7a5ece70849845dd44dae", `block transactionsTrie should be a63280a882356c733cf44030e7759e54d3f42aaf74e7a5ece70849845dd44dae, now is ${bufferToInt(blockTmp.header.number)}`);
+			assert.equal(blockTmp.header.transactionsTrie.toString("hex"), "263f7bb49a1de9a812622ba15adcb0483756feaa37028989f945169eb6a4251b", `block transactionsTrie should be 263f7bb49a1de9a812622ba15adcb0483756feaa37028989f945169eb6a4251b, now is ${bufferToInt(blockTmp.header.number)}`);
 		}
 
 		checkRunBlockChain().then(() => {
 			done();
 		}).catch(err => {
-			done(err);
+			done(err.stack ? err.stack : err.toString());
 		});
 	});
 })
