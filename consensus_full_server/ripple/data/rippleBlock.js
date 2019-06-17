@@ -13,7 +13,25 @@ class RippleBlock extends Base
 		data = data || {};
 
     const fields = [{
-      name: "block"
+      name: "parentHash",
+      length: 32,
+      default: Buffer.alloc(32)
+    }, {
+      name: "number",
+      length: 32,
+      allowZero: true,
+      allowLess: true,
+      default: Buffer.alloc(0)
+    }, {
+      name: "transactions",
+      allowZero: true,
+      default: Buffer.alloc(0)
+    }, {
+      name: "timestamp",
+      length: 32,
+      allowZero: true,
+      allowLess: true,
+      default: Buffer.alloc(0)
     }, {
       name: "v",
       length: 1,

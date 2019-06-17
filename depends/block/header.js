@@ -20,10 +20,6 @@ class BlockHeader
       length: 32,
       default: Buffer.alloc(32)
     }, {
-      name: "transactionsTrie",
-      length: 32,
-      default: Buffer.alloc(32)
-    }, {
       name: "number",
       length: 32,
       allowZero: true,

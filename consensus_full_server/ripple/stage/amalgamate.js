@@ -61,7 +61,8 @@ class Amalgamate extends Stage
 		
 		// init candidate
 		const candidate = new Candidate({
-			transactions: rlp.encode(transactionRaws)
+			transactions: rlp.encode(transactionRaws),
+			timestamp: Date.now()
 		});
 		candidate.sign(privateKey);
 

@@ -41,7 +41,7 @@ class CandidateAgreement extends Stage
 		
 		const transactionCollsHash = new Map();
 		this.candidates.forEach(candidate => {
-			const key = sha256(candidate.transactions).toString('hex');
+			const key = candidate.hash(false).toString('hex');
 
 			if(transactionCollsHash.has(key))
 			{
@@ -148,7 +148,8 @@ class CandidateAgreement extends Stage
 
 		// init candidate
 		const candidate = new Candidate({
-			transactions: rlp.encode(transactions)
+			transactions: rlp.encode(transactions),
+			timestamp: Date.now()
 		});
 		candidate.sign(privateKey);
 

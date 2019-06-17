@@ -1,4 +1,5 @@
 const Block = require("../../../depends/block");
+const Transaction = require("../../../depends/transaction");
 const RippleBlock = require("../data/rippleBlock");
 const utils = require("../../../depends/utils");
 const Stage = require("./stage");
@@ -44,7 +45,7 @@ class BlockAgreement extends Stage
 		
 		const blocksHash = new Map();
 		this.rippleBlocks.forEach(rippleBlock => {
-			const key = sha256(rippleBlock.block).toString('hex');
+			const key = rippleBlock.hash(false).toString('hex');
 
 			if(blocksHash.has(key))
 			{
@@ -52,14 +53,14 @@ class BlockAgreement extends Stage
 
 				blocksHash.set(key, {
 					count: count + 1,
-					data: rippleBlock.block
+					data: rippleBlock
 				});
 			}
 			else
 			{
 				blocksHash.set(key, {
 					count: 1,
-					data: rippleBlock.block
+					data: rippleBlock
 				});
 			}
 		});
@@ -79,9 +80,21 @@ class BlockAgreement extends Stage
 
 			this.reset();
 			
+			// init block
+			const consensusRippleBlock = new RippleBlock(sortedBlocks[0][1].data);
+			const consensusBlock = new Block({
+				header: {
+					number: consensusRippleBlock.number,
+					parentHash: consensusRippleBlock.parentHash,
+					timestamp: consensusRippleBlock.timestamp
+				},
+				transactions: consensusRippleBlock.transactions
+			});
+
+			// begin process block
 			(async () => {
 				await this.ripple.processor.processBlock({
-					block: new Block(sortedBlocks[0][1].data)
+					block: consensusBlock
 				});
 
 				logger.info("BlockAgreement handler, block agreement success, process block is over");
@@ -121,16 +134,17 @@ class BlockAgreement extends Stage
  		this.ripple.stage = RIPPLE_STAGE_BLOCK_AGREEMENT;
  		this.start();
  		
- 		// init block trasactions
-		const block = new Block({
+ 		// init RippleBlock
+		const rippleBlock = new RippleBlock({
 			transactions: transactions
 		});
 
 		// init timestamp, drag timestamp to make sure it is will not too litte than current time
 		let timestamp = 0;
-		for(let i = 0; i < block.transactions.length; i++)
+		const transactionsArray = rlp.decode(transactions);
+		for(let i = 0; i < transactionsArray.length; i++)
 		{
-			let transaction = block.transactions[i];
+			let transaction = new Transaction(transactionsArray[i]);
 
 			if(bufferToInt(transaction.timestamp) > timestamp)
 			{
@@ -151,7 +165,7 @@ class BlockAgreement extends Stage
 			{
 				await Promise.reject(`BlockAgreement run, getBlockChainHeight(${height.toString("hex")}) should not return undefined`)
 			}
-			block.header.number = (new BN(height).addn(1)).toArrayLike(Buffer);
+			rippleBlock.number = (new BN(height).addn(1)).toArrayLike(Buffer);
 			const parentHash = await this.ripple.processor.blockChain.getBlockHashByNumber(height);
 			if(!parentHash)
 			{
@@ -159,10 +173,7 @@ class BlockAgreement extends Stage
 			}
 
 			// init parentHash
-			block.header.parentHash = parentHash;
-
-			// init txTrie
-			block.header.transactionsTrie = await block.genTxTrie();
+			rippleBlock.parentHash = parentHash;
 
 			// init itemstamp, drag timestamp to make sure it is bigger than parent block's timestamp
 			const parentBlock = await this.ripple.processor.blockChain.getBlockByHash(parentHash);
@@ -170,15 +181,12 @@ class BlockAgreement extends Stage
 			{
 				timestamp += BLOCK_AGREEMENT_TIMESTAMP_JUMP_LENGTH;
 			}
-			block.header.timestamp = timestamp;
+			rippleBlock.timestamp = timestamp;
 
 			// sign
-			const rippleBlock = new RippleBlock({
-				block: block.serialize()
-			});
 			rippleBlock.sign(privateKey);
 
-			// broadcast block
+			// broadcast rippleBlocks
 			p2p.sendAll(PROTOCOL_CMD_BLOCK_AGREEMENT, rippleBlock.serialize());
 
 			//

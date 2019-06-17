@@ -3,6 +3,7 @@
 const program = require("commander");
 const benchmark = require("./benchmark");
 
+// node toolkit/index.js benchmark -n 100000
 program
   .version("0.1.0")
   .option("-n, --num <num>", "content size(bytes), default is 250")

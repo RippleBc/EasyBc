@@ -83,9 +83,6 @@ class Update
 			// init number
 			block.header.number = 0;
 
-			// init transactionTrie
-			block.header.transactionsTrie = await block.genTxTrie();
-
 			const result = await this.blockChain.runBlockChain({
 				block: block,
 				generate: true,

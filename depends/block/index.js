@@ -15,8 +15,6 @@ class Block
   {
     data = data || [[], []];
 
-    this.txTrie = new Trie();
-
     // decode
     if(typeof data === "string" && utils.isHexString(data))
     {
@@ -92,30 +90,6 @@ class Block
   }
 
   /**
-   * Generate transaction trie. The tx trie must be generated before the transaction trie can be validated with `validateTransactionTrie`
-   */
-  async genTxTrie()
-  {
-    for(let i = 0 ; i < this.transactions.length; i++)
-    {
-      let transaction = this.transactions[i];
-
-      await this.txTrie.put(transaction.hash(true), transaction.serialize());
-    };
-
-    return this.txTrie.root;
-  }
-
-  /**
-   * Validates the transaction trie
-   * @return {Boolean}
-   */
-  validateTransactionsTrie()
-  {
-    return this.header.transactionsTrie.toString("hex") === this.txTrie.root.toString("hex");
-  }
-
-  /**
    * Validates the transactions
    * @return {Object}
    * @prop {Boolean} state - if transactions are valid
@@ -150,16 +124,6 @@ class Block
     assert(parentBlock instanceof Block || parentBlock === undefined, `Block validate, parentBlock should be an BLock or undefined, now is ${typeof parentBlock}`);
 
     const errors = [];
-
-    // generate the transaction trie
-    try
-    {
-      await this.genTxTrie();
-    }
-    catch(e)
-    {
-      errors.push(`genTxTrie is failed, ${e}`);
-    }
     
     try
     {
@@ -173,12 +137,6 @@ class Block
     catch(e)
     {
       await Promise.reject(`block validate failed, header.validate throw exception, ${e}`);
-    }
-
-    // check transactions trie
-    if(!this.validateTransactionsTrie())
-    {
-      errors.push("invalid transactions trie");
     }
 
     // check transactions

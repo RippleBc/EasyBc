@@ -5,6 +5,7 @@ const Transaction = require("../../../depends/transaction");
 const logger = process[Symbol.for("loggerConsensus")];
 
 const rlp = util.rlp;
+const Buffer = util.Buffer;
 
 class Candidate extends Base
 {
@@ -17,25 +18,31 @@ class Candidate extends Base
     const fields = [{
       name: "transactions",
       allowZero: true,
-      default: util.Buffer.alloc(0)
+      default: Buffer.alloc(0)
     }, {
+      name: "timestamp",
+      length: 32,
+      allowZero: true,
+      allowLess: true,
+      default: Buffer.alloc(0)
+    },{
       name: "v",
       length: 1,
       allowZero: true,
       allowLess: true,
-      default: util.Buffer.from([0x1c])
+      default: Buffer.from([0x1c])
     }, {
       name: "r",
       length: 32,
       allowZero: true,
       allowLess: true,
-      default: util.Buffer.alloc(0)
+      default: Buffer.alloc(0)
     }, {
       name: "s",
       length: 32,
       allowZero: true,
       allowLess: true,
-      default: util.Buffer.alloc(0)
+      default: Buffer.alloc(0)
     }];
 
     util.defineProperties(this, fields, data);
