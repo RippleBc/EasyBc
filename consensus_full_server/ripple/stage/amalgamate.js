@@ -26,8 +26,6 @@ class Amalgamate extends Stage
 
 	handler(ifSuccess)
 	{
-		console.time(`Amalgamate handler`);
-
 		if(ifSuccess)
 		{
 			logger.info("Amalgamate handler success")
@@ -46,8 +44,6 @@ class Amalgamate extends Stage
 			});
 		});
 
-		console.timeEnd(`Amalgamate handler`);
-
 		this.ripple.candidateAgreement.run([...transactionRawsMap.values()]);
 
 		this.reset();
@@ -58,8 +54,6 @@ class Amalgamate extends Stage
 	 */
 	run(transactionRaws)
 	{
-		console.time(`Amalgamate run`)
-
 		assert(Array.isArray(transactionRaws), `Amalgamate run, transactionRaws should be an Array, now is ${typeof transactionRaws}`);
 
 		this.ripple.stage = RIPPLE_STAGE_AMALGAMATE;
@@ -76,8 +70,6 @@ class Amalgamate extends Stage
 
 		//
 		this.candidates.push(candidate);
-
-		console.timeEnd(`Amalgamate run`)
 	}
 
 	/**

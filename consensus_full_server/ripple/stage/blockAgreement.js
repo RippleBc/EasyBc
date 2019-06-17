@@ -33,8 +33,6 @@ class BlockAgreement extends Stage
 
 	handler(ifSuccess)
 	{
-		console.time(`BlockAgreement handler`);
-
 		if(ifSuccess)
 		{
 			logger.info("BlockAgreement handler success")
@@ -88,8 +86,6 @@ class BlockAgreement extends Stage
 
 				logger.info("BlockAgreement handler, block agreement success, process block is over");
 
-				console.timeEnd(`BlockAgreement handler`);
-
 				await this.ripple.run(false);
 
 				for(let i = 0; i < this.ripple.amalgamateMessagesCache.length; i++)
@@ -111,8 +107,6 @@ class BlockAgreement extends Stage
 			return;
 		}
 
-		console.timeEnd(`BlockAgreement handler`);
-
 		this.reset();
 		this.ripple.run(true);
 	}
@@ -122,8 +116,6 @@ class BlockAgreement extends Stage
 	 */
  	run(transactions)
  	{
- 		console.time(`BlockAgreement run`);
-
  		assert(Buffer.isBuffer(transactions), `BlockAgreement run, transactions should be an Buffer, now is ${typeof transactions}`);
  		
  		this.ripple.stage = RIPPLE_STAGE_BLOCK_AGREEMENT;
@@ -135,7 +127,6 @@ class BlockAgreement extends Stage
 		});
 
 		// init timestamp, drag timestamp to make sure it is will not too litte than current time
-		console.time("first init timestamp");
 		let timestamp = 0;
 		for(let i = 0; i < block.transactions.length; i++)
 		{
@@ -151,13 +142,10 @@ class BlockAgreement extends Stage
 		{
 			timestamp += BLOCK_AGREEMENT_TIMESTAMP_MAX_OFFSET
 		}
-		console.log(`first timestamp: ${timestamp}`)
-		console.timeEnd("first init timestamp");
 
 		// init oth property
 		(async () => {
 			// init number
-			console.time("init number")
 			const height = await this.ripple.processor.blockChain.getBlockChainHeight();
 			if(!height)
 			{
@@ -169,26 +157,20 @@ class BlockAgreement extends Stage
 			{
 				await Promise.reject(`BlockAgreement run, getBlockHashByNumber(${height.toString("hex")}) should not return undefined`);
 			}
-			console.timeEnd("init number")
 
 			// init parentHash
 			block.header.parentHash = parentHash;
 
 			// init txTrie
-			console.time("init txTrie")
 			block.header.transactionsTrie = await block.genTxTrie();
-			console.timeEnd("init txTrie")
 
 			// init itemstamp, drag timestamp to make sure it is bigger than parent block's timestamp
-			console.time("second init timestamp");
 			const parentBlock = await this.ripple.processor.blockChain.getBlockByHash(parentHash);
 			while(timestamp <= bufferToInt(parentBlock.header.timestamp))
 			{
 				timestamp += BLOCK_AGREEMENT_TIMESTAMP_JUMP_LENGTH;
 			}
 			block.header.timestamp = timestamp;
-			console.log(`second timestamp: ${timestamp}`)
-			console.timeEnd("second init timestamp");
 
 			// sign
 			const rippleBlock = new RippleBlock({
@@ -208,8 +190,6 @@ class BlockAgreement extends Stage
 			
 			process.exit(1);
 		}).finally(() => {
-			console.timeEnd(`BlockAgreement run`);
-
 			this.emit("runBlockFinished");
 		});
  	}
