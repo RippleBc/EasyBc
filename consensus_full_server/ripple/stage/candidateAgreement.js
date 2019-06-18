@@ -41,7 +41,7 @@ class CandidateAgreement extends Stage
 		
 		const transactionCollsHash = new Map();
 		this.candidates.forEach(candidate => {
-			const key = candidate.hash(false).toString('hex');
+			const key = sha256(candidate.transactions).toString('hex');
 
 			if(transactionCollsHash.has(key))
 			{
