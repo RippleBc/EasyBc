@@ -68,7 +68,7 @@ class Counter extends Stage
 			}
 			else if(this.action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE)
 			{
-				logger.warn("Counter handler, stage synchronize success, begin to reuse cached transactions and amalgamate")
+				logger.trace("Counter handler, stage synchronize success, begin to reuse cached transactions and amalgamate")
 
 				this.ripple.run(true);
 			}
