@@ -152,7 +152,7 @@ class Ripple
 					}
 					else if(this.counter.checkActionIfReuseCachedTransactionsAndAmalgamate())
 					{
-						loggerStageConsensus.warn("Ripple handleMessage, stage synchronize success because of node notification, begin to amalgamate use cached transactions");
+						loggerStageConsensus.info("Ripple handleMessage, stage synchronize success because of node notification, begin to amalgamate use cached transactions");
 					}
 					else
 					{
