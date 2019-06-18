@@ -185,7 +185,7 @@ const run = async function(dir, logsBufferMaxSize)
 		{
 			index ++;
 
-			logger.info(`logParser run, try to read next file, ${index >= files.length ? 'wait to be refresh' : files[index]}`);
+			logger.trace(`logParser run, try to read next file, ${index >= files.length ? 'wait to be refresh' : files[index]}`);
 
 			continue;
 		}
@@ -193,7 +193,7 @@ const run = async function(dir, logsBufferMaxSize)
 		// read log file finish, repeat to read
 		if(result === 'repeat')
 		{
-			logger.info(`logParser run, try to read the same log file, ${files[index]}`);
+			logger.trace(`logParser run, try to read the same log file, ${files[index]}`);
 
 			continue;
 		}
