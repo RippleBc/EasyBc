@@ -68,7 +68,7 @@ class Counter extends Stage
 			}
 			else if(this.action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE)
 			{
-				logger.trace("Counter handler, stage synchronize success, begin to reuse cached transactions and amalgamate")
+				logger.info("Counter handler, stage synchronize success, begin to reuse cached transactions and amalgamate")
 
 				this.ripple.run(true);
 			}
@@ -123,7 +123,7 @@ class Counter extends Stage
 					}
 					else if(action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE)
 					{
-						logger.warn(`Counter handleMessage, begin to synchronize stage negatively, stage: ${this.ripple.stage}, begin to use cached tranasctions and amalgamate`);
+						logger.info(`Counter handleMessage, begin to synchronize stage negatively, stage: ${this.ripple.stage}, begin to use cached tranasctions and amalgamate`);
 					}
 					else
 					{
