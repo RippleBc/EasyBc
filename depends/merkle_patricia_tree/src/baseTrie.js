@@ -609,16 +609,16 @@ module.exports = class Trie {
           // 创建一个扩展节点连接parentNode和branchNode
           const extentionNode = new TrieNode('extention', [branchKey], null)
           stack.push(extentionNode)
+          // 更新key值
           key.push(branchKey)
         } 
         else 
         {
-          // branchNode是一个键值对节点，修改其键值
+          // branchNode是一个键值对节点，将删除的分支节点的key值放入branchNode
           branchNodeKey.unshift(branchKey)
           branchNode.key = branchNodeKey
 
-          // hackery. This is equvilant to array.concat except we need keep the
-          // rerfance to the `key` that was passed in.
+          // 相当于key = key.concat(branchNodeKey);
           branchNodeKey.unshift(0)
           branchNodeKey.unshift(key.length)
           key.splice.apply(key, branchNodeKey)
