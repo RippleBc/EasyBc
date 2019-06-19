@@ -583,13 +583,22 @@ module.exports = class Trie {
     this.db.batch(opStack, cb)
   }
 
+  /**
+   * @param {Array} key
+   * @param {Array} stack
+   */
   _deleteNode (key, stack, cb) {
-    // 处理branchNode中只有一个槽点有值的情况（这种情况下需要把将其父节点和子节点连接起来）
+    /**
+     * @param {Array} key
+     * @param {Char} branchKey，删除的分支节点上仅有的有效槽位对应的key
+     * @param {} branchNode，删除的分支节点上仅有的有效槽位对应的子节点哈西
+     * @param {} parentNode，删除的分支节点的父节点
+     */
     function processBranchNode (key, branchKey, branchNode, parentNode, stack) {
-      // branchNode is the node ON the branch node not THE branch node
       const branchNodeKey = branchNode.key
       if (!parentNode || parentNode.type === 'branch') 
       {
+        // 父节点存在的情况下，需要更新父节点
         if (parentNode) 
         {
           stack.push(parentNode)
@@ -597,15 +606,14 @@ module.exports = class Trie {
 
         if (branchNode.type === 'branch') 
         {
-          // create an extention node branch->extention->branch
+          // 创建一个扩展节点连接parentNode和branchNode
           const extentionNode = new TrieNode('extention', [branchKey], null)
           stack.push(extentionNode)
           key.push(branchKey)
         } 
         else 
         {
-          // branch key is an extention or a leaf
-          // branch->(leaf or extention)
+          // branchNode是一个键值对节点，修改其键值
           branchNodeKey.unshift(branchKey)
           branchNode.key = branchNodeKey
 
@@ -619,19 +627,22 @@ module.exports = class Trie {
       } 
       else 
       {
-        // parent is a extention
+        // parentNode为扩展节点
         let parentKey = parentNode.key
 
-        if (branchNode.type === 'branch') {
-          // ext->branch
+        if (branchNode.type === 'branch') 
+        {
+          // branchNode为分支节点（删除的分支的分支节点的key向上提升到parentNode）
           parentKey.push(branchKey)
+          // 重新设置key值
           key.push(branchKey)
+          // 设置parentNode的key值
           parentNode.key = parentKey
           stack.push(parentNode)
-        } else {
-          // branch node is an leaf or extention and parent node is an exstention
-          // add two keys together
-          // dont push the parent node
+        } 
+        else 
+        {
+          // branchNode为键值对节点（branchNode和parentNode合并为一个键值对节点）
           branchNodeKey.unshift(branchKey)
           key = key.concat(branchNodeKey)
           parentKey = parentKey.concat(branchNodeKey)
@@ -656,7 +667,7 @@ module.exports = class Trie {
 
     if (!parentNode) 
     {
-      // the root here has to be a leaf.
+      // 删除根节点
       this.root = this.EMPTY_TRIE_ROOT
       cb()
     } 
@@ -664,23 +675,28 @@ module.exports = class Trie {
     {
       if (lastNode.type === 'branch') 
       {
+        // 删除分支节点
         lastNode.value = null
       } 
       else
       {
-        // the lastNode has to be a leaf if its not a branch. And a leaf's parent if it has one must be a branch.
+        // 删除叶子节点
         const lastNodeKey = lastNode.key
         key.splice(key.length - lastNodeKey.length)
-        // delete the value
+        // opStack中记录删除lastNode的操作
         this._formatNode(lastNode, false, true, opStack)
+        // 重新设置父节点的槽值
         parentNode.setValue(key.pop(), null)
+
+        //
         lastNode = parentNode
         parentNode = stack.pop()
       }
 
       // nodes on the branch
       const branchNodes = []
-      // count the number of nodes on the branch
+
+      // 统计分支节点的有效槽位的数量
       lastNode.raw.forEach((node, i) => {
         const val = lastNode.getValue(i)
 
@@ -689,26 +705,29 @@ module.exports = class Trie {
         }
       })
 
-      // if there is only one branch node left, collapse the branch node
+      // 分支节点的有效槽位只有一个，删除分支节点
       if (branchNodes.length === 1) 
       {
-        // add the one remaing branch node to node above it
+        // 子节点哈西
         const branchNode = branchNodes[0][1]
+
+        // 分支节点key
         const branchNodeKey = branchNodes[0][0]
 
-        // look up node
         this._lookupNode(branchNode, (e, foundNode) => {
           if (e) 
           {
             return cb(e, foundNode)
           }
+
+          // 删除分支节点
           key = processBranchNode(key, branchNodeKey, foundNode, parentNode, stack, opStack)
           this._saveStack(key, stack, opStack, cb)
         })
       } 
       else 
       {
-        // simple removing a leaf and recaluclation the stack
+        // 分支节点的有效槽位数量大于一个，只需要更新分支节点
         if (parentNode) {
           stack.push(parentNode)
         }
