@@ -11,21 +11,13 @@ const { callTogether } = require('./util/async')
 const { stringToNibbles, matchingNibbleLength, doKeysMatch } = require('./util/nibbles')
 
 /**
- * Use `require('merkel-patricia-tree')` for the base interface. In Ethereum applications
- * stick with the Secure Trie Overlay `require('merkel-patricia-tree/secure')`.
- * The API for the raw and the secure interface are about the same
  * @class Trie
  * @public
- * @param {Object} [db] An instance of `DB`.
- * If the db is `null` or left undefined, then the trie will be stored in memory via [memdown](https://github.com/Level/memdown)
- * @param {Buffer|String} [root] A hex `String` or `Buffer` for the root of a previously stored trie
- * @prop {Buffer} root The current root of the `trie`
- * @prop {Buffer} EMPTY_TRIE_ROOT the Root for an empty trie
  */
 module.exports = class Trie {
   /**
-   * @param db
-   * @param root
+   * @param {Object} [db] An instance of `DB`. If the db is `null` or left undefined, then the trie will be stored in memory via [memdown](https://github.com/Level/memdown)
+   * @param {Buffer|String} [root] A hex `String` or `Buffer` for the root of a previously stored trie
    */
   constructor (db, root) {
     const self = this
@@ -54,11 +46,8 @@ module.exports = class Trie {
   }
 
   /**
-   * Gets a value given a `key`
-   * @method get
-   * @memberof Trie
    * @param {Buffer|String} key - the key to search for
-   * @param {Function} cb A callback `Function` which is given the arguments `err` - for errors that may have occured and `value` - the found value in a `Buffer` or if no value was found `null`
+   * @param {Function} cb
    */
   get (key, cb) {
     key = ethUtil.toBuffer(key)
@@ -66,7 +55,8 @@ module.exports = class Trie {
     this.findPath(key, (err, node, remainder, stack) => {
       let value = null
 
-      if (node && remainder.length === 0) {
+      if (node) 
+      {
         value = node.value
       }
 
@@ -75,46 +65,45 @@ module.exports = class Trie {
   }
 
   /**
-   * Stores a given `value` at the given `key`
-   * @method put
-   * @memberof Trie
    * @param {Buffer|String} key
-   * @param {Buffer|String} Value
-   * @param {Function} cb A callback `Function` which is given the argument `err` - for errors that may have occured
+   * @param {Buffer|String} value
+   * @param {Function} cb
    */
   put (key, value, cb) {
     key = ethUtil.toBuffer(key)
     value = ethUtil.toBuffer(value)
 
-    if (!value || value.toString() === '') {
-      // 进行删除操作
+    if (!value || value.toString() === '') 
+    {
       this.del(key, cb)
-    } else {
+    } 
+    else 
+    {
       cb = callTogether(cb, this.sem.leave)
 
       this.sem.take(() => {
-        if (this.root.toString('hex') !== ethUtil.SHA3_RLP.toString('hex')) {
-          // first try to find the give key or its nearst node
+        if (this.root.toString('hex') !== ethUtil.SHA3_RLP.toString('hex')) 
+        {
           this.findPath(key, (err, foundValue, keyRemainder, stack) => {
-            if (err) {
+            if (err) 
+            {
               return cb(err)
             }
-            // then update
+            
             this._updateNode(key, value, keyRemainder, stack, cb)
           })
-        } else {
-          this._createInitialNode(key, value, cb) // if no root initialize this trie
+        } 
+        else 
+        {
+          this._createInitialNode(key, value, cb)
         }
       })
     }
   }
 
   /**
-   * deletes a value given a `key`
-   * @method del
-   * @memberof Trie
    * @param {Buffer|String} key
-   * @param {Function} callback the callback `Function`
+   * @param {Function} cb
    */
   del (key, cb) {
     key = ethUtil.toBuffer(key)
@@ -122,33 +111,43 @@ module.exports = class Trie {
 
     this.sem.take(() => {
       this.findPath(key, (err, foundValue, keyRemainder, stack) => {
-        if (err) {
+        if (err) 
+        {
           return cb(err)
         }
-        if (foundValue) {
+        if (foundValue) 
+        {
           this._deleteNode(key, stack, cb)
-        } else {
+        } 
+        else 
+        {
           cb()
         }
       })
     })
   }
 
-  // retrieves a node from dbs by hash
   _lookupNode (node, cb) {
-    if (TrieNode.isRawNode(node)) {
+    if (TrieNode.isRawNode(node)) 
+    {
       // 指定了TrieNode的元数据，返回TrieNode对象
       cb(null, new TrieNode(node))
-    } else {
+    } 
+    else 
+    {
       // 从数据库中寻找指定root的节点
       this.db.get(node, (err, value) => {
-        if (err) {
+        if (err) 
+        {
           throw err
         }
 
-        if (value) {
+        if (value) 
+        {
           value = new TrieNode(rlp.decode(value))
-        } else {
+        } 
+        else 
+        {
           err = new Error('Missing node in DB')
         }
 
@@ -157,7 +156,6 @@ module.exports = class Trie {
     }
   }
 
-  // writes a single node to dbs
   _putNode (node, cb) {
     const hash = node.hash()
     const serialized = node.serialize()
@@ -165,13 +163,9 @@ module.exports = class Trie {
   }
 
   /**
-   * Tries to find a path to the node for the given key
-   * It returns a `stack` of nodes to the closet node
-   * @method findPath
-   * @memberof Trie
+   * Tries to find a path to the node for the given key, It returns a `stack` of nodes to the closet node
    * @param {String|Buffer} - key - the search key
-   * @param {Function} - cb - the callback function. Its is given the following
-   * arguments
+   * @param {Function} - cb - the callback function. It is given the following arguments
    *  - err - any errors encontered
    *  - node - the last node found
    *  - keyRemainder - the remaining key nibbles not accounted for
@@ -179,55 +173,78 @@ module.exports = class Trie {
    */
   findPath (targetKey, cb) {
     const stack = []
+
+    // convert key to nibble array
     targetKey = stringToNibbles(targetKey)
 
+    // begin to walk trie with the specified root
     this._walkTrie(this.root, processNode, cb)
 
     /**
-     * @param {} nodeRef 节点对应的哈希
-     * @param {} node 节点
-     * @param {} keyProgress 节点对应的完整的key
-     * @param {} walkController
+     * @param {} nodeRef 节点哈西
+     * @param {} node 当前节点
+     * @param {} keyProgress 当前已经处理的key（不包含node的key）
+     * @param {cb} walkController
      */
     function processNode (nodeRef, node, keyProgress, walkController) {
+      // 获取当前node的key
       const nodeKey = node.key || []
-      // 获取还需要匹配的key
+      // 获取未处理的目标key
       const keyRemainder = targetKey.slice(matchingNibbleLength(keyProgress, targetKey))
-      // 判断还需要匹配的key是否和当前node的key相同
+      // 判断未处理的key与当前node的key匹配的长度
       const matchingLen = matchingNibbleLength(keyRemainder, nodeKey)
 
+      // 记录匹配路径上的节点
       stack.push(node)
 
-      if (node.type === 'branch') {
-        if (keyRemainder.length === 0) {
+      if (node.type === 'branch') 
+      {
+        // 目标key已经全部处理完
+        if (keyRemainder.length === 0) 
+        {
+          // 找到目标key对应的节点
           walkController.return(null, node, [], stack)
-        // we exhausted the key without finding a node
-        } else {
-          // 获取分支节点中具体的槽位
+        } 
+        else 
+        {
+          // 获取分支节点上对应槽位的内容
           const branchIndex = keyRemainder[0]
           const branchNode = node.getValue(branchIndex)
-          if (!branchNode) {
-            // there are no more nodes to find and we didn't find the key
+          if (!branchNode) 
+          {
+            // 对应槽位没有内容，无法继续寻找
             walkController.return(null, null, keyRemainder, stack)
-          } else {
-            // node found, continuing search
+          } 
+          else 
+          {
+            // 继续寻找目标key对应的节点
             walkController.only(branchIndex)
           }
         }
-      } else if (node.type === 'leaf') {
-        if (doKeysMatch(keyRemainder, nodeKey)) {
-          // keys match, return node with empty key
+      } 
+      else if (node.type === 'leaf') 
+      {
+        if (doKeysMatch(keyRemainder, nodeKey)) 
+        {
+          // 找到目标key对应的节点
           walkController.return(null, node, [], stack)
-        } else {
-          // reached leaf but keys dont match
+        } 
+        else 
+        {
+          // 没有找到目标key对应的节点
           walkController.return(null, null, keyRemainder, stack)
         }
-      } else if (node.type === 'extention') {
-        if (matchingLen !== nodeKey.length) {
-          // keys dont match, fail
+      } 
+      else if (node.type === 'extention') 
+      {
+        if (matchingLen !== nodeKey.length) 
+        {
+          // 剩余的未处理的目标key与当前节点的key不匹配，无法继续往下寻找
           walkController.return(null, null, keyRemainder, stack)
-        } else {
-          // keys match, continue search
+        } 
+        else 
+        {
+          // 继续寻找目标key对应的节点
           walkController.next()
         }
       }
@@ -244,163 +261,169 @@ module.exports = class Trie {
   }
 
   /*
-   * Finds all nodes that store k,v values，遍历MPT树
+   * Finds all nodes with value
+   * @param {Function} onFound 
    */
   _findValueNodes (onFound, cb) {
     this._walkTrie(this.root, (nodeRef, node, key, walkController) => {
       let fullKey = key
 
-      if (node.key) {
+      if (node.key) 
+      {
         fullKey = key.concat(node.key)
       }
 
-      if (node.type === 'leaf') {
-        // found leaf node!
-        onFound(nodeRef, node, fullKey, walkController.next)
-      } else if (node.type === 'branch' && node.value) {
-        // found branch with value
-        onFound(nodeRef, node, fullKey, walkController.next)
-      } else {
-        // keep looking for value nodes
+      if (node.type === 'leaf') 
+      {
+        onFound(nodeRef, node, fullKey, walkController.next);
+      } 
+      else if (node.type === 'branch' && node.value) 
+      {
+        onFound(nodeRef, node, fullKey, walkController.next);
+      } 
+      else 
+      {
         walkController.next()
       }
     }, cb)
   }
 
   /*
-   * Finds all nodes that are stored directly in the db
-   * (some nodes are stored raw inside other nodes)
+   * Finds all nodes that are stored directly in the db(some nodes are stored raw inside other nodes)
    */
   _findDbNodes (onFound, cb) {
     this._walkTrie(this.root, (nodeRef, node, key, walkController) => {
-      if (TrieNode.isRawNode(nodeRef)) {
+      if (TrieNode.isRawNode(nodeRef)) 
+      {
         walkController.next()
-      } else {
+      } 
+      else 
+      {
         onFound(nodeRef, node, key, walkController.next)
       }
     }, cb)
   }
 
   /**
-   * Updates a node
-   * @method _updateNode
-   * @private
    * @param {Buffer} key
-   * @param {Buffer| String} value
-   * @param {Array} keyRemainder 剩余的没有匹配的key
-   * @param {Array} stack - 遍历到的node
-   * @param {Function} cb - the callback 
+   * @param {Buffer | String} value
+   * @param {Array} keyRemainder 未处理的目标key
+   * @param {Array} stack - 路径上的节点
+   * @param {Function} cb
    */
-  _updateNode (key, value, keyRemainder, stack, cb) {
-    // 新加入的节点
+  _updateNode (key, value, keyRemainder, stack, cb) 
+  {
     const toSave = []
     const lastNode = stack.pop()
 
-    // add the new nodes
+    // convert key to nibble array
     key = stringToNibbles(key)
 
-    // Check if the last node is a leaf and the key matches to this
-    let matchLeaf = false
-
-    // 第一种情况，最后一个节点时叶子节点
-    if (lastNode.type === 'leaf') {
-
-      // 统计键的长度
-      let l = 0
-      for (let i = 0; i < stack.length; i++) {
-        const n = stack[i]
-
-        if (n.type === 'branch') {
-          l++
-        } else {
-          l += n.key.length
-        }
-      }
-
-      // 新插入的节点和最后一个节点的key值完全匹配（注意，keyRemainder的长度为0对应两种情况，一是value存储在分支节点中，二是value存储在键值对节点（叶子节点））
-      if ((matchingNibbleLength(lastNode.key, key.slice(l)) === lastNode.key.length) && (keyRemainder.length === 0)) {
-        matchLeaf = true
-      }
-    }
-
-    if (matchLeaf) {
-      // 新插入的节点与最后一个节点的key值完全匹配，只需要更新最后一个节点的value
+    if (lastNode.type === 'leaf' && keyRemainder.length === 0) 
+    {
       lastNode.value = value
       stack.push(lastNode)
-    } else if (lastNode.type === 'branch') {
-      stack.push(lastNode)
-      if (keyRemainder.length !== 0) {
-        // 最后一个节点是分支节点，但是新插入的节点无法在分支节点中存储，这时候需要创建一个键值对节点（叶子节点），用来存储新加入的节点
+
+      return this._saveStack(key, stack, toSave, cb)
+    }
+
+    if (lastNode.type === 'branch') 
+    {
+      stack.push(lastNode);
+
+      if (keyRemainder.length === 0) 
+      {
+        lastNode.value = value
+      } 
+      else 
+      {
         keyRemainder.shift()
-        // create a new leaf
+
+        // 添加一个叶子节点，对应的branchIndex会在_saveStack进行赋值
         const newLeaf = new TrieNode('leaf', keyRemainder, value)
         stack.push(newLeaf)
-      } else {
-        // 最后一个节点是分支节点，并且新插入的节点可以存储在分支节点中，这时候只需要更新分支节点的值
-        lastNode.value = value
-      }
-    } else {
-      // 最后一个节点是键值对节点（叶子节点或者扩展节点），并且叶子节点的key值与新加入的节点的key值不匹配，这时候需要创建一个分支节点，用来间接或者直接存储最后一个节点和新加入的节点
-      const lastKey = lastNode.key
-      const matchingLength = matchingNibbleLength(lastKey, keyRemainder)
-      const newBranchNode = new TrieNode('branch')
-
-      // 最后一个节点和新加入的节点的key值有部分匹配，更改最后一个节点的key值和value值
-      if (matchingLength !== 0) {
-        // 获取部分匹配的key值
-        const newKey = lastNode.key.slice(0, matchingLength)
-        // 通过部分匹配的key值创建一个键值对节点（扩展节点）（注意这里的value没有任何意义，因为这个value会在后续的处理中被重新计算）
-        const newExtNode = new TrieNode('extention', newKey, value)
-        // 插入键值对节点（扩展节点）
-        stack.push(newExtNode)
-        // 重新设置最后一个节点的key
-        lastKey.splice(0, matchingLength)
-        // 重新设置新加入的节点的key
-        keyRemainder.splice(0, matchingLength)
       }
 
-      // 插入一个分支节点，用来连接新加入的节点和原先的最后一个节点
-      stack.push(newBranchNode)
+      return this._saveStack(key, stack, toSave, cb)
+    }
+   
+    // 最后一个节点是键值对节点（叶子节点或者扩展节点），并且叶子节点的key值与新加入的节点的key值不匹配，这时候需要创建一个分支节点，用来间接或者直接存储最后一个节点和新加入的节点
+    const lastKey = lastNode.key
+    const matchingLength = matchingNibbleLength(lastKey, keyRemainder)
+    const newBranchNode = new TrieNode('branch')
 
-      // 最后一个节点的key值和新加入的节点的key值，有重叠部分，但是新加入节点的key不包含最后一个节点的key
-      if (lastKey.length !== 0) {
-        // 获取最后一个节点对应分支节点的槽位
-        const branchKey = lastKey.shift()
+    // 最后一个节点的key和未处理的目标key有部分匹配
+    if (matchingLength !== 0) 
+    {
+      // 获取部分匹配的key值
+      const newKey = lastNode.key.slice(0, matchingLength)
 
-        if (lastNode.type === 'leaf') {
-          // 最后一个节点是叶子节点，记录叶子节点对应的值
-          lastNode.key = lastKey
-          // 获取lastNode的元数据
-          const formatedNode = this._formatNode(lastNode, false, toSave)
-          // 这里的formatedNode应当是一个叶子节点
-          newBranchNode.setValue(branchKey, formatedNode)
-        } else {
-          // 最后一个节点是扩展节点，获取lastNode的元数据，里面包含lastNode的key值，以及对应的value
-          this._formatNode(lastNode, false, true, toSave)
-          // 这里的lastNode.value应当是一个扩展节点，扩展节点下面连接着一个分支节点
-          newBranchNode.setValue(branchKey, lastNode.value)
-        }
-      } else {
-        // 新加入节点的key包含最后一个节点的key（注意，这种情况下，最后一个节点肯定是叶子节点，因为如果是扩展节点，新加入的节点必定走分支节点，这与上面的假设矛盾）
-        newBranchNode.value = lastNode.value
+      // 通过部分匹配的key值创建一个扩展节点，扩展节点的子节点的哈希会在_saveStack进行赋值
+      const newExtNode = new TrieNode('extention', newKey, value)
+      stack.push(newExtNode)
+
+      //
+      lastKey.splice(0, matchingLength)
+      keyRemainder.splice(0, matchingLength)
+    }
+
+    // 添加一个分支节点
+    stack.push(newBranchNode)
+
+    // 处理最后一个节点
+    if (lastKey.length !== 0) 
+    {
+      // 获取分支节点的槽位
+      const branchKey = lastKey.shift()；
+
+      if (lastNode.type === 'leaf') 
+      {
+        // 重新定义lastNode的key
+        lastNode.key = lastKey
+        
+        // 获取lastNode的哈希，toSave中记录的是将lastNode放入数据库的操作
+        const formatedNode = this._formatNode(lastNode, false, toSave)
+
+        // 添加一个叶子节点
+        newBranchNode.setValue(branchKey, formatedNode)
+      } 
+      else 
+      {
+        // toSave中存储删除lastNode的操作
+        this._formatNode(lastNode, false, true, toSave)
+
+        // 添加一个扩展节点，漏掉的key会在_saveStack进行赋值
+        newBranchNode.setValue(branchKey, lastNode.value)
       }
+    } 
+    else 
+    {
+      newBranchNode.value = lastNode.value
+    }
 
-      // 最后一个节点的key值和新加入的节点的key值，有重叠部分，但是最后一个节点的key不包含新加入节点的key
-      if (keyRemainder.length !== 0) {
-        keyRemainder.shift()
-        // 创建一个叶子节点
-        const newLeafNode = new TrieNode('leaf', keyRemainder, value)
-        stack.push(newLeafNode)
-      } else {
-        // 最后一个节点的key包含新加入节点的key，新加入的节点的值放入
-        newBranchNode.value = value
-      }
+    // 处理新加入的节点
+    if (keyRemainder.length !== 0) 
+    {
+      keyRemainder.shift()
+
+      // 添加一个叶子节点，对应的branchIndex会在_saveStack进行赋值
+      const newLeafNode = new TrieNode('leaf', keyRemainder, value)
+      stack.push(newLeafNode)
+    } 
+    else 
+    {
+      newBranchNode.value = value
     }
 
     // 保存修改过的节点
     this._saveStack(key, stack, toSave, cb)
   }
 
+  /**
+   * @param {} root 
+   * @param {Functioin} onNode 遍历节点的控制函数，用来制定遍历策略以及调用onDone函数返回遍历结果
+   * @param {Functioin} onDone
+   */
   _walkTrie (root, onNode, onDone) {
     const self = this
     root = root || this.root
@@ -408,18 +431,19 @@ module.exports = class Trie {
     let aborted = false
     let returnValues = []
 
-    // 判断root是否为空
-    if (root.toString('hex') === ethUtil.SHA3_RLP.toString('hex')) {
+    if (root.toString('hex') === ethUtil.SHA3_RLP.toString('hex')) 
+    {
       return onDone()
     }
 
-    // 从数据中寻找root对应的节点
     this._lookupNode(root, (e, node) => {
-      if (e) {
+      if (e) 
+      {
         return onDone(e, node)
       }
       processNode(root, node, null, err => {
-        if (err) {
+        if (err) 
+        {
           return onDone(err)
         }
 
@@ -434,64 +458,69 @@ module.exports = class Trie {
 
     /**
      * @param {} nodeRef 节点对应的哈希值
-     * @param {} node 对应的节点
-     * @param {} key 节点对应的完整的key
+     * @param {} node 当前节点
+     * @param {} key 当前处理的key（不包含当前节点的key）
      * @param {} cb
      */
     function processNode (nodeRef, node, key, cb) {
-      if (!node || aborted) {
+      if (!node || aborted) 
+      {
         return cb()
       }
 
       let stopped = false
       key = key || []
 
+      // 遍历控制接口（相当于是一个迭代器，用于控制遍历的方向）
       const walkController = {
         stop: function () {
           stopped = true
           cb()
         },
-        // end all traversal and return values to the onDone cb
         return: function () {
           aborted = true
           returnValues = arguments
           cb()
         },
-        // 遍历路线
         next: function () {
-          if (aborted || stopped) {
+          if (aborted || stopped) 
+          {
             return cb()
           }
 
-          // 获取子节点（如果node为叶子节点，则返回空数组，如果是扩展节点，返回键值对，如果是分支节点）
+          // 获取子节点
           const children = node.getChildren()
           async.forEachOf(children, (childData, index, cb) => {
-            // 获取key
+            // 获取key(nibble array)
             const keyExtension = childData[0]
-            // 获取value
+            // 获取子节点的哈西
             const childRef = childData[1]
             // 获取完整的key
             const childKey = key.concat(keyExtension)
+            // 扩展节点的优先级要大于分支节点
             const priority = childKey.length
-            // 优先遍历已经遍历到较深层次的节点
+            // 继续遍历
             taskExecutor.execute(priority, taskCallback => {
               self._lookupNode(childRef, (e, childNode) => {
-                if (e) {
+                if (e) 
+                {
                   return cb(e, node)
                 }
+
                 taskCallback()
                 processNode(childRef, childNode, childKey, cb)
               })
             })
           }, cb)
         },
-        // 走指定的路线
+        // 当前节点为分支节点，调用only函数继续往下遍历
         only: function (childIndex) {
-          // 获取扩展节点信息
+          // 获取对应槽位上子节点的哈希
           const childRef = node.getValue(childIndex)
-          // 扩展节点对应的键
+          // 获取完整的key
           const childKey = key.slice()
           childKey.push(childIndex)
+          // 继续遍历
           const priority = childKey.length
           taskExecutor.execute(priority, taskCallback => {
             self._lookupNode(childRef, (e, childNode) => {
@@ -510,8 +539,6 @@ module.exports = class Trie {
   }
 
   /**
-   * saves a stack
-   * @method _saveStack
    * @private
    * @param {Array} key - the key. Should follow the stack
    * @param {Array} stack - a stack of nodes to the value given by the key
@@ -522,25 +549,34 @@ module.exports = class Trie {
     let lastRoot
 
     // update nodes
-    while (stack.length) {
+    while (stack.length) 
+    {
       const node = stack.pop()
-      if (node.type === 'leaf') {
+      if (node.type === 'leaf') 
+      {
         key.splice(key.length - node.key.length)
-      } else if (node.type === 'extention') {
+      } 
+      else if (node.type === 'extention') 
+      {
         key.splice(key.length - node.key.length)
-        if (lastRoot) {
+        if (lastRoot) 
+        {
           node.value = lastRoot
         }
-      } else if (node.type === 'branch') {
-        if (lastRoot) {
-          const branchKey = key.pop()
+      } 
+      else if (node.type === 'branch') 
+      {
+        if (lastRoot) 
+        {
+          const branchKey = key.pop();
           node.setValue(branchKey, lastRoot)
         }
       }
       lastRoot = this._formatNode(node, stack.length === 0, opStack)
     }
 
-    if (lastRoot) {
+    if (lastRoot) 
+    {
       this.root = lastRoot
     }
 
@@ -548,22 +584,26 @@ module.exports = class Trie {
   }
 
   _deleteNode (key, stack, cb) {
+    // 处理branchNode中只有一个槽点有值的情况（这种情况下需要把将其父节点和子节点连接起来）
     function processBranchNode (key, branchKey, branchNode, parentNode, stack) {
       // branchNode is the node ON the branch node not THE branch node
       const branchNodeKey = branchNode.key
-      if (!parentNode || parentNode.type === 'branch') {
-        // branch->?
-        if (parentNode) {
+      if (!parentNode || parentNode.type === 'branch') 
+      {
+        if (parentNode) 
+        {
           stack.push(parentNode)
         }
 
-        if (branchNode.type === 'branch') {
-          // create an extention node
-          // branch->extention->branch
+        if (branchNode.type === 'branch') 
+        {
+          // create an extention node branch->extention->branch
           const extentionNode = new TrieNode('extention', [branchKey], null)
           stack.push(extentionNode)
           key.push(branchKey)
-        } else {
+        } 
+        else 
+        {
           // branch key is an extention or a leaf
           // branch->(leaf or extention)
           branchNodeKey.unshift(branchKey)
@@ -576,7 +616,9 @@ module.exports = class Trie {
           key.splice.apply(key, branchNodeKey)
         }
         stack.push(branchNode)
-      } else {
+      } 
+      else 
+      {
         // parent is a extention
         let parentKey = parentNode.key
 
@@ -606,21 +648,27 @@ module.exports = class Trie {
     let parentNode = stack.pop()
     const opStack = []
 
-    if (!Array.isArray(key)) {
+    if (!Array.isArray(key)) 
+    {
       // convert key to nibbles
       key = stringToNibbles(key)
     }
 
-    if (!parentNode) {
+    if (!parentNode) 
+    {
       // the root here has to be a leaf.
       this.root = this.EMPTY_TRIE_ROOT
       cb()
-    } else {
-      if (lastNode.type === 'branch') {
+    } 
+    else 
+    {
+      if (lastNode.type === 'branch') 
+      {
         lastNode.value = null
-      } else {
-        // the lastNode has to be a leaf if its not a branch. And a leaf's parent
-        // if it has one must be a branch.
+      } 
+      else
+      {
+        // the lastNode has to be a leaf if its not a branch. And a leaf's parent if it has one must be a branch.
         const lastNodeKey = lastNode.key
         key.splice(key.length - lastNodeKey.length)
         // delete the value
@@ -642,20 +690,24 @@ module.exports = class Trie {
       })
 
       // if there is only one branch node left, collapse the branch node
-      if (branchNodes.length === 1) {
+      if (branchNodes.length === 1) 
+      {
         // add the one remaing branch node to node above it
         const branchNode = branchNodes[0][1]
         const branchNodeKey = branchNodes[0][0]
 
         // look up node
         this._lookupNode(branchNode, (e, foundNode) => {
-          if (e) {
+          if (e) 
+          {
             return cb(e, foundNode)
           }
           key = processBranchNode(key, branchNodeKey, foundNode, parentNode, stack, opStack)
           this._saveStack(key, stack, opStack, cb)
         })
-      } else {
+      } 
+      else 
+      {
         // simple removing a leaf and recaluclation the stack
         if (parentNode) {
           stack.push(parentNode)
@@ -684,15 +736,19 @@ module.exports = class Trie {
 
     const rlpNode = node.serialize()
 
-    if (rlpNode.length >= 32 || topLevel) {
+    if (rlpNode.length >= 32 || topLevel) 
+    {
       const hashRoot = node.hash()
 
-      if (remove && this.isCheckpoint) {
+      if (remove && this.isCheckpoint) 
+      {
         opStack.push({
           type: 'del',
           key: hashRoot
         })
-      } else {
+      } 
+      else
+      {
         opStack.push({
           type: 'put',
           key: hashRoot,
