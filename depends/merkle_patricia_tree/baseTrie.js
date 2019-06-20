@@ -458,7 +458,7 @@ class Trie
     }
 
     this._lookupNode(root, (e, node) => {
-      if(e) 
+      if(e)
       {
         return onDone(e)
       }

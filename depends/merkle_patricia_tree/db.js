@@ -29,7 +29,7 @@ class DB
 
   /**
    * @param {Buffer} key
-   * @param {Buffer} value
+   * @param {Buffer} val
    * @param {Function} cb
    */
   put(key, val, cb) 
@@ -44,7 +44,7 @@ class DB
    * @param {Buffer} key
    * @param {Function} cb
    */
-  del(key, cb) 
+  del(key, cb)
   {
     assert(Buffer.isBuffer(key), `DB del, key should be an Buffer, now is ${typeof key}`);
 

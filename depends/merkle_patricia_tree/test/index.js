@@ -1,13 +1,22 @@
 const BaseTrie = require('../baseTrie');
 const async = require("async");
 const baseTrie = new BaseTrie();
-const readStream = baseTrie.createReadStream();
 
 async.waterfall([
 	cb => {
 		baseTrie.put(Buffer.from('do'), Buffer.from('verb'), cb)
 	},
 	cb => {
+		const readStream = baseTrie.createReadStream();
+		readStream.on('data', data => {
+			console.log(`key: ${data.key}, value: ${data.value.toString()}`)
+		})
+		readStream.on('end', () => {
+			cb();
+		})
+	},
+	cb => {
+		console.log(`root, ${baseTrie.root.toString("hex")}`)
 		baseTrie.put(Buffer.from('dog'), Buffer.from('puppy'), cb)
 	},
 	cb => {
@@ -17,6 +26,7 @@ async.waterfall([
 		baseTrie.put(Buffer.from('horse'), Buffer.from('stallion'), cb)
 	},
 	cb => {
+		const readStream = baseTrie.createReadStream();
 		readStream.on('data', data => {
 			console.log(`key: ${data.key}, value: ${data.value.toString()}`)
 		})
