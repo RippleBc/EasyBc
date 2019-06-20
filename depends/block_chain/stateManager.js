@@ -32,7 +32,7 @@ class StateManager
 
   /**
    * @param {Buffer} address
-   * @param {Buufer} account
+   * @param {Buffer} account
    */
   putAccount(address, account)
   {

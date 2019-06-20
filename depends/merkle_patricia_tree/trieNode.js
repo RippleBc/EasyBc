@@ -1,6 +1,6 @@
 const rlp = require('rlp')
 const ethUtil = require('ethereumjs-util')
-const { stringToNibbles, nibblesToBuffer } = require('./util/nibbles')
+const { bufferToNibbles, nibblesToBuffer } = require('./util/nibbles')
 const { isTerminator, addHexPrefix, removeHexPrefix } = require('./util/hex')
 
 module.exports = class TrieNode {
@@ -48,7 +48,7 @@ module.exports = class TrieNode {
     } 
     // 表示的是键值对节点
     else if (node.length === 2) {
-      var key = stringToNibbles(node[0])
+      var key = bufferToNibbles(node[0])
       // 键值对节点中的叶子节点（拥有结束标记，对应的值是需要进行存储的值）
       if (isTerminator(key)) {
         return 'leaf'
@@ -120,7 +120,7 @@ module.exports = class TrieNode {
     if (this.type !== 'branch') {
       // 键值对节点
       if (Buffer.isBuffer(key)) {
-        key = stringToNibbles(key)
+        key = bufferToNibbles(key)
       } else {
         key = key.slice(0) // copy the key
       }
@@ -134,7 +134,7 @@ module.exports = class TrieNode {
   getKey () {
     if (this.type !== 'branch') {
       var key = this.raw[0]
-      key = removeHexPrefix(stringToNibbles(key))
+      key = removeHexPrefix(bufferToNibbles(key))
       return (key)
     }
   }

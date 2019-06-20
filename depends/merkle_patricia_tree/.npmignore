@@ -1,8 +1,0 @@
-.travis.yml
-.babelrc
-index.js
-
-*.tgz
-
-test/
-src/

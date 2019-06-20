@@ -1,14 +1,16 @@
 const assert = require('assert')
 const async = require('async')
-const rlp = require('rlp')
-const ethUtil = require('ethereumjs-util')
+const utils = require('../../utils')
 const semaphore = require('semaphore')
 const DB = require('./db')
 const TrieNode = require('./trieNode')
 const ReadStream = require('./readStream')
 const PrioritizedTaskExecutor = require('./prioritizedTaskExecutor')
 const { callTogether } = require('./util/async')
-const { stringToNibbles, matchingNibbleLength, doKeysMatch } = require('./util/nibbles')
+const { bufferToNibbles, matchingNibbleLength, doKeysMatch } = require('./util/nibbles')
+
+const rlp = utils.rlp;
+const Buffer = utils.Buffer;
 
 /**
  * @class Trie
@@ -16,28 +18,35 @@ const { stringToNibbles, matchingNibbleLength, doKeysMatch } = require('./util/n
  */
 module.exports = class Trie {
   /**
-   * @param {Object} [db] An instance of `DB`. If the db is `null` or left undefined, then the trie will be stored in memory via [memdown](https://github.com/Level/memdown)
-   * @param {Buffer|String} [root] A hex `String` or `Buffer` for the root of a previously stored trie
+   * @param {DB} db, default is memdown
+   * @param {Buffer} root
    */
-  constructor (db, root) {
-    const self = this
-    this.EMPTY_TRIE_ROOT = ethUtil.SHA3_RLP
+  constructor(db, root)
+  {
+    assert(db instanceof DB, `Trie constructor, db should be an instance of DB, now is ${typeof db}`)
+    assert(Buffer.isBuffer(root), `Trie constructor, root should be an Buffer, now is ${typeof db}`)
+
     this.sem = semaphore(1)
 
     this.db = db || new DB()
 
     Object.defineProperty(this, 'root', {
-      set (value) {
-        if (value) {
-          value = ethUtil.toBuffer(value)
-          assert(value.length === 32, 'Invalid root length. Roots are 32 bytes')
-        } else {
-          value = self.EMPTY_TRIE_ROOT
+      set(value) 
+      {
+        if(value) 
+        {
+          assert(Buffer.isBuffer(value), `Trie set root, root should be an Buffer, now is ${typeof value}`)
+          assert(value.length === 32, `Trie set root, root lenth should be 32 bytes, now is ${value.length}`)
+        } 
+        else
+        {
+          value = utils.SHA3_RLP
         }
 
         this._root = value
       },
-      get () {
+      get()
+      {
         return this._root
       }
     })
@@ -46,12 +55,14 @@ module.exports = class Trie {
   }
 
   /**
-   * @param {Buffer|String} key - the key to search for
+   * @param {Buffer} key
    * @param {Function} cb
    */
-  get (key, cb) {
-    key = ethUtil.toBuffer(key)
+  get (key, cb) 
+  {
+    assert(Buffer.isBuffer(key), `Trie get, key should be an Buffer, now is ${typeof key}`)
 
+    // try to find correponsed value
     this.findPath(key, (err, node, remainder, stack) => {
       let value = null
 
@@ -65,61 +76,63 @@ module.exports = class Trie {
   }
 
   /**
-   * @param {Buffer|String} key
-   * @param {Buffer|String} value
+   * @param {Buffer} key
+   * @param {Buffer} value
    * @param {Function} cb
    */
-  put (key, value, cb) {
-    key = ethUtil.toBuffer(key)
-    value = ethUtil.toBuffer(value)
+  put(key, value, cb) 
+  {
+    assert(Buffer.isBuffer(key), `Trie put, key should be an Buffer, now is ${typeof key}`)
+    assert(Buffer.isBuffer(value), `Trie put, value should be an Buffer, now is ${typeof value}`)
 
-    if (!value || value.toString() === '') 
+    if(value.toString() === '') 
     {
-      this.del(key, cb)
+      return cb("Trie put, value can not be empty");
     } 
-    else 
-    {
-      cb = callTogether(cb, this.sem.leave)
+   
 
-      this.sem.take(() => {
-        if (this.root.toString('hex') !== ethUtil.SHA3_RLP.toString('hex')) 
-        {
-          this.findPath(key, (err, foundValue, keyRemainder, stack) => {
-            if (err) 
-            {
-              return cb(err)
-            }
-            
-            this._updateNode(key, value, keyRemainder, stack, cb)
-          })
-        } 
-        else 
-        {
-          this._createInitialNode(key, value, cb)
-        }
-      })
-    }
+    cb = callTogether(cb, this.sem.leave)
+
+    this.sem.take(() => {
+      if(this.root.toString('hex') !== utils.SHA3_RLP.toString('hex')) 
+      {
+        this.findPath(key, (err, foundValue, keyRemainder, stack) => {
+          if(err) 
+          {
+            return cb(err)
+          }
+          
+          this._updateNode(key, value, keyRemainder, stack, cb)
+        })
+      } 
+      else 
+      {
+        this._createInitialNode(key, value, cb)
+      }
+    })
   }
 
   /**
-   * @param {Buffer|String} key
+   * @param {Buffer} key
    * @param {Function} cb
    */
-  del (key, cb) {
-    key = ethUtil.toBuffer(key)
+  del(key, cb) 
+  {
+    assert(Buffer.isBuffer(key), `Trie del, key should be an Buffer, now is ${typeof key}`)
+
     cb = callTogether(cb, this.sem.leave)
 
     this.sem.take(() => {
       this.findPath(key, (err, foundValue, keyRemainder, stack) => {
-        if (err) 
+        if(err)
         {
           return cb(err)
         }
-        if (foundValue) 
+        if(foundValue)
         {
           this._deleteNode(key, stack, cb)
         } 
-        else 
+        else
         {
           cb()
         }
@@ -127,106 +140,118 @@ module.exports = class Trie {
     })
   }
 
-  _lookupNode (node, cb) {
-    if (TrieNode.isRawNode(node)) 
+  /**
+   * @param {Buffer | Array} node
+   */
+  _lookupNode(node, cb) 
+  {
+    // 节点中可以存储其他节点的元数据
+    if(TrieNode.isRawNode(node)) 
     {
-      // 指定了TrieNode的元数据，返回TrieNode对象
-      cb(null, new TrieNode(node))
+      return cb(null, new TrieNode(node))
     } 
-    else 
-    {
-      // 从数据库中寻找指定root的节点
-      this.db.get(node, (err, value) => {
-        if (err) 
-        {
-          throw err
-        }
+   
+    assert(Buffer.isBuffer(node), `Trie _lookupNode, node should be an Buffer, now is ${typeof node}`)
 
-        if (value) 
-        {
-          value = new TrieNode(rlp.decode(value))
-        } 
-        else 
-        {
-          err = new Error('Missing node in DB')
-        }
+    this.db.get(node, (err, value) => {
+      if(err) 
+      {
+        throw err
+      }
 
-        cb(err, value)
-      })
-    }
+      if(value) 
+      {
+        const trieNodeRawData = rlp.decode(value);
+
+        value = new TrieNode(trieNodeRawData)
+      } 
+      else 
+      {
+        err = new Error(`Trie _lookupNode, node: ${node.toString("hex")}, can not find node in DB`);
+      }
+
+      cb(err, value)
+    })
   }
 
-  _putNode (node, cb) {
+  /**
+   * @param {TrieNode} node
+   * @param {Function} cb
+   */
+  _putNode(node, cb) 
+  {
+    assert(node instanceof TrieNode, `Trie _putNode, node should be an instance of TrieNode, now is ${typeof node}`);
+
     const hash = node.hash()
     const serialized = node.serialize()
     this.db.put(hash, serialized, cb)
   }
 
   /**
-   * Tries to find a path to the node for the given key, It returns a `stack` of nodes to the closet node
-   * @param {String|Buffer} - key - the search key
-   * @param {Function} - cb - the callback function. It is given the following arguments
-   *  - err - any errors encontered
-   *  - node - the last node found
-   *  - keyRemainder - the remaining key nibbles not accounted for
-   *  - stack - an array of nodes that forms the path to node we are searching for
+   * @param {Buffer} key - the search key
+   * @param {Function} cb - It is given the following arguments
+   *   err - any errors encontered
+   *   node - the last node found
+   *   keyRemainder - the remaining key nibbles not accounted for
+   *   stack - an array of nodes that forms the path to node we are searching for
    */
-  findPath (targetKey, cb) {
+  findPath(targetKey, cb) 
+  {
+    assert(Buffer.isBuffer(targetKey), `Trie targetKey, targetKey should be an Buffer, now is ${typeof targetKey}`)
+
     const stack = []
 
-    // convert key to nibble array
-    targetKey = stringToNibbles(targetKey)
+    targetKey = bufferToNibbles(targetKey)
 
     // begin to walk trie with the specified root
     this._walkTrie(this.root, processNode, cb)
 
     /**
-     * @param {} nodeRef 节点哈西
-     * @param {} node 当前节点
-     * @param {} keyProgress 当前已经处理的key（不包含node的key）
+     * @param {Array | Buffer} nodeRef - Buffer对应的是节点哈西，Array对应的是节点序列化数据
+     * @param {TrieNode} node 当前节点
+     * @param {Array} keyProgress 当前已经处理的key（不包含node的key）
      * @param {cb} walkController
      */
-    function processNode (nodeRef, node, keyProgress, walkController) {
-      // 获取当前node的key
+    function processNode(nodeRef, node, keyProgress, walkController)
+    {
+      assert(node instanceof TrieNode, `Trie findPath processNode, node should be an instance of TrieNode, now is ${typeof node}`)
+      assert(Array.isArray(keyProgress), `Trie findPath processNode, keyProgress should be an Array, now is ${typeof keyProgress}`)
+
       const nodeKey = node.key || []
-      // 获取未处理的目标key
       const keyRemainder = targetKey.slice(matchingNibbleLength(keyProgress, targetKey))
-      // 判断未处理的key与当前node的key匹配的长度
       const matchingLen = matchingNibbleLength(keyRemainder, nodeKey)
 
-      // 记录匹配路径上的节点
       stack.push(node)
 
-      if (node.type === 'branch') 
+      if(node.type === 'branch') 
       {
-        // 目标key已经全部处理完
         if (keyRemainder.length === 0) 
         {
-          // 找到目标key对应的节点
-          walkController.return(null, node, [], stack)
+          // 返回targetKey对应的节点
+          walkController.return(null, node, [], stack);
         } 
         else 
         {
           // 获取分支节点上对应槽位的内容
           const branchIndex = keyRemainder[0]
           const branchNode = node.getValue(branchIndex)
-          if (!branchNode) 
+          if(branchNode) 
           {
-            // 对应槽位没有内容，无法继续寻找
-            walkController.return(null, null, keyRemainder, stack)
+            // 继续寻找target对应的节点
+            walkController.only(branchIndex)
           } 
           else 
           {
-            // 继续寻找目标key对应的节点
-            walkController.only(branchIndex)
+            // 对应槽位没有内容，无法继续寻找
+            walkController.return(null, null, keyRemainder, stack)
           }
         }
       } 
-      else if (node.type === 'leaf') 
+      else if(node.type === 'leaf') 
       {
-        if (doKeysMatch(keyRemainder, nodeKey)) 
+        if(doKeysMatch(keyRemainder, nodeKey)) 
         {
-          // 找到目标key对应的节点
+          // 返回targetKey对应的节点
           walkController.return(null, node, [], stack)
         } 
         else 
@@ -235,11 +260,11 @@ module.exports = class Trie {
           walkController.return(null, null, keyRemainder, stack)
         }
       } 
-      else if (node.type === 'extention') 
+      else if(node.type === 'extention') 
       {
-        if (matchingLen !== nodeKey.length) 
+        if(matchingLen !== nodeKey.length) 
         {
-          // 剩余的未处理的目标key与当前节点的key不匹配，无法继续往下寻找
+          // keyRemainder无法通过当前扩展节点往下寻找
           walkController.return(null, null, keyRemainder, stack)
         } 
         else 
@@ -252,28 +277,22 @@ module.exports = class Trie {
   }
 
   /*
-   * Finds all nodes that store k,v values
-   */
-  _findNode (key, root, stack, cb) {
-    this.findPath(key, () => {
-      cb.apply(null, arguments)
-    })
-  }
-
-  /*
    * Finds all nodes with value
    * @param {Function} onFound 
    */
-  _findValueNodes (onFound, cb) {
-    this._walkTrie(this.root, (nodeRef, node, key, walkController) => {
-      let fullKey = key
+  _findValueNodes(onFound, cb) 
+  {
+    this._walkTrie(this.root, (nodeRef, node, keyProgress, walkController) => {
+      // 已经处理的key
+      let fullKey = keyProgress
 
-      if (node.key) 
+      // 注意！！！分支节点的key属性返回空，因此这里需要区分分支节点和键值对节点
+      if(node.key) 
       {
-        fullKey = key.concat(node.key)
+        fullKey = keyProgress.concat(node.key)
       }
 
-      if (node.type === 'leaf') 
+      if(node.type === 'leaf') 
       {
         onFound(nodeRef, node, fullKey, walkController.next);
       } 
@@ -291,35 +310,38 @@ module.exports = class Trie {
   /*
    * Finds all nodes that are stored directly in the db(some nodes are stored raw inside other nodes)
    */
-  _findDbNodes (onFound, cb) {
+  _findDbNodes(onFound, cb) 
+  {
     this._walkTrie(this.root, (nodeRef, node, key, walkController) => {
-      if (TrieNode.isRawNode(nodeRef)) 
+      if(TrieNode.isRawNode(nodeRef)) 
       {
-        walkController.next()
+        return walkController.next()
       } 
-      else 
-      {
-        onFound(nodeRef, node, key, walkController.next)
-      }
+     
+      onFound(nodeRef, node, key, walkController.next)
     }, cb)
   }
 
   /**
    * @param {Buffer} key
-   * @param {Buffer | String} value
-   * @param {Array} keyRemainder 未处理的目标key
-   * @param {Array} stack - 路径上的节点
+   * @param {Buffer} value
+   * @param {Array} keyRemainder
+   * @param {Array} stack
    * @param {Function} cb
    */
-  _updateNode (key, value, keyRemainder, stack, cb) 
+  _updateNode(key, value, keyRemainder, stack, cb) 
   {
+    assert(Buffer.isBuffer(key), `Trie _updateNode, key should be an Buffer, now is ${typeof key}`)
+    assert(Buffer.isBuffer(value), `Trie _updateNode, value should be an Buffer, now is ${typeof value}`)
+    assert(Array.isArray(keyRemainder), `Trie _updateNode, keyRemainder should be an Array, now is ${typeof keyRemainder}`)
+    assert(Array.isArray(stack), `Trie _updateNode, stack should be an Array, now is ${typeof stack}`)
+
     const toSave = []
     const lastNode = stack.pop()
 
-    // convert key to nibble array
-    key = stringToNibbles(key)
+    key = bufferToNibbles(key)
 
-    if (lastNode.type === 'leaf' && keyRemainder.length === 0) 
+    if(lastNode.type === 'leaf' && keyRemainder.length === 0) 
     {
       lastNode.value = value
       stack.push(lastNode)
@@ -327,11 +349,11 @@ module.exports = class Trie {
       return this._saveStack(key, stack, toSave, cb)
     }
 
-    if (lastNode.type === 'branch') 
+    if(lastNode.type === 'branch') 
     {
       stack.push(lastNode);
 
-      if (keyRemainder.length === 0) 
+      if(keyRemainder.length === 0) 
       {
         lastNode.value = value
       } 
@@ -339,7 +361,7 @@ module.exports = class Trie {
       {
         keyRemainder.shift()
 
-        // 添加一个叶子节点，对应的branchIndex会在_saveStack进行赋值
+        // 添加一个叶子节点
         const newLeaf = new TrieNode('leaf', keyRemainder, value)
         stack.push(newLeaf)
       }
@@ -347,19 +369,18 @@ module.exports = class Trie {
       return this._saveStack(key, stack, toSave, cb)
     }
    
-    // 最后一个节点是键值对节点（叶子节点或者扩展节点），并且叶子节点的key值与新加入的节点的key值不匹配，这时候需要创建一个分支节点，用来间接或者直接存储最后一个节点和新加入的节点
+    // 最后一个节点是键值对节点
     const lastKey = lastNode.key
     const matchingLength = matchingNibbleLength(lastKey, keyRemainder)
     const newBranchNode = new TrieNode('branch')
 
-    // 最后一个节点的key和未处理的目标key有部分匹配
-    if (matchingLength !== 0) 
+    // lastNode的key和的keyRemainder有部分匹配
+    if(matchingLength !== 0)
     {
-      // 获取部分匹配的key值
       const newKey = lastNode.key.slice(0, matchingLength)
 
-      // 通过部分匹配的key值创建一个扩展节点，扩展节点的子节点的哈希会在_saveStack进行赋值
-      const newExtNode = new TrieNode('extention', newKey, value)
+      // 添加一个扩展节点
+      const newExtNode = new TrieNode('extention', newKey, null)
       stack.push(newExtNode)
 
       //
@@ -371,30 +392,19 @@ module.exports = class Trie {
     stack.push(newBranchNode)
 
     // 处理最后一个节点
-    if (lastKey.length !== 0) 
+    if(lastKey.length !== 0) 
     {
       // 获取分支节点的槽位
       const branchKey = lastKey.shift()；
 
-      if (lastNode.type === 'leaf') 
-      {
-        // 重新定义lastNode的key
-        lastNode.key = lastKey
-        
-        // 获取lastNode的哈希，toSave中记录的是将lastNode放入数据库的操作
-        const formatedNode = this._formatNode(lastNode, false, toSave)
+      // 重新定义lastNode的key
+      lastNode.key = lastKey
+      
+      // 获取lastNode的哈希，toSave中记录的是将lastNode放入数据库的操作
+      const formatedNode = this._formatNode(lastNode, false, toSave)
 
-        // 添加一个叶子节点
-        newBranchNode.setValue(branchKey, formatedNode)
-      } 
-      else 
-      {
-        // toSave中存储删除lastNode的操作
-        this._formatNode(lastNode, false, true, toSave)
-
-        // 添加一个扩展节点，漏掉的key会在_saveStack进行赋值
-        newBranchNode.setValue(branchKey, lastNode.value)
-      }
+      // 将lastNode放入新创建的分支节点中
+      newBranchNode.setValue(branchKey, formatedNode)
     } 
     else 
     {
@@ -406,7 +416,7 @@ module.exports = class Trie {
     {
       keyRemainder.shift()
 
-      // 添加一个叶子节点，对应的branchIndex会在_saveStack进行赋值
+      // 添加一个叶子节点
       const newLeafNode = new TrieNode('leaf', keyRemainder, value)
       stack.push(newLeafNode)
     } 
@@ -420,29 +430,34 @@ module.exports = class Trie {
   }
 
   /**
-   * @param {} root 
-   * @param {Functioin} onNode 遍历节点的控制函数，用来制定遍历策略以及调用onDone函数返回遍历结果
+   * @param {Buffer} root 
+   * @param {Functioin} onNode 遍历节点的控制函数，用来制定遍历策略
    * @param {Functioin} onDone
    */
-  _walkTrie (root, onNode, onDone) {
+  _walkTrie(root, onNode, onDone) 
+  {
+    assert(Buffer.isBuffer(root), `Trie _walkTrie, root should be an Buffer, now is ${typeof root}`)
+
     const self = this
-    root = root || this.root
+  
     onDone = onDone || function () {}
+
     let aborted = false
     let returnValues = []
 
-    if (root.toString('hex') === ethUtil.SHA3_RLP.toString('hex')) 
+    if(root.toString('hex') === utils.SHA3_RLP.toString('hex')) 
     {
       return onDone()
     }
 
     this._lookupNode(root, (e, node) => {
-      if (e) 
+      if(e) 
       {
-        return onDone(e, node)
+        return onDone(e)
       }
+
       processNode(root, node, null, err => {
-        if (err) 
+        if(err) 
         {
           return onDone(err)
         }
@@ -457,54 +472,50 @@ module.exports = class Trie {
     const taskExecutor = new PrioritizedTaskExecutor(maxPoolSize)
 
     /**
-     * @param {} nodeRef 节点对应的哈希值
-     * @param {} node 当前节点
-     * @param {} key 当前处理的key（不包含当前节点的key）
-     * @param {} cb
+     * @param {Buffer | Array} nodeRef
+     * @param {TrieNode} node 当前节点
+     * @param {Array} keyProgress 当前处理的keyProgress（不包含当前节点的key）
+     * @param {Function} cb
      */
-    function processNode (nodeRef, node, key, cb) {
-      if (!node || aborted) 
+    function processNode(nodeRef, node, keyProgress, cb) 
+    {
+      if(!node || aborted) 
       {
         return cb()
       }
 
       let stopped = false
-      key = key || []
+      keyProgress = keyProgress || []
 
-      // 遍历控制接口（相当于是一个迭代器，用于控制遍历的方向）
+      // 遍历控制接口（相当于是一个迭代器，用于控制遍历的策略）
       const walkController = {
-        stop: function () {
+        stop: function() {
           stopped = true
           cb()
         },
-        return: function () {
+        return: function() {
           aborted = true
           returnValues = arguments
           cb()
         },
-        next: function () {
-          if (aborted || stopped) 
+        next: function() {
+          if(aborted || stopped) 
           {
             return cb()
           }
 
-          // 获取子节点
           const children = node.getChildren()
           async.forEachOf(children, (childData, index, cb) => {
-            // 获取key(nibble array)
             const keyExtension = childData[0]
-            // 获取子节点的哈西
             const childRef = childData[1]
-            // 获取完整的key
-            const childKey = key.concat(keyExtension)
-            // 扩展节点的优先级要大于分支节点
-            const priority = childKey.length
+            const childKey = keyProgress.concat(keyExtension)
             // 继续遍历
+            const priority = childKey.length
             taskExecutor.execute(priority, taskCallback => {
               self._lookupNode(childRef, (e, childNode) => {
-                if (e) 
+                if(e) 
                 {
-                  return cb(e, node)
+                  return cb(e)
                 }
 
                 taskCallback()
@@ -513,12 +524,9 @@ module.exports = class Trie {
             })
           }, cb)
         },
-        // 当前节点为分支节点，调用only函数继续往下遍历
         only: function (childIndex) {
-          // 获取对应槽位上子节点的哈希
           const childRef = node.getValue(childIndex)
-          // 获取完整的key
-          const childKey = key.slice()
+          const childKey = keyProgress.slice()
           childKey.push(childIndex)
           // 继续遍历
           const priority = childKey.length
@@ -534,60 +542,72 @@ module.exports = class Trie {
         }
       }
 
-      onNode(nodeRef, node, key, walkController)
+      onNode(nodeRef, node, keyProgress, walkController)
     }
   }
 
   /**
-   * @private
-   * @param {Array} key - the key. Should follow the stack
-   * @param {Array} stack - a stack of nodes to the value given by the key
-   * @param {Array} opStack - a stack of levelup operations to commit at the end of this funciton
+   * @param {Array} key
+   * @param {Array} stack - nodes in the path to the node which represent the key-value
+   * @param {Array} opStack - a stack of db operations to commit at the end of this funciton
    * @param {Function} cb
    */
-  _saveStack (key, stack, opStack, cb) {
+  _saveStack(key, stack, opStack, cb)
+  {
+    assert(Array.isArray(key), `Trie _saveStack, key should be an Array, now is ${typeof key}`)
+    assert(Array.isArray(stack), `Trie _saveStack, stack should be an Array, now is ${typeof stack}`)
+    assert(Array.isArray(opStack), `Trie _saveStack, opStack should be an Array, now is ${typeof opStack}`)
+
     let lastRoot
 
-    // update nodes
-    while (stack.length) 
+    while(stack.length) 
     {
       const node = stack.pop()
-      if (node.type === 'leaf') 
+      if(node.type === 'leaf')
       {
         key.splice(key.length - node.key.length)
       } 
-      else if (node.type === 'extention') 
+      else if(node.type === 'extention') 
       {
         key.splice(key.length - node.key.length)
-        if (lastRoot) 
+        if(lastRoot) 
         {
           node.value = lastRoot
         }
       } 
-      else if (node.type === 'branch') 
+      else if(node.type === 'branch') 
       {
-        if (lastRoot) 
+        if(lastRoot) 
         {
           const branchKey = key.pop();
           node.setValue(branchKey, lastRoot)
         }
       }
+      // 将存储node的操作放入opStack中
       lastRoot = this._formatNode(node, stack.length === 0, opStack)
     }
 
-    if (lastRoot) 
+    // 重新定义根节点哈西
+    if(lastRoot) 
     {
       this.root = lastRoot
     }
 
+    // 进行数据库操作
     this.db.batch(opStack, cb)
   }
 
   /**
-   * @param {Array} key
+   * @param {Buffer} key
    * @param {Array} stack
    */
-  _deleteNode (key, stack, cb) {
+  _deleteNode(key, stack, cb)
+  {
+    assert(Buffer.isBuffer(key), `Trie _deleteNode, key should be an Buffer, now is ${typeof key}`)
+    assert(Array.isArray(stack), `Trie _deleteNode, stack should be an Array, now is ${typeof stack}`)
+
+    key = bufferToNibbles(key)
+
     /**
      * @param {Array} key
      * @param {Char} branchKey，删除的分支节点上仅有的有效槽位对应的key
@@ -659,94 +679,97 @@ module.exports = class Trie {
     let parentNode = stack.pop()
     const opStack = []
 
-    if (!Array.isArray(key)) 
+    if(!parentNode) 
     {
-      // convert key to nibbles
-      key = stringToNibbles(key)
+      // 删除根节点（实际上我们并不会去删除根节点）
+      this.root = utils.SHA3_RLP
+
+      return cb()
+    } 
+   
+    if(lastNode.type === 'branch') 
+    {
+      lastNode.value = null
+    } 
+    else
+    {
+      // 删除叶子节点
+      const lastNodeKey = lastNode.key
+      key.splice(key.length - lastNodeKey.length)
+
+      // opStack中记录删除lastNode的操作
+      this._formatNode(lastNode, false, true, opStack)
+
+      // 重新设置父节点的槽值
+      parentNode.setValue(key.pop(), null)
+
+      //
+      lastNode = parentNode
+      parentNode = stack.pop()
     }
 
-    if (!parentNode) 
+    // nodes on the branch
+    const branchNodes = []
+
+    // 统计分支节点的有效槽位的数量
+    lastNode.raw.forEach((node, branchKey) => {
+      const val = lastNode.getValue(branchKey)
+
+      if(val) 
+      {
+        branchNodes.push([branchKey, val])
+      }
+    })
+
+    // 分支节点的有效槽位只有一个，删除分支节点，并且进行父节点和子节点互连
+    if(branchNodes.length === 1) 
     {
-      // 删除根节点
-      this.root = this.EMPTY_TRIE_ROOT
-      cb()
+      const branchNodeKey = branchNodes[0][0]
+      const branchNode = branchNodes[0][1]
+
+      this._lookupNode(branchNode, (e, foundNode) => {
+        if(e)
+        {
+          return cb(e)
+        }
+
+        // 删除分支节点，并且进行父节点和子节点互连操作
+        key = processBranchNode(key, branchNodeKey, foundNode, parentNode, stack, opStack)
+
+        this._saveStack(key, stack, opStack, cb)
+      })
     } 
     else 
     {
-      if (lastNode.type === 'branch') 
+      // 分支节点的有效槽位数量大于一个，只需要更新分支节点
+      if(parentNode)
       {
-        // 删除分支节点
-        lastNode.value = null
-      } 
-      else
-      {
-        // 删除叶子节点
-        const lastNodeKey = lastNode.key
-        key.splice(key.length - lastNodeKey.length)
-        // opStack中记录删除lastNode的操作
-        this._formatNode(lastNode, false, true, opStack)
-        // 重新设置父节点的槽值
-        parentNode.setValue(key.pop(), null)
-
-        //
-        lastNode = parentNode
-        parentNode = stack.pop()
+        stack.push(parentNode)
       }
 
-      // nodes on the branch
-      const branchNodes = []
-
-      // 统计分支节点的有效槽位的数量
-      lastNode.raw.forEach((node, i) => {
-        const val = lastNode.getValue(i)
-
-        if (val) {
-          branchNodes.push([i, val])
-        }
-      })
-
-      // 分支节点的有效槽位只有一个，删除分支节点
-      if (branchNodes.length === 1) 
-      {
-        // 子节点哈西
-        const branchNode = branchNodes[0][1]
-
-        // 分支节点key
-        const branchNodeKey = branchNodes[0][0]
-
-        this._lookupNode(branchNode, (e, foundNode) => {
-          if (e) 
-          {
-            return cb(e, foundNode)
-          }
-
-          // 删除分支节点
-          key = processBranchNode(key, branchNodeKey, foundNode, parentNode, stack, opStack)
-          this._saveStack(key, stack, opStack, cb)
-        })
-      } 
-      else 
-      {
-        // 分支节点的有效槽位数量大于一个，只需要更新分支节点
-        if (parentNode) {
-          stack.push(parentNode)
-        }
-
-        stack.push(lastNode)
-        this._saveStack(key, stack, opStack, cb)
-      }
+      stack.push(lastNode)
+      
+      this._saveStack(key, stack, opStack, cb)
     }
   }
 
-  // Creates the initial node from an empty tree
+  /**
+   * @param {} key
+   * @param {} value
+   * @param {Function} cb
+   */
   _createInitialNode (key, value, cb) {
     const newNode = new TrieNode('leaf', key, value)
     this.root = newNode.hash()
     this._putNode(newNode, cb)
   }
 
-  // formats node to be saved by levelup.batch.
-  // returns either the hash that will be used key or the rawNode
+  /**
+   * @param {TrieNode} node
+   * @param {Boolean} topLevel
+   * @param {Boolean} remove
+   * @param {Array} opStack
+   */
   _formatNode (node, topLevel, remove, opStack) {
     if (arguments.length === 3) {
       opStack = remove
@@ -759,6 +782,7 @@ module.exports = class Trie {
     {
       const hashRoot = node.hash()
 
+      // 删除操作并且拥有检查点
       if (remove && this.isCheckpoint) 
       {
         opStack.push({
@@ -791,8 +815,6 @@ module.exports = class Trie {
     return new ReadStream(this)
   }
 
-  // creates a new trie backed by the same db
-  // and starting at the same root
   copy () {
     const db = this.db.copy()
     return new Trie(db, this.root)
@@ -815,26 +837,29 @@ module.exports = class Trie {
    * @param {Function} cb
    */
   batch (ops, cb) {
-    async.eachSeries(ops, (op, cb2) => {
-      if (op.type === 'put') {
-        this.put(op.key, op.value, cb2)
-      } else if (op.type === 'del') {
-        this.del(op.key, cb2)
-      } else {
-        cb2()
+    async.eachSeries(ops, (op, callback) => {
+      if (op.type === 'put') 
+      {
+        this.put(op.key, op.value, callback)
+      } 
+      else if (op.type === 'del') 
+      {
+        this.del(op.key, callback)
+      } 
+      else 
+      {
+        callback()
       }
     }, cb)
   }
 
   /**
    * Checks if a given root exists
-   * @method checkRoot
-   * @memberof Trie
    * @param {Buffer} root
    * @param {Function} cb
    */
   checkRoot (root, cb) {
-    root = ethUtil.toBuffer(root)
+    root = utils.toBuffer(root)
     this._lookupNode(root, (e, value) => {
       cb(null, !!value)
     })
