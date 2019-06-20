@@ -6,7 +6,8 @@ const ScratchReadStream = require('./scratchReadStream')
 const ScratchDB = require('./scratch')
 const { callTogether } = require('./util/async')
 
-module.exports = class CheckpointTrie extends BaseTrie {
+class CheckpointTrie extends BaseTrie 
+{
   constructor (...args) {
     super(...args)
     // Reference to main DB instance
@@ -152,3 +153,5 @@ module.exports = class CheckpointTrie extends BaseTrie {
     return new ScratchReadStream(trie)
   }
 }
+
+module.exports = CheckpointTrie;

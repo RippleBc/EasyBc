@@ -1,6 +1,6 @@
 const assert = require('assert')
 const async = require('async')
-const utils = require('../../utils')
+const utils = require('../utils')
 const semaphore = require('semaphore')
 const DB = require('./db')
 const TrieNode = require('./trieNode')
@@ -16,16 +16,23 @@ const Buffer = utils.Buffer;
  * @class Trie
  * @public
  */
-module.exports = class Trie {
+class Trie 
+{
   /**
    * @param {DB} db, default is memdown
    * @param {Buffer} root
    */
   constructor(db, root)
   {
-    assert(db instanceof DB, `Trie constructor, db should be an instance of DB, now is ${typeof db}`)
-    assert(Buffer.isBuffer(root), `Trie constructor, root should be an Buffer, now is ${typeof db}`)
-
+    if(db)
+    {
+      assert(db instanceof DB, `Trie constructor, db should be an instance of DB, now is ${typeof db}`);
+    }
+    if(root)
+    {
+      assert(Buffer.isBuffer(root), `Trie constructor, root should be an Buffer, now is ${typeof db}`);
+    }
+    
     this.sem = semaphore(1)
 
     this.db = db || new DB()
@@ -58,7 +65,7 @@ module.exports = class Trie {
    * @param {Buffer} key
    * @param {Function} cb
    */
-  get (key, cb) 
+  get(key, cb) 
   {
     assert(Buffer.isBuffer(key), `Trie get, key should be an Buffer, now is ${typeof key}`)
 
@@ -395,7 +402,7 @@ module.exports = class Trie {
     if(lastKey.length !== 0) 
     {
       // 获取分支节点的槽位
-      const branchKey = lastKey.shift()；
+      const branchKey = lastKey.shift();
 
       // 重新定义lastNode的key
       lastNode.key = lastKey
@@ -823,7 +830,8 @@ module.exports = class Trie {
    * @param {Buffer} root
    * @param {Function} cb
    */
-  checkRoot (root, cb) {
+  checkRoot(root, cb)
+  {
     assert(Buffer.isBuffer(root), `Trie checkRoot, root should be an Buffer, now is ${typeof root}`)
 
     this._lookupNode(root, (e, value) => {
@@ -831,3 +839,5 @@ module.exports = class Trie {
     })
   }
 }
+
+module.exports = Trie;

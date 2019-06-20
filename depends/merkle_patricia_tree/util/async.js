@@ -1,33 +1,26 @@
 const async = require('async')
 
-module.exports = {
-  callTogether: callTogether,
-  asyncFirstSeries: asyncFirstSeries
-}
+module.exports.callTogether = function() 
+{
+  let funcs = arguments
+  let length = funcs.length
+  let index = length
 
-/**
- * Take two or more functions and returns a function  that will execute all of
- * the given functions
- */
-function callTogether () {
-  var funcs = arguments
-  var length = funcs.length
-  var index = length
-
-  if (!length) {
-    return function () {}
+  if(!length) 
+  {
+    return function() {}
   }
 
-  return function () {
-    length = index
-
-    while (length--) {
-      var fn = funcs[length]
-      if (typeof fn === 'function') {
-        var result = funcs[length].apply(this, arguments)
+  return function() {
+    while(index--)
+    {
+      let fn = funcs[index]
+      if(typeof fn !== 'function') 
+      {
+        throw Error(`async callTogether, arguments should be function, now is ${typeof fn}`)
       }
+      funcs[index].apply(this, arguments)
     }
-    return result
   }
 }
 
@@ -35,10 +28,15 @@ function callTogether () {
  * Take a collection of async fns, call the cb on the first to return a truthy value.
  * If all run without a truthy result, return undefined
  */
-function asyncFirstSeries (array, iterator, cb) {
+module.exports.asyncFirstSeries = function(array, iterator, cb)
+{
   var didComplete = false
-  async.eachSeries(array, function (item, next) {
-    if (didComplete) return next
+  async.eachSeries(array, function(item, next) {
+    if(didComplete) 
+    {
+      return next
+    }
+
     iterator(item, function (err, result) {
       if (result) {
         didComplete = true

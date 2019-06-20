@@ -1,48 +1,54 @@
+const assert = require("assert")
+
 /**
- * Converts a string OR a buffer to a nibble array.
- * @method bufferToNibbles
- * @param {Buffer| String} key
- * @private
+ * @param {Buffer} key
+ * @return {Array}
  */
-export function bufferToNibbles (key) {
-  const bkey = new Buffer(key)
+module.exports.bufferToNibbles = function(key) 
+{
+  assert(Buffer.isBuffer(key), `bufferToNibbles, key should be an Buffer, now is ${typeof key}`)
+
   let nibbles = []
 
-  for (let i = 0; i < bkey.length; i++) {
-    let q = i * 2
-    nibbles[q] = bkey[i] >> 4
-    ++q
-    nibbles[q] = bkey[i] % 16
+  for(let i = 0; i < key.length; i++)
+  {
+    let q = i * 2;
+    nibbles[q] = key[i] >> 4
+    nibbles[++q] = key[i] % 16
   }
 
   return nibbles
 }
 
 /**
- * Converts a nibble array into a buffer.
- * @method nibblesToBuffer
- * @param {Array} Nibble array
- * @private
+ * @param {Array} key
  */
-export function nibblesToBuffer (arr) {
-  let buf = new Buffer(arr.length / 2)
-  for (let i = 0; i < buf.length; i++) {
+module.exports.nibblesToBuffer = function(key)
+{
+  assert(Array.isArray(key), `nibblesToBuffer, key should be an Array, now is ${typeof key}`)
+
+  let buf = Buffer.alloc(key.length / 2)
+  for(let i = 0; i < buf.length; i++) 
+  {
     let q = i * 2
-    buf[i] = (arr[q] << 4) + arr[++q]
+    buf[i] = (key[q] << 4) + key[++q]
   }
   return buf
 }
 
 /**
- * Returns the number of in order matching nibbles of two give nibble arrays.
- * @method matchingNibbleLength
- * @param {Array} nib1
- * @param {Array} nib2
- * @private
+ * nibB中和nibA匹配的字符的个数
+ * @param {Array} nibA
+ * @param {Array} nibB
  */
-export function matchingNibbleLength (nib1, nib2) {
+module.exports.matchingNibbleLength = function(nibA, nibB) 
+{
+  assert(Array.isArray(nibA), `matchingNibbleLength, nibA should be an Array, now is ${typeof nibA}`)
+  assert(Array.isArray(nibB), `matchingNibbleLength, nibB should be an Array, now is ${typeof nibB}`)
+
   let i = 0
-  while (nib1[i] === nib2[i] && nib1.length > i) {
+  while(nibA[i] === nibB[i] && nibA.length > i) 
+  {
     i++
   }
   return i
@@ -53,7 +59,11 @@ export function matchingNibbleLength (nib1, nib2) {
  * @param {Array} keyA
  * @param {Array} keyB
  */
-export function doKeysMatch (keyA, keyB) {
+module.exports.doKeysMatch = function(keyA, keyB) 
+{
+  assert(Array.isArray(keyA), `doKeysMatch, keyA should be an Array, now is ${typeof keyA}`)
+  assert(Array.isArray(keyB), `doKeysMatch, keyB should be an Array, now is ${typeof keyB}`)
+
   const length = matchingNibbleLength(keyA, keyB)
   return length === keyA.length && length === keyB.length
 }

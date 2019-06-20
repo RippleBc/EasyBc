@@ -1,14 +1,14 @@
-module.exports = class PrioritizedTaskExecutor {
+const assert = require("assert")
+
+class PrioritizedTaskExecutor 
+{
   /**
-   * Executes tasks up to maxPoolSize at a time, other items are put in a priority queue.
-   * @class PrioritizedTaskExecutor
-   * @private
-   * @param {Number} maxPoolSize The maximum size of the pool
-   * @prop {Number} maxPoolSize The maximum size of the pool
-   * @prop {Number} currentPoolSize The current size of the pool
-   * @prop {Array} queue The task queue
+   * @param {Number} maxPoolSize
    */
-  constructor (maxPoolSize) {
+  constructor(maxPoolSize) 
+  {
+    assert(typeof maxPoolSize === 'number', `PrioritizedTaskExecutor constructor, maxPoolSize should be a Number, now is ${typeof maxPoolSize}`);
+
     this.maxPoolSize = maxPoolSize
     this.currentPoolSize = 0
     this.queue = []
@@ -16,22 +16,30 @@ module.exports = class PrioritizedTaskExecutor {
 
   /**
    * Executes the task.
-   * @private
    * @param {Number} priority The priority of the task
    * @param {Function} task The function that accepts the callback, which must be called upon the task completion.
    */
-  execute (priority, task) {
-    if (this.currentPoolSize < this.maxPoolSize) {
+  execute(priority, task) 
+  {
+    if(this.currentPoolSize < this.maxPoolSize)
+    {
       this.currentPoolSize++
-      task(() => {
+
+      const taskCallback = () => {
         this.currentPoolSize--
-        if (this.queue.length > 0) {
+        if(this.queue.length > 0) 
+        {
           this.queue.sort((a, b) => b.priority - a.priority)
           const item = this.queue.shift()
           this.execute(item.priority, item.task)
         }
-      })
-    } else {
+      }
+
+      // task可能是一个异步操作
+      task(taskCallback);
+    }
+    else
+    {
       this.queue.push({
         priority: priority,
         task: task
@@ -39,3 +47,5 @@ module.exports = class PrioritizedTaskExecutor {
     }
   }
 }
+
+module.exports = PrioritizedTaskExecutor

@@ -1,6 +1,7 @@
-const utils = require('../depends/utils')
+const utils = require('../utils')
 const { bufferToNibbles, nibblesToBuffer } = require('./util/nibbles')
 const { isTerminator, addHexPrefix, removeHexPrefix } = require('./util/hex')
+const assert = require('assert');
 
 const rlp = utils.rlp;
 const sha256 = utils.sha256;
@@ -15,9 +16,16 @@ class TrieNode
   constructor(type, key, value) 
   {
     assert(Array.isArray(type) || typeof type === 'string', `TrieNode constructor, type should be an Array or String, now is ${typeof type}`);
-    assert(Array.isArray(key) || Buffer.isBuffer(Key), `TrieNode constructor, key should be an Array or Buffer, now is ${typeof key}`);
-    assert(Buffer.isBuffer(value), `TrieNode constructor, value should be an Buffer, now is ${typeof value}`);
 
+    if(key)
+    {
+      assert(Array.isArray(key) || Buffer.isBuffer(key), `TrieNode constructor, key should be an Array or Buffer, now is ${typeof key}`);
+    }
+    if(value)
+    {
+      assert(Buffer.isBuffer(value), `TrieNode constructor, value should be an Buffer, now is ${typeof value}`);
+    }
+    
     if(Array.isArray(type))
     {
       this.parseNode(type)
@@ -77,13 +85,13 @@ class TrieNode
   {
     assert(Array.isArray(rawNode), `TrieNode parseNode, rawNode should be an Array, now is ${typeof rawNode}`)
 
-    if(node.length === 17) 
+    if(rawNode.length === 17) 
     {
       this.type = 'branch'
     } 
-    else if(node.length === 2) 
+    else if(rawNode.length === 2) 
     {
-      let key = bufferToNibbles(node[0])
+      let key = bufferToNibbles(rawNode[0])
       // 叶子节点拥有结束标记
       if(isTerminator(key))
       {
@@ -146,14 +154,18 @@ class TrieNode
   }
 
   /**
-   * @param {Array} key
+   * @param {Array | Buffer} key
    */
   setKey(key)
   {
-    assert(Array.isArray(key), `TrieNode setKey, key should be an Array, now is ${typeof key}`);
+    assert(Array.isArray(key) || Buffer.isBuffer(key), `TrieNode setKey, key should be an Array or Buffer, now is ${typeof key}`);
 
     if(this.type !== 'branch')
     {
+      if(Buffer.isBuffer(key))
+      {
+        key = bufferToNibbles(key);
+      }
       // copy the key
       key = key.slice(0)
 

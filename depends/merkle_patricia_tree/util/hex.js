@@ -1,21 +1,28 @@
+const assert = require("assert")
+
 /**
- * Prepends hex prefix to an array of nibbles，键数据的编码算法
- * @method addHexPrefix
- * @param {Array} Array of nibbles
- * @returns {Array} - returns buffer of encoded data
+ * @param {Array} key - Array of nibbles
+ * @param {Boolean} terminator
+ * @returns {Array}
  **/
-export function addHexPrefix (key, terminator) {
-  if (key.length % 2) {
+module.exports.addHexPrefix = function(key, terminator = false) 
+{
+  assert(Array.isArray(key), `addHexPrefix, key should be an Array, now is ${typeof key}`)
+  assert(typeof terminator === 'boolean', `addHexPrefix, terminator should be an Boolean, now is ${typeof terminator}`)
+
+  if (key.length % 2)
+  { 
     // key的长度是否是奇数，向key的头部增加一个值为1的半字节
     key.unshift(1)
-  } else {
+  } 
+  else 
+  {
     // key的长度是否是偶数，向key的头部增加两个值为0的半字节
     key.unshift(0)
     key.unshift(0)
   }
 
-  if (terminator) {
-    // 带有结束标记，key的第一个半字节加2（结果是2或者3），所以可以通过半字节数组的首个成员的大小推断节点类型（0和1的value存储哈西字符串，2和3的value存储实际内容）
+  if(terminator) {
     key[0] += 2
   }
 
@@ -23,19 +30,22 @@ export function addHexPrefix (key, terminator) {
 }
 
 /**
- * Removes hex prefix of an array of nibbles.
- * @method removeHexPrefix
- * @param {Array} Array of nibbles
- * @private
+ * @param {Array} key
  */
-export function removeHexPrefix (val) {
-  if (val[0] % 2) {
-    val = val.slice(1)
-  } else {
-    val = val.slice(2)
+module.exports.removeHexPrefix = function(key) 
+{
+  assert(Array.isArray(key), `removeHexPrefix, key should be an Array, now is ${typeof key}`)
+
+  if(key[0] % 2) 
+  {
+    key = key.slice(1)
+  } 
+  else 
+  {
+    key = key.slice(2)
   }
 
-  return val
+  return key
 }
 
 /**
@@ -44,7 +54,10 @@ export function removeHexPrefix (val) {
  * @param {Array} key - an hexprefixed array of nibbles
  * @private
  */
-export function isTerminator (key) {
-  // 只有键拥有结束标记的情况下，nibbleArray key的首个半字节才会大于0（2或者3）
+module.exports.isTerminator = function(key)
+{
+  assert(Array.isArray(key), `isTerminator, key should be an Array, now is ${typeof key}`)
+
+  // 只有键拥有结束标记的情况下，nibbleArray key的首个半字节才会大于1（2或者3）
   return key[0] > 1
 }
