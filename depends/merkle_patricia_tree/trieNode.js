@@ -1,161 +1,207 @@
-const rlp = require('rlp')
-const ethUtil = require('ethereumjs-util')
+const utils = require('../depends/utils')
 const { bufferToNibbles, nibblesToBuffer } = require('./util/nibbles')
 const { isTerminator, addHexPrefix, removeHexPrefix } = require('./util/hex')
 
-module.exports = class TrieNode {
+const rlp = utils.rlp;
+const sha256 = utils.sha256;
+
+class TrieNode 
+{
   /**
-   * @param {*} type 可以是一个分支节点或者键值对节点；也可以是一个字符串，表示的是节点类型，配合key和value参数进行初始化
+   * @param {Array | String} type - Array表示节点的元数据，String表示节点的类型
+   * @param {Array | Buffer} key - Array对应的是nibblesArray，只有在键值对节点才会用到
+   * @param {Buffer} value - Array对应的是nibblesArray，只有在键值对节点才会用到
    */
-  constructor (type, key, value) {
-    if (Array.isArray(type)) {
-      // parse raw node
+  constructor(type, key, value) 
+  {
+    assert(Array.isArray(type) || typeof type === 'string', `TrieNode constructor, type should be an Array or String, now is ${typeof type}`);
+    assert(Array.isArray(key) || Buffer.isBuffer(Key), `TrieNode constructor, key should be an Array or Buffer, now is ${typeof key}`);
+    assert(Buffer.isBuffer(value), `TrieNode constructor, value should be an Buffer, now is ${typeof value}`);
+
+    if(Array.isArray(type))
+    {
       this.parseNode(type)
-    } else {
+    } 
+    else 
+    {
       this.type = type
-      if (type === 'branch') {
-        // 分支节点
-        this.raw = Array.apply(null, Array(17))
-        // 初始化key值（key是一个数组，成员也是一个数组，成员的第一个元素表示的是分支节点的key（0~16），成员的第二个元素是一个哈西字符串，指向下一个节点）
-        if (key) {
-          key.forEach(function (keyVal) {
-            // apply方法使得this劫持另外一个对象的方法，继承另外一个对象的属性
-            this.set.apply(this, keyVal)
-          })
-        }
-      } else {
-        // 键值对节点
-        this.raw = Array(2)
+      if(type === 'branch') 
+      {
+        this.raw = new Array(17)
+      } 
+      else 
+      {
+        this.raw = new Array(2)
         this.setValue(value)
         this.setKey(key)
       }
     }
-  }
 
-  /**
-   * Determines the node type.
-   * @private
-   * @returns {String} - the node type
-   *   - leaf - if the node is a leaf
-   *   - branch - if the node is a branch
-   *   - extention - if the node is an extention
-   *   - unknown - if something else got borked
-   */
-  static getNodeType (node) {
-    // 表示的是分支节点
-    if (node.length === 17) {
-      return 'branch'
-    } 
-    // 表示的是键值对节点
-    else if (node.length === 2) {
-      var key = bufferToNibbles(node[0])
-      // 键值对节点中的叶子节点（拥有结束标记，对应的值是需要进行存储的值）
-      if (isTerminator(key)) {
-        return 'leaf'
+    Object.defineProperty(this, 'length', {
+      get() 
+      {
+        return this.raw.length;
       }
-
-      // 键值对节点中的扩展节点（不拥有结束标记，对应的值指向下一个键值对节点的哈希值）
-      return 'extention'
-    }
+    })
   }
 
-  static isRawNode (node) {
-    return Array.isArray(node) && !Buffer.isBuffer(node)
+  static isRawNode(node) 
+  {
+    return Array.isArray(node)
   }
 
-  get value () {
+  get value() 
+  {
     return this.getValue()
   }
 
-  set value (v) {
+  set value(v) 
+  {
     this.setValue(v)
   }
 
-  get key () {
+  get key() 
+  {
     return this.getKey()
   }
 
-  set key (k) {
+  set key(k) 
+  {
     this.setKey(k)
   }
 
-  parseNode (rawNode) {
-    this.raw = rawNode
-    this.type = TrieNode.getNodeType(rawNode)
+  /**
+   * @param {Array} rawNode
+   */
+  parseNode(rawNode)
+  {
+    assert(Array.isArray(rawNode), `TrieNode parseNode, rawNode should be an Array, now is ${typeof rawNode}`)
+
+    if(node.length === 17) 
+    {
+      this.type = 'branch'
+    } 
+    else if(node.length === 2) 
+    {
+      let key = bufferToNibbles(node[0])
+      // 叶子节点拥有结束标记
+      if(isTerminator(key))
+      {
+        this.type = 'leaf'
+      }
+
+      this.type = 'extention'
+    }
+    else
+    {
+      throw new Error(`TrieNode parseNode, invalid rawNode, ${rawNode.toString()}`);
+    }
+
+    this.raw = rawNode;
   }
 
-  setValue (key, value) {
-    if (this.type !== 'branch') {
-      // 键值对节点
-      this.raw[1] = key
-    } else {
-      // 分支节点（key、value都存在的情况下，key的取之范围为0~16）
-      if (arguments.length === 1) {
-        value = key
-        // 16为结束标记，对应的value便是需要进行存储的值
-        key = 16
+  setValue(key, value)
+  {
+    if(this.type === 'branch') 
+    {
+      if(arguments.length === 1)
+      {
+        value = key;
+        key = 16;
       }
-      // value为一个哈西字符串，指向下一个节点
+
+      assert(Buffer.isBuffer(value), `TrieNode setValue, value should be an Buffer, now is ${typeof value}`);
+
       this.raw[key] = value
+    }
+    else 
+    {
+      value = key;
+
+      assert(Buffer.isBuffer(value), `TrieNode setValue, value should be an Buffer, now is ${typeof value}`);
+
+      this.raw[1] = value
     }
   }
 
-  getValue (key) {
-    if (this.type === 'branch') {
-      // 分支节点
-      if (arguments.length === 0) {
+  /**
+   * @return {Buffer}
+   */
+  getValue(key)
+  {
+    if(this.type === 'branch') 
+    {
+      if(arguments.length === 0)
+      {
         key = 16
       }
 
       var val = this.raw[key]
-      if (val !== null && val !== undefined && val.length !== 0) {
-        return val
-      }
-    } else {
+      return val
+    }
+    else 
+    {
       return this.raw[1]
     }
   }
 
-  setKey (key) {
-    if (this.type !== 'branch') {
-      // 键值对节点
-      if (Buffer.isBuffer(key)) {
-        key = bufferToNibbles(key)
-      } else {
-        key = key.slice(0) // copy the key
-      }
+  /**
+   * @param {Array} key
+   */
+  setKey(key)
+  {
+    assert(Array.isArray(key), `TrieNode setKey, key should be an Array, now is ${typeof key}`);
 
-      // 对键值进行编码（需要通过一定的规则，把键值编码为偶数长度）
+    if(this.type !== 'branch')
+    {
+      // copy the key
+      key = key.slice(0)
+
+      // 对键值进行编码
       key = addHexPrefix(key, this.type === 'leaf')
       this.raw[0] = nibblesToBuffer(key)
     }
   }
 
-  getKey () {
-    if (this.type !== 'branch') {
+  /**
+   * @return {Array} - nibblesArray
+   */
+  getKey()
+  {
+    if(this.type !== 'branch') 
+    {
       var key = this.raw[0]
       key = removeHexPrefix(bufferToNibbles(key))
-      return (key)
+      return key
     }
   }
 
-  serialize () {
+  serialize()
+  {
     return rlp.encode(this.raw)
   }
 
-  hash () {
-    return ethUtil.sha3(this.serialize())
+  hash() 
+  {
+    return sha256(this.serialize())
   }
 
-  toString () {
+  toString()
+  {
     var out = this.type
     out += ': ['
-    this.raw.forEach(function (el) {
-      if (Buffer.isBuffer(el)) {
+    this.raw.forEach(el => {
+      if(Buffer.isBuffer(el))
+      {
         out += el.toString('hex') + ', '
-      } else if (el) {
-        out += 'object, '
-      } else {
+      } 
+      else if(el)
+      {
+        // 记录的是一个完整的TrieNode节点
+        out += `TrieNode: ${new TrieNode(el).toString()}, `
+      } 
+      else 
+      {
         out += 'empty, '
       }
     })
@@ -164,9 +210,11 @@ module.exports = class TrieNode {
     return out
   }
 
-  getChildren () {
-    var children = []
-    switch (this.type) {
+  getChildren()
+  {
+    let children = []
+    switch(this.type)
+    {
       case 'leaf':
         // no children
         break
@@ -175,12 +223,11 @@ module.exports = class TrieNode {
         children.push([this.key, this.getValue()])
         break
       case 'branch':
-        for (var index = 0, end = 16; index < end; index++) {
-          var value = this.getValue(index)
-          if (value) {
-            children.push([
-              [index], value
-            ])
+        for(let index = 0, end = 16; index < end; index++) {
+          let value = this.getValue(index)
+          if(value)
+          {
+            children.push([[index], value])
           }
         }
         break
@@ -188,3 +235,5 @@ module.exports = class TrieNode {
     return children
   }
 }
+
+module.exports = TrieNode;

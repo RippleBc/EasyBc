@@ -66,7 +66,7 @@ module.exports = class Trie {
     this.findPath(key, (err, node, remainder, stack) => {
       let value = null
 
-      if (node) 
+      if(node) 
       {
         value = node.value
       }
@@ -313,7 +313,7 @@ module.exports = class Trie {
   _findDbNodes(onFound, cb) 
   {
     this._walkTrie(this.root, (nodeRef, node, key, walkController) => {
-      if(TrieNode.isRawNode(nodeRef)) 
+      if(TrieNode.isRawNode(nodeRef))
       {
         return walkController.next()
       } 
@@ -558,6 +558,7 @@ module.exports = class Trie {
     assert(Array.isArray(stack), `Trie _saveStack, stack should be an Array, now is ${typeof stack}`)
     assert(Array.isArray(opStack), `Trie _saveStack, opStack should be an Array, now is ${typeof opStack}`)
 
+    // 可以是哈希值，也可以是节点数据
     let lastRoot
 
     while(stack.length) 
@@ -610,49 +611,28 @@ module.exports = class Trie {
 
     /**
      * @param {Array} key
-     * @param {Char} branchKey，删除的分支节点上仅有的有效槽位对应的key
-     * @param {} branchNode，删除的分支节点上仅有的有效槽位对应的子节点哈西
-     * @param {} parentNode，删除的分支节点的父节点
+     * @param {Char} branchKey - 删除的分支节点上仅有的有效槽位对应的key
+     * @param {TrieNode} branchNode - 删除的分支节点上仅有的有效槽位对应的子节点
+     * @param {TrieNode} parentNode - 删除的分支节点的父节点
+     * @param {Array} stack
      */
-    function processBranchNode (key, branchKey, branchNode, parentNode, stack) {
+    function processBranchNode(key, branchKey, branchNode, parentNode, stack) 
+    {
+      assert(Array.isArray(key), `Trie _deleteNode processBranchNode, key should be an Array, now is ${typeof key}`)
+      assert(typeof branchKey === 'string', `Trie _deleteNode processBranchNode, branchKey should be an String, now is ${typeof branchKey}`)
+      assert(branchNode instanceof TrieNode, `Trie _deleteNode processBranchNode, branchNode should be an instance of TrieNode, now is ${typeof branchNode}`)
+      assert(parentNode instanceof TrieNode, `Trie _deleteNode processBranchNode, parentNode should be an instance of TrieNode, now is ${typeof parentNode}`)
+      assert(Array.isArray(stack), `Trie _deleteNode processBranchNode, stack should be an Array, now is ${typeof stack}`)
+
       const branchNodeKey = branchNode.key
-      if (!parentNode || parentNode.type === 'branch') 
-      {
-        // 父节点存在的情况下，需要更新父节点
-        if (parentNode) 
-        {
-          stack.push(parentNode)
-        }
-
-        if (branchNode.type === 'branch') 
-        {
-          // 创建一个扩展节点连接parentNode和branchNode
-          const extentionNode = new TrieNode('extention', [branchKey], null)
-          stack.push(extentionNode)
-          // 更新key值
-          key.push(branchKey)
-        } 
-        else 
-        {
-          // branchNode是一个键值对节点，将删除的分支节点的key值放入branchNode
-          branchNodeKey.unshift(branchKey)
-          branchNode.key = branchNodeKey
-
-          // 相当于key = key.concat(branchNodeKey);
-          branchNodeKey.unshift(0)
-          branchNodeKey.unshift(key.length)
-          key.splice.apply(key, branchNodeKey)
-        }
-        stack.push(branchNode)
-      } 
-      else 
+      if(parentNode && parentNode.type !== 'branch') 
       {
         // parentNode为扩展节点
         let parentKey = parentNode.key
 
-        if (branchNode.type === 'branch') 
+        if(branchNode.type === 'branch') 
         {
-          // branchNode为分支节点（删除的分支的分支节点的key向上提升到parentNode）
+          // branchNode为分支节点（删除的分支节点有效槽位上的key提升到parentNode）
           parentKey.push(branchKey)
           // 重新设置key值
           key.push(branchKey)
@@ -662,13 +642,40 @@ module.exports = class Trie {
         } 
         else 
         {
-          // branchNode为键值对节点（branchNode和parentNode合并为一个键值对节点）
+          // branchNode为键值对节点（删除的分支节点有效槽位上的key结合branchNode和parentNode合并为一个键值对节点）
           branchNodeKey.unshift(branchKey)
           key = key.concat(branchNodeKey)
           parentKey = parentKey.concat(branchNodeKey)
           branchNode.key = parentKey
         }
 
+        stack.push(branchNode)
+      }
+      else
+      {
+        // 父节点存在的情况下，需要更新父节点
+        if(parentNode) 
+        {
+          stack.push(parentNode)
+        }
+
+        // branchNode为分支节点（parentNode不存在或者parentNode为分支节点）
+        if(branchNode.type === 'branch') 
+        {
+          // 创建一个扩展节点连接parentNode和branchNode
+          const extentionNode = new TrieNode('extention', [branchKey], null)
+          stack.push(extentionNode)
+          // 更新key值
+          key.push(branchKey)
+        } 
+        else
+        {
+          // branchNode是一个键值对节点（删除的分支节点有效槽位上的key下放到branchNode）
+          branchNodeKey.unshift(branchKey)
+          branchNode.key = branchNodeKey
+          // 更改key值
+          key = key.concat(branchNodeKey)
+        }
         stack.push(branchNode)
       }
 
@@ -689,24 +696,25 @@ module.exports = class Trie {
    
     if(lastNode.type === 'branch') 
     {
-      lastNode.value = null
+      // 删除分支节点（实际上只是删除16槽位对应的值）
+      lastNode.value = null;
+
+      stack.push(parentNode)
+      stack.push(lastNode)
+
+      return this._saveStack(key, stack, opStack, cb)
     } 
-    else
-    {
-      // 删除叶子节点
-      const lastNodeKey = lastNode.key
-      key.splice(key.length - lastNodeKey.length)
+   
+    // 删除键值对节点（这里只是删除key值，并不会真的去删除这个节点）
+    const lastNodeKey = lastNode.key
+    key.splice(key.length - lastNodeKey.length)
 
-      // opStack中记录删除lastNode的操作
-      this._formatNode(lastNode, false, true, opStack)
+    // 重新设置父节点的槽值
+    parentNode.setValue(key.pop(), null)
 
-      // 重新设置父节点的槽值
-      parentNode.setValue(key.pop(), null)
-
-      //
-      lastNode = parentNode
-      parentNode = stack.pop()
-    }
+    // 
+    lastNode = parentNode
+    parentNode = stack.pop()
 
     // nodes on the branch
     const branchNodes = []
@@ -733,7 +741,7 @@ module.exports = class Trie {
           return cb(e)
         }
 
-        // 删除分支节点，并且进行父节点和子节点互连操作
+        // 删除分支节点（实际上只是删除key值，并不会真的去删除对应的节点），并且进行父节点和子节点互连操作
         key = processBranchNode(key, branchNodeKey, foundNode, parentNode, stack, opStack)
 
         this._saveStack(key, stack, opStack, cb)
@@ -748,17 +756,21 @@ module.exports = class Trie {
       }
 
       stack.push(lastNode)
-      
+
       this._saveStack(key, stack, opStack, cb)
     }
   }
 
   /**
-   * @param {} key
-   * @param {} value
+   * @param {Buffer} key
+   * @param {Buffer} value
    * @param {Function} cb
    */
-  _createInitialNode (key, value, cb) {
+  _createInitialNode(key, value, cb)
+  {
+    assert(Buffer.isBuffer(key), `Trie _createInitialNode, key should be an Buffer, now is ${typeof key}`)
+    assert(Buffer.isBuffer(value), `Trie _createInitialNode, value should be an Buffer, now is ${typeof value}`)
+
     const newNode = new TrieNode('leaf', key, value)
     this.root = newNode.hash()
     this._putNode(newNode, cb)
@@ -767,90 +779,43 @@ module.exports = class Trie {
   /**
    * @param {TrieNode} node
    * @param {Boolean} topLevel
-   * @param {Boolean} remove
    * @param {Array} opStack
    */
-  _formatNode (node, topLevel, remove, opStack) {
-    if (arguments.length === 3) {
-      opStack = remove
-      remove = false
-    }
+  _formatNode(node, topLevel, opStack)
+  {
+    assert(node instanceof TrieNode, `Trie _formatNode, node should be an instance of TrieNode, now is ${typeof node}`);
+    assert(typeof topLevel === 'boolean', `Trie _formatNode, topLevel should be an Boolean, now is ${typeof topLevel}`);
+    assert(Array.isArray(opStack), `Trie _formatNode, opStack should be an Array, now is ${typeof opStack}`);
 
     const rlpNode = node.serialize()
 
-    if (rlpNode.length >= 32 || topLevel) 
+    // 如果node的序列化数据大于32或者node是根节点，返回哈西值（这种情况下需要往数据库中新增一个节点）
+    if(rlpNode.length >= 32 || topLevel) 
     {
       const hashRoot = node.hash()
 
-      // 删除操作并且拥有检查点
-      if (remove && this.isCheckpoint) 
-      {
-        opStack.push({
-          type: 'del',
-          key: hashRoot
-        })
-      } 
-      else
-      {
-        opStack.push({
-          type: 'put',
-          key: hashRoot,
-          value: rlpNode
-        })
-      }
+      opStack.push({
+        type: 'put',
+        key: hashRoot,
+        value: rlpNode
+      })
 
       return hashRoot
     }
 
+    // node的序列化数据较小，返回数据本身（这种情况下节点数据存储在其他节点中）
     return node.raw
   }
 
-  /**
-   * The `data` event is given an `Object` hat has two properties; the `key` and the `value`. Both should be Buffers.
-   * @method createReadStream
-   * @memberof Trie
-   * @return {stream.Readable} Returns a [stream](https://nodejs.org/dist/latest-v5.x/docs/api/stream.html#stream_class_stream_readable) of the contents of the `trie`
-   */
-  createReadStream () {
+  createReadStream() 
+  {
     return new ReadStream(this)
   }
 
-  copy () {
+  copy()
+  {
     const db = this.db.copy()
     return new Trie(db, this.root)
-  }
-
-  /**
-   * The given hash of operations (key additions or deletions) are executed on the DB
-   * @method batch
-   * @memberof Trie
-   * @example
-   * var ops = [
-   *    { type: 'del', key: 'father' }
-   *  , { type: 'put', key: 'name', value: 'Yuri Irsenovich Kim' }
-   *  , { type: 'put', key: 'dob', value: '16 February 1941' }
-   *  , { type: 'put', key: 'spouse', value: 'Kim Young-sook' }
-   *  , { type: 'put', key: 'occupation', value: 'Clown' }
-   * ]
-   * trie.batch(ops)
-   * @param {Array} ops
-   * @param {Function} cb
-   */
-  batch (ops, cb) {
-    async.eachSeries(ops, (op, callback) => {
-      if (op.type === 'put') 
-      {
-        this.put(op.key, op.value, callback)
-      } 
-      else if (op.type === 'del') 
-      {
-        this.del(op.key, callback)
-      } 
-      else 
-      {
-        callback()
-      }
-    }, cb)
   }
 
   /**
@@ -859,7 +824,8 @@ module.exports = class Trie {
    * @param {Function} cb
    */
   checkRoot (root, cb) {
-    root = utils.toBuffer(root)
+    assert(Buffer.isBuffer(root), `Trie checkRoot, root should be an Buffer, now is ${typeof root}`)
+
     this._lookupNode(root, (e, value) => {
       cb(null, !!value)
     })
