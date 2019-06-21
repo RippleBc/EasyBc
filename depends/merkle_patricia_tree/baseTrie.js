@@ -84,19 +84,19 @@ class Trie
 
   /**
    * @param {Buffer} key
-   * @param {Buffer} value
+   * @param {*} value
    * @param {Function} cb
    */
   put(key, value, cb) 
   {
     assert(Buffer.isBuffer(key), `Trie put, key should be an Buffer, now is ${typeof key}`)
-    assert(Buffer.isBuffer(value), `Trie put, value should be an Buffer, now is ${typeof value}`)
-
-    if(value.toString() === '') 
+    
+    if(!value || value.toString() === '') 
     {
-      return cb("Trie put, value can not be empty");
-    } 
-   
+      return this.del(key, cb)
+    }
+
+    assert(Buffer.isBuffer(value), `Trie put, value should be an Buffer, now is ${typeof value}`)
 
     cb = callTogether(cb, this.sem.leave)
 
@@ -626,9 +626,12 @@ class Trie
     function processBranchNode(key, branchKey, branchNode, parentNode, stack) 
     {
       assert(Array.isArray(key), `Trie _deleteNode processBranchNode, key should be an Array, now is ${typeof key}`)
-      assert(typeof branchKey === 'string', `Trie _deleteNode processBranchNode, branchKey should be an String, now is ${typeof branchKey}`)
+      assert(typeof branchKey === 'number', `Trie _deleteNode processBranchNode, branchKey should be a Number, now is ${typeof branchKey}`)
       assert(branchNode instanceof TrieNode, `Trie _deleteNode processBranchNode, branchNode should be an instance of TrieNode, now is ${typeof branchNode}`)
-      assert(parentNode instanceof TrieNode, `Trie _deleteNode processBranchNode, parentNode should be an instance of TrieNode, now is ${typeof parentNode}`)
+      if(parentNode)
+      {
+        assert(parentNode instanceof TrieNode, `Trie _deleteNode processBranchNode, parentNode should be an instance of TrieNode, now is ${typeof parentNode}`)
+      }
       assert(Array.isArray(stack), `Trie _deleteNode processBranchNode, stack should be an Array, now is ${typeof stack}`)
 
       const branchNodeKey = branchNode.key

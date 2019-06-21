@@ -5,9 +5,9 @@ const ENCODING_OPTS = { keyEncoding: 'binary', valueEncoding: 'binary' }
 
 class DB 
 {
-  constructor(leveldb) 
+  constructor(db) 
   {
-    this._leveldb = leveldb || level()
+    this._db = db || level()
   }
 
   /**
@@ -18,7 +18,7 @@ class DB
   {
     assert(Buffer.isBuffer(key), `DB get, key should be an Buffer, now is ${typeof key}`);
 
-    this._leveldb.get(key, ENCODING_OPTS, (err, v) => {
+    this._db.get(key, ENCODING_OPTS, (err, v) => {
       if (err || !v) {
         return cb(null, null)
       } 
@@ -37,7 +37,7 @@ class DB
     assert(Buffer.isBuffer(key), `DB put, key should be an Buffer, now is ${typeof key}`);
     assert(Buffer.isBuffer(val), `DB put, val should be an Buffer, now is ${typeof val}`);
 
-    this._leveldb.put(key, val, ENCODING_OPTS, cb)
+    this._db.put(key, val, ENCODING_OPTS, cb)
   }
 
   /**
@@ -48,7 +48,7 @@ class DB
   {
     assert(Buffer.isBuffer(key), `DB del, key should be an Buffer, now is ${typeof key}`);
 
-    this._leveldb.del(key, ENCODING_OPTS, cb)
+    this._db.del(key, ENCODING_OPTS, cb)
   }
 
   /**
@@ -59,15 +59,15 @@ class DB
   {
     assert(Array.isArray(opStack), `DB batch, opStack should be an Array, now is ${typeof opStack}`);
 
-    this._leveldb.batch(opStack, ENCODING_OPTS, cb)
+    this._db.batch(opStack, ENCODING_OPTS, cb)
   }
 
   /**
-   * Returns a copy of the DB instance, with a reference to the same underlying leveldb instance
+   * Returns a copy of the DB instance, with a reference to the same underlying db instance
    */
   copy() 
   {
-    return new DB(this._leveldb)
+    return new DB(this._db)
   }
 }
 

@@ -8,28 +8,35 @@ const { callTogether } = require('./util/async')
 
 class CheckpointTrie extends BaseTrie 
 {
-  constructor (...args) {
+  constructor(...args)
+  {
     super(...args)
+
     // Reference to main DB instance
     this._mainDB = this.db
+
     // DB instance used for checkpoints
     this._scratch = null
+
     // Roots of trie at the moment of checkpoint
     this._checkpoints = []
   }
 
-  static prove (...args) {
+  static prove(...args) 
+  {
     return proof.prove(...args)
   }
 
-  static verifyProof (...args) {
+  static verifyProof(...args)
+  {
     return proof.verifyProof(...args)
   }
 
   /**
-   * Is the trie during a checkpoint phase?
+   * Is the trie during a checkpoint phase
    */
-  get isCheckpoint () {
+  get isCheckpoint() 
+  {
     return this._checkpoints.length > 0
   }
 
@@ -38,14 +45,15 @@ class CheckpointTrie extends BaseTrie
    * After this is called, no changes to the trie will be permanently saved
    * until `commit` is called. Calling `putRaw` overrides the checkpointing
    * mechanism and would directly write to db.
-   * @method checkpoint
    */
-  checkpoint () {
+  checkpoint()
+  {
     const wasCheckpoint = this.isCheckpoint
     this._checkpoints.push(this.root)
 
     // Entering checkpoint mode is not necessary for nested checkpoints
-    if (!wasCheckpoint && this.isCheckpoint) {
+    if(!wasCheckpoint && this.isCheckpoint) 
+    {
       this._enterCpMode()
     }
   }
@@ -53,22 +61,26 @@ class CheckpointTrie extends BaseTrie
   /**
    * Commits a checkpoint to disk, if current checkpoint is not nested. If
    * nested, only sets the parent checkpoint as current checkpoint.
-   * @method commit
-   * @param {Function} cb the callback
-   * @throws If not during a checkpoint phase
    */
-  commit (cb) {
+  commit(cb)
+  {
     cb = callTogether(cb, this.sem.leave)
 
     this.sem.take(() => {
-      if (this.isCheckpoint) {
+      if(this.isCheckpoint) 
+      {
         this._checkpoints.pop()
-        if (!this.isCheckpoint) {
+        if(!this.isCheckpoint)
+        {
           this._exitCpMode(true, cb)
-        } else {
+        } 
+        else 
+        {
           cb()
         }
-      } else {
+      } 
+      else 
+      {
         throw new Error('trying to commit when not checkpointed')
       }
     })
@@ -78,16 +90,18 @@ class CheckpointTrie extends BaseTrie
    * Reverts the trie to the state it was at when `checkpoint` was first called.
    * If during a nested checkpoint, sets root to most recent checkpoint, and sets
    * parent checkpoint as current.
-   * @method revert
    * @param {Function} cb the callback
    */
-  revert (cb) {
+  revert(cb)
+  {
     cb = callTogether(cb, this.sem.leave)
 
     this.sem.take(() => {
-      if (this.isCheckpoint) {
+      if(this.isCheckpoint) 
+      {
         this.root = this._checkpoints.pop()
-        if (!this.isCheckpoint) {
+        if(!this.isCheckpoint) 
+        {
           this._exitCpMode(false, cb)
           return
         }
@@ -103,7 +117,8 @@ class CheckpointTrie extends BaseTrie
    * contain the checkpointing metadata (incl. reference to the same scratch).
    * @method copy
    */
-  copy () {
+  copy() 
+  {
     const db = this._mainDB.copy()
     const trie = new CheckpointTrie(db, this.root)
     if (this.isCheckpoint) {
@@ -116,27 +131,30 @@ class CheckpointTrie extends BaseTrie
 
   /**
    * Enter into checkpoint mode.
-   * @private
    */
-  _enterCpMode () {
+  _enterCpMode()
+  {
     this._scratch = new ScratchDB(this._mainDB)
     this.db = this._scratch
   }
 
   /**
    * Exit from checkpoint mode.
-   * @private
    */
-  _exitCpMode (commitState, cb) {
+  _exitCpMode(commitState, cb) 
+  {
     const scratch = this._scratch
     this._scratch = null
     this.db = this._mainDB
 
-    if (commitState) {
+    if(commitState) 
+    {
       this._createScratchReadStream(scratch)
         .pipe(WriteStream(this.db))
         .on('close', cb)
-    } else {
+    } 
+    else 
+    {
       async.nextTick(cb)
     }
   }
@@ -147,7 +165,8 @@ class CheckpointTrie extends BaseTrie
    * @method createScratchReadStream
    * @private
    */
-  _createScratchReadStream (scratch) {
+  _createScratchReadStream(scratch)
+  {
     scratch = scratch || this._scratch
     const trie = new BaseTrie(scratch, this.root)
     return new ScratchReadStream(trie)

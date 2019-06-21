@@ -1,6 +1,10 @@
-const Trie = require('../src/index.js')
+const Trie = require('../index.js')
 const async = require('async')
 const tape = require('tape')
+const utils = require("../../utils");
+
+const Buffer = utils.Buffer;
+const toBuffer = utils.toBuffer;
 
 tape('offical tests', function (t) {
   const jsonTests = require('./fixture/trietest.json').tests
@@ -11,15 +15,17 @@ tape('offical tests', function (t) {
     let expect = jsonTests[i].root
 
     async.eachSeries(inputs, function (input, done) {
-      for (i = 0; i < 2; i++) {
+      for (i = 0; i < 2; i++) 
+      {
         if (input[i] && input[i].slice(0, 2) === '0x') {
-          input[i] = new Buffer(input[i].slice(2), 'hex')
+          input[i] = Buffer.from(input[i].slice(2), 'hex')
         }
       }
 
-      trie.put(new Buffer(input[0]), input[1], function () {
+      trie.put(Buffer.from(input[0]), input[1] ? Buffer.from(input[1]) : input[1], function() {
         done()
       })
+  
     }, function () {
       t.equal('0x' + trie.root.toString('hex'), expect)
       trie = new Trie()
@@ -40,14 +46,14 @@ tape('offical tests any order', function (t) {
       var val = test.in[key]
 
       if (key.slice(0, 2) === '0x') {
-        key = new Buffer(key.slice(2), 'hex')
+        key = Buffer.from(key.slice(2), 'hex')
       }
 
       if (val && val.slice(0, 2) === '0x') {
-        val = new Buffer(val.slice(2), 'hex')
+        val = Buffer.from(val.slice(2), 'hex')
       }
 
-      trie.put(new Buffer(key), new Buffer(val), function () {
+      trie.put(Buffer.from(key), Buffer.from(val), function () {
         done()
       })
     }, function () {

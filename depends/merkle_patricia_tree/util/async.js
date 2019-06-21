@@ -1,4 +1,5 @@
 const async = require('async')
+const assert =require("assert")
 
 module.exports.callTogether = function() 
 {
@@ -30,22 +31,28 @@ module.exports.callTogether = function()
  */
 module.exports.asyncFirstSeries = function(array, iterator, cb)
 {
+  assert(Array.isArray(array), `async asyncFirstSeries, array should be an Array, now is ${typeof array}`)
+  assert(typeof iterator === 'function', `async asyncFirstSeries, iterator should be a Function, now is ${typeof iterator}`)
+
   var didComplete = false
-  async.eachSeries(array, function(item, next) {
+  async.eachSeries(array, (item, next) => {
     if(didComplete) 
     {
-      return next
+      return next()
     }
 
-    iterator(item, function (err, result) {
-      if (result) {
+    iterator(item, (err, result) => {
+      if(result)
+      {
         didComplete = true
+
         process.nextTick(cb.bind(null, null, result))
       }
       next(err)
     })
-  }, function () {
-    if (!didComplete) {
+  }, () => {
+    if(!didComplete)
+    {
       cb()
     }
   })
