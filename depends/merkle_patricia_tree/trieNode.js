@@ -97,8 +97,10 @@ class TrieNode
       {
         this.type = 'leaf'
       }
-
-      this.type = 'extention'
+      else
+      {
+        this.type = 'extention'
+      }
     }
     else
     {
@@ -118,7 +120,11 @@ class TrieNode
         key = 16;
       }
 
-      assert(Buffer.isBuffer(value), `TrieNode setValue, value should be an Buffer, now is ${typeof value}`);
+      // 节点中即可存储子节点的哈希也可以存储子节点的元数据
+      if(value)
+      {
+        assert(Buffer.isBuffer(value) || Array.isArray(value), `TrieNode setValue, value should be an Buffer or Array, now is ${typeof value}`);
+      }
 
       this.raw[key] = value
     }
@@ -126,8 +132,12 @@ class TrieNode
     {
       value = key;
 
-      assert(Buffer.isBuffer(value), `TrieNode setValue, value should be an Buffer, now is ${typeof value}`);
-
+      // 节点中即可存储子节点的哈希也可以存储子节点的元数据
+      if(value)
+      {
+        assert(Buffer.isBuffer(value) || Array.isArray(value), `TrieNode setValue, value should be an Buffer or Array, now is ${typeof value}`);
+      }
+      
       this.raw[1] = value
     }
   }
@@ -144,12 +154,23 @@ class TrieNode
         key = 16
       }
 
-      var val = this.raw[key]
+      let val = this.raw[key]
+      if(Buffer.isBuffer(val) && val.length === 0)
+      {
+        val = undefined;
+      }
+
       return val
     }
     else 
     {
-      return this.raw[1]
+      let val = this.raw[1];
+      if(Buffer.isBuffer(val) && val.length === 0)
+      {
+        val = undefined;
+      }
+
+      return val
     }
   }
 

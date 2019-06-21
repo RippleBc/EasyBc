@@ -64,6 +64,6 @@ module.exports.doKeysMatch = function(keyA, keyB)
   assert(Array.isArray(keyA), `doKeysMatch, keyA should be an Array, now is ${typeof keyA}`)
   assert(Array.isArray(keyB), `doKeysMatch, keyB should be an Array, now is ${typeof keyB}`)
 
-  const length = matchingNibbleLength(keyA, keyB)
+  const length = module.exports.matchingNibbleLength(keyA, keyB)
   return length === keyA.length && length === keyB.length
 }

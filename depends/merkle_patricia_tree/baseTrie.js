@@ -303,7 +303,7 @@ class Trie
       {
         onFound(nodeRef, node, fullKey, walkController.next);
       } 
-      else if (node.type === 'branch' && node.value) 
+      else if(node.type === 'branch' && node.value) 
       {
         onFound(nodeRef, node, fullKey, walkController.next);
       } 

@@ -15,7 +15,7 @@ class TrieReadStream extends Readable
 
   _read()
   {
-    if (!this._started) 
+    if(!this._started) 
     {
       this._started = true
       this.trie._findValueNodes((nodeRef, node, key, next) => {

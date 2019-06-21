@@ -38,7 +38,10 @@
     "secp256k1": "^3.6.1",
     "semaphore": "^1.1.0",
     "sequelize": "^5.7.6",
-    "strip-hex-prefix": "^1.0.0"
+    "strip-hex-prefix": "^1.0.0",
+    "level-mem": "^3.0.1",
+    "level-ws": "^1.0.0",
+    "readable-stream": "^3.0.6"
   },
   "devDependencies": {
     "benchmark": "^2.1.4",
