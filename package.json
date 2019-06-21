@@ -47,8 +47,10 @@
     "benchmark": "^2.1.4",
     "chai": "^4.2.0",
     "mocha": "^5.2.0",
+    "nyc": "^14.1.1",
     "single-line-log": "^1.1.2",
     "source-map-support": "^0.5.12",
+    "tape": "^4.10.2",
     "underscore": "^1.9.1"
   },
   "scripts": {
