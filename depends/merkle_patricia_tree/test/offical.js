@@ -15,7 +15,7 @@ tape('offical tests', function (t) {
     let expect = jsonTests[i].root
 
     async.eachSeries(inputs, function (input, done) {
-      for (i = 0; i < 2; i++) 
+      for (let i = 0; i < 2; i++) 
       {
         if (input[i] && input[i].slice(0, 2) === '0x') {
           input[i] = Buffer.from(input[i].slice(2), 'hex')
@@ -28,6 +28,7 @@ tape('offical tests', function (t) {
   
     }, function () {
       t.equal('0x' + trie.root.toString('hex'), expect)
+
       trie = new Trie()
       done()
     })

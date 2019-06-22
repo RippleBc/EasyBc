@@ -1,7 +1,7 @@
 const TrieNode = require('./trieNode')
 const utils = require('../utils')
 const { bufferToNibbles, matchingNibbleLength } = require('./util/nibbles')
-const BaseTrie = require("./BaseTrie");
+const BaseTrie = require("./index");
 const assert = require("assert");
 
 const toBuffer = utils.toBuffer; 
@@ -19,7 +19,7 @@ const rlp = utils.rlp;
  */
 module.exports.prove = function(trie, key, cb) 
 {
-  assert(trie instanceof BaseTrie, `prove, trie should be an instance of BaseTrie, now is ${typeof trie}`)
+  // assert(trie instanceof BaseTrie, `prove, trie should be an instance of BaseTrie, now is ${typeof trie}`)
   assert(Buffer.isBuffer(key), `prove, key should be an Buffer, now is ${typeof key}`)
 
   trie.findPath(key, function (err, node, remainder, stack) {

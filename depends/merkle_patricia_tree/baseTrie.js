@@ -348,12 +348,32 @@ class Trie
 
     key = bufferToNibbles(key)
 
-    if(lastNode.type === 'leaf' && keyRemainder.length === 0) 
+    if(lastNode.type === 'leaf') 
     {
-      lastNode.value = value
-      stack.push(lastNode)
+      // compute processed keys
+      let l = 0
+      for(let i = 0; i < stack.length; i++)
+      {
+        const n = stack[i]
 
-      return this._saveStack(key, stack, toSave, cb)
+        if(n.type === 'branch') 
+        {
+          l++
+        }
+        else 
+        {
+          l += n.key.length
+        }
+      }
+
+      if(doKeysMatch(lastNode.key, key.slice(l))
+        && keyRemainder.length === 0)
+      {
+        lastNode.value = value
+        stack.push(lastNode)
+
+        return this._saveStack(key, stack, toSave, cb)
+      }
     }
 
     if(lastNode.type === 'branch') 

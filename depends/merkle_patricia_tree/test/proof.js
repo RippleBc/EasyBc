@@ -1,6 +1,9 @@
 const Trie = require('../index.js')
 const async = require('async')
 const tape = require('tape')
+const utils = require('../../utils')
+
+const Buffer = utils.Buffer;
 
 tape('simple merkle proofs generation and verification', function (tester) {
   var it = tester.test
@@ -9,18 +12,18 @@ tape('simple merkle proofs generation and verification', function (tester) {
 
     async.series([
       function (cb) {
-        trie.put('key1aa', '0123456789012345678901234567890123456789xx', cb)
+        trie.put(Buffer.from('key1aa'), Buffer.from('0123456789012345678901234567890123456789xx'), cb)
       },
       function (cb) {
-        trie.put('key2bb', 'aval2', cb)
+        trie.put(Buffer.from('key2bb'), Buffer.from('aval2'), cb)
       },
       function (cb) {
-        trie.put('key3cc', 'aval3', cb)
+        trie.put(Buffer.from('key3cc'), Buffer.from('aval3'), cb)
       },
       function (cb) {
-        Trie.prove(trie, 'key2bb', function (err, prove) {
+        Trie.prove(trie, Buffer.from('key2bb'), function (err, prove) {
           if (err) return cb(err)
-          Trie.verifyProof(trie.root, 'key2bb', prove, function (err, val) {
+          Trie.verifyProof(trie.root, Buffer.from('key2bb'), prove, function (err, val) {
             if (err) return cb(err)
             t.equal(val.toString('utf8'), 'aval2')
             cb()
@@ -28,9 +31,9 @@ tape('simple merkle proofs generation and verification', function (tester) {
         })
       },
       function (cb) {
-        Trie.prove(trie, 'key1aa', function (err, prove) {
+        Trie.prove(trie, Buffer.from('key1aa'), function (err, prove) {
           if (err) return cb(err)
-          Trie.verifyProof(trie.root, 'key1aa', prove, function (err, val) {
+          Trie.verifyProof(trie.root, Buffer.from('key1aa'), prove, function (err, val) {
             if (err) return cb(err)
             t.equal(val.toString('utf8'), '0123456789012345678901234567890123456789xx')
             cb()
@@ -38,28 +41,28 @@ tape('simple merkle proofs generation and verification', function (tester) {
         })
       },
       function (cb) {
-        Trie.prove(trie, 'key2bb', function (err, prove) {
+        Trie.prove(trie, Buffer.from('key2bb'), function (err, prove) {
           if (err) return cb(err)
-          Trie.verifyProof(trie.root, 'randomkey', prove, function (err, val) {
+          Trie.verifyProof(trie.root, Buffer.from('randomkey'), prove, function (err, val) {
             t.notEqual(err, null, 'Expected error: ' + err.message)
             cb()
           })
         })
       },
       function (cb) {
-        Trie.prove(trie, 'key2bb', function (err, prove) {
+        Trie.prove(trie, Buffer.from('key2bb'), function (err, prove) {
           if (err) return cb(err)
-          Trie.verifyProof(trie.root, 'key2b', prove, function (err, val) {
+          Trie.verifyProof(trie.root, Buffer.from('key2b'), prove, function (err, val) {
             t.notEqual(err, null, 'Expected error: ' + err.message)
             cb()
           })
         })
       },
       function (cb) {
-        Trie.prove(trie, 'key2bb', function (err, prove) {
+        Trie.prove(trie, Buffer.from('key2bb'), function (err, prove) {
           if (err) return cb(err)
           prove.push(Buffer.from('123456'))
-          Trie.verifyProof(trie.root, 'key2b', prove, function (err, val) {
+          Trie.verifyProof(trie.root, Buffer.from('key2b'), prove, function (err, val) {
             t.notEqual(err, null, 'Expected error: ' + err.message)
             cb()
           })
@@ -75,12 +78,12 @@ tape('simple merkle proofs generation and verification', function (tester) {
 
     async.series([
       function (cb) {
-        trie.put('key1aa', '0123456789012345678901234567890123456789xx', cb)
+        trie.put(Buffer.from('key1aa'), Buffer.from('0123456789012345678901234567890123456789xx'), cb)
       },
       function (cb) {
-        Trie.prove(trie, 'key1aa', function (err, prove) {
+        Trie.prove(trie, Buffer.from('key1aa'), function (err, prove) {
           if (err) return cb(err)
-          Trie.verifyProof(trie.root, 'key1aa', prove, function (err, val) {
+          Trie.verifyProof(trie.root, Buffer.from('key1aa'), prove, function (err, val) {
             if (err) return cb(err)
             t.equal(val.toString('utf8'), '0123456789012345678901234567890123456789xx')
             cb()
@@ -97,12 +100,12 @@ tape('simple merkle proofs generation and verification', function (tester) {
 
     async.series([
       function (cb) {
-        trie.put('key1aa', '01234', cb)
+        trie.put(Buffer.from('key1aa'), Buffer.from('01234'), cb)
       },
       function (cb) {
-        Trie.prove(trie, 'key1aa', function (err, prove) {
+        Trie.prove(trie, Buffer.from('key1aa'), function (err, prove) {
           if (err) return cb(err)
-          Trie.verifyProof(trie.root, 'key1aa', prove, function (err, val) {
+          Trie.verifyProof(trie.root, Buffer.from('key1aa'), prove, function (err, val) {
             if (err) return cb(err)
             t.equal(val.toString('utf8'), '01234')
             cb()
@@ -119,27 +122,27 @@ tape('simple merkle proofs generation and verification', function (tester) {
 
     async.series([
       function (cb) {
-        trie.put('key1aa', '0123456789012345678901234567890123456789xxx', cb)
+        trie.put(Buffer.from('key1aa'), Buffer.from('0123456789012345678901234567890123456789xxx'), cb)
       },
       function (cb) {
-        trie.put('key1', '0123456789012345678901234567890123456789Very_Long', cb)
+        trie.put(Buffer.from('key1'), Buffer.from('0123456789012345678901234567890123456789Very_Long'), cb)
       },
       function (cb) {
-        trie.put('key2bb', 'aval3', cb)
+        trie.put(Buffer.from('key2bb'), Buffer.from('aval3'), cb)
       },
       function (cb) {
-        trie.put('key2', 'short', cb)
+        trie.put(Buffer.from('key2'), Buffer.from('short'), cb)
       },
       function (cb) {
-        trie.put('key3cc', 'aval3', cb)
+        trie.put(Buffer.from('key3cc'), Buffer.from('aval3'), cb)
       },
       function (cb) {
-        trie.put('key3', '1234567890123456789012345678901', cb)
+        trie.put(Buffer.from('key3'), Buffer.from('1234567890123456789012345678901'), cb)
       },
       function (cb) {
-        Trie.prove(trie, 'key1', function (err, prove) {
+        Trie.prove(trie, Buffer.from('key1'), function (err, prove) {
           if (err) return cb(err)
-          Trie.verifyProof(trie.root, 'key1', prove, function (err, val) {
+          Trie.verifyProof(trie.root, Buffer.from('key1'), prove, function (err, val) {
             if (err) return cb(err)
             t.equal(val.toString('utf8'), '0123456789012345678901234567890123456789Very_Long')
             cb()
@@ -147,9 +150,9 @@ tape('simple merkle proofs generation and verification', function (tester) {
         })
       },
       function (cb) {
-        Trie.prove(trie, 'key2', function (err, prove) {
+        Trie.prove(trie, Buffer.from('key2'), function (err, prove) {
           if (err) return cb(err)
-          Trie.verifyProof(trie.root, 'key2', prove, function (err, val) {
+          Trie.verifyProof(trie.root, Buffer.from('key2'), prove, function (err, val) {
             if (err) return cb(err)
             t.equal(val.toString('utf8'), 'short')
             cb()
@@ -157,9 +160,9 @@ tape('simple merkle proofs generation and verification', function (tester) {
         })
       },
       function (cb) {
-        Trie.prove(trie, 'key3', function (err, prove) {
+        Trie.prove(trie, Buffer.from('key3'), function (err, prove) {
           if (err) return cb(err)
-          Trie.verifyProof(trie.root, 'key3', prove, function (err, val) {
+          Trie.verifyProof(trie.root, Buffer.from('key3'), prove, function (err, val) {
             if (err) return cb(err)
             t.equal(val.toString('utf8'), '1234567890123456789012345678901')
             cb()
@@ -176,33 +179,33 @@ tape('simple merkle proofs generation and verification', function (tester) {
 
     async.series([
       (cb) => {
-        trie.put('a', 'a', cb)
+        trie.put(Buffer.from('a'), Buffer.from('a'), cb)
       }, (cb) => {
-        trie.put('b', 'b', cb)
+        trie.put(Buffer.from('b'), Buffer.from('b'), cb)
       }, (cb) => {
-        trie.put('c', 'c', cb)
+        trie.put(Buffer.from('c'), Buffer.from('c'), cb)
       }, (cb) => {
-        Trie.prove(trie, 'a', function (err, prove) {
+        Trie.prove(trie, Buffer.from('a'), function (err, prove) {
           if (err) return cb(err)
-          Trie.verifyProof(trie.root, 'a', prove, function (err, val) {
+          Trie.verifyProof(trie.root, Buffer.from('a'), prove, function (err, val) {
             if (err) return cb(err)
             t.equal(val.toString('utf8'), 'a')
             cb()
           })
         })
       }, (cb) => {
-        Trie.prove(trie, 'b', function (err, prove) {
+        Trie.prove(trie, Buffer.from('b'), function (err, prove) {
           if (err) return cb(err)
-          Trie.verifyProof(trie.root, 'b', prove, function (err, val) {
+          Trie.verifyProof(trie.root, Buffer.from('b'), prove, function (err, val) {
             if (err) return cb(err)
             t.equal(val.toString('utf8'), 'b')
             cb()
           })
         })
       }, (cb) => {
-        Trie.prove(trie, 'c', function (err, prove) {
+        Trie.prove(trie, Buffer.from('c'), function (err, prove) {
           if (err) return cb(err)
-          Trie.verifyProof(trie.root, 'c', prove, function (err, val) {
+          Trie.verifyProof(trie.root, Buffer.from('c'), prove, function (err, val) {
             if (err) return cb(err)
             t.equal(val.toString('utf8'), 'c')
             cb()
