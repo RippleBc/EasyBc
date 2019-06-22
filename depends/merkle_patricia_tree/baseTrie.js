@@ -424,14 +424,23 @@ class Trie
       // 获取分支节点的槽位
       const branchKey = lastKey.shift();
 
-      // 重新定义lastNode的key
-      lastNode.key = lastKey
-      
-      // 获取lastNode的哈希，toSave中记录的是将lastNode放入数据库的操作
-      const formatedNode = this._formatNode(lastNode, false, toSave)
+      // if lastKey is not empty, last can be an attachment; if lastNode's type is leaf, just save it
+      if(lastKey.length !== 0 || lastNode.type === 'leaf')
+      {
+        // 重新定义lastNode的key
+        lastNode.key = lastKey
+        
+        // 获取lastNode的哈希，toSave中记录的是将lastNode放入数据库的操作
+        const formatedNode = this._formatNode(lastNode, false, toSave)
 
-      // 将lastNode放入新创建的分支节点中
-      newBranchNode.setValue(branchKey, formatedNode)
+        // 将lastNode放入新创建的分支节点中
+        newBranchNode.setValue(branchKey, formatedNode)
+      }
+      else
+      {
+        // if lastKey is empty and it is not a leaf node, just remove it(just not use it in this tire, not delete it from lower db instance)
+        newBranchNode.setValue(branchKey, lastNode.value)
+      }
     } 
     else 
     {
@@ -861,6 +870,30 @@ class Trie
       cb(null, !!value)
     })
   }
+
+  /**
+   * @param {Array} ops
+   * @param {Function} cb
+   */
+  batch(ops, cb) 
+  {
+    assert(Array.isArray(ops), `Trie batch, opts should be an Array, now is ${typeof ops}`)
+
+    async.eachSeries(ops, (op, callback) => {
+      if(op.type === 'put') 
+      {
+        this.put(op.key, op.value, callback)
+      } 
+      else if (op.type === 'del') 
+      {
+        this.del(op.key, callback)
+      } 
+      else 
+      {
+        callback()
+      }
+    }, cb)
+}
 }
 
 module.exports = Trie;

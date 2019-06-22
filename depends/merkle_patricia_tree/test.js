@@ -18,13 +18,10 @@ const datas = [
 async.eachSeries(datas, (data, done) => {
 	baseTrie.put(Buffer.from(data[0]), Buffer.from(data[1]), done);
 }, () => {
-	const readStream = baseTrie.createReadStream();
+	baseTrie._findDbNodes((nodeRef, node, key, next) => {
+		console.log(`\n\nprocessed key: ${key}, node hash: ${node.hash().toString('hex')}, node detail: ${node.toString()}\n\n`)
+		next();
+	}, () => {
 
-	readStream.on('data', data => {
-		console.log(`key: ${data.key.toString()}, value: ${data.value.toString()}`)
-	})
-
-	readStream.on('end', () => {
-		console.log(baseTrie.root.toString('hex'))
 	})
 })

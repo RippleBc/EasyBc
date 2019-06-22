@@ -1,5 +1,8 @@
-const Trie = require('../src/index.js')
+const Trie = require('../index.js')
 const describe = require('tape')
+const utils = require('../../utils')
+
+const Buffer = utils.Buffer;
 
 describe('kv stream test', function (tester) {
   var it = tester.test
@@ -79,7 +82,13 @@ describe('kv stream test', function (tester) {
   })
 
   it('should populate trie', function (t) {
-    trie.batch(init, function () {
+    trie.batch(init.map(ele => {
+      return {
+        type: ele.type,
+        key: Buffer.from(ele.key),
+        value: ele.value ? Buffer.from(ele.value) : ele.value
+      }
+    }), function () {
       t.end()
     })
   })
@@ -137,7 +146,13 @@ describe('db stream test', function (tester) {
 
   it('should populate trie', function (t) {
     trie.checkpoint()
-    trie.batch(init, t.end)
+    trie.batch(init.map(ele => {
+      return {
+        type: ele.type,
+        key: Buffer.from(ele.key),
+        value: ele.value ? Buffer.from(ele.value) : ele.value
+      }
+    }), t.end)
   })
 
   it('should only fetch nodes in the current trie', function (t) {
