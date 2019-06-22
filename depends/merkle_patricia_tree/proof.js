@@ -134,7 +134,7 @@ module.exports.verifyProof = function(rootHash, key, proof, cb)
 
       if(key.length === 0 || (cld.length === 17 && key.length === 1))
       {
-        // 扩展节点中存储的是分支节点的序列化值
+        // 扩展节点中存储的是分支节点的raw data
         if(cld.length === 17) 
         {
           cld = cld[key[0]][1]
@@ -146,7 +146,7 @@ module.exports.verifyProof = function(rootHash, key, proof, cb)
           return cb(new Error('verifyProof, Additional nodes at end of proof (extention|leaf)'))
         }
 
-        return cb(null, new TrieNode(cld).value)
+        return cb(null, cld)
       } 
       else 
       {

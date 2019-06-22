@@ -1,5 +1,10 @@
-const ethUtil = require('ethereumjs-util')
+const utils = require('../utils')
 const CheckpointTrie = require('./checkpointTrie')
+const BaseTrie = require('./baseTrie')
+const assert = require('assert')
+
+const sha256 = utils.sha256;
+const Buffer = utils.Buffer;
 
 /**
  * You can create a secure Trie where the keys are automatically hashed
@@ -9,46 +14,94 @@ const CheckpointTrie = require('./checkpointTrie')
  * @extends Trie
  * @public
  */
-module.exports = class SecureTrie extends CheckpointTrie {
-  constructor (...args) {
+class SecureTrie extends CheckpointTrie 
+{
+  constructor (...args) 
+  {
     super(...args)
   }
 
-  static prove (trie, key, cb) {
-    const hash = ethUtil.keccak256(key)
+  /**
+   * @param {BaseTrie} trie
+   * @param {Buffer} key
+   * @param {Function} cb
+   * @return {Array}
+   */
+  static prove(trie, key, cb) 
+  {
+    assert(trie instanceof BaseTrie, `SecureTrie prove, trie should be an instance of BaseTrie, now is ${typeof trie}`)
+    assert(Buffer.isBuffer(key), `SecureTrie prove, key should be an Buffer, now is ${typeof key}`);
+
+    const hash = sha256(key)
     super.prove(trie, hash, cb)
   }
 
-  static verifyProof (rootHash, key, proof, cb) {
-    const hash = ethUtil.keccak256(key)
+  /**
+   * @param {Buffer} rootHash
+   * @param {Buffer} key
+   * @param {Arrat} proof
+   */
+  static verifyProof(rootHash, key, proof, cb) 
+  {
+    assert(Buffer.isBuffer(rootHash), `SecureTrie verifyProof, rootHash should be an Buffer, now is ${typeof rootHash}`);
+    assert(Buffer.isBuffer(key), `SecureTrie verifyProof, key should be an Buffer, now is ${typeof key}`);
+    assert(Array.isArray(proof), `SecureTrie verifyProof, key should be an Array, now is ${typeof key}`);
+
+    const hash = sha256(key)
     super.verifyProof(rootHash, hash, proof, cb)
   }
 
-  copy () {
+  copy() 
+  {
     const db = this.db.copy()
     return new SecureTrie(db, this.root)
   }
 
-  get (key, cb) {
-    const hash = ethUtil.keccak256(key)
+  /**
+   * @param {Buffer} key
+   * @param {Function} cb
+   */
+  get(key, cb) 
+  {
+    assert(Buffer.isBuffer(key), `SecureTrie get, key should be an Buffer, now is ${typeof key}`);
+
+    const hash = sha256(key)
     super.get(hash, cb)
   }
 
   /**
-   * For a falsey value, use the original key
-   * to avoid double hashing the key.
+   * @param {Buffer} key
+   * @param {Buffer} val
+   * @param {Function} cb
    */
-  put (key, val, cb) {
-    if (!val) {
+  put(key, val, cb)
+  {
+    assert(Buffer.isBuffer(key), `SecureTrie put, key should be an Buffer, now is ${typeof key}`);
+
+    if(!val || val.toString() === '') 
+    {
       this.del(key, cb)
-    } else {
-      const hash = ethUtil.keccak256(key)
+    } 
+    else 
+    {
+      assert(Buffer.isBuffer(val), `SecureTrie put, val should be an Buffer, now is ${typeof val}`);
+      
+      const hash = sha256(key)
       super.put(hash, val, cb)
     }
   }
 
-  del (key, cb) {
-    const hash = ethUtil.keccak256(key)
+  /**
+   * @param {Buffer} key
+   * @param {Function} cb
+   */
+  del(key, cb) 
+  {
+    assert(Buffer.isBuffer(key), `SecureTrie del, key should be an Buffer, now is ${typeof key}`);
+
+    const hash = sha256(key)
     super.del(hash, cb)
   }
 }
+
+module.exports = SecureTrie
