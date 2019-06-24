@@ -49,11 +49,6 @@ class Db
 		await this.db.put(block.hash(), block.serialize());
 	}
 
-	async saveAccounts(number, stateRoot, accounts)
-	{
-		
-	}
-
 	async saveTransactions()
 	{
 		

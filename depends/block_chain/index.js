@@ -2,6 +2,7 @@ const utils = require("../utils");
 const StateManager = require("./stateManager.js");
 const Block = require("../block");
 const assert = require("assert");
+const Trie = require("../trie");
 
 const Buffer = utils.Buffer;
 
@@ -11,15 +12,21 @@ class BlockChain
   {
     opts = opts || {};
 
-    this.stateManager = new StateManager({
-      trie: opts.trie
-    });
-    this.db = opts.db;
-    
-    if(this.db === undefined)
+    let dbInstance;
+    if(opts.db)
     {
-      throw new Error(`BlockChain constructor, opts.db should not be undefined`);
+      dbInstance = new Trie(opts.db);
     }
+    else
+    {
+      dbInstance = new Trie();
+    }
+
+    this.stateManager = new StateManager({
+      trie: dbInstance
+    });
+    
+    this.db = dbInstance;
 
     this.runBlockChain = require("./runBlockChain.js");
     this.runBlock = require("./runBlock.js");
@@ -77,22 +84,7 @@ class BlockChain
   {
     assert(block instanceof Block, `BlockChain addBlock, block should be an Block Object, now is ${typeof block}`);
 
-    await this.db.saveTransactions(block.header.number, block.transactions);
     await this.db.saveBlock(block);
-  }
-
-  /**
-   * @param {Buffer} number
-   * @param {Buffer} stateRoot
-   * @param {Array} accounts
-   */
-  async saveAccounts(number, stateRoot, accounts)
-  {
-    assert(Buffer.isBuffer(number), `BlockChain saveAccounts, number should be an Buffer, now is ${typeof number}`);
-    assert(Buffer.isBuffer(stateRoot), `BlockChain saveAccounts, stateRoot should be an Buffer, now is ${typeof stateRoot}`);
-    assert(Array.isArray(accounts), `BlockChain saveAccounts, accounts should be an Array, now is ${typeof accounts}`);
-
-    await this.db.saveAccounts(number, stateRoot, accounts);
   }
 }
 

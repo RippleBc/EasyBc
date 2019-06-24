@@ -14,6 +14,7 @@ const loggerUpdate = process[Symbol.for("loggerUpdate")];
 const p2p = process[Symbol.for("p2p")];
 const db = process[Symbol.for("db")];
 const mysql = process[Symbol.for("mysql")];
+const mongo = process[Symbol.for("mongo")];
 
 const BN = utils.BN;
 const bufferToInt = utils.bufferToInt;
@@ -30,8 +31,7 @@ class Processor
 		const self = this;
 
 		this.blockChain = new BlockChain({
-			trie: new Trie(db),
-			db: mysql
+			db: mongo
 		});
 
 		this.consensus = new Consensus(self);

@@ -100,7 +100,7 @@ module.exports = async function(opts) {
   }
 
   await this.stateManager.commit();
-  await this.saveAccounts(block.header.number, block.header.stateRoot, modifiedAccounts);
+  
   this.stateManager.clearCache();
 
   return {
