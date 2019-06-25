@@ -191,7 +191,17 @@ class Mongo
     {
       lean: true
     }, (err, result) => {
-      if()
+      if(!!err)
+      {
+        return cb(`Mongo get, throw exception ${e}`)
+      }
+
+      if(result)
+      {
+        return cb(null, Buffer.from(result.val, "hex"));
+      }
+      
+      cb(`Mongo get, key ${key.toString('hex')} has no corresponding value}`);
     })
   }
 
@@ -202,7 +212,14 @@ class Mongo
    */
   put(key, val, options, cb)
   {
-
+    TrieNode.create({
+      hash: key.toString("hex"),
+      data: val.toString("hex")
+    }).then(() => {
+      cb()
+    }).catch(e => {
+      cb(`Mongo put, throw exception ${e}`)
+    })
   }
 
   /**
@@ -211,7 +228,17 @@ class Mongo
    */
   del(key, options, cb)
   {
+    TrieNode.remove({
+      hash: key.toString("hex"),
+      data: val.toString("hex")
+    }, e => {
+      if(!!e)
+      {
+        return cb(`Mongo del, trhow exception ${e}`)
+      }
 
+      cb()
+    }) 
   }
 
   /**

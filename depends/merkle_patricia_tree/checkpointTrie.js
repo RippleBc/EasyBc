@@ -1,5 +1,5 @@
 const async = require('async')
-const WriteStream = require('level-ws')
+const WriteStream = require('./writeStream')
 const BaseTrie = require('./baseTrie')
 const proof = require('./proof.js')
 const ScratchReadStream = require('./scratchReadStream')
