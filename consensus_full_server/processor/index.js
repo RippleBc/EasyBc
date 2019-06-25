@@ -12,9 +12,8 @@ const Update = require("./update");
 const loggerConsensus = process[Symbol.for("loggerConsensus")];
 const loggerUpdate = process[Symbol.for("loggerUpdate")];
 const p2p = process[Symbol.for("p2p")];
-const db = process[Symbol.for("db")];
-const mysql = process[Symbol.for("mysql")];
 const mongo = process[Symbol.for("mongo")];
+const mysql = process[Symbol.for("mysql")];
 
 const BN = utils.BN;
 const bufferToInt = utils.bufferToInt;

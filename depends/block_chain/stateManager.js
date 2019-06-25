@@ -14,8 +14,8 @@ class StateManager
   constructor(opts)
   {
     opts = opts || {};
-
-    this.trie = opts.trie || new Trie();
+    
+    this.trie = opts.trie || new Trie(); 
     this.cache = new Cache(this.trie);
   }
 

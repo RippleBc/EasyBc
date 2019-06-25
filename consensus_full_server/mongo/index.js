@@ -2,6 +2,9 @@ const mongoose = require('mongoose');
 const blockSchema = require("./block")
 const trieNodeSchema = require("./trieNode")
 const mongoConfig = require("../config.json").mongo;
+const MptDB = require("../../depends/merkle_patricia_tree/db")
+const assert = require("assert");
+const Block = require("../../depends/block")
 
 class Mongo
 {
@@ -10,16 +13,105 @@ class Mongo
     
 	}
 
-  init()
+  async init()
   {
-    await blockDb = mongoose.createConnection(`mongodb://${mongoConfig.host}:${mongoConfig.port}/block`);
-    await trieDb = mongoose.createConnection(`mongodb://${mongoConfig.host}:${mongoConfig.port}/trie`);
+    mongoose.set('useNewUrlParser', true);
+    mongoose.set('useFindAndModify', false);
+    mongoose.set('useCreateIndex', true);
 
-    const Block = blockDb.model('Block', blockSchema);
-    const TrieNode = trieDb.model('TrieNode', trieNodeSchema);
+    const blockChainDb = await mongoose.connect(`mongodb://${mongoConfig.host}:${mongoConfig.port}`, {
+      dbName: "blockChain", 
+      user: mongoConfig.user,
+      pass: mongoConfig.password
+    });
+
+    this.Block = blockChainDb.model('Block', blockSchema);
+    this.TrieNode = blockChainDb.model('TrieNode', trieNodeSchema);
   }
 
-	/**
+  /**
+   * @param {Buffer} key
+   * @param {Function} cb
+   */
+  get(key, options, cb)
+  {
+    TrieNode.findOne({
+      hash: key.toString("hex")
+    },
+    'data',
+    {
+      lean: true
+    }, (err, result) => {
+      if(!!err)
+      {
+        return cb(`Mongo get, throw exception ${e}`)
+      }
+
+      if(result)
+      {
+        return cb(null, Buffer.from(result.data, "hex"));
+      }
+      
+      cb(`Mongo get, key ${key.toString('hex')} has no corresponding value}`);
+    })
+  }
+
+  /**
+   * @param {Buffer} key
+   * @param {Buffer} val
+   * @param {Function} cb
+   */
+  put(key, val, options, cb)
+  {
+    TrieNode.create({
+      hash: key.toString("hex"),
+      data: val.toString("hex")
+    }).then(() => {
+      cb()
+    }).catch(e => {
+      cb(`Mongo put, throw exception ${e}`)
+    })
+  }
+
+  /**
+   * @param {Buffer} key
+   * @param {Function} cb
+   */
+  del(key, options, cb)
+  {
+    TrieNode.remove({
+      hash: key.toString("hex")
+    }, e => {
+      if(!!e)
+      {
+        return cb(`Mongo del, trhow exception ${e}`)
+      }
+
+      cb()
+    }) 
+  }
+
+  /**
+   * @param {Array} opStack
+   * @param {Function} cb
+   */
+  batch(opStack, options, cb)
+  {
+    opStack = opStack.map(op => {
+      return {
+        hash: op.key.toString("hex"),
+        data: op.value.toString("hex")
+      }
+    });
+
+    this.TrieNode.create(opStack).then(() => {
+      cb()
+    }).catch(e => {
+      cb(e)
+    })
+  }
+
+  /**
    * @param {Buffer} number
    * @return {Buffer}
    */
@@ -177,77 +269,12 @@ class Mongo
       data: block.serialize().toString('hex')
     })
   }
-
-  /**
-   * @param {Buffer} key
-   * @param {Function} cb
-   */
-  get(key, options, cb)
-  {
-    TrieNode.findOne({
-      hash: key.toString("hex")
-    },
-    'data',
-    {
-      lean: true
-    }, (err, result) => {
-      if(!!err)
-      {
-        return cb(`Mongo get, throw exception ${e}`)
-      }
-
-      if(result)
-      {
-        return cb(null, Buffer.from(result.val, "hex"));
-      }
-      
-      cb(`Mongo get, key ${key.toString('hex')} has no corresponding value}`);
-    })
-  }
-
-  /**
-   * @param {Buffer} key
-   * @param {Buffer} val
-   * @param {Function} cb
-   */
-  put(key, val, options, cb)
-  {
-    TrieNode.create({
-      hash: key.toString("hex"),
-      data: val.toString("hex")
-    }).then(() => {
-      cb()
-    }).catch(e => {
-      cb(`Mongo put, throw exception ${e}`)
-    })
-  }
-
-  /**
-   * @param {Buffer} key
-   * @param {Function} cb
-   */
-  del(key, options, cb)
-  {
-    TrieNode.remove({
-      hash: key.toString("hex"),
-      data: val.toString("hex")
-    }, e => {
-      if(!!e)
-      {
-        return cb(`Mongo del, trhow exception ${e}`)
-      }
-
-      cb()
-    }) 
-  }
-
-  /**
-   * @param {Array} opStack
-   * @param {Function} cb
-   */
-  batch(opStack, options, cb)
-  {
-
-  }
 }
-	
+
+module.exports = async () => {
+  const mongo = new Mongo()
+
+  await mongo.init()
+
+  return new MptDB(mongo);
+}

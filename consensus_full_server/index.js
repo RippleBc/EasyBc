@@ -22,7 +22,6 @@ const levelup = require("levelup");
 const leveldown = require("leveldown");
 const Mysql = require("./mysql");
 
-process[Symbol.for("db")] = levelup(leveldown(BLOCK_CHAIN_DATA_DIR));
 process[Symbol.for("mysql")] = new Mysql();
 process[Symbol.for("getStackInfo")] = function(e) {
 
@@ -77,6 +76,7 @@ process.on("uncaughtException", function(err) {
 
 (async function() {
     await process[Symbol.for("mysql")].init();
+    process[Symbol.for("mongo")] = await require("./mongo")();
 
     /************************************** p2p **************************************/
     const p2p = process[Symbol.for("p2p")] = new P2p(function(message) {

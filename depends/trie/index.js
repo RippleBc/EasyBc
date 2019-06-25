@@ -1,4 +1,4 @@
-const MerklePatriciaTree = require("../merkle-patricia-tree");
+const MerklePatriciaTree = require("../merkle_patricia_tree");
 
 class Trie extends MerklePatriciaTree
 {

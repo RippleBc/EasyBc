@@ -1,11 +1,7 @@
 const mysqlConfig = require("../config.json").mysql;
-const Account = require("../../depends/account");
-const Block = require("../../depends/block");
 const Transaction = require("../../depends/transaction");
 const utils = require("../../depends/utils");
 const assert = require("assert");
-const accountModelConfig = require('./account');
-const blockModelConfig = require('./block');
 const transactionModelConfig = require('./transaction');
 const rawTransactionModelConfig = require('./rawTransaction');
 const timeConsumeModelConfig = require('./timeConsume');
@@ -35,8 +31,6 @@ class Mysql
 
   async init()
   {
-    this.Account = this.sequelize.define(...accountModelConfig);
-    this.Block = this.sequelize.define(...blockModelConfig);
     this.Transaction = this.sequelize.define(...transactionModelConfig);
     this.RawTransaction = this.sequelize.define(...rawTransactionModelConfig);
     this.TimeConsume = this.sequelize.define(...timeConsumeModelConfig);

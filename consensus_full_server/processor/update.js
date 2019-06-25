@@ -10,9 +10,8 @@ const { TRANSACTIONS_CONSENSUS_THRESHOULD } = require('../constant');
 const _ = require("underscore");
 const { unl } = require("../config.json");
 
-const db = process[Symbol.for("db")];
+const mongo = process[Symbol.for("mongo")];
 const logger = process[Symbol.for("loggerUpdate")];
-const mysql = process[Symbol.for("mysql")];
 
 const BN = utils.BN;
 const Buffer = utils.Buffer;
@@ -49,7 +48,7 @@ class Update
 
 	async init()
 	{
-		const blockChain = new BlockChain({db: mysql});
+		const blockChain = new BlockChain({db: mongo});
 
 		this.blockChainHeight = await blockChain.getBlockChainHeight();
 		if(!this.blockChainHeight)
@@ -57,8 +56,7 @@ class Update
 			this.blockChainHeight = Buffer.alloc(0);
 
 			this.blockChain = new BlockChain({
-				db: mysql,
-				trie: new Trie(db)
+				db: mongo
 			});
 
 
@@ -106,8 +104,8 @@ class Update
 		}
 
 		this.blockChain = new BlockChain({
-			db: mysql,
-			trie: new Trie(db, lastestBlock.header.stateRoot)
+			db: mongo,
+			root: lastestBlock.header.stateRoot
 		});
 	}
 

@@ -3,7 +3,7 @@ const createTree = require("functional-red-black-tree");
 const Account = require("../account");
 const async = require("async");
 const assert = require("assert");
-const Trie = require("merkle-patricia-tree");
+const Trie = require("../merkle_patricia_tree");
 
 const Buffer = utils.Buffer;
 
@@ -11,7 +11,7 @@ class Cache
 {
   constructor(trie)
   {
-    assert(trie instanceof Trie, `Cache constructor, trie should be a Tire Object, now is ${typeof Trie}`);
+    assert(trie instanceof Trie, `Cache constructor, trie should be a Tire Object, now is ${typeof trie}`);
 
     this._cache = createTree();
     this._deletes = [];

@@ -12,21 +12,11 @@ class BlockChain
   {
     opts = opts || {};
 
-    let dbInstance;
-    if(opts.db)
-    {
-      dbInstance = new Trie(opts.db);
-    }
-    else
-    {
-      dbInstance = new Trie();
-    }
-
     this.stateManager = new StateManager({
-      trie: dbInstance
+      trie: new Trie(opts.db, opts.root)
     });
     
-    this.db = dbInstance;
+    this.db = opts.db || new Trie();
 
     this.runBlockChain = require("./runBlockChain.js");
     this.runBlock = require("./runBlock.js");
