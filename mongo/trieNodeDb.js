@@ -14,7 +14,7 @@ class TrieNodeDb
    */
   get(key, options, cb)
   {
-    TrieNode.findOne({
+    this.TrieNode.findOne({
       hash: key.toString("hex")
     },
     'data',
@@ -42,7 +42,7 @@ class TrieNodeDb
    */
   put(key, val, options, cb)
   {
-    TrieNode.create({
+    this.TrieNode.create({
       hash: key.toString("hex"),
       data: val.toString("hex")
     }).then(() => {
@@ -58,7 +58,7 @@ class TrieNodeDb
    */
   del(key, options, cb)
   {
-    TrieNode.remove({
+    this.TrieNode.remove({
       hash: key.toString("hex")
     }, e => {
       if(!!e)

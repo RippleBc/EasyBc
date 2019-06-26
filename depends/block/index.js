@@ -1,6 +1,5 @@
 const utils = require("../utils");
 const Transaction = require("../transaction");
-const Trie = require("../trie");
 const Header = require("./header");
 const assert = require("assert");
 

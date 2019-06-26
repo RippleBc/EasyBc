@@ -6,7 +6,6 @@ const utils = require("../../depends/utils");
 const Consensus = require("../ripple");
 const assert = require("assert");
 const Message = require("../../depends/fly/net/message");
-const Trie = require("../../depends/trie");
 const Update = require("./update");
 
 const loggerConsensus = process[Symbol.for("loggerConsensus")];

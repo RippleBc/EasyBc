@@ -1,7 +1,6 @@
 const Block = require("../../depends/block");
 const BlockChain = require("../../depends/block_chain");
 const Transaction = require("../../depends/transaction");
-const Trie = require("../../depends/trie");
 const utils = require("../../depends/utils");
 const rp = require("request-promise");
 const { SUCCESS } = require("../../constant");

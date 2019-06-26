@@ -28,7 +28,7 @@ class BlockDb
       (err, result) => {
         if(!!err)
         {
-          reject(`Mongo getBlockHashByNumber, throw exception, ${err}`)
+          reject(`BlockDb getBlockHashByNumber, throw exception, ${err}`)
         }
 
         if(result)
@@ -65,7 +65,7 @@ class BlockDb
       (err, result) => {
         if(!!err)
         {
-          reject(`Mongo getBlockChainHeight, throw exception, ${err}`)
+          reject(`BlockDb getBlockChainHeight, throw exception, ${err}`)
         }
 
         if(result)
@@ -101,12 +101,14 @@ class BlockDb
       (err, result) => {
         if(!!err)
         {
-          reject(`Mongo getBlockHashByNumber, throw exception, ${err}`)
+          reject(`BlockDb getBlockByHash, throw exception, ${err}`)
         }
 
         if(result)
         {
-          resolve(Buffer.from(result.data, "hex"))
+          const block = new Block(Buffer.from(result.data, "hex"))
+          
+          resolve(block)
         }
         else
         {
@@ -137,7 +139,7 @@ class BlockDb
       (err, result) => {
         if(!!err)
         {
-          reject(`Mongo getBlockHashByNumber, throw exception, ${err}`)
+          reject(`BlockDb getBlockByNumber, throw exception, ${err}`)
         }
 
         if(result)

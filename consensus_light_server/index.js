@@ -4,6 +4,8 @@ const cors = require('cors');
 const { host, port } = require("./config.json");
 const Mysql = require("./mysql");
 const log4js= require("./logConfig");
+const Trie = require("../depends/merkle_patricia_tree");
+const mongoConfig = require("./config").mongo;
 
 const logger = log4js.getLogger();
 process[Symbol.for("errLogger")] = log4js.getLogger("err");
@@ -44,17 +46,19 @@ const printErrorStack = process[Symbol.for("printErrorStack")] = e => {
 process.on('uncaughtException', err => {
   printErrorStack(err);
 
-  exit(1)
-})
-
-process[Symbol.for('app')] = app;
+  process.exit(1);
+});
 
 (async () => {
   // init mysql
   process[Symbol.for("mysql")].init()
 
   // init mongo
-  process[Symbol.for("mongo")] = await require("./mongo")();
+  const mongo = require("../mongo");
+  await mongo.initBaseDb(mongoConfig.host, mongoConfig.port, mongoConfig.user, mongoConfig.password);
+  const trieDb = mongo.generateMptDb()
+  process[Symbol.for("accountTrie")] = new Trie(trieDb);
+  process[Symbol.for("blockDb")] = mongo.generateBlockDb();
 
   // express
   const app = express();
@@ -66,6 +70,7 @@ process[Symbol.for('app')] = app;
     credentials: true, 
     origin: 'http://localhost:8080'
   }));
+  process[Symbol.for('app')] = app;
 
   // load module
   require('./block_chain');

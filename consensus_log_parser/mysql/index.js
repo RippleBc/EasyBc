@@ -1,4 +1,3 @@
-const mysql = require("mysql");
 const mysqlConfig = require("../config.json").mysql;
 const assert = require("assert");
 const logModelConfig = require('./log');

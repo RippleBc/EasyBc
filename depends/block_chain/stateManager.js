@@ -1,4 +1,4 @@
-const Trie = require("../trie");
+const Trie = require("../merkle_patricia_tree");
 const async = require("async");
 const Account = require("../account");
 const Cache = require("./cache.js");

@@ -137,7 +137,16 @@ class Cache
       if(it.value && it.value.modified)
       {
         it.value.modified = false;
-        await this._trie.put(it.key, it.value.val);
+        await new Promise((resolve, reject) => {
+          this._trie.put(it.key, it.value.val, err => {
+            if(!!err)
+            {
+              reject(err)
+            }
+
+            resolve()
+          });
+        })
 
         modifiedAccounts.push(it.key, it.value.val);
       }
@@ -156,7 +165,16 @@ class Cache
     for(let i = 0; i < this._deletes.length; i++)
     {
       let address = this._deletes[i];
-      await this._trie.del(address);
+      await new Promise((resolve, reject) => {
+        this._trie.del(address, err => {
+          if(!!err)
+          {
+            reject(err)
+          }
+
+          resolve()
+        });
+      })
     }
     this._deletes = [];
 
@@ -186,7 +204,15 @@ class Cache
   {
     assert(Buffer.isBuffer(address), `Cache _lookupAccountFromDb, address should be an Buffer, now is ${typeof address}`);
 
-    const accountRaw = await this._trie.get(address);
+    const accountRaw = await new Promise((resolve, reject) => {
+      this._trie.get(address, (err, result) => {
+        if(!!err)
+        {
+          reject(err)
+        }
+        resolve(result)
+      });
+    })
     
     return new Account(accountRaw);
   }

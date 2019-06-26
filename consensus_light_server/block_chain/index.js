@@ -2,7 +2,10 @@ const { QUERY_MAX_LIMIT, SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_PACKED, 
 const { MAX_TX_TIMESTAMP_LEFT_GAP, MAX_TX_TIMESTAMP_RIGHT_GAP } = require("../constant");
 const Transaction = require("../../depends/transaction");
 const Block = require("../../depends/block");
+const Account = require("../../depends/account");
 const utils = require("../../depends/utils");
+const accountTrie = process[Symbol.for("accountTrie")];
+const blockDb = process[Symbol.for("blockDb")];
 
 const bufferToInt = utils.bufferToInt;
 
@@ -77,17 +80,36 @@ app.post("/getAccountInfo", function(req, res) {
     const address = req.body.address;
 
     (async () => {
-        const blockChainHeight = await mysql.getBlockChainHeight();
+        const blockChainHeight = await blockDb.getBlockChainHeight();
         if(blockChainHeight === undefined)
         {
             return;
         }
 
-        const blockRawData = await mysql.getBlockByNumber(blockChainHeight);
+        const blockRawData = await blockDb.getBlockByNumber(blockChainHeight);
         const block = new Block(Buffer.from(blockRawData, "hex"));
         const stateRoot = block.header.stateRoot.toString("hex");
+
+        // get account info
+        const trie = accountTrie.copy();
+        trie.root = Buffer.from(stateRoot, "hex");
+        const getAccountRaw = new Promise((resolve, reject) => {
+            trie.get(Buffer.from(address, "hex"), (err, result) => {
+                if(!!err)
+                {
+                    reject(err);
+                }
+
+                resolve(result);
+            })
+        });
+        const accountRaw = await getAccountRaw;
+
+        if(accountRaw)
+        {
+            return accountRaw.toString('hex');
+        }
         
-        return await mysql.getAccount(stateRoot, address);
     })().then(account => {
         if(account)
         {
@@ -205,7 +227,7 @@ app.post("/getBlockByNumber", function(req, res) {
         });
     }
 
-    mysql.getBlockByNumber(Buffer.from(req.body.number, 'hex')).then(block => {
+    blockDb.getBlockByNumber(Buffer.from(req.body.number, 'hex')).then(block => {
         if(block)
         {
             return res.json({
@@ -231,10 +253,10 @@ app.post("/getBlockByNumber", function(req, res) {
 
 app.post("/getLastestBlock", function(req, res) {
     (async () => {
-        const blockChainHeight = await mysql.getBlockChainHeight();
+        const blockChainHeight = await blockDb.getBlockChainHeight();
         if(blockChainHeight !== undefined)
         {
-            return await mysql.getBlockByNumber(blockChainHeight);
+            return await blockDb.getBlockByNumber(blockChainHeight);
         }
     })().then(block => {
         if(block)

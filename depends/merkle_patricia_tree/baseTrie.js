@@ -68,7 +68,7 @@ class Trie
   get(key, cb) 
   {
     assert(Buffer.isBuffer(key), `Trie get, key should be an Buffer, now is ${typeof key}`)
-
+    
     // try to find correponsed value
     this.findPath(key, (err, node, remainder, stack) => {
       let value = null

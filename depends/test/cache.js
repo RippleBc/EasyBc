@@ -1,6 +1,6 @@
 const {assert, expect, should} = require("chai"); 
 const Account = require("../account");
-const Trie = require("../trie");
+const Trie = require("../merkle_patricia_tree");
 const Cache = require("../block_chain/cache");
 const utils = require("../utils");
 

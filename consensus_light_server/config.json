@@ -6,6 +6,13 @@
 		"user": "root",
 		"password": "root"
 	},
+  "mongo":
+  {
+    "host": "localhost",
+    "port": 4406,
+    "user": "blockChain",
+    "password": "blockChain"
+  },
 	"host": "0.0.0.0",
 	"port": 8081
 }

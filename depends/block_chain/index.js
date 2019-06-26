@@ -2,7 +2,7 @@ const utils = require("../utils");
 const StateManager = require("./stateManager.js");
 const Block = require("../block");
 const assert = require("assert");
-const Trie = require("../trie");
+const Trie = require("../merkle_patricia_tree");
 
 const Buffer = utils.Buffer;
 

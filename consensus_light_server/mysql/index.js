@@ -1,4 +1,3 @@
-const mysql = require("mysql");
 const mysqlConfig = require("../config.json").mysql;
 const Transaction = require("../../depends/transaction");
 const utils = require("../../depends/utils");
