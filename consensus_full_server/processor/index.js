@@ -30,7 +30,8 @@ class Processor
 		const self = this;
 
 		this.blockChain = new BlockChain({
-			db: mongo
+			mptDb: mongo.generateMptDb(),
+			blockDb: mongo.generateBlockDb()
 		});
 
 		this.consensus = new Consensus(self);

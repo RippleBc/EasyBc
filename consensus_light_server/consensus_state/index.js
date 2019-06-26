@@ -1,45 +1,8 @@
-const pm2 = require('pm2');
 const { QUERY_MAX_LIMIT, SUCCESS, PARAM_ERR, OTH_ERR } = require("../../constant");
 
 const app =  process[Symbol.for('app')];
 const mysql = process[Symbol.for("mysql")];
 const printErrorStack = process[Symbol.for("printErrorStack")]
-
-app.post('/status', (req, res) => {
-	pm2.list((err, processDescriptionList) => {
-		if(!!err)
-		{
-			printErrorStack(err);
-
-			return res.json({
-				code: OTH_ERR,
-				msg: `pm2.list throw error, ${err.toString()}`
-			})
-		}
-
-		for(let processDescription of processDescriptionList)
-		{
-			if(processDescription.name === 'fullConsensus')
-			{
-				return res.json({
-					code: SUCCESS,
-					data: {
-						"name": processDescription.name,
-						"pid": processDescription.pid,
-						"pm_id": processDescription.pm_id,
-						"memory": processDescription.monit ? processDescription.monit.memory : undefined,
-						"cpu": processDescription.monit ? processDescription.monit.cpu : undefined
-					}
-				})
-			}
-		}
-
-		res.json({
-			code: OTH_ERR,
-			msg: 'cpu and memory info is can not get'
-		})
-	})
-});
 
 app.post('/logs', (req, res) => {
 	if(undefined === req.body.offset)

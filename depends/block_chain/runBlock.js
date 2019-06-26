@@ -24,8 +24,8 @@ module.exports = async function(opts) {
   assert(opts.block instanceof Block, `runBlock, opts.block should be an Block, now is ${typeof opts.block}`);
 
   const block = opts.block;
-  const ifGenerateStateRoot = opts.generate || false;
-  const validateStateRoot = !ifGenerateStateRoot;
+  const ifGenerateTrie = opts.generate || false;
+  const validateTrie = !ifGenerateTrie;
 
   let failedTransactions = [];
   let errors = [];
@@ -89,12 +89,12 @@ module.exports = async function(opts) {
 
   const modifiedAccounts = await this.stateManager.flushCache();
 
-  if(ifGenerateStateRoot)
+  if(ifGenerateTrie)
   {
     block.header.stateRoot = this.stateManager.getTrieRoot();
   }     
   // check state trie
-  if(validateStateRoot && this.stateManager.getTrieRoot().toString("hex") !== block.header.stateRoot.toString("hex"))
+  if(validateTrie && this.stateManager.getTrieRoot().toString("hex") !== block.header.stateRoot.toString("hex"))
   {
     await Promise.reject(`runBlock, stateRoot should be ${this.stateManager.getTrieRoot().toString("hex")}, now is ${block.header.stateRoot.toString("hex")}`);
   }

@@ -48,7 +48,10 @@ class Update
 
 	async init()
 	{
-		const blockChain = new BlockChain({db: mongo});
+		const blockChain = new BlockChain({
+			mptDb: mongo.generateMptDb(),
+			blockDb: mongo.generateBlockDb()
+		});
 
 		this.blockChainHeight = await blockChain.getBlockChainHeight();
 		if(!this.blockChainHeight)
@@ -56,7 +59,8 @@ class Update
 			this.blockChainHeight = Buffer.alloc(0);
 
 			this.blockChain = new BlockChain({
-				db: mongo
+				mptDb: mongo.generateMptDb(),
+				blockDb: mongo.generateBlockDb()
 			});
 
 
@@ -104,7 +108,8 @@ class Update
 		}
 
 		this.blockChain = new BlockChain({
-			db: mongo,
+			mptDb: mongo.generateMptDb(),
+			blockDb: mongo.generateBlockDb(),
 			root: lastestBlock.header.stateRoot
 		});
 	}

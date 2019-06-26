@@ -28,7 +28,7 @@ module.exports = async function(opts)
     }
   }
 
-  // check parentHash and number and transactions and transactionsTrie
+  // check parentHash and number and transactions
   let result = await block.validate(parentBlock);
   if(false === result.state)
   {

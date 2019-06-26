@@ -13,10 +13,10 @@ class BlockChain
     opts = opts || {};
 
     this.stateManager = new StateManager({
-      trie: new Trie(opts.db, opts.root)
+      trie: new Trie(opts.mptDb, opts.root)
     });
-    
-    this.db = opts.db || new Trie();
+
+    this.blockDb = opts.blockDb;
 
     this.runBlockChain = require("./runBlockChain.js");
     this.runBlock = require("./runBlock.js");
@@ -30,7 +30,7 @@ class BlockChain
   {
     assert(Buffer.isBuffer(number), `BlockChain getBlockHashByNumber, number should be an Buffer, now is ${typeof number}`);
     
-    return await this.db.getBlockHashByNumber(number);
+    return await this.blockDb.getBlockHashByNumber(number);
   }
 
   /**
@@ -40,7 +40,7 @@ class BlockChain
   {
     assert(Buffer.isBuffer(hash), `BlockChain getBlockByHash, hash should be an Buffer, now is ${typeof hash}`);
 
-    return await this.db.getBlockByHash(hash);
+    return await this.blockDb.getBlockByHash(hash);
   }
 
   /**
@@ -63,7 +63,7 @@ class BlockChain
 
   async getBlockChainHeight()
   {
-    return await this.db.getBlockChainHeight();
+    return await this.blockDb.getBlockChainHeight();
   }
 
   /**
@@ -74,7 +74,7 @@ class BlockChain
   {
     assert(block instanceof Block, `BlockChain addBlock, block should be an Block Object, now is ${typeof block}`);
 
-    await this.db.saveBlock(block);
+    await this.blockDb.saveBlock(block);
   }
 }
 

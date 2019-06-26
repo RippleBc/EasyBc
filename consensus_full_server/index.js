@@ -2,6 +2,7 @@ const log4js= require("./logConfig");
 const logger = log4js.getLogger("consensus");
 const { fork } = require("child_process");
 const path = require('path');
+const mongoConfig = require("./config").mongo;
 
 process[Symbol.for("loggerConsensus")] = logger;
 process[Symbol.for("loggerP2p")] = log4js.getLogger("p2p");
@@ -23,6 +24,7 @@ const leveldown = require("leveldown");
 const Mysql = require("./mysql");
 
 process[Symbol.for("mysql")] = new Mysql();
+process[Symbol.for("mongo")] = require("../mongo");
 process[Symbol.for("getStackInfo")] = function(e) {
 
     let err;
@@ -75,8 +77,11 @@ process.on("uncaughtException", function(err) {
 });
 
 (async function() {
+    // init mysql
     await process[Symbol.for("mysql")].init();
-    process[Symbol.for("mongo")] = await require("./mongo")();
+
+    // init mongo
+    await process[Symbol.for("mongo")].initBaseDb(mongoConfig.host, mongoConfig.port, mongoConfig.user, mongoConfig.password);
 
     /************************************** p2p **************************************/
     const p2p = process[Symbol.for("p2p")] = new P2p(function(message) {

@@ -69,49 +69,6 @@ class DB
   {
     return new DB(this._db)
   }
-
-  /**
-   * @param {Buffer} number
-   * @return {Buffer}
-   */
-  async getBlockHashByNumber(number)
-  {
-    return await this._db.getBlockHashByNumber(number);
-  }
-
-  /*
-   * @return {Buffer}
-   */
-  async getBlockChainHeight()
-  {
-    return await this._db.getBlockChainHeight();
-  }
-
-  /**
-   * @param {Buffer} hash
-   * @return {Block}
-   */
-  async getBlockByHash(hash)
-  {
-    return await this._db.getBlockByHash(hash);
-  }
-
-  /**
-   * @param {Buffer} number
-   * @return {Block}
-   */
-  async getBlockByNumber(number)
-  {
-    return await this._db.getBlockByNumber(number)
-  }
-
-  /**
-   * @param {Block} block
-   */
-  async saveBlock(block)
-  {
-    await this._db.saveBlock(block)
-  }
 }
 
 module.exports = DB;

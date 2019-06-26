@@ -1,13 +1,12 @@
 const { QUERY_MAX_LIMIT, SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS } = require("../../constant");
 const { MAX_TX_TIMESTAMP_LEFT_GAP, MAX_TX_TIMESTAMP_RIGHT_GAP } = require("../constant");
+const Transaction = require("../../depends/transaction");
+const Block = require("../../depends/block");
 const utils = require("../../depends/utils");
 
 const bufferToInt = utils.bufferToInt;
 
 const app = process[Symbol.for('app')];
-const Transaction = require("../../depends/transaction");
-const Block = require("../../depends/block");
-
 const mysql = process[Symbol.for("mysql")];
 const printErrorStack = process[Symbol.for("printErrorStack")]
 
@@ -86,10 +85,9 @@ app.post("/getAccountInfo", function(req, res) {
 
         const blockRawData = await mysql.getBlockByNumber(blockChainHeight);
         const block = new Block(Buffer.from(blockRawData, "hex"));
-        const blockHeight = block.header.number.toString("hex");
         const stateRoot = block.header.stateRoot.toString("hex");
         
-        return await mysql.getAccount(blockHeight, stateRoot, address);
+        return await mysql.getAccount(stateRoot, address);
     })().then(account => {
         if(account)
         {
