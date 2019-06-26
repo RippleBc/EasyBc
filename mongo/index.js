@@ -18,7 +18,6 @@ module.exports = {
     assert(typeof user === 'string', `mongo initBaseDb, user should be a String, now is ${typeof user}`)
     assert(typeof password === 'string', `mongo initBaseDb, password should be a String, now is ${typeof password}`)
 
-
     mongoose.set('useNewUrlParser', true);
     mongoose.set('useFindAndModify', false);
     mongoose.set('useCreateIndex', true);

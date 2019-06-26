@@ -20,8 +20,8 @@
 	{
 		"host": "localhost",
 		"port": 4406,
-		"user": "root",
-		"password": "root"
+		"user": "blockChain",
+		"password": "blockChain"
 	},
 	"genesis":
 	[
