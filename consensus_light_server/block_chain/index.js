@@ -264,7 +264,7 @@ app.post("/getLastestBlock", function(req, res) {
             return res.json({
                 code: SUCCESS,
                 msg: "",
-                data: block
+                data: block.serialize().toString("hex")
             });
         }
       
