@@ -86,8 +86,7 @@ app.post("/getAccountInfo", function(req, res) {
             return;
         }
 
-        const blockRawData = await blockDb.getBlockByNumber(blockChainHeight);
-        const block = new Block(Buffer.from(blockRawData, "hex"));
+        const block = await blockDb.getBlockByNumber(blockChainHeight);
         const stateRoot = block.header.stateRoot.toString("hex");
 
         // get account info
@@ -233,7 +232,7 @@ app.post("/getBlockByNumber", function(req, res) {
             return res.json({
                 code: SUCCESS,
                 msg: "",
-                data: block
+                data: block.serialize().toString("hex")
             });
         }
        

@@ -144,7 +144,9 @@ class BlockDb
 
         if(result)
         {
-          resolve(Buffer.from(result.data, "hex"))
+          const block = new Block(Buffer.from(result.data, "hex"))
+          
+          resolve(block)
         }
         else
         {

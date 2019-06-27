@@ -25,6 +25,7 @@ class BlockChain
 
   /**
    * @param {Buffer} number
+   * @return {Buffer}
    */
   async getBlockHashByNumber(number)
   {
@@ -35,6 +36,7 @@ class BlockChain
 
   /**
    * @param {Buffer} hash
+   * @return {Block}
    */
   async getBlockByHash(hash) 
   {
@@ -45,22 +47,20 @@ class BlockChain
 
   /**
    * @param {Buffer} number
+   * @return {Block}
    */
   async getBlockByNumber(number)
   {
     assert(Buffer.isBuffer(number), `BlockChain getBlockByNumber, number should be an Buffer, now is ${typeof number}`);
-    
-    const hash = await this.getBlockHashByNumber(number);
-    if(!hash)
-    {
-      return undefined;
-    }
 
-    const block = await this.getBlockByHash(hash); 
+    const block = await this.blockDb.getBlockByNumber(number); 
     
     return block;
   }
 
+  /**
+   * @return {Buffer}
+   */
   async getBlockChainHeight()
   {
     return await this.blockDb.getBlockChainHeight();
