@@ -36,20 +36,6 @@
                     </el-card>
                 </el-col>
             </el-row>
-            <el-row :gutter="20" style="margin-bottom: 20px;">
-                <el-col :span="24">
-                    <el-card shadow="hover">
-                        <ve-line :data="cpuConsume" :resizeable="true"></ve-line>
-                    </el-card>
-                </el-col>
-            </el-row>
-            <el-row :gutter="20" style="margin-bottom: 20px;">
-                <el-col :span="24">
-                    <el-card shadow="hover">
-                        <ve-line :data="memoryConsume" :resizeable="true"></ve-line>
-                    </el-card>
-                </el-col>
-            </el-row>
         </el-col>
     </div>
 </template>
@@ -84,14 +70,6 @@
             timeConsume: {
                 columns: ['createdAt', 'consume'],
                 rows: []
-            },
-            cpuConsume:{
-                columns: ['createdAt', 'consume'],
-                rows: []
-            },
-            memoryConsume:{
-                columns: ['createdAt', 'consume'],
-                rows: []
             }
         }),
         computed: {
@@ -110,7 +88,6 @@
                 {
                     this.getCurrentNode();
 
-                    this.getNodeStatus();
                     this.getTimeConsume();
                     this.getCheatedNodes();
                     this.getTimeoutNodes();
@@ -129,7 +106,6 @@
 
             this.$store.commit('switchNavType', 'node');
 
-            this.getNodeStatus();
             this.getTimeConsume();
             this.getCheatedNodes();
             this.getTimeoutNodes();
@@ -154,31 +130,6 @@
                 const nodeIndex = this.$route.path.split('/')[2];
                 const nodeInfo = this.unl.find(n => nodeIndex == n.id)
                 this.currentNode = nodeInfo;
-            },
-            getNodeStatus() {
-                this.$axios.get("nodeStatus", {
-                    address: this.currentNode.address
-                }).then(res => {
-                    if(res.code !== 0)
-                    {
-                        this.$message.error(res.msg);
-                    }
-                    else
-                    {
-                        this.cpuConsume.rows = res.data.cpus.map(n => {
-                            return {
-                                createdAt: new Date(n.createdAt).toLocaleString(),
-                                consume: n.consume
-                            }
-                        }).reverse();
-                        this.memoryConsume.rows = res.data.memories.map(n => {
-                            return {
-                                createdAt: new Date(n.createdAt).toLocaleString(),
-                                consume: n.consume / 1024 / 1024
-                            }
-                        }).reverse();
-                    }
-                });
             },
             getTimeConsume() {
                 this.$axios.get("timeConsume", {

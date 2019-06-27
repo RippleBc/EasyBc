@@ -29,7 +29,6 @@ app.get('/blocks', checkCookie, (req, res) => {
             hash: lastestBlock.hash().toString('hex'),
             parentHash: lastestBlock.header.parentHash.toString('hex'),
             stateRoot: lastestBlock.header.stateRoot.toString('hex'),
-            transactionsTrie: lastestBlock.header.transactionsTrie.toString('hex'),
             number: lastestBlock.header.number.toString('hex'),
             timestamp: lastestBlock.header.timestamp.toString('hex')
         });
@@ -47,7 +46,6 @@ app.get('/blocks', checkCookie, (req, res) => {
                 hash: block.hash().toString('hex'),
                 parentHash: block.header.parentHash.toString('hex'),
                 stateRoot: block.header.stateRoot.toString('hex'),
-                transactionsTrie: block.header.transactionsTrie.toString('hex'),
                 number: block.header.number.toString('hex'),
                 timestamp: block.header.timestamp.toString('hex')
             });

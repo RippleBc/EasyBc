@@ -44,10 +44,6 @@
                                             <span style="margin: 20px;">{{block.stateRoot}}</span> 
                                         </div>
                                         <div style="display: flex;flex-direction: row;justify-content: start;align-items: center;">
-                                            <strong style="width: 100px;flex-shrink: 0;">交易树</strong>
-                                            <span style="margin: 20px;">{{block.transactionsTrie}}</span>
-                                        </div>
-                                        <div style="display: flex;flex-direction: row;justify-content: start;align-items: center;">
                                             <strong style="width: 100px;flex-shrink: 0;">时间戳</strong>
                                             <span style="margin: 20px;">{{block.timestamp}}</span>
                                         </div>

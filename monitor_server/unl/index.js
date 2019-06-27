@@ -1,6 +1,5 @@
 const checkCookie = require('../user/checkCookie')
 const { SUCCESS, PARAM_ERR, OTH_ERR } = require('../../constant')
-const { GET_RESOURCE_TIME_INTERVAL, MAX_RESOURCE_NUM, UPDATE_NODES_TIME_INTERVAL } = require('../constant')
 const rp = require("request-promise");
 const assert = require("assert");
 
@@ -8,43 +7,6 @@ const app = process[Symbol.for('app')]
 const { Node, Cpu, Memory } = process[Symbol.for('models')]
 const logger = process[Symbol.for('logger')];
 const printErrorStack = process[Symbol.for("printErrorStack")]
-
-var nodes = [] 
-
-setInterval(() => {
-  Node.findAll().then(data => {
-    logger.info("updateNodes success")
-
-    nodes = data;
-  }).catch(e => {
-    printErrorStack(e)
-  });
-}, UPDATE_NODES_TIME_INTERVAL).unref();
-
-setInterval(() => {
-  (async () => {
-    for(let node of nodes.values())
-    {
-      const response = await rp({
-        method: "POST",
-        uri: `${node.host}:${node.port}/status`,
-        json: true // Automatically stringifies the body to JSON
-      });
-
-      if(response.code !== SUCCESS)
-      {
-          await Promise.reject(response.msg) 
-      }
-
-      await Cpu.create({address: node.address, consume: response.data.cpu});
-      await Memory.create({address: node.address, consume: response.data.memory});
-    }
-  })().then(() => {
-    logger.info("getCpuAndMemoryConsume success")
-  }).catch(e => {
-    printErrorStack(e);
-  })
-}, GET_RESOURCE_TIME_INTERVAL).unref();
 
 app.get('/nodes', checkCookie, (req, res) => {
 	Node.findAll().then(nodes => {
@@ -61,7 +23,6 @@ app.get('/nodes', checkCookie, (req, res) => {
     })
   })
 });
-
 
 app.post('/addNode', checkCookie, (req, res) => {
 	const name = req.body.name;
@@ -261,43 +222,6 @@ app.post('/deleteNode', checkCookie, (req, res) => {
       msg: e.toString()
     })
   })
-});
-
-app.get('/nodeStatus', checkCookie, (req, res) => {
-
-  const address = req.query.address;
-
-  (async function(){
-    const cpus = await Cpu.findAll({
-      limit: 10,
-      order: [['id', 'DESC']],
-      where: {
-        address: address
-      }
-    });
-
-    const memories = await Memory.findAll({
-      limit: 10,
-      order: [['id', 'DESC']],
-      where: {
-        address: address
-      }
-    });
-
-    return { cpus, memories };
-  })().then(({ cpus, memories }) => {
-    res.json({
-      code: SUCCESS,
-      data: { cpus, memories }
-    });
-  }).catch(e => {
-    printErrorStack(e)
-
-    res.json({
-      code: PARAM_ERR,
-      msg: e.toString()
-    });
-  });
 });
 
 app.get('/logs', checkCookie, (req, res) => {

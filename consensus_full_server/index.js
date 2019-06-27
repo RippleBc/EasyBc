@@ -24,7 +24,7 @@ const leveldown = require("leveldown");
 const Mysql = require("./mysql");
 
 process[Symbol.for("mysql")] = new Mysql();
-process[Symbol.for("mongo")] = require("../mongo");
+process[Symbol.for("mongo")] = require("../depends/mpt_db_wrapper");
 process[Symbol.for("getStackInfo")] = function(e) {
 
     let err;
