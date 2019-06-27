@@ -12,5 +12,7 @@ consensus_light_server/data/*
 consensus_light_server/logs/*
 consensus_log_parser/data/*
 consensus_log_parser/logs/*
+consensus_transaction_parser/data/*
+consensus_transaction_parser/logs/*
 block_chain_data/*
 .nyc_output/*

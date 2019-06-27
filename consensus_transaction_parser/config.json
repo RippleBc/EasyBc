@@ -1,0 +1,16 @@
+{
+	"mysql":
+	{
+		"host": "localhost",
+		"port": 3306,
+		"user": "root",
+		"password": "root"
+	},
+  "mongo":
+  {
+    "host": "localhost",
+    "port": 4406,
+    "user": "blockChain",
+    "password": "blockChain"
+  }
+}

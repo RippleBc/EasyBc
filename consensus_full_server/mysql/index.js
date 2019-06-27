@@ -2,7 +2,6 @@ const mysqlConfig = require("../config.json").mysql;
 const Transaction = require("../../depends/transaction");
 const utils = require("../../depends/utils");
 const assert = require("assert");
-const transactionModelConfig = require('./transaction');
 const rawTransactionModelConfig = require('./rawTransaction');
 const timeConsumeModelConfig = require('./timeConsume');
 const abnormalNodeModelConfig = require('./abnormalNode');
@@ -31,48 +30,12 @@ class Mysql
 
   async init()
   {
-    this.Transaction = this.sequelize.define(...transactionModelConfig);
     this.RawTransaction = this.sequelize.define(...rawTransactionModelConfig);
     this.TimeConsume = this.sequelize.define(...timeConsumeModelConfig);
     this.AbnormalNode = this.sequelize.define(...abnormalNodeModelConfig);
 
     await this.sequelize.authenticate();
     await this.sequelize.sync();
-  }
-
-  /**
-   * @param {Buffer} number
-   * @param {Transaction} transaction
-   */
-  async saveTransaction(number, transaction)
-  {
-    assert(Buffer.isBuffer(number), `Mysql saveTransaction, number should be an Buffer, now is ${typeof number}`);
-    assert(transaction instanceof Transaction, `Mysql saveTransaction, transaction should be an Transaction Object, now is ${typeof transaction}`);
-
-    await this.Transaction.create({
-      hash: transaction.hash().toString('hex'),
-      number: number.toString('hex'),
-      nonce: transaction.nonce.toString('hex'),
-      from: transaction.from.toString('hex'),
-      to: transaction.to.toString('hex'),
-      value: transaction.value.toString('hex'),
-      data: transaction.data.toString('hex')
-    })
-  }
-
-  /**
-   * @param {Buffer} number
-   * @param {Array/Transaction} transactions
-   */
-  async saveTransactions(number, transactions)
-  {
-    assert(Buffer.isBuffer(number), `Mysql saveTransactions, number should be an Buffer, now is ${typeof number}`);
-    assert(Array.isArray(transactions), `Mysql saveTransactions, transactions should be an Array, now is ${typeof transactions}`);
-
-    for(let i = 0; i < transactions.length; i++)
-    {
-      await this.saveTransaction(number, transactions[i]);
-    }
   }
 
   /**
