@@ -121,8 +121,9 @@
 <script>
 import axios from '../net/axios.js'
 
-const TRANSACTION_STATE_PACKED = 1
-const TRANSACTION_STATE_NOT_EXISTS = 2
+const TRANSACTION_STATE_IN_CACHE = 1;
+const TRANSACTION_STATE_PROCESSING = 2;
+const TRANSACTION_STATE_PACKED = 3;
 
   export default {
     name: 'Send',
@@ -258,7 +259,7 @@ const TRANSACTION_STATE_NOT_EXISTS = 2
           }
         })
       },
-
+      
       getTransactionState: function () {
         axios.get('getTransactionState', {
         	url: this.currentNode.url,
@@ -270,10 +271,15 @@ const TRANSACTION_STATE_NOT_EXISTS = 2
                 title: 'getTransactionState',
                 message: 'transaction has packed'
               });
-            } else if (response.data === TRANSACTION_STATE_NOT_EXISTS) {
+            } else if (response.data === TRANSACTION_STATE_PROCESSING) {
               this.$notify.warn({
                 title: 'getTransactionState',
-                message: 'transaction not packet for now'
+                message: 'transaction is processing'
+              });
+            } else if (response.data === TRANSACTION_STATE_IN_CACHE) {
+              this.$notify.warn({
+                title: 'getTransactionState',
+                message: 'transaction is in cache, waiting to be process'
               });
             } else {
               this.$notify.error({

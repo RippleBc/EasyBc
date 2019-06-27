@@ -1,4 +1,4 @@
-const { QUERY_MAX_LIMIT, SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_PACKED, TRANSACTION_STATE_NOT_EXISTS } = require("../../constant");
+const { QUERY_MAX_LIMIT, SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_IN_CACHE, TRANSACTION_STATE_PROCESSING, TRANSACTION_STATE_PACKED } = require("../../constant");
 const { MAX_TX_TIMESTAMP_LEFT_GAP, MAX_TX_TIMESTAMP_RIGHT_GAP } = require("../constant");
 const Transaction = require("../../depends/transaction");
 const Block = require("../../depends/block");
@@ -144,29 +144,40 @@ app.post("/getTransactionState", function(req, res) {
         });
     }
 
-    mysql.getTransaction(req.body.hash).then(transaction => {
-        if(!transaction)
+    (async () => {
+        const rawTransaction = await mysql.getRawTransaction(req.body.hash)
+        if(rawTransaction)
         {
             return res.json({
                 code: SUCCESS,
                 msg: "",
-                data: TRANSACTION_STATE_NOT_EXISTS
+                data: TRANSACTION_STATE_IN_CACHE
+            }); 
+        }
+
+        const transaction = await mysql.getTransaction(req.body.hash);
+        if(transaction)
+        {
+            return res.json({
+                code: SUCCESS,
+                msg: "",
+                data: TRANSACTION_STATE_PACKED
             });
         }
 
-        res.json({
+        return res.json({
             code: SUCCESS,
             msg: "",
-            data: TRANSACTION_STATE_PACKED
+            data: TRANSACTION_STATE_PROCESSING
         });
-    }).catch(e => {
+    })().catch(e => {
         printErrorStack(e)
 
         res.json({
             code: OTH_ERR,
             msg: e.toString()
         });
-    });;
+    });
 });
 
 app.post("/getTransactions", function(req, res) {

@@ -126,6 +126,22 @@ class Mysql
 
   /**
    * @param {String} hash
+   * @return {String}
+   */
+  async getRawTransaction(hash)
+  {
+    assert(typeof hash === 'string', `Mysql getRawTransaction, hash should be a String, now is ${typeof hash}`)
+
+    return await this.RawTransaction.findOne({
+      where: {
+        hash: hash
+      }
+    })
+  }
+
+
+  /**
+   * @param {String} hash
    * @param {String} tx
    */
   async saveRawTransaction(hash, tx)
