@@ -5,6 +5,9 @@ const assert = require("assert");
 const transactionModelConfig = require('./transaction');
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
+const log4js= require("../logConfig");
+
+const logger = log4js.getLogger("logParse");
 
 const Buffer = utils.Buffer;
 
@@ -43,15 +46,22 @@ class Mysql
     assert(Buffer.isBuffer(number), `Mysql saveTransaction, number should be an Buffer, now is ${typeof number}`);
     assert(transaction instanceof Transaction, `Mysql saveTransaction, transaction should be an Transaction Object, now is ${typeof transaction}`);
 
-    await this.Transaction.create({
-      hash: transaction.hash().toString('hex'),
-      number: number.toString('hex'),
-      nonce: transaction.nonce.toString('hex'),
-      from: transaction.from.toString('hex'),
-      to: transaction.to.toString('hex'),
-      value: transaction.value.toString('hex'),
-      data: transaction.data.toString('hex')
-    })
+    try
+    {
+      await this.Transaction.create({
+        hash: transaction.hash().toString('hex'),
+        number: number.toString('hex'),
+        nonce: transaction.nonce.toString('hex'),
+        from: transaction.from.toString('hex'),
+        to: transaction.to.toString('hex'),
+        value: transaction.value.toString('hex'),
+        data: transaction.data.toString('hex')
+      })
+    }
+    catch(e)
+    {
+      logger.error(`saveTransaction, throw exception ${e}`)
+    }
   }
 
   /**

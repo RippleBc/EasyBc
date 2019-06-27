@@ -37,7 +37,7 @@ module.exports.getBlockNumber = async function()
  */
 module.exports.saveBlockNumber = async function(number)
 {
-	assert(typeof number === 'string', `saveBlockNumber, number should be a String, now is ${typeof number}`)
+	assert(Buffer.isBuffer(number), `saveBlockNumber, number should be an Buffer, now is ${typeof number}`)
 
 	return new Promise((resolve, reject) => {
 		db.put(BLOCK_NUMBER_KEY, number, err => {

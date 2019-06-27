@@ -4,6 +4,9 @@ const { getBlockNumber, saveBlockNumber } = require('./db');
 const log4js= require("./logConfig");
 const assert = require("assert");
 const mongoConfig = require("./config").mongo;
+const utils = require("../depends/utils");
+
+const BN = utils.BN;
 
 const logger = log4js.getLogger("logParse");
 
@@ -25,27 +28,25 @@ process.on("uncaughtException", function(err) {
   await mongo.initBaseDb(mongoConfig.host, mongoConfig.port, mongoConfig.user, mongoConfig.password);
 
 	await run(mongo.generateBlockDb())
-})().catch(e => {
-	logger.fatal(`log parser throw exception, ${e.stack ? e.statck : e.toString("hex")}`);
-	process.exit(1);
-})
+})()
 
 /**
  * @param {BlockDb} blockDb
  */
-async run(blockDb)
+const run = async blockDb =>
 {
 	let blockNumber;
 
+	// get block number which is need to be process
+	blockNumber = await getBlockNumber();
+
+	if(!blockNumber)
+	{
+		blockNumber = Buffer.alloc(1)
+	}
+
 	while(true)
 	{
-		// get block number which is need to be process
-		blockNumber = await getBlockNumber();
-		if(!blockNumber)
-		{
-			blockNumber = Buffer.alloc(0)
-		}
-
 		// fetch block
 		const block = await blockDb.getBlockByNumber(blockNumber);
 
@@ -56,8 +57,8 @@ async run(blockDb)
 			await mysql.saveTransactions(blockNumber, transactions);
 
 			// update block number
-			const newBlockNumber = new BN(blockNumber).addn(1).toBuffer();
-			await saveBlockNumber(newBlockNumber)
+			blockNumber = new BN(blockNumber).addn(1).toBuffer();
+			await saveBlockNumber(blockNumber)
 		}
 		else
 		{
