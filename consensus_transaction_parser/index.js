@@ -70,3 +70,5 @@ const run = async blockDb =>
 		}
 	}
 }
+
+console.log("process.pid: " + process.pid)

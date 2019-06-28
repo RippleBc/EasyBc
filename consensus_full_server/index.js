@@ -97,3 +97,6 @@ process.on("uncaughtException", function(err) {
 
     processor.run();
 })();
+
+
+console.log("process.pid: " + process.pid)
