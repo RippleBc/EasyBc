@@ -346,7 +346,7 @@ class Stage extends AsyncEventEmitter
 				}
 				else
 				{
-					this.logger.warn(`Stage handleMessage, stage: ${this.ripple.stage}, stage state is empty, can not process messages`);
+					this.logger.fatal(`Stage handleMessage, stage: ${this.ripple.stage}, stage state is empty, can not process messages`);
 
 					process.exit(1);
 				}
