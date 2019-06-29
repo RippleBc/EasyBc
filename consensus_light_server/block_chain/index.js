@@ -213,11 +213,14 @@ app.post("/getTransactions", function(req, res) {
         to: req.body.to, 
         beginTime: req.body.beginTime, 
         endTime: req.body.endTime
-    }).then(transactions => {
+    }).then(({count, rows}) => {
         res.json({
             code: SUCCESS,
             msg: "",
-            data: transactions
+            data: {
+                total: count, 
+                transactions: rows
+            }
         });
     }).catch(e => {
         printErrorStack(e)

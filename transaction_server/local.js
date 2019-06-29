@@ -53,15 +53,25 @@ exports.getAccounts = async function(offset)
 }
 
 /**
+ * @param {Boolean} cacheAccount - default is false
  * @return {Object}
  *   @prop {String} address
  *   @prop {String} privateKey 
  */
-exports.generateKeyPiar = async function()
+exports.generateKeyPiar = async function(cacheAccount = false)
 {
 	let privateKey = utils.createPrivateKey();
 	
-	const address = await saveAccount(privateKey);
+	let address;
+	if(cacheAccount)
+	{
+		address = await saveAccount(privateKey);
+	}
+	else
+	{
+		const publicKey = utils.privateToPublic(privateKey);
+		address = utils.publicToAddress(publicKey).toString("hex");
+	}
 
 	return { address, privateKey: privateKey.toString("hex") }
 }
@@ -106,9 +116,13 @@ exports.getFromHistory = async function(offset)
 		order: [['id', 'DESC']]
 	});
 
-	return froms.map(from => {
+	// get addresses
+	let addresses =  froms.map(from => {
 		return from.from;
 	})
+
+	// filter same address
+	return [...new Set(addresses)];
 }
 
 /**
@@ -128,9 +142,13 @@ exports.getToHistory = async function(offset)
 		order: [['id', 'DESC']]
 	})
 
-	return tos.map(to => {
+	// get addresses
+	let addresses =  tos.map(to => {
 		return to.to;
 	})
+
+	// filter same address
+	return [...new Set(addresses)];
 }
 
 /**

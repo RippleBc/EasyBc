@@ -133,7 +133,7 @@ import axios from '../net/axios.js'
 	  			endTime: this.endTime
 	  		}, response => {
 					if (response.code === 0) {
-            this.transactions = response.data
+            this.transactions = response.data.transactions
           } else {
             this.$notify.error({
               title: 'getTransactions',

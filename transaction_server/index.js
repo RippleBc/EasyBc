@@ -96,7 +96,7 @@ const models = process[Symbol.for("models")] = new Models();
   });
 
   app.get("/generateKeyPiar", function(req, res) {
-    local.generateKeyPiar().then(({address, privateKey}) => {
+    local.generateKeyPiar(req.query.cacheAccount).then(({address, privateKey}) => {
       res.send({
           code: SUCCESS,
           data: {
@@ -299,10 +299,10 @@ const models = process[Symbol.for("models")] = new Models();
       });
       return;
     }
-    getTransactions(req.query.url, req.query.offset, req.query.limit, req.query.hash, req.query.from, req.query.to, req.query.beginTime, req.query.endTime).then(transactions => {
+    getTransactions(req.query.url, req.query.offset, req.query.limit, req.query.hash, req.query.from, req.query.to, req.query.beginTime, req.query.endTime).then(({total, transactions}) => {
       res.send({
           code: SUCCESS,
-          data: transactions
+          data: { total, transactions }
       });
     }).catch(e => {
       printErrorStack(e);

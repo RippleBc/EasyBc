@@ -187,7 +187,9 @@ const TRANSACTION_STATE_PACKED = 3;
     	},
 
     	generateKeyPiar: function () {
-    		axios.get('generateKeyPiar', {}, response => {
+    		axios.get('generateKeyPiar', {
+          cacheAccount: true
+        }, response => {
           if (response.code === 0) {
             this.getAccounts()
           } else {

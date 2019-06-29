@@ -116,7 +116,7 @@ class Mysql
     {
       where.to = to;
     }
-    return await this.Transaction.findAll({
+    return await this.Transaction.findAndCountAll({
       where: where,
       order: [['id', 'DESC' ]],
       offset: offset,
