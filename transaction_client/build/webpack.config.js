@@ -15,9 +15,7 @@ module.exports = {
         // 生成的js文件名称
         filename: 'js/[name].[hash:8].js',
         // 生成的chunk名称
-        chunkFilename: 'js/[name].[hash:8].js',
-        // 资源引用路径
-        publicPath: "/dist/"
+        chunkFilename: 'js/[name].[hash:8].js'
     },
     devServer: { 
         contentBase: path.resolve(__dirname, '../dist'),
