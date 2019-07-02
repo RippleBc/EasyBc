@@ -59,7 +59,7 @@
   }
 </script>
 
-<style lang="scss">
+<style lang="scss" type scoped>
 .container
 {
   display: flex;
