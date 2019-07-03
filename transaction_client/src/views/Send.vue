@@ -34,7 +34,7 @@
       <div class="border" style="height: 500px;justify-content:start;align-items:start;padding:20px;margin:20px 20px 20px 0px;">
         <span>账户列表</span>
         <div style="overflow: auto;justify-content: start;">
-          <div v-for="account in accounts">
+          <div v-bind:key="account" v-for="account in accounts">
             <div>
               <p style="cursor:pointer;width:100%;text-align:left;">{{account}}</p>
               <div style="flex-direction:row;justify-content:end;">
@@ -52,7 +52,7 @@
 			<div class="border" style="height: 500px;justify-content:start;align-items:start;padding:20px;margin:20px 20px 20px 0px;">
         <span>发送者记录</span>
         <div style="overflow: auto;justify-content: start;">
-          <div v-for="from in froms">
+          <div v-bind:key="from" v-for="from in froms">
             <div>
               <p style="cursor:pointer;width:100%;text-align:left;" @dblclick="chooseFrom(from)">{{from}}</p>
               <div style="flex-direction:row;justify-content:end;">
@@ -68,7 +68,7 @@
 			<div class="border" style="height: 500px;justify-content:start;align-items:start;padding:20px;margin:20px 0px 20px 0px;">
 				<span>接收者记录</span>
         <div style="overflow: auto;justify-content: start;">
-          <div v-for="to in tos">
+          <div v-bind:key="to" v-for="to in tos">
             <div>
               <p style="cursor:pointer;width:100%;text-align:left;" @dblclick="chooseTo(to)">{{to}}</p>
               <div style="flex-direction:row;justify-content:end;">

@@ -1,6 +1,6 @@
 const path = require('path')
 const HtmlWebpackplugin = require('html-webpack-plugin');
-const VueLoaderPlugin = require('vue-loader/lib/plugin');
+const VueLoaderPlugin = require('vue-loader/lib/plugin')
 
 module.exports = {
     // 指定打包模式
@@ -21,19 +21,26 @@ module.exports = {
         contentBase: path.resolve(__dirname, '../dist'),
         compress: true,
         hot: true,
-        port: 8088
+        port: 8080,
+        proxy: {
+            '/': {
+                target: 'http://127.0.0.1:8082/',
+                changeOrigin: true,
+                ws: false,
+                pathRewrite: {
+                    '^/': '/',
+                },
+            }
+        }
     },
     module: {
         rules: [
             {   // 将js或者jsx文件编译为es5
                 test: /\.jsx?$/,
                 exclude: /node_modules/,
-                use: {
-                    loader: 'babel-loader',
-                    options: {
-                        presets:['@babel/preset-env']
-                    }
-                }
+                use: [{
+                    loader: 'babel-loader'
+                }]
             },
             {
                 // 编译vue模版

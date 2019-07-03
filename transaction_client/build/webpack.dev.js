@@ -3,7 +3,7 @@ const webpackConfig = require('./webpack.config')
 const webpack = require('webpack')
 module.exports = merge(webpackConfig, {
   mode: 'development',
-  devtool: 'cheap-module-eval-source-map',
+  devtool: 'source-map',
   module: {
     rules: [{
         test: /\.(css|scss|sass)$/,

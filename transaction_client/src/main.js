@@ -3,7 +3,9 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 import './registerServiceWorker'
-import { TableColumn, Table, DatePicker, Dialog, MessageBox, Card, Button, Select, Input, Notification, Menu, Submenu, MenuItemGroup, MenuItem } from 'element-ui';
+import '~/../../web_depends/assets/css/theme-green/index.css'
+
+import { TableColumn, Table, DatePicker, Dialog, Card, Button, Select, Input, Notification, Menu, Submenu, MenuItemGroup, MenuItem } from 'element-ui';
 
 Vue.use(TableColumn);
 Vue.use(Table);
