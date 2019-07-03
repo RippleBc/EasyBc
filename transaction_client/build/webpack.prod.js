@@ -29,7 +29,7 @@ module.exports = merge(webpackConfig, {
   module: {
     rules: [
       {
-        test: /\.(scss|sass)$/,
+        test: /\.(css|scss|sass)$/,
         use: [
           {
             loader: MiniCssExtractPlugin.loader
@@ -46,7 +46,10 @@ module.exports = merge(webpackConfig, {
             loader: 'sass-loader'
           },
           {
-            loader: 'postcss-loader'
+            loader: 'postcss-loader',
+            options: {
+              plugins: [require('autoprefixer')]
+            }
           }
         ]
       },

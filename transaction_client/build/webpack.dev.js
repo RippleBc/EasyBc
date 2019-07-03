@@ -24,7 +24,10 @@ module.exports = merge(webpackConfig, {
             loader: 'sass-loader'
           },
           {
-            loader: 'postcss-loader'
+            loader: 'postcss-loader',
+            options: {
+              plugins: [require('autoprefixer')]
+            }
           }
         ]
       },

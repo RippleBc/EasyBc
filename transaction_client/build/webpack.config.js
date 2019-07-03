@@ -5,10 +5,15 @@ const VueLoaderPlugin = require('vue-loader/lib/plugin')
 module.exports = {
     // 指定打包模式
     mode: 'development',
-    entry: {
-        // 配置入口文件
-        main: path.resolve(__dirname, '../src/main.js')
-    },
+    entry: [
+        // Babel默认只转换新的JavaScript句法（syntax），而不转换新的API.
+        // 比如Iterator、Generator、Set、Maps、Proxy、Reflect、Symbol、Promise等全局对象，
+        // 以及一些定义在全局对象上的方法（比如Object.assign）都不会转码.
+        // 举例来说，ES6在Array对象上新增了Array.from方法, Babel就不会转码这个方法.
+        // 如果想让这个方法运行，必须使用babel-polyfill，为当前环境提供一个垫片。
+        "babel-polyfill",
+        path.resolve(__dirname, '../src/main.js')
+    ],
     output: {
         // 配置打包文件输出的目录
         path: path.resolve(__dirname, '../dist'),
@@ -39,7 +44,11 @@ module.exports = {
                 test: /\.jsx?$/,
                 exclude: /node_modules/,
                 use: [{
-                    loader: 'babel-loader'
+                    loader: 'babel-loader',
+                    options: {
+                        presets: ['@babel/preset-env'],
+                        plugins: ['syntax-dynamic-import']
+                    }
                 }]
             },
             {
