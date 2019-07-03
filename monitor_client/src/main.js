@@ -6,8 +6,9 @@ import store from './store'
 import './registerServiceWorker'
 import axios from './net/axios';
 import ElementUI from 'element-ui';
-import './assets/css/icon.css';
-import "babel-polyfill";
+import '~/../../web_depends/assets/css/theme-green/index.css'
+import "~/../../web_depends/assets/css/main.css";
+import "~/../../web_depends/assets/css/color-green.css";
 
 Vue.use(VCharts)
 Vue.config.productionTip = false

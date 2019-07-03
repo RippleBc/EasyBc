@@ -1,0 +1,16 @@
+{
+    "plugins": [
+        [
+            // 在转换ES2015语法为ECMAScript5的语法时，babel 需要一些辅助函数例如_extend.
+            // babel默认会将这些辅助函数内联到每一个js文件里，这样文件多的时候，项目就会很大.
+            // transform-runtime 来将这些辅助函数“搬”到一个单独的模块babel-runtime中，这样做能减小项目文件的大小。
+            "transform-runtime",
+            {
+            "helpers": false,
+            "polyfill": false,
+            "regenerator": true,
+            "moduleName": "babel-runtime"
+            }
+        ]
+    ]
+}

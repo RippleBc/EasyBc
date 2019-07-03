@@ -17,6 +17,7 @@
     "cookie": "^0.3.1",
     "cookie-parser": "^1.4.4",
     "cors": "^2.8.5",
+    "echarts": "^4.2.1",
     "element-ui": "^2.10.1",
     "express": "^4.16.4",
     "flow-stoplight": "^1.0.0",
@@ -44,6 +45,7 @@
     "sequelize": "^5.7.6",
     "strip-hex-prefix": "^1.0.0",
     "underscore": "^1.9.1",
+    "v-charts": "^1.19.0",
     "vue": "^2.6.10",
     "vue-router": "^3.0.6",
     "vuex": "^3.1.1"

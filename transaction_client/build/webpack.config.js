@@ -16,7 +16,7 @@ module.exports = {
     ],
     output: {
         // 配置打包文件输出的目录
-        path: path.resolve(__dirname, '../dist'),
+        path: path.resolve(__dirname, '../../transaction_server/dist'),
         // 生成的js文件名称
         filename: 'js/[name].[hash:8].js',
         // 生成的chunk名称
