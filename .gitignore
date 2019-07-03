@@ -4,8 +4,10 @@ depends/test/data2/*
 depends/test/data3/*
 monitor_server/data/*
 monitor_server/logs/*
+monitor_server/dist/*
 transaction_server/data/*
 transaction_server/logs/*
+transaction_server/dist/*
 consensus_full_server/data/*
 consensus_full_server/logs/*
 consensus_light_server/data/*
