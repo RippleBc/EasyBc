@@ -1,8 +1,7 @@
 module.exports = function (api) {
   api.cache(true);
 
-  const presets = [ 
-    "@vue/app",
+  const presets = [
     ["env", {
       targets: {
         browsers: [ "ie >= 8", "chrome >= 62" ]
