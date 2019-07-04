@@ -1,32 +1,23 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import bus from './components/bus';
 
 Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
-  	currentNode: {
-  		id: 0,
-      name: "",
-      address: "",
-			host: "",
-			port: 0,
-			remarks: ""
-  	},
     unl: []
   },
   mutations: {
-  	switchCurrentNode(state, node)
-  	{
-  		state.currentNode = node;
-  	},
     getUnl(state, unl)
     {
       state.unl = unl;
+
+      bus.$emit('fetchUnlFinish')
     }
   },
   actions: {
-    getUnl(context, vueInstance){
+    getUnl(context){
       const loading = Vue.prototype.$loading({
         lock: true,
         text: 'Loading',

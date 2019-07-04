@@ -230,7 +230,6 @@
             },
             checkNodeDetail(row)
             {
-                this.$store.commit('switchCurrentNode', row)
                 this.$router.push(`dashboard/${row.id}`);
             },
             //

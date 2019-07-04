@@ -72,14 +72,11 @@
                     if(this.tagsList.length >= MAX_TAGS_NUM){
                         this.tagsList.shift();
                     }
-                    
+
                     this.tagsList.push({
                         title: route.meta.title,
-                        path: route.fullPath,
-                        name: route.matched[1].components.default.name
+                        path: route.fullPath
                     })
-
-                    bus.$emit('tags', this.tagsList);
                 }
             },
             handleTags(command){

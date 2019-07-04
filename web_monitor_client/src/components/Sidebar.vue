@@ -64,6 +64,8 @@
     ];
 
     import bus from './bus';
+    import { mapState } from 'vuex';
+
     export default {
         data() {
             return {
@@ -72,6 +74,9 @@
                 navType: 'main',
                 items: mainNavItems
             }
+        },
+        computed: {
+            ...mapState(['unl'])
         },
         watch:{
             $route: function() {
@@ -97,15 +102,21 @@
                     case 'nodeDetail':
                     case 'warnRule':
                     {
+                        // get current node
+                        const nodeIndex = this.$route.path.split('/')[2];
+                        const nodeInfo = this.unl.find(n => nodeIndex == n.id)
+                        const currentNode = nodeInfo;
+
+                        //
                         this.items = nodeNavItems.map(item => {
                             const eles = item.index.split('/')
-                            item.index = `/${eles[1]}/${this.$store.state.currentNode.id}`
+                            item.index = `/${eles[1]}/${currentNode.id}`
                         
                             return item;
                         });;
                         
                         this.navType = 'node';
-                        this.onRoutes =  `/${navName}/${this.$store.state.currentNode.id}`;
+                        this.onRoutes =  `/${navName}/${currentNode.id}`;
                     }
                     break;
                     default:

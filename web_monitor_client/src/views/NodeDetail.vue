@@ -76,54 +76,15 @@
             ...mapState(['unl'])
         },
         created(){
-            if(this.currentNode === undefined)
-            {
-                this.getCurrentNode();
-            }
-        },
-        watch: {
-            $route(newVal, oldVal)
-            {
-                if(!this.switch)
-                {
-                    this.getCurrentNode();
-
-                    this.getTimeConsume();
-                    this.getCheatedNodes();
-                    this.getTimeoutNodes();
-
-                    this.handleListener();
-                }
-
-                this.switch = false;
-            }
-        },
-        
-        activated(){
-            this.switch = true;
-
             this.getCurrentNode();
-
+            
             this.getTimeConsume();
             this.getCheatedNodes();
             this.getTimeoutNodes();
-
-            this.handleListener();
-        },
-
-        deactivated(){
-            bus.$off('collapse', this.renderCharts);
         },
 
         methods:
         {
-            handleListener(){
-                bus.$on('collapse', this.renderCharts);
-            },
-
-            renderCharts(){
-                
-            },
             getCurrentNode(){
                 const nodeIndex = this.$route.path.split('/')[2];
                 const nodeInfo = this.unl.find(n => nodeIndex == n.id)
@@ -135,7 +96,7 @@
                     beginTime: Date.now() - 2 * 60 * 60 * 1000,
                     endTime: Date.now(),
                     offset: 0,
-                    limit: 499
+                    limit: 100
                 }).then(res => {
                     if(res.code !== 0)
                     {

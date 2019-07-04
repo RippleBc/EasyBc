@@ -82,47 +82,40 @@
         computed: {
             ...mapState(['unl'])
         },
-        watch:
-        {
-            unl: function(val, oldVal)
-            {
+        created() {
+            bus.$on('fetchUnlFinish', () => {
                 const nodeInfoSet = [];
-
                 
-                for(let node of this.$store.state.unl)
+                for(let node of this.unl)
                 {
                     this.$axios.get('/blocks', {
                         url: `${node.host}:${node.port}`
                     }).then(res => {
-                        for(let index of res.data.keys())
+                        if(res.code !== 0)
                         {
-                            res.data[index].show = false;
+                            this.$message.error(res.msg);
                         }
+                        else
+                        {
+                            for(let index of res.data.keys())
+                            {
+                                res.data[index].show = false;
+                            }
 
-                        let nodeInfo = {...{
-                            id: node.id,
-                            name: node.name,
-                            host: node.host,
-                            port: node.port
-                        }, ...{blocks: res.data}}
+                            let nodeInfo = {...{
+                                id: node.id,
+                                name: node.name,
+                                host: node.host,
+                                port: node.port
+                            }, ...{blocks: res.data}}
 
-                        nodeInfoSet.push(nodeInfo);
+                            nodeInfoSet.push(nodeInfo);
 
-                        this.nodes = nodeInfoSet;
+                            this.nodes = nodeInfoSet;
+                        }
                     });
                 }
-            }
-        },
-        created() {
-            
-        },
-
-        activated(){
-            
-        },
-
-        methods: {
-            
+            })
         }
     }
 </script>

@@ -100,15 +100,6 @@
             vMessages
         },
         methods: {
-            deleteSelectedWarningMessage(){
-                
-            },
-            deleteAllWarningMessage(){
-
-            },
-            deleteWarningMessage(warningMessage){
-                
-            },
             getCurrentNode(){
                 const nodeIndex = this.$route.path.split('/')[2];
                 const nodeInfo = this.unl.find(n => nodeIndex == n.id)
@@ -120,7 +111,7 @@
                     url: `${this.currentNode.host}:${this.currentNode.port}`,
                     type: type,
                     offset: 0,
-                    limit: 499
+                    limit: 100
                 }).then(res => {
                     if(res.code !== 0)
                     {
@@ -163,43 +154,13 @@
             }
         },
 
-        created() {
-            if(this.currentNode === undefined)
-            {
-                this.getCurrentNode();
-            }
-        },
-
-        watch: {
-            $route(newVal, oldVal){
-                if(!this.switch)
-                {
-                    this.getCurrentNode();
-
-                    this.getLogs('INFO')
-                    this.getLogs('WARNING')
-                    this.getLogs('ERROR')
-                    this.getLogs('FATAL')
-                }
-
-                this.switch = false;
-            }
-        },
-
-        activated(){
-            this.switch = true;
-
-            // when the component is activated again, init data again
+        created() {  
             this.getCurrentNode();
 
             this.getLogs('INFO')
             this.getLogs('WARNING')
             this.getLogs('ERROR')
             this.getLogs('FATAL')
-        },
-        
-        deactivated(){
-            bus.$off('collapse', this.renderCharts);
         }
     }
 
