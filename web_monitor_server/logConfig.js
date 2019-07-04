@@ -8,19 +8,19 @@ log4js.configure({
         },
         common: {
             type: "dateFile",
-            filename: "monitor_server/logs/common_log/",
+            filename: "web_monitor_server/logs/common_log/",
             pattern: "common-yyyy-MM-dd.log",
             alwaysIncludePattern: true
         },
         err: {
             type: "dateFile",
-            filename: "monitor_server/logs/err_log/",
+            filename: "web_monitor_server/logs/err_log/",
             pattern: "err-yyyy-MM-dd.log",
             alwaysIncludePattern: true
         },
         db: {
             type: "dateFile",
-            filename: "monitor_server/logs/db_log/",
+            filename: "web_monitor_server/logs/db_log/",
             pattern: "db-yyyy-MM-dd.log",
             alwaysIncludePattern: true
         }
