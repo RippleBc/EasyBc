@@ -111,16 +111,14 @@
                         this.nodes = nodeInfoSet;
                     });
                 }
-            
-                
             }
         },
         created() {
-            this.$store.commit('switchNavType', 'main');
+            
         },
 
         activated(){
-            this.$store.commit('switchNavType', 'main');
+            
         },
 
         methods: {

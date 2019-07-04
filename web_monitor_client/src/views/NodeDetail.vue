@@ -104,8 +104,6 @@
 
             this.getCurrentNode();
 
-            this.$store.commit('switchNavType', 'node');
-
             this.getTimeConsume();
             this.getCheatedNodes();
             this.getTimeoutNodes();

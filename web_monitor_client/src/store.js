@@ -5,10 +5,10 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
-  	navType: 'main',
   	currentNode: {
-  		index: 0,
-			name: "",
+  		id: 0,
+      name: "",
+      address: "",
 			host: "",
 			port: 0,
 			remarks: ""
@@ -16,10 +16,6 @@ export default new Vuex.Store({
     unl: []
   },
   mutations: {
-  	switchNavType(state, type)
-  	{
-  		state.navType = type;
-  	},
   	switchCurrentNode(state, node)
   	{
   		state.currentNode = node;

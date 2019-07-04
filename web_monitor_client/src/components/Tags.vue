@@ -78,8 +78,9 @@
                         path: route.fullPath,
                         name: route.matched[1].components.default.name
                     })
+
+                    bus.$emit('tags', this.tagsList);
                 }
-                bus.$emit('tags', this.tagsList);
             },
             handleTags(command){
                 command === 'other' ? this.closeOther() : this.closeAll();

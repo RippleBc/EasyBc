@@ -131,6 +131,8 @@
         created() {
             this.tableData = this.nodesInfo;
         },
+        activated() {
+        },
         watch: {
             select_word: function(val, oldVal)
             {

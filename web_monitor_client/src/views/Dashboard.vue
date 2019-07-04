@@ -192,8 +192,6 @@
             // when the component is activated again, init data again
             this.getCurrentNode();
 
-            this.$store.commit('switchNavType', 'node');
-
             this.getLogs('INFO')
             this.getLogs('WARNING')
             this.getLogs('ERROR')

@@ -120,6 +120,8 @@
         created() {
             this.getData();
         },
+        activated() {
+        },
         watch: {
             select_word: function(val, oldVal)
             {
