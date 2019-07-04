@@ -183,6 +183,11 @@ module.exports.getTransactions = async function(url, offset, limit, hash, from, 
 		options.body.endTime = parseInt(endTime)
 	}
 
+	if(options.body.beginTime === undefined || options.body.beginTime === null || options.body.beginTime === "")
+	{
+		options.body.beginTime = 0;
+	}
+
 	const promise = new Promise((resolve, reject) => {
 		rp(options).then(response => {
 			if(response.code !== SUCCESS)
