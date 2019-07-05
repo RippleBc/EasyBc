@@ -48,9 +48,6 @@
 </template>
 
 <script>
-    import bus from '../components/bus';
-    import { mapState } from 'vuex'
-
     export default {
         name: 'warnRule',
         data(){
@@ -64,21 +61,12 @@
                 }
             }
         },
-        computed:{
-            ...mapState(['unl'])
-        },
         created(){
-            this.getCurrentNode();
-        },
-        activated(){
-            this.getCurrentNode();
+            const nodeIndex = this.$route.path.split('/')[2];
+            const nodeInfo = this.$store.state.unl.find(n => nodeIndex == n.id)
+            this.currentNode = nodeInfo;
         },
         methods: {
-            getCurrentNode(){
-                const nodeIndex = this.$route.path.split('/')[2];
-                const nodeInfo = this.unl.find(n => nodeIndex == n.id)
-                this.currentNode = nodeInfo;
-            },
             onSubmit(){
 
             }

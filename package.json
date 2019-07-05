@@ -84,9 +84,12 @@
     "webpack-merge": "^4.2.1"
   },
   "scripts": {
-    "consensus_server": "pm2 start consensus_server/index.js --no-autorestart --name=consensus",
-    "transaction_server": "pm2 start transaction_server/index.js --no-autorestart --name=transaction",
-    "monitor_server": "pm2 start monitor_server/index.js --no-autorestart --name=monitor",
+    "dev_transaction_client": "webpack-dev-server --progress --config ./web_transaction_client/build/webpack.dev.js",
+    "build_transaction_client": "webpack --config ./web_transaction_client/build/webpack.prod.js",
+    "transaction_server": "pm2 start ./web_transaction_server/index.js --name=transaction",
+    "dev_monitor_client": "webpack-dev-server --progress --config ./web_monitor_client/build/webpack.dev.js",
+    "build_monitor_client": "webpack --config ./web_monitor_client/build/webpack.prod.js",
+    "monitor_server": "pm2 start ./web_monitor_server/index.js --name=monitor",
     "test": "mocha depends/test/account.js && mocha depends/test/transaction.js && mocha depends/test/block.js && mocha depends/test/cache.js && mocha depends/test/stateManager.js && mocha depends/test/runBlockChain.js && mocha depends/test/net.js"
   },
   "keywords": [

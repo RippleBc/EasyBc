@@ -36,7 +36,7 @@
 					</el-date-picker>
 					
   			</div>
-  			<div style="flex-direction: row; justify-content: end;">
+  			<div style="flex-direction: row; justify-content: flex-end;">
   				<el-button type="info" @click="search()">搜索</el-button>
   			</div>
     	</div>

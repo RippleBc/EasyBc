@@ -82,10 +82,18 @@
         computed: {
             ...mapState(['unl'])
         },
+        watch: {
+            unl: function() {
+                this.getNodesBlocksInfo()
+            }
+        },
         created() {
-            bus.$on('fetchUnlFinish', () => {
+            this.getNodesBlocksInfo()
+        },
+        methods: {
+            getNodesBlocksInfo() {
                 const nodeInfoSet = [];
-                
+            
                 for(let node of this.unl)
                 {
                     this.$axios.get('/blocks', {
@@ -114,8 +122,8 @@
                             this.nodes = nodeInfoSet;
                         }
                     });
-                }
-            })
+                } 
+            }
         }
     }
 </script>

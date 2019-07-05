@@ -44,8 +44,6 @@
             bus.$on('messages', val => {
                 messages = val
             });
-
-            this.$store.dispatch('getUnl');
         }
     }
 </script>

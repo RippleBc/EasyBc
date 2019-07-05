@@ -91,9 +91,18 @@
         watch: {
             $route(newValue, oldValue){
                 this.setTags(newValue);
+            },
+            tagsList(newValue, oldValue)
+            {
+                sessionStorage.setItem("tagsList", JSON.stringify(this.tagsList))
             }
         },
         created(){
+            // get cached tags list
+            const cachedTagsList = JSON.parse(sessionStorage.getItem("tagsList"));
+            this.tagsList =  cachedTagsList || [];
+
+            // set new tags
             this.setTags(this.$route);
         }
     }

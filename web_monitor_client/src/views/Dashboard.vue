@@ -73,14 +73,11 @@
 
 <script>
     import vMessages from '../components/Messages.vue'
-    import bus from '../components/bus';
-    import { mapState } from 'vuex';
 
     export default {
         name: 'dashboard',
         data() {
             return {
-                switch: false,
                 type: 'INFO',
                 infoLogsCount: 0,
                 infoLogs: [],
@@ -93,18 +90,10 @@
                 currentNode: undefined,
             }
         },
-        computed: {
-            ...mapState(['unl'])
-        },
         components:{
             vMessages
         },
         methods: {
-            getCurrentNode(){
-                const nodeIndex = this.$route.path.split('/')[2];
-                const nodeInfo = this.unl.find(n => nodeIndex == n.id)
-                this.currentNode = nodeInfo;
-            },
             getLogs(type)
             {
                 this.$axios.get('/logs', {
@@ -150,12 +139,13 @@
                         });
                     }
                 })
-
             }
         },
 
-        created() {  
-            this.getCurrentNode();
+        created() {
+            const nodeIndex = this.$route.path.split('/')[2];
+            const nodeInfo = this.$store.state.unl.find(n => nodeIndex == n.id)
+            this.currentNode = nodeInfo;
 
             this.getLogs('INFO')
             this.getLogs('WARNING')

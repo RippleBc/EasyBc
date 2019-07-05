@@ -9,11 +9,9 @@ export default new Vuex.Store({
     unl: []
   },
   mutations: {
-    getUnl(state, unl)
+    setUnl(state, unl)
     {
       state.unl = unl;
-
-      bus.$emit('fetchUnlFinish')
     }
   },
   actions: {
@@ -32,7 +30,7 @@ export default new Vuex.Store({
         }
         else
         {
-          context.commit('getUnl', res.data)
+          context.commit('setUnl', res.data)
         }
         
       }).catch(err => {

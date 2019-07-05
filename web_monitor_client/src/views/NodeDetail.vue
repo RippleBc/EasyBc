@@ -41,13 +41,9 @@
 </template>
 
 <script>
-    import bus from '../components/bus';
-    import { mapState } from 'vuex';
-
     export default {
         name: 'nodeDetail',
         data: () => ({
-            switch: false,
             currentNode: undefined,
             timeoutNodesData:{
                 columns: ['address', 'times', 'frequency'],
@@ -56,7 +52,7 @@
             timeoutNodesSettings:{
                 axisSite: { right: ['超时频率'] },
                 yAxisType: ['normal', 'normal'],
-                yAxisName: ['超时次数', '超时频率/小时                               ']
+                yAxisName: ['超时次数', '超时频率/小时']
             },
             cheatedNodesData:{
                 columns: ['address', 'times', 'frequency'],
@@ -65,18 +61,17 @@
             cheatedNodesSettings:{
                 axisSite: { right: ['作弊频率'] },
                 yAxisType: ['normal', 'normal'],
-                yAxisName: ['作弊次数', '作弊频率/小时                                ']
+                yAxisName: ['作弊次数', '作弊频率/小时']
             },
             timeConsume: {
                 columns: ['createdAt', 'consume'],
                 rows: []
             }
         }),
-        computed: {
-            ...mapState(['unl'])
-        },
         created(){
-            this.getCurrentNode();
+            const nodeIndex = this.$route.path.split('/')[2];
+            const nodeInfo = this.$store.state.unl.find(n => nodeIndex == n.id)
+            this.currentNode = nodeInfo;
             
             this.getTimeConsume();
             this.getCheatedNodes();
@@ -85,11 +80,6 @@
 
         methods:
         {
-            getCurrentNode(){
-                const nodeIndex = this.$route.path.split('/')[2];
-                const nodeInfo = this.unl.find(n => nodeIndex == n.id)
-                this.currentNode = nodeInfo;
-            },
             getTimeConsume() {
                 this.$axios.get("timeConsume", {
                     url: `${this.currentNode.host}:${this.currentNode.port}`,

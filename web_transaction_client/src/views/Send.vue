@@ -25,7 +25,7 @@
           <span  style="width:100px;">值</span>
           <el-input v-model="value" placeholder="请输入值"/>
         </div>
-        <div style="flex-direction:row;justify-content:end;margin:20px 20px 20px 0px;">
+        <div style="flex-direction:row;justify-content:flex-end;margin:20px 20px 20px 0px;">
           <el-button type="primary" @click="sendTransaction">发送交易</el-button>
         </div>
       </div>
@@ -33,11 +33,11 @@
     <div style="flex-direction:row;">
       <div class="border" style="height: 500px;justify-content:start;align-items:start;padding:20px;margin:20px 20px 20px 0px;">
         <span>账户列表</span>
-        <div style="overflow: auto;justify-content: start;">
+        <div style="overflow: auto;justify-content: flex-start;">
           <div v-bind:key="account" v-for="account in accounts">
             <div>
               <p style="cursor:pointer;width:100%;text-align:left;">{{account}}</p>
-              <div style="flex-direction:row;justify-content:end;">
+              <div style="flex-direction:row;justify-content:flex-start;">
                 <el-button type="primary" @click="getTransactions(account)">获取交易记录</el-button>
                 <el-button type="primary" @click="getAccountInfo(account)">获取账户信息</el-button>
                 <el-button type="primary" @click="getPrivateKey(account)">获取私钥</el-button>
@@ -51,11 +51,11 @@
 		<div style="flex-direction:row;">
 			<div class="border" style="height: 500px;justify-content:start;align-items:start;padding:20px;margin:20px 20px 20px 0px;">
         <span>发送者记录</span>
-        <div style="overflow: auto;justify-content: start;">
+        <div style="overflow: auto;justify-content: flex-start;">
           <div v-bind:key="from" v-for="from in froms">
             <div>
               <p style="cursor:pointer;width:100%;text-align:left;" @dblclick="chooseFrom(from)">{{from}}</p>
-              <div style="flex-direction:row;justify-content:end;">
+              <div style="flex-direction:row;justify-content:flex-start;">
                 <el-button type="primary" @click="getTransactions(from)">获取交易记录</el-button>
                 <el-button type="primary" @click="getAccountInfo(from)">获取账户信息</el-button>
                 <el-button type="primary" @click="getPrivateKey(from)">获取私钥</el-button>
@@ -67,11 +67,11 @@
 			</div>
 			<div class="border" style="height: 500px;justify-content:start;align-items:start;padding:20px;margin:20px 0px 20px 0px;">
 				<span>接收者记录</span>
-        <div style="overflow: auto;justify-content: start;">
+        <div style="overflow: auto;justify-content:flex-start;">
           <div v-bind:key="to" v-for="to in tos">
             <div>
               <p style="cursor:pointer;width:100%;text-align:left;" @dblclick="chooseTo(to)">{{to}}</p>
-              <div style="flex-direction:row;justify-content:end;">
+              <div style="flex-direction:row;justify-content:flex-start;">
                 <el-button type="primary" @click="getTransactions(to)">获取交易记录</el-button>
                 <el-button type="primary" @click="getAccountInfo(to)">获取账户信息</el-button>
                 <el-button type="primary" @click="getPrivateKey(to)">获取私钥</el-button>

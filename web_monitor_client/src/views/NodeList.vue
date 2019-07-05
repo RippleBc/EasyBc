@@ -4,7 +4,7 @@
             <div class="handle-box">
                 <el-input v-model="select_word" placeholder="筛选关键词" class="handle-input mr10"></el-input>
                 <el-button type="primary" @click="search">服务器筛选</el-button>
-                <el-button type="primary" @click="delAll">批量删除</el-button>
+                <el-button type="primary" @click="delBatch">批量删除</el-button>
                 <el-button type="primary" class="mr10" @click="addVisible=true">新增节点</el-button>
             </div>
             <el-table :data="pageData" border class="table" @selection-change="handleSelectionChange">
@@ -95,7 +95,7 @@
             <div class="del-dialog-cnt">删除不可恢复，是否确定删除？</div>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="delVisible=false">取 消</el-button>
-                <el-button type="primary" @click="deleteRow">确 定</el-button>
+                <el-button type="primary" @click="saveDelete">确 定</el-button>
             </span>
         </el-dialog>
     </div>
@@ -129,20 +129,18 @@
             }
         },
         created() {
-            this.tableData = this.nodesInfo;
-        },
-        activated() {
+            this.tableData = this.unl;
         },
         watch: {
             select_word: function(val, oldVal)
             {
                 if(oldVal !== '' && val === '')
                 {
-                    this.tableData = this.nodesInfo;
+                    this.tableData = this.unl;
                 }
             },
 
-            nodesInfo: function(val, oldVal)
+            unl: function(val, oldVal)
             {
                 this.tableData = val;
                 this.search();
@@ -154,17 +152,11 @@
                 return this.tableData.slice(this.pageSize * (this.cur_page - 1), this.pageSize * this.cur_page)
             },
 
-            ...mapState({
-                nodesInfo: state => state.unl
-            })
-
+            ...mapState(['unl'])
         },
         methods: {
-            handleCurrentChange(page) {
-                this.cur_page = page;
-            },
             search() {
-                this.tableData = this.nodesInfo.filter(data => {
+                this.tableData = this.unl.filter(data => {
                     if(data.name.includes(this.select_word))
                     {
                         return true;
@@ -189,6 +181,9 @@
                     return false;
                 })
             },
+            handleCurrentChange(page) {
+                this.cur_page = page;
+            },
             handleEdit(row) {
                 this.currentHandleNode = row;
                 this.editVisible = true;
@@ -196,8 +191,15 @@
             handleDelete(row) {
                 this.currentHandleNode = row;
                 this.delVisible = true;
+            },          
+            handleSelectionChange(val) {
+                this.multipleSelection = val;
             },
-            delAll() {
+            checkNodeDetail(row)
+            {
+                this.$router.push(`dashboard/${row.id}`);
+            },
+            delBatch() {
                 const errMsgs = [];
 
                 (async () => {
@@ -225,14 +227,6 @@
                     this.multipleSelection = [];
                 });
             },
-            handleSelectionChange(val) {
-                this.multipleSelection = val;
-            },
-            checkNodeDetail(row)
-            {
-                this.$router.push(`dashboard/${row.id}`);
-            },
-            //
             saveAdd() {
                 this.addVisible = false;
 
@@ -250,7 +244,6 @@
                     this.$message.error(err);
                 });
             },
-            // 保存编辑
             saveEdit() {
                 this.editVisible = false;
                 
@@ -268,8 +261,7 @@
                     this.$message.error(err);
                 });
             },
-            // 确定删除
-            deleteRow(){
+            saveDelete(){
                 this.delVisible = false;
 
                 this.$axios.post('/deleteNode', this.currentHandleNode).then(res => {

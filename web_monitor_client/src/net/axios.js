@@ -1,5 +1,19 @@
 import axios from 'axios'
-import { host, port } from '../config.json'
+import developmentConfig from '../configs/development.json'
+import productionConfig from '../configs/production.json'
+
+var host;
+var port;
+
+if(process.env.NODE_ENV === 'development')
+{
+  ({ host, port } = developmentConfig)
+}
+
+if(process.env.NODE_ENV === 'production')
+{
+  ({ host, port } = productionConfig)
+}
 
 let http = axios.create({
   baseURL: `http://${host}:${port}`,

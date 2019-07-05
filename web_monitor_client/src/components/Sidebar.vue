@@ -3,20 +3,20 @@
         <el-menu class="sidebar-el-menu" :default-active="onRoutes" :collapse="collapse" unique-opened router>
             <template v-for="item in items">
                 <template v-if="item.subs">
-                    <el-submenu :index="item.index">
+                    <el-submenu v-bind:key="item.index" :index="item.index">
                         <template slot="title">
                             <i :class="item.icon"></i>
                             <span>{{ item.title }}</span>
                         </template>
                         <template v-for="subItem in item.subs">
-                            <el-menu-item :index="subItem.index">
+                            <el-menu-item v-bind:key="subItem.index" :index="subItem.index">
                                 <span>{{ subItem.title }}</span>
                             </el-menu-item>
                         </template>
                     </el-submenu>
                 </template>
                 <template v-else>
-                    <el-menu-item :index="item.index">
+                    <el-menu-item v-bind:key="item.index" :index="item.index">
                         <i :class="item.icon"></i>
                         <span slot="title">{{ item.title }}</span>
                     </el-menu-item>
@@ -80,6 +80,20 @@
         },
         watch:{
             $route: function() {
+                this.updateNavigation()
+            }
+        },
+        created(){
+            // 通过 Event Bus 进行组件间通信，来折叠侧边栏
+            bus.$on('collapse', msg => {
+                this.collapse = msg;
+            })
+
+            // 
+            this.updateNavigation()
+        },
+        methods: {
+            updateNavigation() {
                 const [, navName] = this.$route.path.split('/');
 
                 // change nav
@@ -125,12 +139,6 @@
                     }
                 }
             }
-        },
-        created(){
-            // 通过 Event Bus 进行组件间通信，来折叠侧边栏
-            bus.$on('collapse', msg => {
-                this.collapse = msg;
-            })
         }
     }
 </script>
