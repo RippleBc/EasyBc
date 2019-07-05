@@ -38,7 +38,8 @@ export default new Router({
                     name: 'permission',
                     component: () => import('./views/Permission.vue'),
                     meta: { 
-                        title: '权限控制', permission: true,
+                        title: '权限控制', 
+                        permission: true,
                         keepAlive: true
                     }
                 },
