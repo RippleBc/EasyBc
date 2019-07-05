@@ -64,7 +64,7 @@ const models = process[Symbol.for("models")] = new Models();
   process.on('uncaughtException', err => {
     printErrorStack(err);
     
-    exit(1)
+    process.exit(1)
   })
   
   const server = app.listen(port, host, function() {

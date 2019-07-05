@@ -49,6 +49,7 @@ async function apiAxios(method, url, params)
     });
     await Promise.reject('invalid status code');
   }
+
   return res.data
 }
 

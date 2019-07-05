@@ -15,5 +15,8 @@ module.exports = function (req, res, next) {
     return next();
   }
 
-  res.redirect('/login');
+  res.json({
+    code: ERR_COOKIE_INVALID,
+    msg: "invalid cookie, please login again"
+  })
 }

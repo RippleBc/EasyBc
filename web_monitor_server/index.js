@@ -72,7 +72,7 @@ process[Symbol.for('cookieSet')] = new Set();
 	process.on('uncaughtException', err => {
 	  printErrorStack(err);
 
-	  exit(1)
+	  process.exit(1)
 	})
 
 	const server = app.listen(port, host, function() {
