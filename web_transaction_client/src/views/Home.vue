@@ -7,7 +7,7 @@
     </div>
     
     <div class="border" style="width:100%;height:500px;overflow:auto;margin:20px 0px 20px 0px;padding-top:20px;">
-      <div style="justify-content:left;" v-for="nodeInfo in nodesInfo">
+      <div style="justify-content:left;" v-bind:key="nodeInfo.url" v-for="nodeInfo in nodesInfo">
         <div style="display: flex;flex-direction:row;justify-content:start;cursor:pointer;" @dblclick="chooseNode(nodeInfo)">
           <span style="width:100px;">节点地址</span>
           <p style="width:100%;">{{nodeInfo.url}}</p>

@@ -8,6 +8,10 @@ module.exports = ['abnormalNode', {
   type: {
     type: Sequelize.INTEGER,
     allowNull: false
+  },
+  weight: {
+    type: Sequelize.NUMBER,
+    allowNull: false
   }
 }, {
   indexes: [],

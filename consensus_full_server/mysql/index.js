@@ -79,26 +79,6 @@ class Mysql
 
   /**
    * @param {Number} stage
-   */
-  async getDataExchangeTimeConsume(stage)
-  {
-    assert(typeof stage === 'number', `Mysql getDataExchangeTimeConsume, stage should be a Number, now is ${typeof stage}`);
-
-    const limit = 100
-
-    const total =  await this.TimeConsume.sum('data', {
-      where: { 
-        stage: stage, 
-        type: 1
-      },
-      limit: limit,
-    });
-
-    return total / limit
-  }
-
-  /**
-   * @param {Number} stage
    * @param {Number} timeConsume
    */
   async saveStageSynchronizeTimeConsume(stage, timeConsume)
@@ -111,26 +91,6 @@ class Mysql
       type: 2,
       data: timeConsume 
     });
-  }
-
-  /**
-   * @param {Number} stage
-   */
-  async getStageSynchronizeTimeConsume(stage)
-  {
-    assert(typeof stage === 'number', `Mysql getStageSynchronizeTimeConsume, stage should be a Number, now is ${typeof stage}`);
-
-    const limit = 100
-    
-    const total =  await this.TimeConsume.sum('data', {
-      where: { 
-        stage: stage, 
-        type: 2
-      },
-      limit: limit,
-    });
-
-    return total / limit
   }
 
   /**

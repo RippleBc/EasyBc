@@ -72,6 +72,10 @@
 	        prop="to"
 	        label="接收账户">
 	      </el-table-column>
+		  <el-table-column
+	        prop="data"
+	        label="额外信息">
+	      </el-table-column>
 	      <el-table-column
 	        prop="value"
 	        label="金额"
