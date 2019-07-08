@@ -30,11 +30,11 @@ class P2p
 	{
 		// init server
 		const server = await createServer({
-	    host: tcp.host,
-	    port: tcp.port,
-	    dispatcher: this.dispatcher,
-	    logger: loggerNet
-	  });
+			host: tcp.host,
+			port: tcp.port,
+			dispatcher: this.dispatcher,
+			logger: loggerNet
+		});
 
 		// init conn
 		for(let i = 0; i < unl.length; i++)

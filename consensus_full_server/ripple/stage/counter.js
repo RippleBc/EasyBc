@@ -1,6 +1,6 @@
 const CounterData = require("../data/counter");
 const utils = require("../../../depends/utils");
-const { RIPPLE_STAGE_AMALGAMATE_FETCHING_NEW_TRANSACTIONS, COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE, RIPPLE_STATE_PERISH_NODE, COUNTER_CONSENSUS_STAGE_TRIGGER_MAX_SIZE, PROTOCOL_CMD_COUNTER_FINISH_STATE_REQUEST, PROTOCOL_CMD_COUNTER_FINISH_STATE_RESPONSE, RIPPLE_STATE_STAGE_CONSENSUS, COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD, COUNTER_HANDLER_TIME_DETAY, COUNTER_INVALID_STAGE_TIME_SECTION, STAGE_STATE_EMPTY, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_STAGE_INFO_REQUEST, PROTOCOL_CMD_STAGE_INFO_RESPONSE } = require("../../constant");
+const { CHEAT_REASON_INVALID_COUNTER_ACTION, CHEAT_REASON_REPEAT_DATA_EXCHANGE, CHEAT_REASON_INVALID_SIG, CHEAT_REASON_INVALID_ADDRESS, RIPPLE_STAGE_AMALGAMATE_FETCHING_NEW_TRANSACTIONS, COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE, RIPPLE_STATE_PERISH_NODE, COUNTER_CONSENSUS_STAGE_TRIGGER_MAX_SIZE, PROTOCOL_CMD_COUNTER_FINISH_STATE_REQUEST, PROTOCOL_CMD_COUNTER_FINISH_STATE_RESPONSE, RIPPLE_STATE_STAGE_CONSENSUS, COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD, COUNTER_HANDLER_TIME_DETAY, COUNTER_INVALID_STAGE_TIME_SECTION, STAGE_STATE_EMPTY, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_STAGE_INFO_REQUEST, PROTOCOL_CMD_STAGE_INFO_RESPONSE } = require("../../constant");
 const Stage = require("./stage");
 const assert = require("assert");
 
@@ -129,7 +129,10 @@ class Counter extends Stage
 					{
 						logger.error(`Counter handleMessage, invalid action, ${action}`)
 
-						this.cheatedNodes.push(address.toString('hex'))
+						this.cheatedNodes.push({
+							address: address.toString('hex'),
+							reason: CHEAT_REASON_INVALID_COUNTER_ACTION
+						})
 
 						return;
 					}
@@ -159,7 +162,10 @@ class Counter extends Stage
 				{
 					if(address.toString("hex") !== counterData.from.toString("hex"))
 					{
-						this.cheatedNodes.push(address.toString('hex'));
+						this.cheatedNodes.push({
+							address: address.toString('hex'),
+							reason: CHEAT_REASON_INVALID_ADDRESS
+						});
 
 						logger.info(`Counter handleMessage, address should be ${address.toString("hex")}, now is ${counterData.from.toString("hex")}`);
 					}
@@ -169,7 +175,10 @@ class Counter extends Stage
 						{
 							logger.info(`Counter handleMessage, address: ${address.toString("hex")}, send the same exchange data`);
 							
-							this.cheatedNodes.push(address.toString('hex'));
+							this.cheatedNodes.push({
+								address: address.toString('hex'),
+								reason: CHEAT_REASON_REPEAT_DATA_EXCHANGE
+							});
 						}
 						else
 						{
@@ -181,7 +190,10 @@ class Counter extends Stage
 				}
 				else
 				{
-					this.cheatedNodes.push(address.toString('hex'));
+					this.cheatedNodes.push({
+						address: address.toString('hex'),
+						reason: CHEAT_REASON_INVALID_SIG
+					});
 					
 					logger.info(`Counter handleMessage, address ${address.toString("hex")}, validate failed`);
 				}

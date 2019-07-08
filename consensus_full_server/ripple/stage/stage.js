@@ -1,12 +1,11 @@
-const { RIPPLE_STAGE_BLOCK_AGREEMENT, COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE, RIPPLE_STATE_PERISH_NODE, RIPPLE_STATE_TRANSACTIONS_CONSENSUS, RIPPLE_STATE_STAGE_CONSENSUS, STAGE_DATA_EXCHANGE_TIMEOUT, STAGE_STAGE_SYNCHRONIZE_TIMEOUT, STAGE_MAX_FINISH_RETRY_TIMES, STAGE_STATE_EMPTY, STAGE_STATE_DATA_EXCHANGE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING } = require("../../constant");
+const { CHEAT_REASON_REPEAT_SYNC_FINISH, TIMEOUT_REASON_OFFLINE, TIMEOUT_REASON_DEFER, RIPPLE_STAGE_BLOCK_AGREEMENT, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE, RIPPLE_STATE_PERISH_NODE, RIPPLE_STATE_TRANSACTIONS_CONSENSUS, RIPPLE_STATE_STAGE_CONSENSUS, STAGE_DATA_EXCHANGE_TIMEOUT, STAGE_STAGE_SYNCHRONIZE_TIMEOUT, STAGE_MAX_FINISH_RETRY_TIMES, STAGE_STATE_EMPTY, STAGE_STATE_DATA_EXCHANGE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING } = require("../../constant");
 const utils = require("../../../depends/utils");
 const assert = require("assert");
 const Sender = require("../sender");
 const AsyncEventEmitter = require('async-eventemitter');
+const Base = require("../data/base");
 
 const stripHexPrefix = utils.stripHexPrefix;
-const rlp = utils.rlp;
-const toBuffer = utils.toBuffer;
 const bufferToInt = utils.bufferToInt;
 const Buffer = utils.Buffer;
 
@@ -78,8 +77,7 @@ class Stage extends AsyncEventEmitter
 		}
 
 		// timeout nodes
-		this.otherTimeoutNodes = [];
-		this.ownTimeoutNodes = [];
+		this.timeoutNodes = [];
 
 		// cheated nodes
 		this.cheatedNodes = [];
@@ -117,7 +115,20 @@ class Stage extends AsyncEventEmitter
 				{
 					if(!this.dataExchange.checkIfNodeIsFinished(stripHexPrefix(unl[i].address)))
 					{
-						this.ownTimeoutNodes.push(unl[i].address);
+						if(p2p.checkIfConnectionIsOpen(Buffer.from(unl[i].address, "hex")))
+						{
+							this.timeoutNodes.push({
+								address: unl[i].address,
+								reason: TIMEOUT_REASON_DEFER
+							});
+						}
+						else
+						{
+							this.timeoutNodes.push({
+								address: unl[i].address,
+								reason: TIMEOUT_REASON_OFFLINE
+							});
+						}
 					}
 				}
 
@@ -154,7 +165,7 @@ class Stage extends AsyncEventEmitter
 				});
 
 				// handle abnormal nodes
-				this.ripple.handleTimeoutNodes(this.ownTimeoutNodes, this.otherTimeoutNodes);
+				this.ripple.handleTimeoutNodes(this.timeoutNodes);
 				this.ripple.handleCheatedNodes(this.cheatedNodes);
 
 				// if state is transactions consensus and stage sync success, reset counter
@@ -173,7 +184,20 @@ class Stage extends AsyncEventEmitter
 				{
 					if(!this.stageSynchronize.checkIfNodeIsFinished(stripHexPrefix(unl[i].address)))
 					{
-						this.ownTimeoutNodes.push(unl[i].address);
+						if(p2p.checkIfConnectionIsOpen(Buffer.from(unl[i].address, "hex")))
+						{
+							this.timeoutNodes.push({
+								address: unl[i].address,
+								reason: TIMEOUT_REASON_DEFER
+							});
+						}
+						else
+						{
+							this.timeoutNodes.push({
+								address: unl[i].address,
+								reason: TIMEOUT_REASON_OFFLINE
+							});
+						}
 					}
 				}
 
@@ -204,7 +228,7 @@ class Stage extends AsyncEventEmitter
 					});
 
 					// handle abnormal nodes
-					this.ripple.handleTimeoutNodes(this.ownTimeoutNodes, this.otherTimeoutNodes);
+					this.ripple.handleTimeoutNodes(this.timeoutNodes);
 					this.ripple.handleCheatedNodes(this.cheatedNodes);
 
 					// data exchange is failed, try to stage consensus
@@ -261,6 +285,68 @@ class Stage extends AsyncEventEmitter
 	}
 
 	/**
+	 * @param {Base} candidate
+	 * @param {Array} candidates
+	 * @param {String} address
+	 */
+	validate(candidate, candidates, address, {
+		sigCheck, 
+		addressCheck, 
+		dataExchangeCheck
+	} = {
+		sigCheck: true, 
+		addressCheck: true, 
+		dataExchangeCheck: true})
+	{
+		assert(candidate instanceof Base, `${this.name} Stage, candidate should be an instance of Base, now is ${typeof candidate}`);
+		assert(Array.isArray(candidates), `${this.name} Stage, candidates should be an Array, now is ${typeof candidates}`);
+		assert(typeof address === 'string', `${this.name} Stage, address should be a String, now is ${typeof address}`);
+
+		if(sigCheck && candidate.validate())
+		{
+			if(addressCheck && address !== candidate.from.toString("hex"))
+			{
+				// address is invalid
+				this.cheatedNodes.push({
+					address: address.toString('hex'),
+					reason: CHEAT_REASON_INVALID_ADDRESS
+				});
+				
+				this.logger.info(`${this.name} Stage validate, address should be ${address}, now is ${candidate.from.toString("hex")}`);
+			}
+			else
+			{
+				if(dataExchangeCheck && this.checkIfNodeFinishDataExchange(address))
+				{
+					this.logger.info(`${this.name} Stage validate, address: ${address}, send the same exchange data`);
+					
+					// repeat data exchange
+					this.cheatedNodes.push({
+						address: address.toString('hex'),
+						reason: CHEAT_REASON_REPEAT_DATA_EXCHANGE
+					});
+				}
+				else
+				{
+					candidates.push(candidate);
+				}
+			}
+		}
+		else
+		{
+			// invalid sig
+			this.cheatedNodes.push({
+				address: address.toString('hex'),
+				reason: CHEAT_REASON_INVALID_SIG
+			});
+
+			this.logger.info(`${this.name} Stage validate, address: ${address}, validate failed`);
+		}
+
+		this.dataExchange.recordFinishNode(address);
+	}
+
+	/**
 	 * @param {Buffer} address
 	 * @param {Number} cmd
 	 * @param {Buffer} data
@@ -277,55 +363,26 @@ class Stage extends AsyncEventEmitter
 		{
 			case this.synchronize_state_request_cmd:
 			{
-				// compute timeout nodes
-				let timeoutAddresses = [];
-				if(this.state === STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING || this.state === STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING)
-				{
-					for(let i = 0; i < unl.length; i++)
-					{
-						if(!this.dataExchange.checkIfNodeIsFinished(stripHexPrefix(unl[i].address)))
-						{
-							timeoutAddresses.push(unl[i].address);
-						}
-
-						if(!this.stageSynchronize.checkIfNodeIsFinished(stripHexPrefix(unl[i].address)))
-						{
-							timeoutAddresses.push(unl[i].address);
-						}
-					}
-					
-					// filter the same timeoutAddresses
-					timeoutAddresses = [...new Set(timeoutAddresses)];
-				}
-				
-				//
-				p2p.send(address, this.synchronize_state_response_cmd, rlp.encode([toBuffer(this.state), timeoutAddresses]));
+				p2p.send(address, this.synchronize_state_response_cmd, this.state);
 			}
 			break;
 			case this.synchronize_state_response_cmd:
 			{
-				const nodeInfo = rlp.decode(data);
-				const state = bufferToInt(nodeInfo[0]);
-				const timeoutAddresses = [...new Set(nodeInfo[1])];
+				const state = bufferToInt(data);
 
 				if(state === STAGE_STATE_DATA_EXCHANGE_PROCEEDING)
 				{
-					const addressHex = address.toString("hex");
 
-					this.otherTimeoutNodes.push(addressHex)
 				}
 				else if(state === STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING)
 				{
-					// record timeout nodes
-					timeoutAddresses.forEach(address => {
-						const addressHex = address.toString("hex");
-						
-						this.otherTimeoutNodes.push(addressHex);
-					});
-
 					if(this.stageSynchronize.checkIfNodeIsFinished(address.toString("hex")))
 					{
-						this.cheatedNodes.push(address.toString('hex'))
+						this.cheatedNodes.push({
+							address: address.toString('hex'),
+							reason: CHEAT_REASON_REPEAT_SYNC_FINISH,
+							weight: 1
+						})
 					}
 					else
 					{
@@ -337,7 +394,11 @@ class Stage extends AsyncEventEmitter
 				{
 					if(this.stageSynchronize.checkIfNodeIsFinished(address.toString("hex")))
 					{
-						this.cheatedNodes.push(address.toString('hex'));
+						this.cheatedNodes.push({
+							address: address.toString('hex'),
+							reason: CHEAT_REASON_REPEAT_SYNC_FINISH,
+							weight: 1
+						})
 					}
 					else
 					{
@@ -356,8 +417,8 @@ class Stage extends AsyncEventEmitter
 
 	reset()
 	{
-		this.ownTimeoutNodes = [];
-		this.otherTimeoutNodes = [];
+		this.timeoutNodes = [];
+		this.cheatedNodes = [];
 
 		this.state = STAGE_STATE_EMPTY;
 		this.leftSynchronizeTryTimes = STAGE_MAX_FINISH_RETRY_TIMES;

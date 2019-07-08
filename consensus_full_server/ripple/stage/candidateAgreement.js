@@ -20,6 +20,7 @@ class CandidateAgreement extends Stage
 	constructor(ripple)
 	{
 		super({
+			name: 'candidateAgreement',
 			synchronize_state_request_cmd: PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_REQUEST,
 			synchronize_state_response_cmd: PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_RESPONSE
 		});
@@ -196,36 +197,7 @@ class CandidateAgreement extends Stage
 
 		const candidate = new Candidate(data);
 
-		if(candidate.validate())
-		{
-			if(address.toString("hex") !== candidate.from.toString("hex"))
-			{
-				this.cheatedNodes.push(address.toString('hex'));
-
-				logger.info(`CandidateAgreement handleCandidateAgreement, address should be ${address.toString("hex")}, now is ${candidate.from.toString("hex")}`);
-			}
-			else
-			{
-				if(this.checkIfNodeFinishDataExchange(address.toString("hex")))
-				{
-					logger.info(`CandidateAgreement handleCandidateAgreement, address: ${address.toString("hex")}, send the same exchange data`);
-					
-					this.cheatedNodes.push(address.toString('hex'));
-				}
-				else
-				{
-					this.candidates.push(candidate);
-				}
-			}
-		}
-		else
-		{
-			this.cheatedNodes.push(address.toString('hex'));
-			
-			logger.info(`CandidateAgreement handleCandidateAgreement, address ${address.toString("hex")}, validate failed`);
-		}
-
-		this.recordDataExchangeFinishNode(address.toString("hex"));
+		this.validate(candidate, this.candidates, address.toString("hex"))
 	}
 
 	reset()

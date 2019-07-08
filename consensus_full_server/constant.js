@@ -69,3 +69,14 @@ module.exports.ACTIVE_PERISH_DATA_PERIOD_OF_VALID = 5 * 1000;
 module.exports.NEGATIVE_PERISH_DATA_PERIOD_OF_VALID = 15 * 1000;
 //
 module.exports.TRANSACTIONS_CONSENSUS_THRESHOULD = 0.8;
+
+// timeout reason
+module.exports.TIMEOUT_REASON_OFFLINE = 'offline';
+module.exports.TIMEOUT_REASON_DEFER = 'defer';
+
+// cheat reason
+module.exports.CHEAT_REASON_REPEAT_DATA_EXCHANGE = 'repeatDataExchange'
+module.exports.CHEAT_REASON_REPEAT_SYNC_FINISH = 'repeatSyncFinish';
+module.exports.CHEAT_REASON_INVALID_SIG = 'invalidSig';
+module.exports.CHEAT_REASON_INVALID_ADDRESS = 'invalidAddress';
+module.exports.CHEAT_REASON_INVALID_COUNTER_ACTION = 'invalidCounterAction';

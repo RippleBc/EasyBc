@@ -2,7 +2,6 @@ const Candidate = require("../data/candidate");
 const utils = require("../../../depends/utils");
 const Stage = require("./stage");
 const assert = require("assert");
-const Transaction = require("../../../depends/transaction");
 const { RIPPLE_STAGE_AMALGAMATE, PROTOCOL_CMD_CANDIDATE_AMALGAMATE, PROTOCOL_CMD_CANDIDATE_AMALGAMATE_FINISH_STATE_REQUEST, PROTOCOL_CMD_CANDIDATE_AMALGAMATE_FINISH_STATE_RESPONSE } = require("../../constant");
 
 const rlp = utils.rlp;
@@ -16,6 +15,7 @@ class Amalgamate extends Stage
 	constructor(ripple)
 	{
 		super({
+			name: 'amalgamate',
 			synchronize_state_request_cmd: PROTOCOL_CMD_CANDIDATE_AMALGAMATE_FINISH_STATE_REQUEST,
 			synchronize_state_response_cmd: PROTOCOL_CMD_CANDIDATE_AMALGAMATE_FINISH_STATE_RESPONSE
 		});
@@ -109,36 +109,7 @@ class Amalgamate extends Stage
 
 		const candidate = new Candidate(data);
 
-		if(candidate.validate())
-		{
-			if(address.toString("hex") !== candidate.from.toString("hex"))
-			{
-				this.cheatedNodes.push(address.toString('hex'));
-				
-				logger.info(`Amalgamate handleAmalgamate, address should be ${address.toString("hex")}, now is ${candidate.from.toString("hex")}`);
-			}
-			else
-			{
-				if(this.checkIfNodeFinishDataExchange(address.toString("hex")))
-				{
-					logger.info(`Amalgamate handleAmalgamate, address: ${address.toString("hex")}, send the same exchange data`);
-				
-					this.cheatedNodes.push(address.toString('hex'));
-				}
-				else
-				{
-					this.candidates.push(candidate);
-				}
-			}
-		}
-		else
-		{
-			this.cheatedNodes.push(address.toString('hex'));
-
-			logger.info(`Amalgamate handleAmalgamate, address: ${address.toString("hex")}, validate failed`);
-		}
-
-		this.recordDataExchangeFinishNode(address.toString("hex"));
+		this.validate(candidate, this.candidates, address.toString("hex"))
 	}
 
 	reset()

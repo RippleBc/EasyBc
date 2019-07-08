@@ -2,7 +2,7 @@ const PerishData = require("../data/perish");
 const utils = require("../../../depends/utils");
 const Sender = require("../sender");
 const Stage = require("./stage");
-const { TRANSACTIONS_CONSENSUS_THRESHOULD, PROTOCOL_CMD_KILL_NODE_FINISH_STATE_REQUEST, PROTOCOL_CMD_KILL_NODE_FINISH_STATE_RESPONSE, NEGATIVE_PERISH_DATA_PERIOD_OF_VALID, ACTIVE_PERISH_DATA_PERIOD_OF_VALID, STAGE_STATE_EMPTY, RIPPLE_STATE_PERISH_NODE, PROTOCOL_CMD_KILL_NODE_REQUEST, PROTOCOL_CMD_KILL_NODE_RESPONSE } = require("../../constant");
+const { CHEAT_REASON_REPEAT_DATA_EXCHANGE, CHEAT_REASON_INVALID_SIG, CHEAT_REASON_INVALID_ADDRESS, TRANSACTIONS_CONSENSUS_THRESHOULD, PROTOCOL_CMD_KILL_NODE_FINISH_STATE_REQUEST, PROTOCOL_CMD_KILL_NODE_FINISH_STATE_RESPONSE, NEGATIVE_PERISH_DATA_PERIOD_OF_VALID, ACTIVE_PERISH_DATA_PERIOD_OF_VALID, STAGE_STATE_EMPTY, RIPPLE_STATE_PERISH_NODE, PROTOCOL_CMD_KILL_NODE_REQUEST, PROTOCOL_CMD_KILL_NODE_RESPONSE } = require("../../constant");
 const _ = require("underscore");
 
 const bufferToInt = utils.bufferToInt;
@@ -130,7 +130,10 @@ class Perish extends Stage
 					}
 					else
 					{
-						this.cheatedNodes.push(address.toString('hex'));
+						this.cheatedNodes.push({
+							address: address.toString('hex'),
+							reason: CHEAT_REASON_INVALID_SIG
+						});
 
 						logger.info(`Perish handleMessage, address: ${address.toString("hex")}, send an invalid message`);
 					}
@@ -154,7 +157,10 @@ class Perish extends Stage
 					{
 						logger.info(`Perish handleMessage, address: ${address.toString("hex")}, send the same response exchange data`);
 
-						this.cheatedNodes.push(address.toString('hex'));
+						this.cheatedNodes.push({
+							address: address.toString('hex'),
+							reason: CHEAT_REASON_REPEAT_DATA_EXCHANGE
+						});
 					}
 					else
 					{
@@ -163,7 +169,10 @@ class Perish extends Stage
 				}
 				else
 				{
-					this.cheatedNodes.push(address.toString('hex'));
+					this.cheatedNodes.push({
+						address: address.toString('hex'),
+						reason: CHEAT_REASON_INVALID_SIG
+					});
 
 					logger.info(`Perish handleMessage, address: ${address.toString("hex")}, send an invalid response exchange message`);
 				}

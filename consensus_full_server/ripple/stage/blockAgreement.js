@@ -24,6 +24,7 @@ class BlockAgreement extends Stage
 	constructor(ripple)
 	{
 		super({
+			name: 'blockAgreement',
 			synchronize_state_request_cmd: PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_REQUEST,
 			synchronize_state_response_cmd: PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE
 		});
@@ -237,36 +238,7 @@ class BlockAgreement extends Stage
 
 		const rippleBlock = new RippleBlock(data);
 
-		if(rippleBlock.validate())
-		{
-			if(address.toString("hex") !== rippleBlock.from.toString("hex"))
-			{
-				this.cheatedNodes.push(address.toString('hex'));
-
-				logger.info(`BlockAgreement handleBlockAgreement, address should be ${address.toString("hex")}, now is ${rippleBlock.from.toString("hex")}`);
-			}
-			else
-			{
-				if(this.checkIfNodeFinishDataExchange(address.toString("hex")))
-				{
-					logger.info(`BlockAgreement handleBlockAgreement, address: ${address.toString("hex")}, send the same exchange data`);
-				
-					this.cheatedNodes.push(address.toString('hex'));
-				}
-				else
-				{
-					this.rippleBlocks.push(rippleBlock);
-				}
-			}
-		}
-		else
-		{
-			this.cheatedNodes.push(address.toString('hex'));
-			
-			logger.info(`BlockAgreement handleBlockAgreement, address ${address.toString("hex")}, validate failed`);
-		}
-
-		this.recordDataExchangeFinishNode(address.toString("hex"));
+		this.validate(rippleBlock, this.rippleBlocks, address.toString("hex"));
 	}
 
 	reset()

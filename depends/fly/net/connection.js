@@ -63,8 +63,8 @@ class Connection extends AsyncEventEmitter
 		this.socket.setTimeout(HEART_BEAT_TIME, () => {
 			this.logger.error(`Connection constructor, socket is idle for a long time, address: ${this.address ? this.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}, try to close it`);
 
-      this.close();
-    });
+			this.close();
+		});
 
 		this.socket.on("data", data => {
 			if(!this.allChannelClosed)

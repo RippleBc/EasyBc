@@ -21,8 +21,9 @@ exports.createClient = async function(opts)
 	assert(typeof dispatcher === "function", `fly createServer, dispatcher should be a function, now is ${typeof dispatcher}`);
 
 	const client = net.createConnection({ 
+		allowHalfOpen: true,
 		host: host,
-	  port: port
+	  	port: port
 	});
 
 	const connection = await (async function() {
@@ -73,7 +74,9 @@ exports.createServer = function(opts)
 
 	assert(typeof dispatcher === "function", `fly createServer, dispatcher should be a function, now is ${typeof dispatcher}`);
 
-	const server = net.createServer();
+	const server = net.createServer({
+		allowHalfOpen: true
+	});
 
 	server.on("listening", () => {
 		logger.trace(`fly createServer, host: ${host}, port: ${port}`);
