@@ -11,7 +11,6 @@ process[Symbol.for("loggerStageConsensus")] = log4js.getLogger("stageConsensus")
 process[Symbol.for("loggerPerishNode")] = log4js.getLogger("perishNode");
 
 const utils = require("../depends/utils");
-const P2p = require("./p2p");
 const Mysql = require("./mysql");
 
 process[Symbol.for("mysql")] = new Mysql();
@@ -80,6 +79,7 @@ process.on("uncaughtException", function(err) {
     process[Symbol.for("privateKey")] = Buffer.from(privateKey, "hex");
 
     /************************************** p2p **************************************/
+    const P2p = require("./p2p");
     const p2p = process[Symbol.for("p2p")] = new P2p(function(message) {
         processor.handleMessage(this.address, message);
     });

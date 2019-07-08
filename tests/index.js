@@ -1,13 +1,12 @@
-let a = process[Symbol.for("test")] = [{
+const a = [{
     name: "a"
 }, {
     name: "b"
 }]
+
+let b = process[Symbol.for("test")] = a
 console.log(a);
 
-process[Symbol.for("test")] = [{
-    name: "c"
-}, {
-    name: "d"
-}]
-console.log(a);
+a[0].name = 'c';
+a[1].name = 'd';
+console.log(b);

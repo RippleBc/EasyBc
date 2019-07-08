@@ -95,27 +95,31 @@ class Mysql
 
   /**
    * @param {String} address
+   * @param {Number} weight
    */
-  async saveTimeoutNode(address)
+  async saveTimeoutNode(address, weight = 1)
   {
     assert(typeof address === 'string', `Mysql saveTimeoutNode, address should be a String, now is ${typeof address}`);
 
     await this.AbnormalNode.create({
       address: address, 
-      type: 1
+      type: 1,
+      weight: weight
     })
   }
 
   /**
    * @param {String} address
+   * @param {Number} weight
    */
-  async saveCheatedNode(address)
+  async saveCheatedNode(address, weight = 1)
   {
     assert(typeof address === 'string', `Mysql saveCheatedNode, address should be a String, now is ${typeof address}`);
     
     await this.AbnormalNode.create({
       address: address, 
-      type: 2
+      type: 2,
+      weight: weight
     })
   }
 }
