@@ -1,10 +1,10 @@
-const { unl } = require("../config.json");
 const utils = require("../../depends/utils");
 const assert = require("assert");
 
 const stripHexPrefix = utils.stripHexPrefix;
 
 const logger = process[Symbol.for("loggerConsensus")];
+const unl = process[Symbol.for("unl")];
 
 const SENDER_STATE_IDLE = 1;
 const SENDER_STATE_PROCESSING = 2;

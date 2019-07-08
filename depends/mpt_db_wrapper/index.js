@@ -1,15 +1,14 @@
 const mongoose = require('mongoose');
-const blockSchema = require("./block")
-const trieNodeSchema = require("./trieNode")
-const MptDB = require("../merkle_patricia_tree/db")
 const assert = require("assert");
-const Block = require("../block")
+const MptDB = require("../merkle_patricia_tree/db")
 const TrieNodeDb = require("./trieNodeDb")
 const BlockDb = require("./blockDb")
+const UnlDb = require("./unlDb")
 
 var mongooseInstance;
 var mptDb;
 var blockDb;
+var unlDb;
 
 module.exports = {
   initBaseDb: async (host, port, user, password) => {
@@ -44,5 +43,13 @@ module.exports = {
       blockDb = new BlockDb(mongooseInstance);
     }
     return blockDb
+  },
+
+  generateUnlDb: () => {
+    if(!unlDb)
+    {
+      unlDb = new UnlDb(mongooseInstance);
+    }
+    return unlDb
   }
 }

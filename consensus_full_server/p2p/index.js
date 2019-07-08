@@ -1,11 +1,11 @@
-const { tcp, unl, privateKey } = require("../config.json");
+const { tcp } = require("../config.json");
 const utils = require("../../depends/utils");
 const { createClient, createServer, connectionsManager } = require("../../depends/fly");
 const assert = require("assert");
 
-const Buffer = utils.Buffer;
+const unl = process[Symbol.for("unl")];
 
-process[Symbol.for("privateKey")] = Buffer.from(privateKey, "hex");
+const Buffer = utils.Buffer;
 
 const loggerP2p = process[Symbol.for("loggerP2p")];
 const loggerNet = process[Symbol.for("loggerNet")];

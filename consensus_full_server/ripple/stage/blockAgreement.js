@@ -5,7 +5,6 @@ const utils = require("../../../depends/utils");
 const Stage = require("./stage");
 const async = require("async");
 const assert = require("assert");
-const { unl } = require("../../config.json");
 const { BLOCK_AGREEMENT_TIMESTAMP_JUMP_LENGTH, BLOCK_AGREEMENT_TIMESTAMP_MAX_OFFSET, TRANSACTIONS_CONSENSUS_THRESHOULD, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_BLOCK_AGREEMENT, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_REQUEST, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE } = require("../../constant");
 const _ = require("underscore");
 
@@ -18,6 +17,7 @@ const bufferToInt = utils.bufferToInt;
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
 const privateKey = process[Symbol.for("privateKey")];
+const unl = process[Symbol.for("unl")];
 
 class BlockAgreement extends Stage
 {

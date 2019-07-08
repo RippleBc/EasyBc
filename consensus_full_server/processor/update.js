@@ -4,12 +4,13 @@ const Transaction = require("../../depends/transaction");
 const utils = require("../../depends/utils");
 const rp = require("request-promise");
 const { SUCCESS } = require("../../constant");
-const { genesis, unl } = require("../config.json");
+const { genesis } = require("../config.json");
 const { TRANSACTIONS_CONSENSUS_THRESHOULD } = require('../constant');
 const _ = require("underscore");
 
 const mongo = process[Symbol.for("mongo")];
 const logger = process[Symbol.for("loggerUpdate")];
+const unl = process[Symbol.for("unl")];
 
 const BN = utils.BN;
 const Buffer = utils.Buffer;

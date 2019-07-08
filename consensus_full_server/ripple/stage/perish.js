@@ -1,5 +1,4 @@
 const PerishData = require("../data/perish");
-const { unl } = require("../../config.json");
 const utils = require("../../../depends/utils");
 const Sender = require("../sender");
 const Stage = require("./stage");
@@ -11,6 +10,7 @@ const bufferToInt = utils.bufferToInt;
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerPerishNode")];
 const privateKey = process[Symbol.for("privateKey")];
+const unl = process[Symbol.for("unl")];
 
 class Perish extends Stage
 {

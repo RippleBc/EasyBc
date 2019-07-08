@@ -1,6 +1,7 @@
 const assert = require("assert");
 const utils = require("../../../depends/utils");
-const { unl } = require("../../config.json");
+
+const unl = process[Symbol.for("unl")];
 
 const rlp = utils.rlp;
 const sha256 = utils.sha256;

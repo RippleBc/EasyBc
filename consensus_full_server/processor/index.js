@@ -1,5 +1,3 @@
-const child_process = require("child_process");
-const Transaction = require("../../depends/transaction");
 const Block = require("../../depends/block");
 const BlockChain = require("../../depends/block_chain");
 const utils = require("../../depends/utils");
@@ -10,15 +8,11 @@ const Update = require("./update");
 
 const loggerConsensus = process[Symbol.for("loggerConsensus")];
 const loggerUpdate = process[Symbol.for("loggerUpdate")];
-const p2p = process[Symbol.for("p2p")];
 const mongo = process[Symbol.for("mongo")];
 const mysql = process[Symbol.for("mysql")];
 
-const BN = utils.BN;
 const bufferToInt = utils.bufferToInt;
 const Buffer = utils.Buffer;
-
-var updateInstance;
 
 const update = new Update();
 
