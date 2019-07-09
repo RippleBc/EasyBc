@@ -294,9 +294,9 @@ class Stage extends AsyncEventEmitter
 	 * @param {String} address
 	 */
 	validateAndProcessExchangeData(candidate, candidates, address, {
-		sigCheck, 
-		addressCheck, 
-		dataExchangeCheck
+		sigCheck = true, 
+		addressCheck = true, 
+		dataExchangeCheck = true
 	} = {
 		sigCheck: true, 
 		addressCheck: true, 
@@ -306,37 +306,25 @@ class Stage extends AsyncEventEmitter
 		assert(Array.isArray(candidates), `${this.name} Stage, candidates should be an Array, now is ${typeof candidates}`);
 		assert(typeof address === 'string', `${this.name} Stage, address should be a String, now is ${typeof address}`);
 
-		if(sigCheck && candidate.validate())
+		// check if send repeat exchange data
+		if(dataExchangeCheck && this.checkIfNodeFinishDataExchange(address))
 		{
-			if(addressCheck && address !== candidate.from.toString("hex"))
-			{
-				// address is invalid
-				this.cheatedNodes.push({
-					address: address.toString('hex'),
-					reason: CHEAT_REASON_INVALID_ADDRESS
-				});
-				
-				this.logger.info(`${this.name} Stage validate, address should be ${address}, now is ${candidate.from.toString("hex")}`);
-			}
-			else
-			{
-				if(dataExchangeCheck && this.checkIfNodeFinishDataExchange(address))
-				{
-					this.logger.info(`${this.name} Stage validate, address: ${address}, send the same exchange data`);
-					
-					// repeat data exchange
-					this.cheatedNodes.push({
-						address: address.toString('hex'),
-						reason: CHEAT_REASON_REPEAT_DATA_EXCHANGE
-					});
-				}
-				else
-				{
-					candidates.push(candidate);
-				}
-			}
+			this.logger.info(`${this.name} Stage validate, address: ${address}, send the same exchange data`);
+			
+			// repeat data exchange
+			this.cheatedNodes.push({
+				address: address.toString('hex'),
+				reason: CHEAT_REASON_REPEAT_DATA_EXCHANGE
+			});
+
+			return;
 		}
-		else
+
+		// record finish node
+		this.dataExchange.recordFinishNode(address);
+
+		// check sig
+		if(sigCheck && !candidate.validate())
 		{
 			// invalid sig
 			this.cheatedNodes.push({
@@ -345,9 +333,25 @@ class Stage extends AsyncEventEmitter
 			});
 
 			this.logger.info(`${this.name} Stage validate, address: ${address}, validate failed`);
+
+			return
 		}
 
-		this.dataExchange.recordFinishNode(address);
+		// check address
+		if(addressCheck && address !== candidate.from.toString("hex"))
+		{
+			// address is invalid
+			this.cheatedNodes.push({
+				address: address.toString('hex'),
+				reason: CHEAT_REASON_INVALID_ADDRESS
+			});
+			
+			this.logger.info(`${this.name} Stage validate, address should be ${address}, now is ${candidate.from.toString("hex")}`);
+			
+			return
+		}
+
+		candidates.push(candidate);
 	}
 
 	/**
