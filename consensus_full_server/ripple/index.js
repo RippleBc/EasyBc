@@ -76,29 +76,28 @@ class Ripple
 	}
 
 	/**
-	 * @param {Array/Buffer} addresses
+	 * @param {Array} cheatedNodes
 	 */
-	handleCheatedNodes(addresses)
+	handleCheatedNodes(cheatedNodes)
 	{
-		assert(Array.isArray(addresses), `Ripple handleCheatedNodes, addresses should be an Buffer, now is ${typeof addresses}`);
+		assert(Array.isArray(cheatedNodes), `Ripple handleCheatedNodes, cheatedNodes should be an Buffer, now is ${typeof cheatedNodes}`);
 
-		addresses.forEach(address => {
-			address = address.toString("hex");
-			mysql.saveCheatedNode(address).catch(e => {
+		cheatedNodes.forEach(cheatedNode => {
+			mysql.saveCheatedNode(cheatedNode.address, cheatedNode.reason).catch(e => {
 				logger.error(`Ripple handleCheatedNodes, saveCheatedNode throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 			});
 		});
 	}
 
 	/**
-	 * @param {Array/String} ownTimeoutNodes
+	 * @param {Array} timeoutNodes
 	 */
-	handleTimeoutNodes(ownTimeoutNodes)
+	handleTimeoutNodes(timeoutNodes)
 	{
-		assert(Array.isArray(ownTimeoutNodes), `Ripple handleTimeoutNodes, ownTimeoutNodes should be an Array, now is ${typeof ownTimeoutNodes}`);
+		assert(Array.isArray(timeoutNodes), `Ripple handleTimeoutNodes, timeoutNodes should be an Array, now is ${typeof timeoutNodes}`);
 		
-		ownTimeoutNodes.forEach(ownTimeoutNode => {
-			mysql.saveTimeoutNode(ownTimeoutNode.address, ownTimeoutNode.reason).catch(e => {
+		timeoutNodes.forEach(timeoutNode => {
+			mysql.saveTimeoutNode(timeoutNode.address, timeoutNode.reason).catch(e => {
 				logger.error(`Ripple handleTimeoutNodes, saveTimeoutNode throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 			})
 		});
