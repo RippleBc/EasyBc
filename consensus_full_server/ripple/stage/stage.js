@@ -93,12 +93,12 @@ class Stage extends AsyncEventEmitter
 		this.dataExchange = new Sender(result => {
 			// record data exchange time consume
 			mysql.saveDataExchangeTimeConsume(this.ripple.stage, this.dataExchange.consensusTimeConsume).catch(e => {
-				this.logger.error(`Stage dataExchange, stage: ${this.ripple.stage}, saveDataExchangeTimeConsume throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+				this.logger.error(`${this.name} Stage dataExchange, stage: ${this.ripple.stage}, saveDataExchangeTimeConsume throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 			});
 
 			if(result)
 			{
-				this.logger.info(`Stage dataExchange, stage: ${this.ripple.stage}, dataExchange is over success`);
+				this.logger.info(`${this.name} Stage dataExchange, stage: ${this.ripple.stage}, dataExchange is over success`);
 
 				this.state = STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING;
 
@@ -132,12 +132,12 @@ class Stage extends AsyncEventEmitter
 					}
 				}
 
-				this.logger.warn(`Stage dataExchange, stage: ${this.ripple.stage}, dataExchange is over because of timeout`);
+				this.logger.warn(`${this.name} Stage dataExchange, stage: ${this.ripple.stage}, dataExchange is over because of timeout`);
 
 				// data exchange is failed, try to stage consensus
 				if(this.ripple.counter.checkIfTriggered() && this.ripple.counter.state === STAGE_STATE_EMPTY && this.ripple.state !== RIPPLE_STATE_PERISH_NODE)
 				{
-					loggerStageConsensus.warn(`Counter handleMessage, begin to synchronize stage actively, stage: ${this.ripple.stage}`);
+					loggerStageConsensus.warn(`${this.name} Counter handleMessage, begin to synchronize stage actively, stage: ${this.ripple.stage}`);
 
 					this.ripple.counter.startStageSynchronize({
 						action: COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE
@@ -159,11 +159,11 @@ class Stage extends AsyncEventEmitter
 
 			if(result)
 			{
-				this.logger.info(`Stage stageSynchronize, stage: ${this.ripple.stage}, stage synchronize is over success`);
+				this.logger.info(`${this.name} Stage stageSynchronize, stage: ${this.ripple.stage}, stage synchronize is over success`);
 
 				// record synchronize time consume
 				mysql.saveStageSynchronizeTimeConsume(this.ripple.stage, this.stageSynchronize.consensusTimeConsume).catch(e => {
-					this.logger.error(`Stage stageSynchronize, stage: ${this.ripple.stage}, saveStageSynchronizeTimeConsume throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+					this.logger.error(`${this.name} Stage stageSynchronize, stage: ${this.ripple.stage}, saveStageSynchronizeTimeConsume throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 				});
 
 				// handle abnormal nodes
@@ -205,7 +205,7 @@ class Stage extends AsyncEventEmitter
 
 				if(this.leftSynchronizeTryTimes > 0)
 				{
-					this.logger.info(`Stage stageSynchronize, stage: ${this.ripple.stage}, stage synchronize is failed, retry ${STAGE_MAX_FINISH_RETRY_TIMES - this.leftSynchronizeTryTimes + 1}`);
+					this.logger.info(`${this.name} Stage stageSynchronize, stage: ${this.ripple.stage}, stage synchronize is failed, retry ${STAGE_MAX_FINISH_RETRY_TIMES - this.leftSynchronizeTryTimes + 1}`);
 
 					this.stageSynchronize.reset();
 					this.stageSynchronize.start();
@@ -222,11 +222,11 @@ class Stage extends AsyncEventEmitter
 				}
 				else
 				{
-					this.logger.warn(`Stage stageSynchronize, stage: ${this.ripple.stage}, stage synchronize is over because of timeout`);
+					this.logger.warn(`${this.name} Stage stageSynchronize, stage: ${this.ripple.stage}, stage synchronize is over because of timeout`);
 
 					// record synchronize time consume
 					mysql.saveStageSynchronizeTimeConsume(this.ripple.stage, this.stageSynchronize.consensusTimeConsume).catch(e => {
-						this.logger.error(`Stage stageSynchronize, stage: ${this.ripple.stage}, saveStageSynchronizeTimeConsume throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+						this.logger.error(`${this.name} Stage stageSynchronize, stage: ${this.ripple.stage}, saveStageSynchronizeTimeConsume throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 					});
 
 					// handle abnormal nodes
@@ -236,7 +236,7 @@ class Stage extends AsyncEventEmitter
 					// data exchange is failed, try to stage consensus
 					if(this.ripple.counter.checkIfTriggered() && this.ripple.counter.state === STAGE_STATE_EMPTY && this.ripple.state !== RIPPLE_STATE_PERISH_NODE)
 					{
-						loggerStageConsensus.warn(`Counter handleMessage, begin to synchronize stage actively again, stage: ${this.ripple.stage}`);
+						loggerStageConsensus.warn(`${this.name} Counter handleMessage, begin to synchronize stage actively again, stage: ${this.ripple.stage}`);
 						
 						this.ripple.counter.startStageSynchronize({
 							action: COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE
@@ -283,7 +283,7 @@ class Stage extends AsyncEventEmitter
 	 */
 	recordDataExchangeFinishNode(address)
 	{
-		assert(typeof address === "string", `Stage recordDataExchangeFinishNode, address should be a String, now is ${typeof address}`);
+		assert(typeof address === "string", `${this.name} Stage recordDataExchangeFinishNode, address should be a String, now is ${typeof address}`);
 
 		this.dataExchange.recordFinishNode(address);
 	}
@@ -361,11 +361,11 @@ class Stage extends AsyncEventEmitter
 	 */
 	handleMessage(address, cmd, data)
 	{
-		assert(Buffer.isBuffer(address), `Stage handleMessage, address should be an Buffer, now is ${typeof address}`);
-		assert(typeof cmd === "number", `Stage handleMessage, cmd should be a Number, now is ${typeof cmd}`);
-		assert(Buffer.isBuffer(data), `Stage handleMessage, data should be an Buffer, now is ${typeof data}`);
+		assert(Buffer.isBuffer(address), `${this.name} Stage handleMessage, address should be an Buffer, now is ${typeof address}`);
+		assert(typeof cmd === "number", `${this.name} Stage handleMessage, cmd should be a Number, now is ${typeof cmd}`);
+		assert(Buffer.isBuffer(data), `${this.name} Stage handleMessage, data should be an Buffer, now is ${typeof data}`);
 
-		assert(this.state !== STAGE_STATE_EMPTY, `Stage handleMessage, address ${address.toString("hex")}, message should not enter an emtpy stage`);
+		assert(this.state !== STAGE_STATE_EMPTY, `${this.name} Stage handleMessage, address ${address.toString("hex")}, message should not enter an emtpy stage`);
 
 		switch(cmd)
 		{
@@ -415,7 +415,7 @@ class Stage extends AsyncEventEmitter
 				}
 				else
 				{
-					this.logger.fatal(`Stage handleMessage, stage: ${this.ripple.stage}, stage state is empty, can not process messages`);
+					this.logger.fatal(`${this.name} Stage handleMessage, stage: ${this.ripple.stage}, stage state is empty, can not process messages`);
 
 					process.exit(1);
 				}
@@ -450,7 +450,7 @@ class Stage extends AsyncEventEmitter
 	 */
 	checkIfNodeFinishDataExchange(address)
 	{
-		assert(typeof address === "string", `Stage checkIfNodeFinishDataExchange, address should be a String, now is ${typeof address}`);
+		assert(typeof address === "string", `${this.name} Stage checkIfNodeFinishDataExchange, address should be a String, now is ${typeof address}`);
 
 		return this.dataExchange.checkIfNodeIsFinished(address)
 	}
