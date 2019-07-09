@@ -53,7 +53,7 @@ class Counter extends Stage
 
 			if(actionCollsMap.has(action))
 			{
-				const count = actionMap.get(action);
+				const count = actionCollsMap.get(action);
 				actionCollsMap.set(action, count + 1);
 			}
 			else
