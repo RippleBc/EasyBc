@@ -189,7 +189,9 @@ class Counter extends Stage
 							// 
 							if(timestamp < now + COUNTER_DATA_TIMESTAMP_STOP_SPREAD_RIGHT_GAP && timestamp > now - COUNTER_DATA_TIMESTAMP_STOP_SPREAD_LEFT_GAP)
 							{
-								this.startStageSynchronize(counterData);
+								this.startStageSynchronize({
+									counterData: counterData
+								});
 							}
 
 							p2p.send(address, PROTOCOL_CMD_STAGE_INFO_RESPONSE, this.counterData.serialize());
@@ -288,7 +290,11 @@ class Counter extends Stage
 			throw new Error(`Counter startStageSynchronize, action and counterData can not be undefined at the same time`);
 		}
 		
-		if(action)
+		if(counterData)
+		{
+			assert(counterData instanceof CounterData, `Counter startStageSynchronize, counter data should be an instance of CounterData, now is ${typeof counterData}`);
+		}
+		else
 		{
 			assert(typeof action === "number", `Counter startStageSynchronize, action should be a Number, now is ${typeof action}`);
 		
@@ -297,10 +303,6 @@ class Counter extends Stage
 				action: action
 			});
 			counterData.sign(privateKey)
-		}
-		else
-		{
-			assert(counterData instanceof CounterData, `Counter startStageSynchronize, counter data should be an instance of CounterData, now is ${typeof counterData}`);
 		}
 
 		this.start();
