@@ -107,6 +107,15 @@ class Counter extends Stage
 		}
 		else 
 		{
+			const counterDataInfo = ""
+			for(let counterData of this.counterDatas)
+			{
+				counterDataInfo += `address: ${counterData.from.toString("hex")}, action: ${bufferToInt(counterData.action)}, `
+			}
+			counterDataInfo.splice(-1, 1);
+
+			logger.error(`Counter handler, stage sync failed, ${counterDataInfo}`);
+
 			this.ripple.run(true);
 		}
 		
