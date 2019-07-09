@@ -6,7 +6,7 @@ const unl = process[Symbol.for("unl")];
 const rlp = utils.rlp;
 const sha256 = utils.sha256;
 
-const logger = process[Symbol["loggerConsensus"]];
+const logger = process[Symbol.for("loggerConsensus")]
 
 class Base
 {
