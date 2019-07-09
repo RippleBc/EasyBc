@@ -92,22 +92,13 @@ class Ripple
 
 	/**
 	 * @param {Array/String} ownTimeoutNodes
-	 * @param {Array/String} otherTimeoutNodes
 	 */
-	handleTimeoutNodes(ownTimeoutNodes, otherTimeoutNodes)
+	handleTimeoutNodes(ownTimeoutNodes)
 	{
 		assert(Array.isArray(ownTimeoutNodes), `Ripple handleTimeoutNodes, ownTimeoutNodes should be an Array, now is ${typeof ownTimeoutNodes}`);
-		assert(Array.isArray(otherTimeoutNodes), `Ripple otherTimeoutNodes, otherTimeoutNodes should be an Array, now is ${typeof otherTimeoutNodes}`);
 		
-		const self = this;
 		ownTimeoutNodes.forEach(ownTimeoutNode => {
-			mysql.saveTimeoutNode(ownTimeoutNode).catch(e => {
-				logger.error(`Ripple handleTimeoutNodes, saveTimeoutNode throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
-			})
-		});
-
-		otherTimeoutNodes.forEach(otherTimeoutNode => {
-			mysql.saveTimeoutNode(otherTimeoutNode).catch(e => {
+			mysql.saveTimeoutNode(ownTimeoutNode.address, ownTimeoutNode.reason).catch(e => {
 				logger.error(`Ripple handleTimeoutNodes, saveTimeoutNode throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 			})
 		});
