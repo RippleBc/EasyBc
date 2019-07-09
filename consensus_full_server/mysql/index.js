@@ -5,6 +5,8 @@ const assert = require("assert");
 const rawTransactionModelConfig = require('./rawTransaction');
 const timeConsumeModelConfig = require('./timeConsume');
 const abnormalNodeModelConfig = require('./abnormalNode');
+const counterHashModelConfig = require('./counterHash');
+const perishHashModelConfig = require('./perishHash');
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 
@@ -33,6 +35,8 @@ class Mysql
     this.RawTransaction = this.sequelize.define(...rawTransactionModelConfig);
     this.TimeConsume = this.sequelize.define(...timeConsumeModelConfig);
     this.AbnormalNode = this.sequelize.define(...abnormalNodeModelConfig);
+    this.CounterHash = this.sequelize.define(...counterHashModelConfig);
+    this.PerishHash = this.sequelize.define(...perishHashModelConfig);
 
     await this.sequelize.authenticate();
     await this.sequelize.sync();
@@ -123,6 +127,48 @@ class Mysql
       type: 2,
       reason: reason
     })
+  }
+
+  /**
+   * @param {String} hash
+   */
+  async checkIfCounterRepeated(hash)
+  {
+    assert(typeof hash === 'string', `Mysql checkIfCounterRepeated, hash should be a String, now is ${typeof hash}`);
+
+    const [, created] = await this.CounterHash.findOrCreate({
+      where: {
+        hash: hash
+      }
+    });
+    
+    if(created)
+    {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * @param {String} hash
+   */
+  async checkIfPerishRepeated(hash)
+  {
+    assert(typeof hash === 'string', `Mysql checkIfPerishRepeated, hash should be a String, now is ${typeof hash}`);
+
+    const [, created] = await this.PerishHash.findOrCreate({
+      where: {
+        hash: hash
+      }
+    });
+    
+    if(created)
+    {
+      return false;
+    }
+    
+    return true;
   }
 }
 

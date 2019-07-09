@@ -80,3 +80,7 @@ module.exports.CHEAT_REASON_REPEAT_SYNC_FINISH = 'repeatSyncFinish';
 module.exports.CHEAT_REASON_INVALID_SIG = 'invalidSig';
 module.exports.CHEAT_REASON_INVALID_ADDRESS = 'invalidAddress';
 module.exports.CHEAT_REASON_INVALID_COUNTER_ACTION = 'invalidCounterAction';
+
+module.exports.CHEAT_REASON_REPEATED_COUNTER_DATA = 'repeatedCounterData';
+module.exports.CHEAT_REASON_COUNTER_DATA_INVALID_TIMESTAMP = 'counterDataInvalidTimestamp';
+module.exports.CHEAT_REASON_REPEATED_PERISH_DATA = 'repeatedPerishData';

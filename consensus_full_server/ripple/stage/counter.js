@@ -1,31 +1,36 @@
 const CounterData = require("../data/counter");
 const utils = require("../../../depends/utils");
-const { CHEAT_REASON_INVALID_COUNTER_ACTION, CHEAT_REASON_REPEAT_DATA_EXCHANGE, CHEAT_REASON_INVALID_SIG, CHEAT_REASON_INVALID_ADDRESS, RIPPLE_STAGE_AMALGAMATE_FETCHING_NEW_TRANSACTIONS, COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE, RIPPLE_STATE_PERISH_NODE, COUNTER_CONSENSUS_STAGE_TRIGGER_MAX_SIZE, PROTOCOL_CMD_COUNTER_FINISH_STATE_REQUEST, PROTOCOL_CMD_COUNTER_FINISH_STATE_RESPONSE, RIPPLE_STATE_STAGE_CONSENSUS, COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD, COUNTER_HANDLER_TIME_DETAY, COUNTER_INVALID_STAGE_TIME_SECTION, STAGE_STATE_EMPTY, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_STAGE_INFO_REQUEST, PROTOCOL_CMD_STAGE_INFO_RESPONSE } = require("../../constant");
+const { CHEAT_REASON_COUNTER_DATA_INVALID_TIMESTAMP, CHEAT_REASON_REPEATED_COUNTER_DATA, CHEAT_REASON_INVALID_COUNTER_ACTION, RIPPLE_STAGE_AMALGAMATE_FETCHING_NEW_TRANSACTIONS, COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE, RIPPLE_STATE_PERISH_NODE, COUNTER_CONSENSUS_STAGE_TRIGGER_MAX_SIZE, PROTOCOL_CMD_COUNTER_FINISH_STATE_REQUEST, PROTOCOL_CMD_COUNTER_FINISH_STATE_RESPONSE, RIPPLE_STATE_STAGE_CONSENSUS, COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD, COUNTER_HANDLER_TIME_DETAY, COUNTER_INVALID_STAGE_TIME_SECTION, STAGE_STATE_EMPTY, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_STAGE_INFO_REQUEST, PROTOCOL_CMD_STAGE_INFO_RESPONSE } = require("../../constant");
 const Stage = require("./stage");
 const assert = require("assert");
 
-const rlp = utils.rlp;
-const sha3 = utils.sha3;
 const bufferToInt = utils.bufferToInt;
 
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerStageConsensus")];
 const privateKey = process[Symbol.for("privateKey")];
-const mysql = process[Symbol.for("mysql")];
 const unl = process[Symbol.for("unl")];
+const mysql = process[Symbol.for("mysql")];
+
+const COUNTER_DATA_TIMESTAMP_CHEATED_LEFT_GAP = 60 * 1000;
+const COUNTER_DATA_TIMESTAMP_CHEATED_RIGHT_GAP = 60 * 1000;
+
+const COUNTER_DATA_TIMESTAMP_STOP_SPREAD_LEFT_GAP = 30 * 1000;
+const COUNTER_DATA_TIMESTAMP_STOP_SPREAD_RIGHT_GAP = 30 * 1000;
 
 class Counter extends Stage
 {
 	constructor(ripple)
 	{
 		super({
+			name: 'counter',
 			synchronize_state_request_cmd: PROTOCOL_CMD_COUNTER_FINISH_STATE_REQUEST,
 			synchronize_state_response_cmd: PROTOCOL_CMD_COUNTER_FINISH_STATE_RESPONSE
 		});
 
 		this.ripple = ripple;
 
-		this.actions = [];
+		this.counterDatas = [];
 		this.stageSynchronizeTrigger = [];
 	}
 
@@ -33,17 +38,37 @@ class Counter extends Stage
 	{
 		super.reset();
 
-		this.actions = [];
+		this.counterDatas = [];
 		this.stageSynchronizeTrigger = [];
 	}
 
 	handler(ifSuccess)
 	{
-		if(ifSuccess)
-		{
-			this.reset();
+		const actionCollsMap = new Map();
 
-			if(this.action === COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE)
+		for(let counterData of this.counterDatas)
+		{
+			const action = bufferToInt(counterData.action);
+
+			if(actionCollsMap.has(action))
+			{
+				const count = actionMap.get(action);
+				actionCollsMap.set(action, count + 1);
+			}
+			else
+			{
+				actionCollsMap.set(action) = 1;
+			}
+		}
+
+		// statistic vote result
+		const sortedActionColls = _.sortBy([...actionCollsMap], actionColl => -actionColl[1]);
+
+		if(sortedActionColls[0] && sortedActionColls[0][1] / (unl.length + 1) >= TRANSACTIONS_CONSENSUS_THRESHOULD)
+		{
+			const action = sortedActionColls[0][0];
+
+			if(action === COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE)
 			{
 				logger.info("Counter handler, stage synchronize success, begin to fetch new transaction and amalgamate")
 
@@ -66,7 +91,7 @@ class Counter extends Stage
 					process.exit(1);
 				});
 			}
-			else if(this.action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE)
+			else if(action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE)
 			{
 				logger.info("Counter handler, stage synchronize success, begin to reuse cached transactions and amalgamate")
 
@@ -79,13 +104,8 @@ class Counter extends Stage
 				process.exit(1);
 			}
 		}
-		else
-		{
-			logger.warn(`Counter handleMessage, stage synchronize success because of timeout, begin to synchronize stage actively, stage: ${this.ripple.stage}`);
-			
-			this.reset();
-			this.startStageSynchronize(this.action);
-		}
+
+		this.reset();
 	}
 
 	/**
@@ -112,41 +132,71 @@ class Counter extends Stage
 			break;
 			case PROTOCOL_CMD_STAGE_INFO_REQUEST:
 			{
-				// begin stage synchronize
+				// there is node begin to sync stage, check if already in sync stage
 				if(this.state === STAGE_STATE_EMPTY && this.ripple.state !== RIPPLE_STATE_PERISH_NODE)
 				{
-					const action = bufferToInt(data);
+					const counterData = new CounterData(data);
 
-					if(action === COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE)
+					// check timestamp
+					const now = Date.now();
+					const timestamp = bufferToInt(counterData.timestamp)
+					if(timestamp > now + COUNTER_DATA_TIMESTAMP_CHEATED_RIGHT_GAP || timestamp < now - COUNTER_DATA_TIMESTAMP_CHEATED_LEFT_GAP)
 					{
-						logger.info(`Counter handleMessage, begin to synchronize stage negatively, stage: ${this.ripple.stage}, begin to fetch new transactions and amalgamate`);
-					}
-					else if(action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE)
-					{
-						logger.info(`Counter handleMessage, begin to synchronize stage negatively, stage: ${this.ripple.stage}, begin to use cached tranasctions and amalgamate`);
-					}
-					else
-					{
-						logger.error(`Counter handleMessage, invalid action, ${action}`)
-
-						this.cheatedNodes.push({
+						return this.cheatedNodes.push({
 							address: address.toString('hex'),
-							reason: CHEAT_REASON_INVALID_COUNTER_ACTION
+							reason: CHEAT_REASON_COUNTER_DATA_INVALID_TIMESTAMP
 						})
-
-						return;
 					}
 
-					this.startStageSynchronize(action);
-				}
-				
-				const counterData = new CounterData();
-				counterData.action = this.action;
-				counterData.timestamp = Date.now();
-				counterData.sign(privateKey);
+					const action = bufferToInt(counterData.action);
 
-				p2p.send(address, PROTOCOL_CMD_STAGE_INFO_RESPONSE, counterData.serialize())
-			
+					const counterDataHash = counterData.hash().toString("hex");
+
+					mysql.checkIfCounterRepeated(counterDataHash).then(repeated => {
+						// counter data is valid, check if already in sync stage
+						if(this.state === STAGE_STATE_EMPTY && this.ripple.state !== RIPPLE_STATE_PERISH_NODE)
+						{
+							if(repeated)
+							{
+								return this.cheatedNodes.push({
+									address: address.toString('hex'),
+									reason: CHEAT_REASON_REPEATED_COUNTER_DATA
+								})
+							}
+						
+							if(action === COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE)
+							{
+								logger.info(`Counter handleMessage, begin to synchronize stage negatively, stage: ${this.ripple.stage}, begin to fetch new transactions and amalgamate`);
+							}
+							else if(action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE)
+							{
+								logger.info(`Counter handleMessage, begin to synchronize stage negatively, stage: ${this.ripple.stage}, begin to use cached tranasctions and amalgamate`);
+							}
+							else
+							{
+								logger.error(`Counter handleMessage, invalid action, ${action}`)
+
+								return this.cheatedNodes.push({
+									address: address.toString('hex'),
+									reason: CHEAT_REASON_INVALID_COUNTER_ACTION
+								})
+							}
+							// 
+							if(timestamp < now + COUNTER_DATA_TIMESTAMP_STOP_SPREAD_RIGHT_GAP && timestamp > now - COUNTER_DATA_TIMESTAMP_STOP_SPREAD_LEFT_GAP)
+							{
+								this.startStageSynchronize(counterData);
+							}
+
+							p2p.send(address, PROTOCOL_CMD_STAGE_INFO_RESPONSE, this.counterData.serialize());
+						}
+					}).catch(e => {
+						this.logger.error(e);
+					})
+				}
+				else
+				{
+					p2p.send(address, PROTOCOL_CMD_STAGE_INFO_RESPONSE, this.counterData.serialize());
+				}
 			}
 			break;
 			case PROTOCOL_CMD_STAGE_INFO_RESPONSE:
@@ -158,47 +208,9 @@ class Counter extends Stage
 
 				const counterData = new CounterData(data);
 
-				if(counterData.validate())
-				{
-					if(address.toString("hex") !== counterData.from.toString("hex"))
-					{
-						this.cheatedNodes.push({
-							address: address.toString('hex'),
-							reason: CHEAT_REASON_INVALID_ADDRESS
-						});
-
-						logger.info(`Counter handleMessage, address should be ${address.toString("hex")}, now is ${counterData.from.toString("hex")}`);
-					}
-					else
-					{
-						if(this.checkIfNodeFinishDataExchange(address.toString("hex")))
-						{
-							logger.info(`Counter handleMessage, address: ${address.toString("hex")}, send the same exchange data`);
-							
-							this.cheatedNodes.push({
-								address: address.toString('hex'),
-								reason: CHEAT_REASON_REPEAT_DATA_EXCHANGE
-							});
-						}
-						else
-						{
-							const action = bufferToInt(counterData.action);
-
-							this.actions.push(action);
-						}
-					}
-				}
-				else
-				{
-					this.cheatedNodes.push({
-						address: address.toString('hex'),
-						reason: CHEAT_REASON_INVALID_SIG
-					});
-					
-					logger.info(`Counter handleMessage, address ${address.toString("hex")}, validate failed`);
-				}
-
-				this.recordDataExchangeFinishNode(address.toString("hex"));
+				this.validateAndProcessExchangeData(counterData, this.counterDatas, address.toString("hex"), {
+					addressCheck: false
+				});
 			}
 			break;
 			default:
@@ -262,21 +274,41 @@ class Counter extends Stage
 
 	/**
 	 * @param {Number} action
+	 * @param {CounterData} counterData
 	 */
-	startStageSynchronize(action)
+	startStageSynchronize({action, counterData})
 	{
-		assert(typeof action === "number", `Counter startStageSynchronize, action should be a Number, now is ${typeof action}`);
-
-		this.action = action;
+		if(action === undefined && counterData === undefined)
+		{
+			throw new Error(`Counter startStageSynchronize, action and counterData can not be undefined at the same time`);
+		}
+		
+		if(action)
+		{
+			assert(typeof action === "number", `Counter startStageSynchronize, action should be a Number, now is ${typeof action}`);
+		
+			counterData = new CounterData({
+				timestamp: Date.now(),
+				action: action
+			});
+			counterData.sign(privateKey)
+		}
+		else
+		{
+			assert(counterData instanceof CounterData, `Counter startStageSynchronize, counter data should be an instance of CounterData, now is ${typeof counterData}`);
+		}
 
 		this.start();
 
 		this.ripple.reset();
 		this.ripple.state = RIPPLE_STATE_STAGE_CONSENSUS;
+		
+		this.counterData = counterData;
+		this.action = bufferToInt(counterData.action)
 
-		this.actions.push(action);
+		this.counterDatas.push(counterData);
 
-		p2p.sendAll(PROTOCOL_CMD_STAGE_INFO_REQUEST, action);
+		p2p.sendAll(PROTOCOL_CMD_STAGE_INFO_REQUEST, counterData.serialize());
 	}
 }
 

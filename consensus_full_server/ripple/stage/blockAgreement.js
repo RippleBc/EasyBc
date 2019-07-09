@@ -238,7 +238,7 @@ class BlockAgreement extends Stage
 
 		const rippleBlock = new RippleBlock(data);
 
-		this.validate(rippleBlock, this.rippleBlocks, address.toString("hex"));
+		this.validateAndProcessExchangeData(rippleBlock, this.rippleBlocks, address.toString("hex"));
 	}
 
 	reset()

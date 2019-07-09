@@ -139,7 +139,9 @@ class Stage extends AsyncEventEmitter
 				{
 					loggerStageConsensus.warn(`Counter handleMessage, begin to synchronize stage actively, stage: ${this.ripple.stage}`);
 
-					this.ripple.counter.startStageSynchronize(COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE);
+					this.ripple.counter.startStageSynchronize({
+						action: COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE
+					});
 
 					return;
 				}
@@ -236,7 +238,9 @@ class Stage extends AsyncEventEmitter
 					{
 						loggerStageConsensus.warn(`Counter handleMessage, begin to synchronize stage actively again, stage: ${this.ripple.stage}`);
 						
-						this.ripple.counter.startStageSynchronize(COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE);
+						this.ripple.counter.startStageSynchronize({
+							action: COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE
+						});
 
 						return
 					}
@@ -289,7 +293,7 @@ class Stage extends AsyncEventEmitter
 	 * @param {Array} candidates
 	 * @param {String} address
 	 */
-	validate(candidate, candidates, address, {
+	validateAndProcessExchangeData(candidate, candidates, address, {
 		sigCheck, 
 		addressCheck, 
 		dataExchangeCheck

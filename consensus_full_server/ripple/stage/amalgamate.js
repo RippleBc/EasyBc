@@ -109,7 +109,7 @@ class Amalgamate extends Stage
 
 		const candidate = new Candidate(data);
 
-		this.validate(candidate, this.candidates, address.toString("hex"))
+		this.validateAndProcessExchangeData(candidate, this.candidates, address.toString("hex"))
 	}
 
 	reset()

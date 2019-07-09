@@ -88,7 +88,9 @@ class CandidateAgreement extends Stage
 					logger.fatal(`CandidateAgreement handler, candidate agreement failed, prepare to stage synchronize, but counter state is not STAGE_STATE_EMPTY, ${getStackInfo()}`);
 					process.exit(1);
 				}
-				this.ripple.counter.startStageSynchronize(COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE);
+				this.ripple.counter.startStageSynchronize({
+					action: COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE
+				});
 			}
 			else
 			{
@@ -128,7 +130,9 @@ class CandidateAgreement extends Stage
 			logger.fatal(`CandidateAgreement handler, candidate agreement failed, prepare to stage synchronize, but counter state is not STAGE_STATE_EMPTY, ${getStackInfo()}`);
 			process.exit(1);
 		}
-		this.ripple.counter.startStageSynchronize(COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE);
+		this.ripple.counter.startStageSynchronize({
+			action: COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE
+		});
 
 		//
 		this.reset();
@@ -197,7 +201,7 @@ class CandidateAgreement extends Stage
 
 		const candidate = new Candidate(data);
 
-		this.validate(candidate, this.candidates, address.toString("hex"))
+		this.validateAndProcessExchangeData(candidate, this.candidates, address.toString("hex"))
 	}
 
 	reset()
