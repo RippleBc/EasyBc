@@ -118,6 +118,11 @@ class Base
       }
     }
 
+    if(process[Symbol.for("address")] === address.toString("hex"))
+    {
+      return true;
+    }
+
     return false;
   }
 
@@ -137,7 +142,7 @@ class Base
     // check node address
     if(!this.checkAddress(this.from))
     {
-      logger.error("Base validate, invalid address");
+      logger.error(`Base validate, invalid address, address: ${this.from.toString("hex")}`);
 
       return false;
     }

@@ -77,6 +77,8 @@ process.on("uncaughtException", function(err) {
     // init private key
     const { privateKey } = require("./config.json")
     process[Symbol.for("privateKey")] = Buffer.from(privateKey, "hex");
+    const publicKey = utils.privateToPublic(process[Symbol.for("privateKey")]);
+    process[Symbol.for("address")] = utils.publicToAddress(publicKey).toString("hex");
 
     /************************************** p2p **************************************/
     const P2p = require("./p2p");
