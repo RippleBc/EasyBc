@@ -107,7 +107,7 @@ class Counter extends Stage
 		}
 		else 
 		{
-			const counterDataInfo = ""
+			let counterDataInfo = ""
 			for(let counterData of this.counterDatas)
 			{
 				counterDataInfo += `address: ${counterData.from.toString("hex")}, action: ${bufferToInt(counterData.action)}, `
