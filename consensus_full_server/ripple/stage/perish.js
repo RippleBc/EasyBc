@@ -44,7 +44,7 @@ class Perish extends Stage
 		}
 
 		const perishDataMap = new Map();
-		for(let perishData of perishDatas)
+		for(let perishData of this.perishDatas)
 		{
 			const perishAddress = perishData.address.toString('hex')
 
@@ -59,29 +59,59 @@ class Perish extends Stage
 				perishDataMap.set(perishAddress, 1)
 			}
 		}
-		const sortedPerishNodeAddresses = _.sortBy([...perishDataMap], perishData => -perishData[1]);
-		if(sortedPerishNodeAddresses[0] && sortedPerishNodeAddresses[0][1] / (unl.length + 1) >= TRANSACTIONS_CONSENSUS_THRESHOULD)
+
+		// statistic vote result
+		const sortedPerishData = _.sortBy([...perishDataMap], perishData => -perishData[1]);
+
+		if(sortedPerishData[0] && sortedPerishData[0][1] / (unl.length + 1) >= TRANSACTIONS_CONSENSUS_THRESHOULD)
 		{
-			const perishAddress = sortedPerishNodeAddresses[0][0];
+			const perishAddress = sortedPerishData[0][0];
 
 			// compute perish address
-			const perishSponsor = ''
+			let perishSponsors = []
+			for(let perishData of this.perishDatas)
+			{
+				if(perishData.address.toString('hex') === perishAddress)
+				{
+					perishSponsors.push(perishData.from.toString("hex"))
+				}
+			}
+			perishSponsors = _.sortBy(perishSponsors, perishSponsor => {
+				return perishSponsor;
+			});
 
 			logger.warn(`Perish handler, begin to handle vicious node, sponsor node: ${perishData.from.toString('hex')}, perish node: ${perishData.address.toString('hex')}`)
 
-			this.ripple.handlePerishNode(perishSponsor, perishAddress);
+			// handle perish node
+			this.ripple.handlePerishNode(perishSponsors[0], perishAddress).then(() => {
+				if(this.perishData.address.toString('hex') !== perishData.address.toString('hex'))
+				{
+					return this.startPerishNode({
+						address: this.perishData
+					});
+				}
+				
+				this.reset();
 
-			this.reset();
+				this.ripple.run(true);
+			}).catch(e => {
+				logger.fatal(`Perish handler, this.ripple.handlePerishNode throw exception, ${process[Symbol.for("getStackInfo")](e)}`)
 
-			if(this.perishData.address.toString('hex') !== perishData.address.toString('hex'))
-			{
-				return this.startPerishNode({
-					address: this.perishData
-				});
-			}
+				process.exit(1);
+			});
 		}
 		else
 		{
+			// debug
+			let perishDataInfo = ''
+			for(let perishAddress of perishDataMap)
+			{
+				perishDataInfo += `perishAddress: ${perishAddress}, count: ${perishDataMap.get(perishAddress)}, `
+			}
+			perishDataInfo = perishDataInfo.slice(0, -1);
+			logger.warn(`Perish handler, handle vicious node failed, ${perishDataInfo}`)
+
+			//
 			if(this.ifActive)
 			{
 				this.reset();
@@ -92,6 +122,7 @@ class Perish extends Stage
 			}
 			
 			this.reset();
+
 			this.ripple.run(true);
 		}
 	}

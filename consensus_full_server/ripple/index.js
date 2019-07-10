@@ -7,14 +7,12 @@ const Counter = require("./stage/counter");
 const Perish = require("./stage/perish");
 const utils = require("../../depends/utils");
 
-const bufferToInt = utils.bufferToInt;
-const rlp = utils.rlp;
-
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
 const mysql = process[Symbol.for("mysql")];
 const loggerStageConsensus = process[Symbol.for("loggerStageConsensus")];
 const loggerPerishNode = process[Symbol.for("loggerPerishNode")];
+const unlManager = process[Symbol.for("unlManager")]
 
 class Ripple
 {
@@ -67,12 +65,12 @@ class Ripple
 	 * @param {String} sponsorNode
 	 * @param {String} perishNode
 	 */
-	handlePerishNode(sponsorNode, perishNode)
+	async handlePerishNode(sponsorNode, perishNode)
 	{
 		assert(typeof sponsorNode === 'string', `Ripple handlePerishNode, sponsorNode should be an String, now is ${typeof sponsorNode}`);
 		assert(typeof perishNode === 'string', `Ripple handlePerishNode, perishNode should be an String, now is ${typeof perishNode}`);
 		
-		this.run(true);
+		await unlManager.setNodeMalicious([sponsorNode, perishNode])
 	}
 
 	/**

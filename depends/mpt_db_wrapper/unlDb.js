@@ -15,7 +15,7 @@ class UnlDb
   {
     const promise = new Promise((resolve, reject) => {
       this.Unl.find({
-        state: 0
+        
       }, 
       'address host queryPort p2pPort', 
       { 
@@ -42,12 +42,12 @@ class UnlDb
   }
 
   /**
-   * @param {String} address
-   * @param {Number} unl
+   * @param {Array} addresses
+   * @param {Number} state
    */
-  async updateUnl(address, state)
+  async updateUnl(addresses, state)
   {
-    assert(typeof address === 'string', `UnlManager updateUnl, address should be a String, now is ${typeof address}`)
+    assert(Array.isArray(addresses), `UnlManager updateUnl, addresses should be a String, now is ${typeof addresses}`)
     assert(Number.isNumber(state), `UnlManager updateUnl, state should be a Number, now is ${typeof state}`)
 
     if(state !== 0 && state !== 1 && state !== 2)
@@ -56,8 +56,10 @@ class UnlDb
     }
 
     const promise = new Promise((resolve, reject) => {
-        this.Unl.updateOne({
-            address: address
+        this.Unl.update({
+            address: {
+              $in: addresses
+            }
         }, {
             state: state
         }, err => {

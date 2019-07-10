@@ -72,6 +72,7 @@ process.on("uncaughtException", function(err) {
     const UnlManager = require("./unlManager");
     const unlManager = new UnlManager();
     await unlManager.init();
+    process[Symbol.for("unlManager")] = unlManager;
     process[Symbol.for("unl")] = unlManager.unl
 
     // init private key

@@ -15,82 +15,100 @@ class UnlManager
 
     get unl() 
     {
-        return this._unl;
+        return this._unl.filter(node => {
+            return node.state === 0
+        });
     }
 
     /**
-     * @param {String} address
+     * @param {Array} addresses
      */
-    async setNodeOffLine(address)
+    async setNodeOffLine(addresses)
     {
-        assert(typeof address === 'string', `UnlManager setNodeOffLine, address should be a String, now is ${typeof address}`)
+        assert(Array.isArray(addresses), `UnlManager setNodeOffLine, addresses should be an Array, now is ${typeof addresses}`)
 
-        await this.unlDb.updateUnl(address, 1);
+        await this.unlDb.updateUnl(addresses, 1);
 
-        for(node of this._unl)
+        for(let node of this._unl)
         {
-            if(node.address === address)
+            for(let address of addresses)
             {
-                node.state = 1
-                break;
+                if(node.address === address)
+                {
+                    node.state = 1
+                    break;
+                }
             }
+            
         }
     }
 
     /**
-     * @param {String} address
+     * @param {Array} addresses
      */
-    async setNodeOnLine(address)
+    async setNodeOnLine(addresses)
     {
-        assert(typeof address === 'string', `UnlManager setNodeOnLine, address should be a String, now is ${typeof address}`)
+        assert(Array.isArray(addresses), `UnlManager setNodeOnLine, addresses should be a String, now is ${typeof addresses}`)
 
-        await this.unlDb.updateUnl(address, 0);
+        await this.unlDb.updateUnl(addresses, 0);
 
-        for(node of this._unl)
+        for(let node of this._unl)
         {
-            if(node.address === address)
+            for(let address of addresses)
             {
-                node.state = 0
-                break;
+                if(node.address === address)
+                {
+                    node.state = 0
+                    break;
+                }
             }
+            
         }
     }
 
     /**
-     * @param {String} address
+     * @param {Array} addresses
      */
-    async setNodeMalicious(address)
+    async setNodeMalicious(addresses)
     {
-        assert(typeof address === 'string', `UnlManager setNodeMalicious, address should be a String, now is ${typeof address}`)
+        assert(Array.isArray(addresses), `UnlManager setNodeMalicious, addresses should be an Array, now is ${typeof addresses}`)
 
-        await this.unlDb.updateUnl(address, 2);
+        await this.unlDb.updateUnl(addresses, 2);
 
-        for(node of this._unl)
+        for(let node of this._unl)
         {
-            if(node.address === address)
+            for(let address of addresses)
             {
-                node.state = 2
-                break;
+                if(node.address === address)
+                {
+                    node.state = 2
+                    break;
+                }
             }
+            
         }
     }
 
     /**
-     * @param {String} address
+     * @param {Array} addresses
      */
-    async setNodeRighteous(address)
+    async setNodeRighteous(addresses)
     {
-        assert(typeof address === 'string', `UnlManager setNodeRighteous, address should be a String, now is ${typeof address}`)
+        assert(Array.isArray(addresses), `UnlManager setNodeRighteous, addresses should be an Array, now is ${typeof addresses}`)
 
-        await this.unlDb.updateUnl(address, 0);
+        await this.unlDb.updateUnl(addresses, 0);
 
-        for(node of this._unl)
+        for(let node of this._unl)
         {
-            if(node.address === address)
+            for(let address of addresses)
             {
-                node.state = 0
-                break;
+                if(node.address === address)
+                {
+                    node.state = 0
+                    break;
+                }
             }
+            
         }
     }
 }
