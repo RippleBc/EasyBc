@@ -1,6 +1,6 @@
 const CounterData = require("../data/counter");
 const utils = require("../../../depends/utils");
-const { TRANSACTIONS_CONSENSUS_THRESHOULD, CHEAT_REASON_COUNTER_DATA_INVALID_TIMESTAMP, CHEAT_REASON_REPEATED_COUNTER_DATA, CHEAT_REASON_INVALID_COUNTER_ACTION, RIPPLE_STAGE_AMALGAMATE_FETCHING_NEW_TRANSACTIONS, COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE, RIPPLE_STATE_PERISH_NODE, COUNTER_CONSENSUS_STAGE_TRIGGER_MAX_SIZE, PROTOCOL_CMD_COUNTER_FINISH_STATE_REQUEST, PROTOCOL_CMD_COUNTER_FINISH_STATE_RESPONSE, RIPPLE_STATE_STAGE_CONSENSUS, COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD, COUNTER_HANDLER_TIME_DETAY, COUNTER_INVALID_STAGE_TIME_SECTION, STAGE_STATE_EMPTY, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_STAGE_INFO_REQUEST, PROTOCOL_CMD_STAGE_INFO_RESPONSE } = require("../../constant");
+const { CHEAT_REASON_INVALID_SIG, TRANSACTIONS_CONSENSUS_THRESHOULD, CHEAT_REASON_COUNTER_DATA_INVALID_TIMESTAMP, CHEAT_REASON_REPEATED_COUNTER_DATA, CHEAT_REASON_INVALID_COUNTER_ACTION, RIPPLE_STAGE_AMALGAMATE_FETCHING_NEW_TRANSACTIONS, COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE, RIPPLE_STATE_PERISH_NODE, COUNTER_CONSENSUS_STAGE_TRIGGER_MAX_SIZE, PROTOCOL_CMD_COUNTER_FINISH_STATE_REQUEST, PROTOCOL_CMD_COUNTER_FINISH_STATE_RESPONSE, RIPPLE_STATE_STAGE_CONSENSUS, COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD, COUNTER_HANDLER_TIME_DETAY, COUNTER_INVALID_STAGE_TIME_SECTION, STAGE_STATE_EMPTY, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_STAGE_INFO_REQUEST, PROTOCOL_CMD_STAGE_INFO_RESPONSE } = require("../../constant");
 const Stage = require("./stage");
 const assert = require("assert");
 const _ = require("underscore");
@@ -149,13 +149,25 @@ class Counter extends Stage
 				// there is node begin to sync stage, check if already in sync stage
 				if(this.state === STAGE_STATE_EMPTY && this.ripple.state !== RIPPLE_STATE_PERISH_NODE)
 				{
+					// check if counter data sig and address is valid
 					const counterData = new CounterData(data);
+					if(!counterData.validate())
+					{
+						logger.error(`Counter handleMessage, address: ${address.toString('hex')}, validate failed`);
+
+						return this.cheatedNodes.push({
+							address: address.toString('hex'),
+							reason: CHEAT_REASON_INVALID_SIG
+						});
+					}
 
 					// check timestamp
 					const now = Date.now();
 					const timestamp = bufferToInt(counterData.timestamp)
 					if(timestamp > now + COUNTER_DATA_TIMESTAMP_CHEATED_RIGHT_GAP || timestamp < now - COUNTER_DATA_TIMESTAMP_CHEATED_LEFT_GAP)
 					{
+						logger.error(`Counter handleMessage, address: ${address.toString('hex')}, invalid timestamp ${timestamp}, now is ${now}`);
+
 						return this.cheatedNodes.push({
 							address: address.toString('hex'),
 							reason: CHEAT_REASON_COUNTER_DATA_INVALID_TIMESTAMP
@@ -166,8 +178,9 @@ class Counter extends Stage
 
 					const counterDataHash = counterData.hash().toString("hex");
 
+					// check if repeated
 					mysql.checkIfCounterRepeated(counterDataHash).then(repeated => {
-						// there is a timewindow here, so should check again, counter data is valid, check if already in sync stage
+						// there is a timewindow here, so should check again, check if already in sync stage
 						if(this.state === STAGE_STATE_EMPTY && this.ripple.state !== RIPPLE_STATE_PERISH_NODE)
 						{
 							if(repeated)
@@ -208,7 +221,7 @@ class Counter extends Stage
 					
 						p2p.send(address, PROTOCOL_CMD_STAGE_INFO_RESPONSE, this.counterData.serialize());
 					}).catch(e => {
-						this.logger.error(e);
+						this.logger.error(`Counter handleMessage, checkIfCounterRepeated throw exception, ${e}`);
 					})
 				}
 				else
@@ -303,7 +316,7 @@ class Counter extends Stage
 		
 		if(counterData)
 		{
-			assert(counterData instanceof CounterData, `Counter startStageSynchronize, counter data should be an instance of CounterData, now is ${typeof counterData}`);
+			assert(counterData instanceof CounterData, `Counter startStageSynchronize, counterData should be an instance of CounterData, now is ${typeof counterData}`);
 		}
 		else
 		{

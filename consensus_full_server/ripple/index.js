@@ -64,13 +64,13 @@ class Ripple
 	}
 
 	/**
-	 * @param {Buffer} sponsorNode
-	 * @param {Buffer} perishNode
+	 * @param {String} sponsorNode
+	 * @param {String} perishNode
 	 */
 	handlePerishNode(sponsorNode, perishNode)
 	{
-		assert(Buffer.isBuffer(sponsorNode), `Ripple handlePerishNode, sponsorNode should be an Buffer, now is ${typeof sponsorNode}`);
-		assert(Buffer.isBuffer(perishNode), `Ripple handlePerishNode, perishNode should be an Buffer, now is ${typeof perishNode}`);
+		assert(typeof sponsorNode === 'string', `Ripple handlePerishNode, sponsorNode should be an String, now is ${typeof sponsorNode}`);
+		assert(typeof perishNode === 'string', `Ripple handlePerishNode, perishNode should be an String, now is ${typeof perishNode}`);
 		
 		this.run(true);
 	}

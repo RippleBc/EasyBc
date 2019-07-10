@@ -65,8 +65,6 @@ module.exports.PROTOCOL_CMD_KILL_NODE_RESPONSE = 501;
 module.exports.PROTOCOL_CMD_KILL_NODE_FINISH_STATE_REQUEST = 502;
 module.exports.PROTOCOL_CMD_KILL_NODE_FINISH_STATE_RESPONSE = 503;
 
-module.exports.ACTIVE_PERISH_DATA_PERIOD_OF_VALID = 5 * 1000;
-module.exports.NEGATIVE_PERISH_DATA_PERIOD_OF_VALID = 15 * 1000;
 //
 module.exports.TRANSACTIONS_CONSENSUS_THRESHOULD = 0.8;
 
@@ -84,3 +82,4 @@ module.exports.CHEAT_REASON_INVALID_COUNTER_ACTION = 'invalidCounterAction';
 module.exports.CHEAT_REASON_REPEATED_COUNTER_DATA = 'repeatedCounterData';
 module.exports.CHEAT_REASON_COUNTER_DATA_INVALID_TIMESTAMP = 'counterDataInvalidTimestamp';
 module.exports.CHEAT_REASON_REPEATED_PERISH_DATA = 'repeatedPerishData';
+module.exports.CHEAT_REASON_PERISH_DATA_INVALID_TIMESTAMP = 'perishDataInvalidTimestamp';
