@@ -167,7 +167,7 @@ class Counter extends Stage
 					const counterDataHash = counterData.hash().toString("hex");
 
 					mysql.checkIfCounterRepeated(counterDataHash).then(repeated => {
-						// counter data is valid, check if already in sync stage
+						// there is a timewindow here, so should check again, counter data is valid, check if already in sync stage
 						if(this.state === STAGE_STATE_EMPTY && this.ripple.state !== RIPPLE_STATE_PERISH_NODE)
 						{
 							if(repeated)
@@ -204,9 +204,9 @@ class Counter extends Stage
 									counterData: counterData
 								});
 							}
-
-							p2p.send(address, PROTOCOL_CMD_STAGE_INFO_RESPONSE, this.counterData.serialize());
 						}
+					
+						p2p.send(address, PROTOCOL_CMD_STAGE_INFO_RESPONSE, this.counterData.serialize());
 					}).catch(e => {
 						this.logger.error(e);
 					})
