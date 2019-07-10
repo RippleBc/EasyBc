@@ -112,7 +112,7 @@ class Counter extends Stage
 			{
 				counterDataInfo += `address: ${counterData.from.toString("hex")}, action: ${bufferToInt(counterData.action)}, `
 			}
-			counterDataInfo.splice(-1, 1);
+			counterDataInfo = counterDataInfo.slice(0, -1);
 
 			logger.error(`Counter handler, stage sync failed, ${counterDataInfo}`);
 
