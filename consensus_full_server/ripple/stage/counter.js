@@ -172,6 +172,8 @@ class Counter extends Stage
 						{
 							if(repeated)
 							{
+								logger.error(`Counter handleMessage, counter data is repeated, address: ${address.toString('hex')}`)
+
 								return this.cheatedNodes.push({
 									address: address.toString('hex'),
 									reason: CHEAT_REASON_REPEATED_COUNTER_DATA
@@ -323,6 +325,8 @@ class Counter extends Stage
 		this.action = bufferToInt(counterData.action)
 
 		this.counterDatas.push(counterData);
+
+		logger.info(`Counter startStageSynchronize, begin to send stage sync protocol, stage: ${this.ripple.stage}`);
 
 		p2p.sendAll(PROTOCOL_CMD_STAGE_INFO_REQUEST, counterData.serialize());
 	}

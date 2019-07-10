@@ -68,7 +68,7 @@ class BlockAgreement extends Stage
 
 		// debug candidate
 		for (let [key, value] of blocksHash) {
-		  logger.trace(`BlockAgreement handler, candidate hash: ${key}, count: ${value.count}`);
+		  logger.info(`BlockAgreement handler, candidate hash: ${key}, count: ${value.count}`);
 		}
 
 		const sortedBlocks = _.sortBy([...blocksHash], block => -block[1].count);

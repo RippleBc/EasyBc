@@ -19,6 +19,7 @@ const padToEven = utils.padToEven;
 const STATE_RUNNING = 1;
 const STAGE_STATE_EMPTY = 0;
 
+const FULL_BLOCK_CHAIN_UNL_SCALE_LIMIT = 5
 
 const GOD_PRIVATE_KEY = Buffer.from("d893eacfffa3ab4199c057a9e52587dad6cb8fc727e5678b92a2f58e7221710d", "hex");
 
@@ -174,7 +175,7 @@ class Update
 			if(sortedBlocks[0])
 			{
 				const [majorityBlock, count] = sortedBlocks[0];
-				if(count / unl.length >= TRANSACTIONS_CONSENSUS_THRESHOULD)
+				if(unl.length < FULL_BLOCK_CHAIN_UNL_SCALE_LIMIT || count / unl.length >= TRANSACTIONS_CONSENSUS_THRESHOULD)
 				{
 					const result = await this.blockChain.runBlockChain({
 						block: new Block(Buffer.from(majorityBlock, 'hex'))

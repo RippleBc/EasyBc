@@ -71,7 +71,7 @@ class Stage extends AsyncEventEmitter
 			}, loggerHandler),
 
 			fatal: new Proxy(function(args) {
-				this.fatal(`args, ${process[Symbol.for("getStackInfo")]()}`);
+				this.fatal(`${process[Symbol.for("getStackInfo")](args)}`);
 				
 			}, loggerHandler),
 		}
@@ -205,7 +205,7 @@ class Stage extends AsyncEventEmitter
 
 				if(this.leftSynchronizeTryTimes > 0)
 				{
-					this.logger.info(`${this.name} Stage stageSynchronize, stage: ${this.ripple.stage}, stage synchronize is failed, retry ${STAGE_MAX_FINISH_RETRY_TIMES - this.leftSynchronizeTryTimes + 1}`);
+					this.logger.warn(`${this.name} Stage stageSynchronize, stage: ${this.ripple.stage}, stage synchronize is failed, retry ${STAGE_MAX_FINISH_RETRY_TIMES - this.leftSynchronizeTryTimes + 1}`);
 
 					this.stageSynchronize.reset();
 					this.stageSynchronize.start();
@@ -309,7 +309,7 @@ class Stage extends AsyncEventEmitter
 		// check if send repeat exchange data
 		if(dataExchangeCheck && this.checkIfNodeFinishDataExchange(address))
 		{
-			this.logger.info(`${this.name} Stage validate, address: ${address}, send the same exchange data`);
+			this.logger.error(`${this.name} Stage validate, address: ${address}, send the same exchange data`);
 			
 			// repeat data exchange
 			this.cheatedNodes.push({
@@ -332,7 +332,7 @@ class Stage extends AsyncEventEmitter
 				reason: CHEAT_REASON_INVALID_SIG
 			});
 
-			this.logger.info(`${this.name} Stage validate, address: ${address}, validate failed`);
+			this.logger.error(`${this.name} Stage validate, address: ${address}, validate failed`);
 
 			return
 		}
@@ -346,7 +346,7 @@ class Stage extends AsyncEventEmitter
 				reason: CHEAT_REASON_INVALID_ADDRESS
 			});
 			
-			this.logger.info(`${this.name} Stage validate, address should be ${address}, now is ${candidate.from.toString("hex")}`);
+			this.logger.error(`${this.name} Stage validate, address should be ${address}, now is ${candidate.from.toString("hex")}`);
 			
 			return
 		}

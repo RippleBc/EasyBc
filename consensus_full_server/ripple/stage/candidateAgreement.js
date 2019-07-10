@@ -64,7 +64,7 @@ class CandidateAgreement extends Stage
 
 		// debug candidate
 		for (let [key, value] of transactionCollsHash) {
-		  logger.trace(`CandidateAgreement handler, candidate hash: ${key}, count: ${value.count}`);
+		  logger.info(`CandidateAgreement handler, candidate hash: ${key}, count: ${value.count}`);
 		}
 
 		// statistic vote result
@@ -75,7 +75,7 @@ class CandidateAgreement extends Stage
 			// check if transactions num is zero
 			if(sortedTransactionColls[0][1].data.length === 1 && sortedTransactionColls[0][1].data[0] === 0xc0)
 			{
-				logger.trace("CandidateAgreement handler, candidate agreement success, but there is no transactions in this candidate, go to stage amalgamate");
+				logger.info("CandidateAgreement handler, candidate agreement success, but there is no transactions in this candidate, go to stage amalgamate");
 
 				// begin to synchronize stage and start a new round
 				if(this.ripple.counter.state !== STAGE_STATE_EMPTY)
