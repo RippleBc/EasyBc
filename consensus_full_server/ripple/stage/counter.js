@@ -123,15 +123,16 @@ class Counter extends Stage
 		}
 		else 
 		{
+			// sync stage debug info
 			let counterDataInfo = ""
 			for(let counterData of this.counterDatas)
 			{
 				counterDataInfo += `address: ${counterData.from.toString("hex")}, action: ${bufferToInt(counterData.action)}, `
 			}
 			counterDataInfo = counterDataInfo.slice(0, -1);
-
 			logger.error(`Counter handler, stage sync failed, ${counterDataInfo}`);
 
+			// 
 			this.ripple.run(true);
 		}
 		
@@ -237,7 +238,7 @@ class Counter extends Stage
 							{
 								// then amalgamate is processing, or block agreement is processing, or candidate agreement data exchange is processing
 								if(this.ripple.candidateAgreement.checkDataExchangeIsProceeding() 
-								|| this.ripple.amalgamate.checkIfDataExchangeIsFinish() 
+								|| this.ripple.amalgamate.checkIfDataExchangeIsFinish()
 								|| this.ripple.amalgamate.checkDataExchangeIsProceeding() 
 								|| this.ripple.blockAgreement.checkIfDataExchangeIsFinish() 
 								|| this.ripple.blockAgreement.checkDataExchangeIsProceeding() )
