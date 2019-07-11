@@ -77,6 +77,8 @@ class Counter extends Stage
 		//
 		if(sortedActionColls[0] && sortedActionColls[0][1] / (unl.length + 1) >= TRANSACTIONS_CONSENSUS_THRESHOULD)
 		{
+			this.reset();
+			
 			const action = sortedActionColls[0][0];
 
 			if(action === COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE)
@@ -132,11 +134,9 @@ class Counter extends Stage
 			counterDataInfo = counterDataInfo.slice(0, -1);
 			logger.error(`Counter handler, stage sync failed, ${counterDataInfo}`);
 
-			// 
+			this.reset();
 			this.ripple.run(true);
 		}
-		
-		this.reset();
 	}
 
 	/**
@@ -270,7 +270,9 @@ class Counter extends Stage
 					
 						p2p.send(address, PROTOCOL_CMD_STAGE_INFO_RESPONSE, this.counterData.serialize());
 					}).catch(e => {
-						this.logger.error(`Counter handleMessage, checkIfCounterRepeated throw exception, ${e}`);
+						this.logger.fatal(`Counter handleMessage, checkIfCounterRepeated throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+
+						process.exit(1)
 					})
 				}
 				else

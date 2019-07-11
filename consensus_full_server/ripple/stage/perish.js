@@ -1,14 +1,15 @@
 const PerishData = require("../data/perish");
 const utils = require("../../../depends/utils");
 const Stage = require("./stage");
-const { CHEAT_REASON_PERISH_DATA_INVALID_TIMESTAMP, CHEAT_REASON_INVALID_SIG, TRANSACTIONS_CONSENSUS_THRESHOULD, PROTOCOL_CMD_KILL_NODE_FINISH_STATE_REQUEST, PROTOCOL_CMD_KILL_NODE_FINISH_STATE_RESPONSE, STAGE_STATE_EMPTY, RIPPLE_STATE_PERISH_NODE, PROTOCOL_CMD_KILL_NODE_REQUEST, PROTOCOL_CMD_KILL_NODE_RESPONSE } = require("../../constant");
+const { RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES, CHEAT_REASON_PERISH_DATA_INVALID_TIMESTAMP, CHEAT_REASON_INVALID_SIG, TRANSACTIONS_CONSENSUS_THRESHOULD, PROTOCOL_CMD_KILL_NODE_FINISH_STATE_REQUEST, PROTOCOL_CMD_KILL_NODE_FINISH_STATE_RESPONSE, STAGE_STATE_EMPTY, RIPPLE_STATE_PERISH_NODE, PROTOCOL_CMD_KILL_NODE_REQUEST, PROTOCOL_CMD_KILL_NODE_RESPONSE } = require("../../constant");
 const _ = require("underscore");
+const { randomBytes } = require("crypto");
 
 const bufferToInt = utils.bufferToInt;
+const BN = utils.BN;
 
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerPerishNode")];
-const privateKey = process[Symbol.for("privateKey")];
 const unl = process[Symbol.for("unl")];
 
 const PERISH_DATA_TIMESTAMP_CHEATED_LEFT_GAP = 60 * 1000;
@@ -16,6 +17,11 @@ const PERISH_DATA_TIMESTAMP_CHEATED_RIGHT_GAP = 60 * 1000;
 
 const PERISH_DATA_TIMESTAMP_STOP_SPREAD_LEFT_GAP = 30 * 1000;
 const PERISH_DATA_TIMESTAMP_STOP_SPREAD_RIGHT_GAP = 30 * 1000;
+
+const getRandomPerishInterval = function()
+{
+	return new BN(randomBytes(2)).toNumber() % 5000;
+}
 
 class Perish extends Stage
 {
@@ -82,18 +88,35 @@ class Perish extends Stage
 
 			logger.warn(`Perish handler, begin to handle vicious node, sponsor node: ${perishData.from.toString('hex')}, perish node: ${perishData.address.toString('hex')}`)
 
+			this.ripple.stage = RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES;
+
+			this.reset();
+
 			// handle perish node
 			this.ripple.handlePerishNode(perishSponsors[0], perishAddress).then(() => {
-				if(this.perishData.address.toString('hex') !== perishData.address.toString('hex'))
-				{
-					return this.startPerishNode({
-						address: this.perishData
-					});
-				}
 				
-				this.reset();
-
 				this.ripple.run(true);
+
+				// handle cached messages
+				for(let i = 0; i < this.ripple.amalgamateMessagesCache.length; i++)
+				{
+					let {address, cmd, data} = this.ripple.amalgamateMessagesCache[i];
+					this.ripple.amalgamate.handleMessage(address, cmd, data);
+				}
+
+				this.ripple.amalgamateMessagesCache = [];	
+				
+				// begin to perish node again
+				if(this.ifActive && this.perishData.address.toString('hex') !== perishData.address.toString('hex'))
+				{
+					const waitTime = getRandomPerishInterval()
+
+					setTimeout(() => {
+						this.startPerishNode({
+							address: this.perishData.address
+						});
+					}, waitTime)
+				}
 			}).catch(e => {
 				logger.fatal(`Perish handler, this.ripple.handlePerishNode throw exception, ${process[Symbol.for("getStackInfo")](e)}`)
 
@@ -111,19 +134,21 @@ class Perish extends Stage
 			perishDataInfo = perishDataInfo.slice(0, -1);
 			logger.warn(`Perish handler, handle vicious node failed, ${perishDataInfo}`)
 
-			//
-			if(this.ifActive)
-			{
-				this.reset();
-
-				return this.startPerishNode({
-					address: this.perishData
-				});
-			}
-			
 			this.reset();
 
 			this.ripple.run(true);
+			
+			// begin to perish node again
+			if(this.ifActive)
+			{
+				const waitTime = getRandomPerishInterval()
+
+				setTimeout(() => {
+					this.startPerishNode({
+						address: this.perishData.address
+					});
+				}, waitTime)
+			}
 		}
 	}
 
@@ -187,13 +212,17 @@ class Perish extends Stage
 							{
 								// 
 								this.ifActive = false;
-								this.startPerishNode(perishData);
+								this.startPerishNode({
+									perishData: perishData
+								});
 							}
 						}
 
 						p2p.send(address, PROTOCOL_CMD_KILL_NODE_RESPONSE, this.perishData.serialize());
 					}).catch(e => {
-						this.logger.error(`Perish handleMessage, checkIfPerishRepeated throw exception, ${e}`);
+						this.logger.fatal(`Perish handleMessage, checkIfPerishRepeated throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+
+						process.exit(1);
 					})
 				}
 				else
@@ -235,24 +264,6 @@ class Perish extends Stage
 
 		this.perishDatas = [];
 		this.ifActive = true;
-	}
-
-	/**
-	 * @param {Buffer} address
-	 * @return {PerishData} 
-	 */
-	assemblePerishData(address)
-	{
-		assert(Buffer.isBuffer(address), `Perish assemblePerishData, address should be a Buffer, now is ${typeof address}`);
-
-		const perishData = new PerishData({
-			address: address,
-			timestamp: Date.now()
-		});
-
-		perishData.sign(privateKey);
-
-		return perishData;
 	}
 
 	/**

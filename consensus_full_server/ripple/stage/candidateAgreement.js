@@ -71,6 +71,8 @@ class CandidateAgreement extends Stage
 
 		if(sortedTransactionColls[0] && sortedTransactionColls[0][1].count / (unl.length + 1) >= TRANSACTIONS_CONSENSUS_THRESHOULD)
 		{
+			this.reset();
+
 			// check if transactions num is zero
 			if(sortedTransactionColls[0][1].data.length === 1 && sortedTransactionColls[0][1].data[0] === 0xc0)
 			{
@@ -98,8 +100,7 @@ class CandidateAgreement extends Stage
 				this.ripple.blockAgreement.run(sortedTransactionColls[0][1].data);
 			}
 
-			this.reset();
-			return;
+			return 
 		}
 		
 		// return to amalgamate stage
@@ -129,12 +130,13 @@ class CandidateAgreement extends Stage
 			logger.fatal(`CandidateAgreement handler, candidate agreement failed, prepare to stage synchronize, but counter state is not STAGE_STATE_EMPTY, ${getStackInfo()}`);
 			process.exit(1);
 		}
+
+		this.reset();
+		
 		this.ripple.counter.startStageSynchronize({
 			action: COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_TRANSACTION_CONSENSUS_FAILED
 		});
-
-		//
-		this.reset();
+		
 	}
 
 	/**
