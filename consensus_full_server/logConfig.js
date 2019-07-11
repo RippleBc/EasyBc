@@ -6,6 +6,12 @@ log4js.configure({
         stdout: {
             type: "stdout"
         },
+        command: {
+            type: "dateFile",
+            filename: "consensus_full_server/logs/command_log/",
+            pattern: "command-yyyy-MM-dd.log",
+            alwaysIncludePattern: true
+        },
         p2p: {
             type: "dateFile",
             filename: "consensus_full_server/logs/p2p_log/",
@@ -51,6 +57,7 @@ log4js.configure({
     },
     categories: {
         default: { appenders: ["stdout", "consensus"], level: "info" },
+        command: { appenders: ["stdout", "command"], level: "info" },
         consensus: { appenders: ["stdout", "consensus"], level: "info" },
         p2p: { appenders: ["stdout", "p2p"], level: "info" },
         net: { appenders: ["stdout", "net"], level: "info" },

@@ -69,7 +69,7 @@ class Ripple
 		assert(typeof sponsorNode === 'string', `Ripple handlePerishNode, sponsorNode should be an String, now is ${typeof sponsorNode}`);
 		assert(typeof perishNode === 'string', `Ripple handlePerishNode, perishNode should be an String, now is ${typeof perishNode}`);
 		
-		await unlManager.setNodeMalicious([sponsorNode, perishNode])
+		await unlManager.setNodesMalicious([sponsorNode, perishNode])
 	}
 
 	/**
@@ -101,6 +101,16 @@ class Ripple
 				
 				process.exit(1)
 			})
+		});
+	}
+
+	/**
+	 * @param {Buffer} address
+	 */
+	perishNode(address)
+	{
+		this.perish.startPerishNode({
+			address: address
 		});
 	}
 

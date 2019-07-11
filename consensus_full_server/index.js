@@ -94,6 +94,9 @@ process.on("uncaughtException", function(err) {
     /************************************** init p2p and consensus **************************************/
     await p2p.init();
 
+    //
+    require("./command")
+
     processor.run();
 })();
 

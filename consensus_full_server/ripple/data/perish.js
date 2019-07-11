@@ -4,13 +4,13 @@ const Base = require("./base");
 const Buffer = utils.Buffer;
 
 /**
- * Creates a new Black object
+ * Creates a new Perish object
  *
  * @class
  * @constructor
  * @prop 
  */
-class Black extends Base
+class Perish extends Base
 {
 	constructor(data)
 	{
@@ -55,4 +55,4 @@ class Black extends Base
 	}
 }
 
-module.exports = Black;
+module.exports = Perish;

@@ -13,6 +13,11 @@ class UnlManager
         this._unl = await this.unlDb.getUnl();
     }
 
+    get fullUnl()
+    {
+        return this._unl;
+    }
+
     get unl() 
     {
         return this._unl.filter(node => {
@@ -21,13 +26,11 @@ class UnlManager
     }
 
     /**
-     * @param {Array} addresses
+     * @param {Array/String} addresses
      */
-    async setNodeOffLine(addresses)
+    async setNodesOffline(addresses)
     {
-        assert(Array.isArray(addresses), `UnlManager setNodeOffLine, addresses should be an Array, now is ${typeof addresses}`)
-
-        await this.unlDb.updateUnl(addresses, 1);
+        assert(Array.isArray(addresses), `UnlManager setNodesOffline, addresses should be an Array, now is ${typeof addresses}`)
 
         for(let node of this._unl)
         {
@@ -41,16 +44,16 @@ class UnlManager
             }
             
         }
+
+        await this.unlDb.updateUnl(addresses, 1);
     }
 
     /**
-     * @param {Array} addresses
+     * @param {Array/String} addresses
      */
-    async setNodeOnLine(addresses)
+    async setNodesOnline(addresses)
     {
-        assert(Array.isArray(addresses), `UnlManager setNodeOnLine, addresses should be a String, now is ${typeof addresses}`)
-
-        await this.unlDb.updateUnl(addresses, 0);
+        assert(Array.isArray(addresses), `UnlManager setNodesOnline, addresses should be a String, now is ${typeof addresses}`)
 
         for(let node of this._unl)
         {
@@ -64,14 +67,16 @@ class UnlManager
             }
             
         }
+
+        await this.unlDb.updateUnl(addresses, 0);
     }
 
     /**
-     * @param {Array} addresses
+     * @param {Array/String} addresses
      */
-    async setNodeMalicious(addresses)
+    async setNodesMalicious(addresses)
     {
-        assert(Array.isArray(addresses), `UnlManager setNodeMalicious, addresses should be an Array, now is ${typeof addresses}`)
+        assert(Array.isArray(addresses), `UnlManager setNodesMalicious, addresses should be an Array, now is ${typeof addresses}`)
 
         await this.unlDb.updateUnl(addresses, 2);
 
@@ -90,11 +95,11 @@ class UnlManager
     }
 
     /**
-     * @param {Array} addresses
+     * @param {Array/String} addresses
      */
-    async setNodeRighteous(addresses)
+    async setNodesRighteous(addresses)
     {
-        assert(Array.isArray(addresses), `UnlManager setNodeRighteous, addresses should be an Array, now is ${typeof addresses}`)
+        assert(Array.isArray(addresses), `UnlManager setNodesRighteous, addresses should be an Array, now is ${typeof addresses}`)
 
         await this.unlDb.updateUnl(addresses, 0);
 

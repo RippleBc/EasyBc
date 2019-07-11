@@ -2,6 +2,7 @@ const { tcp } = require("../config.json");
 const utils = require("../../depends/utils");
 const { createClient, createServer, connectionsManager } = require("../../depends/fly");
 const assert = require("assert");
+const { TRANSACTIONS_CONSENSUS_THRESHOULD } = require("../constant")
 
 const unl = process[Symbol.for("unl")];
 
@@ -9,6 +10,7 @@ const Buffer = utils.Buffer;
 
 const loggerP2p = process[Symbol.for("loggerP2p")];
 const loggerNet = process[Symbol.for("loggerNet")];
+const unlManager = process[Symbol.for("unlManager")];
 
 const CHECK_CONNECT_INTERVAL = 10 * 1000;
 
@@ -82,11 +84,20 @@ class P2p
 				loggerP2p.error(`P2p send, send msg to address: ${connection.address}, host: ${connection.address().address}, port: ${connection.address().port}, ${process[Symbol.for("getStackInfo")](e)}`);
 			}
 		}
+		else
+		{
+			if(unl.length > unlManager.fullUnl.length * TRANSACTIONS_CONSENSUS_THRESHOULD)
+			{
+				unlManager.setNodesOffline([address.toString("hex")])
+			}
+		}
 	}
 
 	sendAll(cmd, data)
 	{
 		assert(typeof cmd === "number", `P2p sendAll, cmd should be a Number, now is ${typeof cmd}`);
+
+		const offLineNodes = []
 
 		for(let i = 0; i < unl.length; i++)
 		{
@@ -102,6 +113,16 @@ class P2p
 					loggerP2p.error(`P2p sendAll, send msg to address: ${connection.address}, host: ${connection.address().address}, port: ${connection.address().port}, ${process[Symbol.for("getStackInfo")](e)}`);
 				}
 			}
+			else
+			{
+				offLineNodes.push(unl[i].address)
+				
+			}
+		}
+
+		if(offLineNodes.length > 0 && unl.length > unlManager.fullUnl.length * TRANSACTIONS_CONSENSUS_THRESHOULD)
+		{
+			unlManager.setNodesOffline(offLineNodes)
 		}
 	}
 
