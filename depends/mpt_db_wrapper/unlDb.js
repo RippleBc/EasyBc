@@ -17,7 +17,7 @@ class UnlDb
       this.Unl.find({
         
       }, 
-      'address host queryPort p2pPort', 
+      'address host queryPort p2pPort state', 
       { 
         lean: true 
       }, 
