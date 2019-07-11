@@ -288,21 +288,6 @@ class Counter extends Stage
 		return this.state === STAGE_STATE_EMPTY && stageInvalidFrequency >= COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD * unl.length
 	}
 
-	checkIfFetchingNewTransactions()
-	{
-		return this.ripple.stage === RIPPLE_STAGE_AMALGAMATE_FETCHING_NEW_TRANSACTIONS;
-	}
-
-	checkActionIfFetchingNewTransactionsAndAmalgamate()
-	{
-		return this.action === COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE;
-	}
-
-	checkActionIfReuseCachedTransactionsAndAmalgamate()
-	{
-		return this.action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE;
-	}
-
 	/**
 	 * @param {Number} action
 	 * @param {CounterData} counterData

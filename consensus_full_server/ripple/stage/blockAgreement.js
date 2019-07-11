@@ -248,11 +248,6 @@ class BlockAgreement extends Stage
 		this.removeAllListeners("runBlockFinished");
 		this.rippleBlocks = [];
 	}
-
-	checkIfIsProcessingBlock()
-	{
-		return this.ripple.stage === RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK;
-	}
 }
 
 module.exports = BlockAgreement;
