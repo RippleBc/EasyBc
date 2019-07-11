@@ -1,6 +1,6 @@
 const CounterData = require("../data/counter");
 const utils = require("../../../depends/utils");
-const { TIMEOUT_REASON_SLOW, CHEAT_REASON_INVALID_SIG, TRANSACTIONS_CONSENSUS_THRESHOULD, CHEAT_REASON_COUNTER_DATA_INVALID_TIMESTAMP, CHEAT_REASON_REPEATED_COUNTER_DATA, CHEAT_REASON_INVALID_COUNTER_ACTION, RIPPLE_STAGE_AMALGAMATE_FETCHING_NEW_TRANSACTIONS, COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE, RIPPLE_STATE_PERISH_NODE, COUNTER_CONSENSUS_STAGE_TRIGGER_MAX_SIZE, PROTOCOL_CMD_COUNTER_FINISH_STATE_REQUEST, PROTOCOL_CMD_COUNTER_FINISH_STATE_RESPONSE, RIPPLE_STATE_STAGE_CONSENSUS, COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD, COUNTER_HANDLER_TIME_DETAY, COUNTER_INVALID_STAGE_TIME_SECTION, STAGE_STATE_EMPTY, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_STAGE_INFO_REQUEST, PROTOCOL_CMD_STAGE_INFO_RESPONSE } = require("../../constant");
+const { CHEAT_REASON_MALICIOUS_COUNTER_ACTION, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_STAGE_FALL_BEHIND, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_TRANSACTION_CONSENSUS_FAILED, TIMEOUT_REASON_SLOW, CHEAT_REASON_INVALID_SIG, TRANSACTIONS_CONSENSUS_THRESHOULD, CHEAT_REASON_COUNTER_DATA_INVALID_TIMESTAMP, CHEAT_REASON_REPEATED_COUNTER_DATA, CHEAT_REASON_INVALID_COUNTER_ACTION, RIPPLE_STAGE_AMALGAMATE_FETCHING_NEW_TRANSACTIONS, COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE, RIPPLE_STATE_PERISH_NODE, COUNTER_CONSENSUS_STAGE_TRIGGER_MAX_SIZE, PROTOCOL_CMD_COUNTER_FINISH_STATE_REQUEST, PROTOCOL_CMD_COUNTER_FINISH_STATE_RESPONSE, RIPPLE_STATE_STAGE_CONSENSUS, COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD, COUNTER_HANDLER_TIME_DETAY, COUNTER_INVALID_STAGE_TIME_SECTION, STAGE_STATE_EMPTY, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_STAGE_INFO_REQUEST, PROTOCOL_CMD_STAGE_INFO_RESPONSE } = require("../../constant");
 const Stage = require("./stage");
 const assert = require("assert");
 const _ = require("underscore");
@@ -73,18 +73,6 @@ class Counter extends Stage
 
 		// statistic vote result
 		const sortedActionColls = _.sortBy([...actionCollsMap], actionColl => -actionColl[1]);
-		
-
-		// record timeout nodes
-		const timeoutNodesInfo = []
-		for(let counterData of this.counterDatas)
-		{
-			timeoutNodesInfo.push({
-				address: counterData.from.toString("hex"),
-				reason: TIMEOUT_REASON_SLOW
-			});
-		}
-		this.ripple.handleTimeoutNodes(timeoutNodesInfo);
 
 		//
 		if(sortedActionColls[0] && sortedActionColls[0][1] / (unl.length + 1) >= TRANSACTIONS_CONSENSUS_THRESHOULD)
@@ -114,9 +102,15 @@ class Counter extends Stage
 					process.exit(1);
 				});
 			}
-			else if(action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE)
+			else if(action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_TRANSACTION_CONSENSUS_FAILED)
 			{
-				logger.info("Counter handler, stage synchronize success, begin to reuse cached transactions and amalgamate")
+				logger.info("Counter handler, stage synchronize success, begin to reuse cached transactions and amalgamate because of transaction consensus failed")
+
+				this.ripple.run(true);
+			}
+			else if(action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_STAGE_FALL_BEHIND)
+			{
+				logger.info("Counter handler, stage synchronize success, begin to reuse cached transactions and amalgamate because of stage fall behind")
 
 				this.ripple.run(true);
 			}
@@ -219,9 +213,13 @@ class Counter extends Stage
 							{
 								logger.info(`Counter handleMessage, begin to synchronize stage negatively, stage: ${this.ripple.stage}, begin to fetch new transactions and amalgamate`);
 							}
-							else if(action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE)
+							else if(action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_TRANSACTION_CONSENSUS_FAILED)
 							{
-								logger.info(`Counter handleMessage, begin to synchronize stage negatively, stage: ${this.ripple.stage}, begin to use cached tranasctions and amalgamate`);
+								logger.info(`Counter handleMessage, begin to synchronize stage negatively, stage: ${this.ripple.stage}, begin to use cached tranasctions and amalgamate because of transaction consensus failed`);
+							}
+							else if(action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_STAGE_FALL_BEHIND)
+							{
+								logger.info(`Counter handleMessage, begin to synchronize stage negatively, stage: ${this.ripple.stage}, begin to use cached tranasctions and amalgamate because of stage fall behind`);
 							}
 							else
 							{
@@ -232,7 +230,35 @@ class Counter extends Stage
 									reason: CHEAT_REASON_INVALID_COUNTER_ACTION
 								})
 							}
-							// 
+
+							// handle cheated nodes
+							if(action === COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE 
+								|| action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_TRANSACTION_CONSENSUS_FAILED)
+							{
+								// then amalgamate is processing, or block agreement is processing, or candidate agreement data exchange is processing
+								if(this.ripple.candidateAgreement.checkDataExchangeIsProceeding() 
+								|| this.ripple.amalgamate.checkIfDataExchangeIsFinish() 
+								|| this.ripple.amalgamate.checkDataExchangeIsProceeding() 
+								|| this.ripple.blockAgreement.checkIfDataExchangeIsFinish() 
+								|| this.ripple.blockAgreement.checkDataExchangeIsProceeding() )
+								{
+									return this.cheatedNodes.push({
+										address: counterData.from.toString('hex'),
+										reason: CHEAT_REASON_MALICIOUS_COUNTER_ACTION
+									})
+								}
+							}
+
+							// record fall behind node
+							if(action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_TRANSACTION_CONSENSUS_FAILED)
+							{
+								this.timeoutNodes.push({
+									address: counterData.from.toString('hex'),
+									reason: TIMEOUT_REASON_SLOW
+								});
+							}
+
+							// check if spread counter data
 							if(timestamp < now + COUNTER_DATA_TIMESTAMP_STOP_SPREAD_RIGHT_GAP && timestamp > now - COUNTER_DATA_TIMESTAMP_STOP_SPREAD_LEFT_GAP)
 							{
 								this.startStageSynchronize({

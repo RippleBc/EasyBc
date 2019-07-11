@@ -1,4 +1,4 @@
-const { CHEAT_REASON_INVALID_ADDRESS, CHEAT_REASON_INVALID_SIG, CHEAT_REASON_REPEAT_DATA_EXCHANGE, CHEAT_REASON_REPEAT_SYNC_FINISH, TIMEOUT_REASON_OFFLINE, TIMEOUT_REASON_DEFER, RIPPLE_STAGE_BLOCK_AGREEMENT, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE, RIPPLE_STATE_PERISH_NODE, RIPPLE_STATE_TRANSACTIONS_CONSENSUS, RIPPLE_STATE_STAGE_CONSENSUS, STAGE_DATA_EXCHANGE_TIMEOUT, STAGE_STAGE_SYNCHRONIZE_TIMEOUT, STAGE_MAX_FINISH_RETRY_TIMES, STAGE_STATE_EMPTY, STAGE_STATE_DATA_EXCHANGE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING } = require("../../constant");
+const { CHEAT_REASON_INVALID_ADDRESS, CHEAT_REASON_INVALID_SIG, CHEAT_REASON_REPEAT_DATA_EXCHANGE, CHEAT_REASON_REPEAT_SYNC_FINISH, TIMEOUT_REASON_OFFLINE, TIMEOUT_REASON_DEFER, RIPPLE_STAGE_BLOCK_AGREEMENT, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_STAGE_FALL_BEHIND, RIPPLE_STATE_PERISH_NODE, RIPPLE_STATE_TRANSACTIONS_CONSENSUS, RIPPLE_STATE_STAGE_CONSENSUS, STAGE_DATA_EXCHANGE_TIMEOUT, STAGE_STAGE_SYNCHRONIZE_TIMEOUT, STAGE_MAX_FINISH_RETRY_TIMES, STAGE_STATE_EMPTY, STAGE_STATE_DATA_EXCHANGE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING } = require("../../constant");
 const utils = require("../../../depends/utils");
 const assert = require("assert");
 const Sender = require("../sender");
@@ -140,7 +140,7 @@ class Stage extends AsyncEventEmitter
 					loggerStageConsensus.warn(`${this.name} Counter handleMessage, begin to synchronize stage actively, stage: ${this.ripple.stage}`);
 
 					this.ripple.counter.startStageSynchronize({
-						action: COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE
+						action: COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_STAGE_FALL_BEHIND
 					});
 
 					return;
@@ -239,7 +239,7 @@ class Stage extends AsyncEventEmitter
 						loggerStageConsensus.warn(`${this.name} Counter handleMessage, begin to synchronize stage actively again, stage: ${this.ripple.stage}`);
 						
 						this.ripple.counter.startStageSynchronize({
-							action: COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE
+							action: COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_STAGE_FALL_BEHIND
 						});
 
 						return
@@ -307,7 +307,7 @@ class Stage extends AsyncEventEmitter
 		assert(typeof address === 'string', `${this.name} Stage, address should be a String, now is ${typeof address}`);
 
 		// check if send repeat exchange data
-		if(dataExchangeCheck && this.checkIfNodeFinishDataExchange(address))
+		if(dataExchangeCheck && this.dataExchange.checkIfNodeIsFinished(address))
 		{
 			this.logger.error(`${this.name} Stage validate, address: ${address}, send the same exchange data`);
 			
@@ -443,16 +443,6 @@ class Stage extends AsyncEventEmitter
 	checkDataExchangeIsProceeding()
 	{
 		return this.state === STAGE_STATE_DATA_EXCHANGE_PROCEEDING;
-	}
-
-	/**
-	 * @param {String} address
-	 */
-	checkIfNodeFinishDataExchange(address)
-	{
-		assert(typeof address === "string", `${this.name} Stage checkIfNodeFinishDataExchange, address should be a String, now is ${typeof address}`);
-
-		return this.dataExchange.checkIfNodeIsFinished(address)
 	}
 }
 
