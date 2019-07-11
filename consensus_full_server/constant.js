@@ -71,6 +71,7 @@ module.exports.TRANSACTIONS_CONSENSUS_THRESHOULD = 0.8;
 // timeout reason
 module.exports.TIMEOUT_REASON_OFFLINE = 'offline';
 module.exports.TIMEOUT_REASON_DEFER = 'defer';
+module.exports.TIMEOUT_REASON_SLOW = 'slow';
 
 // cheat reason
 module.exports.CHEAT_REASON_REPEAT_DATA_EXCHANGE = 'repeatDataExchange'
