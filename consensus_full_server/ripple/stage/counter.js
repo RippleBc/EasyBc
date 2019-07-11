@@ -45,6 +45,15 @@ class Counter extends Stage
 
 	handler(ifSuccess)
 	{
+		if(ifSuccess)
+		{
+			logger.info("Counter handler, sync stage success")
+		}
+		else
+		{	
+			logger.info("Counter handler, sync stage success because of timeout")
+		}
+
 		const actionCollsMap = new Map();
 
 		for(let counterData of this.counterDatas)

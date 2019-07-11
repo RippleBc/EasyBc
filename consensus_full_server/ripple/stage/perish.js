@@ -36,11 +36,11 @@ class Perish extends Stage
 	{
 		if(ifSuccess)
 		{
-			logger.warn("Perish handler, perish node success")
+			logger.info("Perish handler, perish node success")
 		}
 		else
 		{	
-			logger.warn("Perish handler, perish node success because of timeout")
+			logger.info("Perish handler, perish node success because of timeout")
 		}
 
 		const perishDataMap = new Map();
