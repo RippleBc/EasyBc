@@ -14,7 +14,7 @@ const loggerConsensus = process[Symbol.for("loggerConsensus")];
 const p2p = process[Symbol.for("p2p")];
 const mysql = process[Symbol.for("mysql")];
 const unl = process[Symbol.for("unl")];
-const fullUnl = process[Symbol.for("unl")];
+const fullUnl = process[Symbol.for("fullUnl")];
 
 class Stage extends AsyncEventEmitter
 {
