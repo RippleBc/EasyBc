@@ -34,11 +34,11 @@ class ConnectionsManager extends AsyncEventEmitter
 			
 			connection.logger.info(`ConnectionsManager push, new address ${connection.address.toString("hex")}`);
 
-			this.emit("addressConnected", connection.address);
+			this.emit("addressConnected", connection.address.toString("hex"));
 
 			connection.once("connectionClosed", () => {
 
-				this.emit("addressClosed", connection.address);
+				this.emit("addressClosed", connection.address.toString("hex"));
 
 				this.connections.splice(i, 1);
 			})
@@ -55,11 +55,11 @@ class ConnectionsManager extends AsyncEventEmitter
 
 				connection.logger.info(`ConnectionsManager push, address ${connection.address.toString("hex")} has closed, replace with new connection`);
 				
-				this.emit("addressConnected", connection.address)
+				this.emit("addressConnected", connection.address.toString("hex"))
 
 				connection.once("connectionClosed", () => {
 
-					this.emit("addressClosed", connection.address)
+					this.emit("addressClosed", connection.address.toString("hex"))
 
 					this.connections.splice(i, 1);
 				})
@@ -101,22 +101,20 @@ class ConnectionsManager extends AsyncEventEmitter
 	 */
 	close(address)
 	{
-		assert(typeof index === "string", `ConnectionsManager close, index should be an String, now is ${typeof connection}`);
+		assert(typeof address === "string", `ConnectionsManager close, address should be an String, now is ${typeof address}`);
 
 		for(let i = 0; i < this.connections.length; i++)
 		{
-			if(this.connections[i].address === address)
+			if(this.connections[i].address.toString("hex") === address)
 			{
-				this.connections[i].logger.info(`ConnectionsManager close, address ${address}`)
+				this.connections[i].logger.warn(`ConnectionsManager close, address ${address}`)
 
-				this.emit("addressClosed", this.connections[i].address)
+				this.emit("addressClosed", address)
 
 				// delete connectionClosed event listeners
 				this.connections[i].removeAllListeners("connectionClosed")
 
 				this.connections[i].close();
-
-				this.connections[i].logger.warn(`ConnectionManager clearInvalidConnections, close address ${connections[i].address}`)
 
 				this.connections.splice(i, 1);
 
@@ -129,16 +127,14 @@ class ConnectionsManager extends AsyncEventEmitter
 	{
 		for(let i = 0; i < this.connections.length; i++)
 		{
-			this.connections[i].logger.info(`ConnectionsManager closeAll, address ${this.connections[i].address ? this.connections[i].address.toString('hex') : ""}`)
+			this.connections[i].logger.warn(`ConnectionsManager closeAll, address ${this.connections[i].address.toString('hex')}`)
 
-			this.emit("addressClosed", this.connections[i].address)
+			this.emit("addressClosed", this.connections[i].address.toString("hex"))
 
 			// delete connectionClosed event listeners
 			this.connections[i].removeAllListeners("connectionClosed")
 
 			this.connections[i].close();
-
-			this.connections[i].logger.warn(`ConnectionManager clearInvalidConnections, close address ${this.connections[i].address}`)
 		}
 
 		this.connections = [];
@@ -156,19 +152,19 @@ class ConnectionsManager extends AsyncEventEmitter
 
 		for(let i = 0; i < originConnections.length; i++)
 		{
-			if(undefined !== addresses.find(address => address === originConnections[i].address))
+			if(undefined !== addresses.find(address => address === originConnections[i].address.toString("hex")))
 			{
 				this.connections.push(originConnections[i]);
 			}
 			else
 			{
-				this.emit("addressClosed", originConnections[i].address)
+				this.emit("addressClosed", originConnections[i].address.toString("hex"))
 
 				originConnections[i].removeAllListeners("connectionClosed");
 
 				originConnections[i].close();
 
-				originConnections[i].logger.warn(`ConnectionManager clearInvalidConnections, close address ${originConnections[i].address}`)
+				originConnections[i].logger.warn(`ConnectionManager clearInvalidConnections, close address ${originConnections[i].address.toString("hex")}`)
 			}
 		}
 	}
