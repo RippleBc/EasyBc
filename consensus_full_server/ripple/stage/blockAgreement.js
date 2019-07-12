@@ -16,6 +16,7 @@ const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
 const privateKey = process[Symbol.for("privateKey")];
 const unl = process[Symbol.for("unl")];
+const fullUnl = process[Symbol.for("fullUnl")];
 
 class BlockAgreement extends Stage
 {
@@ -71,7 +72,7 @@ class BlockAgreement extends Stage
 
 		const sortedBlocks = _.sortBy([...blocksHash], block => -block[1].count);
 
-		if(sortedBlocks[0] && sortedBlocks[0][1].count / (unl.length + 1) >= TRANSACTIONS_CONSENSUS_THRESHOULD)
+		if(sortedBlocks[0] && sortedBlocks[0][1].count / (fullUnl.length + 1) >= TRANSACTIONS_CONSENSUS_THRESHOULD)
 		{
 			logger.info("BlockAgreement handler, block agreement success, begin to process block");
 

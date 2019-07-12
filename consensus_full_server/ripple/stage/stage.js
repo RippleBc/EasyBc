@@ -1,11 +1,10 @@
-const { CHEAT_REASON_INVALID_ADDRESS, CHEAT_REASON_INVALID_SIG, CHEAT_REASON_REPEAT_DATA_EXCHANGE, CHEAT_REASON_REPEAT_SYNC_FINISH, TIMEOUT_REASON_OFFLINE, TIMEOUT_REASON_DEFER, RIPPLE_STAGE_BLOCK_AGREEMENT, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_STAGE_FALL_BEHIND, RIPPLE_STATE_PERISH_NODE, RIPPLE_STATE_TRANSACTIONS_CONSENSUS, RIPPLE_STATE_STAGE_CONSENSUS, STAGE_DATA_EXCHANGE_TIMEOUT, STAGE_STAGE_SYNCHRONIZE_TIMEOUT, STAGE_MAX_FINISH_RETRY_TIMES, STAGE_STATE_EMPTY, STAGE_STATE_DATA_EXCHANGE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING } = require("../../constant");
+const { CHEAT_REASON_INVALID_ADDRESS, CHEAT_REASON_INVALID_SIG, CHEAT_REASON_REPEAT_DATA_EXCHANGE, CHEAT_REASON_REPEAT_SYNC_FINISH, RIPPLE_STAGE_BLOCK_AGREEMENT, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_STAGE_FALL_BEHIND, RIPPLE_STATE_PERISH_NODE, RIPPLE_STATE_TRANSACTIONS_CONSENSUS, RIPPLE_STATE_STAGE_CONSENSUS, STAGE_DATA_EXCHANGE_TIMEOUT, STAGE_STAGE_SYNCHRONIZE_TIMEOUT, STAGE_MAX_FINISH_RETRY_TIMES, STAGE_STATE_EMPTY, STAGE_STATE_DATA_EXCHANGE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING } = require("../../constant");
 const utils = require("../../../depends/utils");
 const assert = require("assert");
 const Sender = require("../sender");
 const AsyncEventEmitter = require('async-eventemitter');
 const Base = require("../data/base");
 
-const stripHexPrefix = utils.stripHexPrefix;
 const bufferToInt = utils.bufferToInt;
 const Buffer = utils.Buffer;
 
@@ -76,9 +75,6 @@ class Stage extends AsyncEventEmitter
 			}, loggerHandler),
 		}
 
-		// timeout nodes
-		this.timeoutNodes = [];
-
 		// cheated nodes
 		this.cheatedNodes = [];
 
@@ -96,6 +92,9 @@ class Stage extends AsyncEventEmitter
 				this.logger.error(`${this.name} Stage dataExchange, stage: ${this.ripple.stage}, saveDataExchangeTimeConsume throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 			});
 
+			// handle abnormal nodes
+			this.ripple.handleTimeoutNodes(this.dataExchange.timeoutNodes);
+
 			if(result)
 			{
 				this.logger.info(`${this.name} Stage dataExchange, stage: ${this.ripple.stage}, dataExchange is over success`);
@@ -110,28 +109,6 @@ class Stage extends AsyncEventEmitter
 			}
 			else
 			{
-				// record the timeout node
-				for(let i = 0; i < unl.length; i++)
-				{
-					if(!this.dataExchange.checkIfNodeIsFinished(stripHexPrefix(unl[i].address)))
-					{
-						if(p2p.checkIfConnectionIsOpen(Buffer.from(unl[i].address, "hex")))
-						{
-							this.timeoutNodes.push({
-								address: unl[i].address,
-								reason: TIMEOUT_REASON_DEFER
-							});
-						}
-						else
-						{
-							this.timeoutNodes.push({
-								address: unl[i].address,
-								reason: TIMEOUT_REASON_OFFLINE
-							});
-						}
-					}
-				}
-
 				this.logger.warn(`${this.name} Stage dataExchange, stage: ${this.ripple.stage}, dataExchange is over because of timeout`);
 
 				// data exchange is failed, try to stage consensus
@@ -167,7 +144,7 @@ class Stage extends AsyncEventEmitter
 				});
 
 				// handle abnormal nodes
-				this.ripple.handleTimeoutNodes(this.timeoutNodes);
+				this.ripple.handleTimeoutNodes(this.stageSynchronize.timeoutNodes);
 				this.ripple.handleCheatedNodes(this.cheatedNodes);
 
 				// if state is transactions consensus and stage sync success, reset counter
@@ -181,32 +158,14 @@ class Stage extends AsyncEventEmitter
 			}
 			else
 			{
-				// record the timeout node
-				for(let i = 0; i < unl.length; i++)
-				{
-					if(!this.stageSynchronize.checkIfNodeIsFinished(stripHexPrefix(unl[i].address)))
-					{
-						if(p2p.checkIfConnectionIsOpen(Buffer.from(unl[i].address, "hex")))
-						{
-							this.timeoutNodes.push({
-								address: unl[i].address,
-								reason: TIMEOUT_REASON_DEFER
-							});
-						}
-						else
-						{
-							this.timeoutNodes.push({
-								address: unl[i].address,
-								reason: TIMEOUT_REASON_OFFLINE
-							});
-						}
-					}
-				}
-
 				if(this.leftSynchronizeTryTimes > 0)
 				{
 					this.logger.warn(`${this.name} Stage stageSynchronize, stage: ${this.ripple.stage}, stage synchronize is failed, retry ${STAGE_MAX_FINISH_RETRY_TIMES - this.leftSynchronizeTryTimes + 1}`);
 
+					// handle abnormal nodes
+					this.ripple.handleTimeoutNodes(this.stageSynchronize.timeoutNodes);
+
+					// sync again
 					this.stageSynchronize.reset();
 					this.stageSynchronize.start();
 
@@ -230,7 +189,7 @@ class Stage extends AsyncEventEmitter
 					});
 
 					// handle abnormal nodes
-					this.ripple.handleTimeoutNodes(this.timeoutNodes);
+					this.ripple.handleTimeoutNodes(this.stageSynchronize.timeoutNodes);
 					this.ripple.handleCheatedNodes(this.cheatedNodes);
 
 					// data exchange is failed, try to stage consensus
@@ -425,7 +384,6 @@ class Stage extends AsyncEventEmitter
 
 	reset()
 	{
-		this.timeoutNodes = [];
 		this.cheatedNodes = [];
 
 		this.state = STAGE_STATE_EMPTY;

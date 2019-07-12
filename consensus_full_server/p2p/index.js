@@ -4,6 +4,7 @@ const { createClient, createServer, connectionsManager } = require("../../depend
 const assert = require("assert");
 
 const unl = process[Symbol.for("unl")];
+const fullUnl = process[Symbol.for("fullUnl")];
 
 const Buffer = utils.Buffer;
 
@@ -51,9 +52,9 @@ class P2p
 		});
 
 		// init conn
-		for(let i = 0; i < unl.length; i++)
+		for(let i = 0; i < fullUnl.length; i++)
 		{
-			const node = unl[i];
+			const node = fullUnl[i];
 
 			try
 			{
@@ -66,15 +67,18 @@ class P2p
 				});
 			}
 			catch(e)
-			{				
+			{
+				// 
+				unlManager.setNodesOffline([node.address])
+
 				loggerP2p.error(`P2p init, connect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort}, ${process[Symbol.for("getStackInfo")](e)}`);
 			}
 		}
 
 		// check connections
-		setTimeout(() => {
+		setInterval(() => {
 			// clear invalid connections
-			connectionsManager.clearInvalidConnections(unl.map(node => node.address))
+			connectionsManager.clearInvalidConnections(fullUnl.map(node => node.address))
 
 			// try to reconnect other nodes
 			this.reconnectAll();
@@ -142,9 +146,9 @@ class P2p
 
 	async reconnectAll()
 	{
-		for(let i = 0; i < unl.length; i++)
+		for(let i = 0; i < fullUnl.length; i++)
 		{
-			const node = unl[i];
+			const node = fullUnl[i];
 			const connection = connectionsManager.get(Buffer.from(node.address, "hex"));
 
 			if(!connection || connection.checkIfClosed())

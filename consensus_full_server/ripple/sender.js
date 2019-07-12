@@ -1,10 +1,13 @@
 const utils = require("../../depends/utils");
 const assert = require("assert");
+const { TIMEOUT_REASON_OFFLINE, TIMEOUT_REASON_DEFER } = require("../constant")
 
 const stripHexPrefix = utils.stripHexPrefix;
 
 const logger = process[Symbol.for("loggerConsensus")];
 const unl = process[Symbol.for("unl")];
+const fullUnl = process[Symbol.for("fullUnl")];
+const p2p = process[Symbol.for("p2p")];
 
 const SENDER_STATE_IDLE = 1;
 const SENDER_STATE_PROCESSING = 2;
@@ -23,7 +26,7 @@ class Sender
 		this.state = SENDER_STATE_IDLE;
 
 		this.finishAddresses = new Set()
-		this.timeoutAddresses = new Set();
+		this.timeoutNodes = [];
 	}
 
 	/**
@@ -89,11 +92,24 @@ class Sender
 
 		this.timeout = setTimeout(() => {
 			// record timeout nodes
-			for(let i = 0; i < unl.length; i++)
+			for(let i = 0; i < fullUnl.length; i++)
 			{
-				if(!this.finishAddresses.has(stripHexPrefix(unl[i].address)))
+				if(!this.finishAddresses.has(fullUnl[i].address))
 				{
-					this.timeoutAddresses.add(stripHexPrefix(unl[i].address));
+					if(p2p.checkIfConnectionIsOpen(Buffer.from(fullUnl[i].address, "hex")))
+					{
+						this.timeoutNodes.push({
+							address: fullUnl[i].address,
+							reason: TIMEOUT_REASON_DEFER
+						});
+					}
+					else
+					{
+						this.timeoutNodes.push({
+							address: fullUnl[i].address,
+							reason: TIMEOUT_REASON_OFFLINE
+						});
+					}
 				}
 			}
 
@@ -114,7 +130,7 @@ class Sender
 		this.consensusTimeConsume = 0;
 
 		this.finishAddresses = new Set();
-		this.timeoutAddresses = new Set();
+		this.timeoutNodes = [];
 	}
 }
 

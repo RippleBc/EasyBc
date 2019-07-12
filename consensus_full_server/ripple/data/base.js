@@ -2,6 +2,7 @@ const assert = require("assert");
 const utils = require("../../../depends/utils");
 
 const unl = process[Symbol.for("unl")];
+const fullUnl = process[Symbol.for("fullUnl")];
 
 const rlp = utils.rlp;
 const sha256 = utils.sha256;
@@ -108,9 +109,9 @@ class Base
   {
     assert(Buffer.isBuffer(address), `Base checkAddress, address should be an Buffer, now is ${typeof address}`);
 
-    for(let i = 0; i < unl.length; i++)
+    for(let i = 0; i < fullUnl.length; i++)
     {
-      const node = unl[i];
+      const node = fullUnl[i];
 
       if(address.toString("hex") === utils.stripHexPrefix(node.address))
       {

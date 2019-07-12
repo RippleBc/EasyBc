@@ -11,6 +11,7 @@ const _ = require("underscore");
 const mongo = process[Symbol.for("mongo")];
 const logger = process[Symbol.for("loggerUpdate")];
 const unl = process[Symbol.for("unl")];
+const fullUnl = process[Symbol.for("fullUnl")];
 
 const BN = utils.BN;
 const Buffer = utils.Buffer;
@@ -121,9 +122,9 @@ class Update
 		{
 			let blocks = new Map();
 
-			for(let i = 0; i < unl.length; i++)
+			for(let i = 0; i < fullUnl.length; i++)
 			{
-				const node = unl[i];
+				const node = fullUnl[i];
 
 
 				let options = {
@@ -175,7 +176,7 @@ class Update
 			if(sortedBlocks[0])
 			{
 				const [majorityBlock, count] = sortedBlocks[0];
-				if(unl.length < FULL_BLOCK_CHAIN_UNL_SCALE_LIMIT || count / unl.length >= TRANSACTIONS_CONSENSUS_THRESHOULD)
+				if(fullUnl.length < FULL_BLOCK_CHAIN_UNL_SCALE_LIMIT || count / fullUnl.length >= TRANSACTIONS_CONSENSUS_THRESHOULD)
 				{
 					const result = await this.blockChain.runBlockChain({
 						block: new Block(Buffer.from(majorityBlock, 'hex'))

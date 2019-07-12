@@ -17,10 +17,12 @@ class UnlManager
 
     get fullUnl()
     {
-        return this._unl;
+        return this._unl.filter(node => {
+            return node.state !== 2
+        });
     }
 
-    get unl() 
+    get unl()
     {
         return this._unl.filter(node => {
             return node.state === 0
@@ -33,7 +35,7 @@ class UnlManager
     async setNodesOffline(addresses)
     {
         assert(Array.isArray(addresses), `UnlManager setNodesOffline, addresses should be an Array, now is ${typeof addresses}`)
-        console.error('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa: ' + addresses);
+
         let needUpdateNodes = [];
 
         for(let node of this._unl)
@@ -63,14 +65,14 @@ class UnlManager
     async setNodesOnline(addresses)
     {
         assert(Array.isArray(addresses), `UnlManager setNodesOnline, addresses should be a String, now is ${typeof addresses}`)
-        console.error('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb: ' + addresses);
+
         let needUpdateNodes = [];
 
         for(let node of this._unl)
         {
             for(let address of addresses)
             {
-                if(node.address === address && node.state !== 1)
+                if(node.address === address && node.state !== 0)
                 {
                     needUpdateNodes.push(address)
 
