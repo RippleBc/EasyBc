@@ -1,10 +1,13 @@
 const Connection = require("../net/connection");
 const assert = require("assert");
+const AsyncEventEmitter = require("async-eventemitter");
 
-class ConnectionsManager
+class ConnectionsManager extends AsyncEventEmitter
 {
 	constructor()
 	{
+		super();
+
 		this.connections = [];
 	}
 
@@ -26,21 +29,40 @@ class ConnectionsManager
 		
 		if(i === this.connections.length)
 		{
+			// add new connection
 			this.connections.push(connection);
 			
 			connection.logger.info(`ConnectionsManager push, new address ${connection.address.toString("hex")}`);
+
+			this.emit("addressConnected", connection.address);
+
+			connection.once("connectionClosed", () => {
+
+				this.emit("addressClosed", connection.address);
+
+				this.connections.splice(i, 1);
+			})
 		}
 		else
 		{
 			if(this.connections[i].checkIfClosed())
 			{
-				// del closed connection
-				this.connections.splice(i, 1);
+				// delete connectionClosed event listeners
+				this.connections[i].removeAllListeners("connectionClosed")
 
-				// add new connection
-				this.connections.push(connection);
+				// replace closed collection
+				this.connections[i] = connection
 
 				connection.logger.info(`ConnectionsManager push, address ${connection.address.toString("hex")} has closed, replace with new connection`);
+				
+				this.emit("addressConnected", connection.address)
+
+				connection.once("connectionClosed", () => {
+
+					this.emit("addressClosed", connection.address)
+
+					this.connections.splice(i, 1);
+				})
 			}
 			else
 			{
@@ -87,7 +109,16 @@ class ConnectionsManager
 			{
 				this.connections[i].logger.info(`ConnectionsManager close, address ${address}`)
 
+				this.emit("addressClosed", this.connections[i].address)
+
+				// delete connectionClosed event listeners
+				this.connections[i].removeAllListeners("connectionClosed")
+
 				this.connections[i].close();
+
+				this.connections.splice(i, 1);
+
+				break;
 			}
 		}
 	}
@@ -98,7 +129,41 @@ class ConnectionsManager
 		{
 			this.connections[i].logger.info(`ConnectionsManager closeAll, address ${this.connections[i].address ? this.connections[i].address.toString('hex') : ""}`)
 
+			this.emit("addressClosed", this.connections[i].address)
+
+			// delete connectionClosed event listeners
+			this.connections[i].removeAllListeners("connectionClosed")
+
 			this.connections[i].close();
+		}
+
+		this.connections = [];
+	}
+
+	/**
+	 * @param {Array/String} addresses - connection addresses should be keeped
+	 */
+	clearInvalidConnections(addresses)
+	{
+		assert(Array.isArray(addresses), `ConnectionManager clearInvalidConnections, addresses should be an Array, now is ${typeof addresses}`)
+		
+		const originConnections = this.connections;
+		this.connections = []
+
+		for(let i = 0; i < originConnections.length; i++)
+		{
+			if(undefined !== addresses.find(address => address === originConnections[i].address))
+			{
+				this.connections.push(originConnections[i]);
+			}
+			else
+			{
+				this.emit("addressClosed", originConnections[i].address)
+
+				originConnections[i].removeAllListeners("connectionClosed");
+
+				originConnections[i].close();
+			}
 		}
 	}
 }

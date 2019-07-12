@@ -96,6 +96,8 @@ class Connection extends AsyncEventEmitter
 			this.writeChannelClosed = true;
 			this.readChannelClosed = true;
 			this.allChannelClosed = true;
+
+			this.emit("connectionClosed");
 		});
 
 		this.socket.on("error", e => {

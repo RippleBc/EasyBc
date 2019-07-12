@@ -1,3 +1,5 @@
+const assert = require("assert")
+
 const mongo = process[Symbol.for("mongo")];
 
 class UnlManager
@@ -30,22 +32,31 @@ class UnlManager
      */
     async setNodesOffline(addresses)
     {
+        console.error('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa: ' + addresses);
         assert(Array.isArray(addresses), `UnlManager setNodesOffline, addresses should be an Array, now is ${typeof addresses}`)
+
+        let needUpdateNodes = [];
 
         for(let node of this._unl)
         {
             for(let address of addresses)
             {
-                if(node.address === address)
+                if(node.address === address && node.state !== 1)
                 {
+                    needUpdateNodes.push(address)
+
                     node.state = 1
+
                     break;
                 }
             }
             
         }
 
-        await this.unlDb.updateUnl(addresses, 1);
+        if(needUpdateNodes.length > 0)
+        {
+            await this.unlDb.updateUnl(needUpdateNodes, 1);
+        }
     }
 
     /**
@@ -55,20 +66,28 @@ class UnlManager
     {
         assert(Array.isArray(addresses), `UnlManager setNodesOnline, addresses should be a String, now is ${typeof addresses}`)
 
+        let needUpdateNodes = [];
+
         for(let node of this._unl)
         {
             for(let address of addresses)
             {
-                if(node.address === address)
+                if(node.address === address && node.state !== 1)
                 {
+                    needUpdateNodes.push(address)
+
                     node.state = 0
+
                     break;
                 }
             }
             
         }
 
-        await this.unlDb.updateUnl(addresses, 0);
+        if(needUpdateNodes.length > 0)
+        {
+            await this.unlDb.updateUnl(needUpdateNodes, 0);
+        }
     }
 
     /**

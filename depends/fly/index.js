@@ -56,7 +56,33 @@ exports.createClient = async function(opts)
 
 	logger.trace(`fly createClient, create an connection to address: ${address.toString("hex")}, host: ${client.remoteAddress}, port: ${client.remotePort}`);
 
-	await connection.authorize();
+	try
+	{
+		await connection.authorize();
+	}
+	catch(errCode)
+	{
+		if(errCode === AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT)
+		{
+			logger.error(`fly createClient, authorize failed because of timeout, host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
+
+			connection.close();
+		}
+		else if(errCode === AUTHORIZE_FAILED_BECAUSE_OF_INVALID_SIGNATURE)
+		{
+			logger.error(`fly createClient, authorize failed because of invalid signature, host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
+
+			connection.close();
+		}
+		else
+		{
+			logger.fatal(`fly createClient, authorize throw unexpected err, ${errCode}`);
+
+			connection.close();
+		}
+
+		return;
+	}
 
 	logger.trace(`fly createClient, authorize successed to address: ${address.toString("hex")}, host: ${client.remoteAddress}, port: ${client.remotePort}`);
 
