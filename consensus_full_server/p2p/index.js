@@ -167,6 +167,9 @@ class P2p
 				}
 				catch(e)
 				{
+					// 
+					unlManager.setNodesOffline([node.address])
+
 					loggerP2p.error(`P2p reconnectAll, connect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort}, ${process[Symbol.for("getStackInfo")](e)}`);
 				}
 			}	
