@@ -48,7 +48,7 @@ class UnlDb
   async updateUnl(addresses, state)
   {
     assert(Array.isArray(addresses), `UnlManager updateUnl, addresses should be a String, now is ${typeof addresses}`)
-    assert(Number.isNumber(state), `UnlManager updateUnl, state should be a Number, now is ${typeof state}`)
+    assert(typeof state === "number", `UnlManager updateUnl, state should be a Number, now is ${typeof state}`)
 
     if(state !== 0 && state !== 1 && state !== 2)
     {
