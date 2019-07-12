@@ -116,6 +116,8 @@ class ConnectionsManager extends AsyncEventEmitter
 
 				this.connections[i].close();
 
+				this.connections[i].logger.warn(`ConnectionManager clearInvalidConnections, close address ${connections[i].address}`)
+
 				this.connections.splice(i, 1);
 
 				break;
@@ -135,6 +137,8 @@ class ConnectionsManager extends AsyncEventEmitter
 			this.connections[i].removeAllListeners("connectionClosed")
 
 			this.connections[i].close();
+
+			this.connections[i].logger.warn(`ConnectionManager clearInvalidConnections, close address ${this.connections[i].address}`)
 		}
 
 		this.connections = [];
@@ -163,6 +167,8 @@ class ConnectionsManager extends AsyncEventEmitter
 				originConnections[i].removeAllListeners("connectionClosed");
 
 				originConnections[i].close();
+
+				originConnections[i].logger.warn(`ConnectionManager clearInvalidConnections, close address ${originConnections[i].address}`)
 			}
 		}
 	}

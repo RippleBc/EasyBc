@@ -32,9 +32,8 @@ class UnlManager
      */
     async setNodesOffline(addresses)
     {
-        console.error('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa: ' + addresses);
         assert(Array.isArray(addresses), `UnlManager setNodesOffline, addresses should be an Array, now is ${typeof addresses}`)
-
+        console.error('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa: ' + addresses);
         let needUpdateNodes = [];
 
         for(let node of this._unl)
@@ -50,7 +49,6 @@ class UnlManager
                     break;
                 }
             }
-            
         }
 
         if(needUpdateNodes.length > 0)
@@ -65,7 +63,7 @@ class UnlManager
     async setNodesOnline(addresses)
     {
         assert(Array.isArray(addresses), `UnlManager setNodesOnline, addresses should be a String, now is ${typeof addresses}`)
-
+        console.error('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb: ' + addresses);
         let needUpdateNodes = [];
 
         for(let node of this._unl)
