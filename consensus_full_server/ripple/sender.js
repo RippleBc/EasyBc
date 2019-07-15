@@ -61,7 +61,6 @@ class Sender
 		let i;
 		for(i = 0; i < unl.length; i++)
 		{
-			console.error(`!!!!!!!!!!!!!!!!!!!!!!!!!!! unl: ${unl[i].address}, state: ${unl[i].state}`)
 			if(!this.finishAddresses.has(stripHexPrefix(unl[i].address)))
 			{
 				break;

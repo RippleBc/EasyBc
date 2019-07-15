@@ -17,21 +17,11 @@ class UnlManager
 
     get fullUnl()
     {
-        for(let node of this._unl)
-        {
-            console.error(`fullUnl $$$$$$$$$$$$$$$$ unl: ${node.address}, state: ${node.state}`);
-        }
-
         return this._unl.filter(node => node.state !== 2);
     }
 
     get unl()
     {
-        for(let node of this._unl)
-        {
-            console.error(`unl $$$$$$$$$$$$$$$$ unl: ${node.address}, state: ${node.state}`);
-        }
-
         return this._unl.filter(node => node.state === 0);
     }
 
