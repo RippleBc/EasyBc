@@ -274,14 +274,11 @@ class Counter extends Stage
 							}
 							else
 							{
-								// counter data is timeout, just handle
-								p2p.send(address, PROTOCOL_CMD_STAGE_INFO_RESPONSE, counterData.serialize());
+								this.counterData = counterData;
 							}
 						}
-						else
-						{
-							p2p.send(address, PROTOCOL_CMD_STAGE_INFO_RESPONSE, this.counterData.serialize());
-						}
+						
+						p2p.send(address, PROTOCOL_CMD_STAGE_INFO_RESPONSE, this.counterData.serialize());
 					}).catch(e => {
 						this.logger.fatal(`Counter handleMessage, checkIfCounterRepeated throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 

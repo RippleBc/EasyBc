@@ -223,14 +223,11 @@ class Perish extends Stage
 							}
 							else
 							{
-								// perish data is timeout, just handle
-								p2p.send(address, PROTOCOL_CMD_KILL_NODE_RESPONSE, perishData.serialize());
+								this.perishData = perishData;
 							}
 						}
-						else
-						{
-							p2p.send(address, PROTOCOL_CMD_KILL_NODE_RESPONSE, this.perishData.serialize());
-						}
+						
+						p2p.send(address, PROTOCOL_CMD_KILL_NODE_RESPONSE, this.perishData.serialize());
 					}).catch(e => {
 						this.logger.fatal(`Perish handleMessage, checkIfPerishRepeated throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 
