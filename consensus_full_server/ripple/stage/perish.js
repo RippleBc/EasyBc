@@ -4,6 +4,7 @@ const Stage = require("./stage");
 const { RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES, CHEAT_REASON_PERISH_DATA_INVALID_TIMESTAMP, CHEAT_REASON_INVALID_SIG, TRANSACTIONS_CONSENSUS_THRESHOULD, PROTOCOL_CMD_KILL_NODE_FINISH_STATE_REQUEST, PROTOCOL_CMD_KILL_NODE_FINISH_STATE_RESPONSE, STAGE_STATE_EMPTY, RIPPLE_STATE_PERISH_NODE, PROTOCOL_CMD_KILL_NODE_REQUEST, PROTOCOL_CMD_KILL_NODE_RESPONSE } = require("../../constant");
 const _ = require("underscore");
 const { randomBytes } = require("crypto");
+const assert = require("assert");
 
 const bufferToInt = utils.bufferToInt;
 const BN = utils.BN;
@@ -274,6 +275,11 @@ class Perish extends Stage
 	 */
 	startPerishNode({address, perishData})
 	{
+		if(this.state !== STAGE_STATE_EMPTY)
+		{
+			return;
+		}
+
 		if(address === undefined && perishData === undefined)
 		{
 			throw new Error(`Perish startPerishNode, address and perishData can not be undefined at the same time`);
