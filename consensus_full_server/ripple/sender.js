@@ -5,8 +5,6 @@ const { TIMEOUT_REASON_OFFLINE, TIMEOUT_REASON_DEFER } = require("../constant")
 const stripHexPrefix = utils.stripHexPrefix;
 
 const logger = process[Symbol.for("loggerConsensus")];
-const unl = process[Symbol.for("unl")];
-const fullUnl = process[Symbol.for("fullUnl")];
 const p2p = process[Symbol.for("p2p")];
 
 const SENDER_STATE_IDLE = 1;
@@ -58,9 +56,11 @@ class Sender
 		this.finishAddresses.add(address);
 
 		// check if all nodes is active
+		const unl = process[Symbol.for("unl")];
 		let i;
 		for(i = 0; i < unl.length; i++)
 		{
+			console.error(`!!!!!!!!!!!!!!!!!!!!!!!!!!! unl: ${unl[i].address}, state: ${unl[i].state}`)
 			if(!this.finishAddresses.has(stripHexPrefix(unl[i].address)))
 			{
 				break;
@@ -90,7 +90,10 @@ class Sender
 
 		this.state = SENDER_STATE_PROCESSING;
 
+		const fullUnl = process[Symbol.for("fullUnl")];
+
 		this.timeout = setTimeout(() => {
+
 			// record timeout nodes
 			for(let i = 0; i < fullUnl.length; i++)
 			{

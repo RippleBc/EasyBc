@@ -1,9 +1,6 @@
 const assert = require("assert");
 const utils = require("../../../depends/utils");
 
-const unl = process[Symbol.for("unl")];
-const fullUnl = process[Symbol.for("fullUnl")];
-
 const rlp = utils.rlp;
 const sha256 = utils.sha256;
 
@@ -108,6 +105,8 @@ class Base
   checkAddress(address)
   {
     assert(Buffer.isBuffer(address), `Base checkAddress, address should be an Buffer, now is ${typeof address}`);
+
+    const fullUnl = process[Symbol.for("fullUnl")];
 
     for(let i = 0; i < fullUnl.length; i++)
     {

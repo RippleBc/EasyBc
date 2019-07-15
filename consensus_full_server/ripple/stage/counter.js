@@ -10,9 +10,7 @@ const bufferToInt = utils.bufferToInt;
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerStageConsensus")];
 const privateKey = process[Symbol.for("privateKey")];
-const unl = process[Symbol.for("unl")];
 const mysql = process[Symbol.for("mysql")];
-const fullUnl = process[Symbol.for("fullUnl")];
 
 const COUNTER_DATA_TIMESTAMP_CHEATED_LEFT_GAP = 60 * 1000;
 const COUNTER_DATA_TIMESTAMP_CHEATED_RIGHT_GAP = 60 * 1000;
@@ -74,6 +72,8 @@ class Counter extends Stage
 
 		// statistic vote result
 		const sortedActionColls = _.sortBy([...actionCollsMap], actionColl => -actionColl[1]);
+
+		const fullUnl = process[Symbol.for("fullUnl")];
 
 		//
 		if(sortedActionColls[0] && sortedActionColls[0][1] / (fullUnl.length + 1) >= TRANSACTIONS_CONSENSUS_THRESHOULD)
@@ -147,6 +147,8 @@ class Counter extends Stage
 	 */
 	handleMessage(address, cmd, data)
 	{
+		const unl = process[Symbol.for("unl")];
+
 		switch(cmd)
 		{
 			case PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE:
@@ -244,6 +246,8 @@ class Counter extends Stage
 								|| this.ripple.blockAgreement.checkIfDataExchangeIsFinish() 
 								|| this.ripple.blockAgreement.checkDataExchangeIsProceeding() )
 								{
+									logger.error(`Counter handleMessage, address: ${address.toString('hex')}, want to fetching new transctions or reuse cached transactions, but own stage is not not support`)
+
 									return this.cheatedNodes.push({
 										address: counterData.from.toString('hex'),
 										reason: CHEAT_REASON_MALICIOUS_COUNTER_ACTION
@@ -322,6 +326,8 @@ class Counter extends Stage
 
 	checkIfTriggered()
 	{
+		const unl = process[Symbol.for("unl")];
+		
 		const now = Date.now();
 
 		let stageInvalidFrequency = 0;

@@ -10,8 +10,6 @@ const BN = utils.BN;
 
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerPerishNode")];
-const unl = process[Symbol.for("unl")];
-const fullUnl = process[Symbol.for("fullUnl")];
 
 const PERISH_DATA_TIMESTAMP_CHEATED_LEFT_GAP = 60 * 1000;
 const PERISH_DATA_TIMESTAMP_CHEATED_RIGHT_GAP = 60 * 1000;
@@ -69,6 +67,8 @@ class Perish extends Stage
 
 		// statistic vote result
 		const sortedPerishData = _.sortBy([...perishDataMap], perishData => -perishData[1]);
+
+		const fullUnl = process[Symbol.for("fullUnl")];
 
 		if(sortedPerishData[0] && sortedPerishData[0][1] / (fullUnl.length + 1) >= TRANSACTIONS_CONSENSUS_THRESHOULD)
 		{

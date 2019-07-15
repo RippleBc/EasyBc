@@ -17,16 +17,22 @@ class UnlManager
 
     get fullUnl()
     {
-        return this._unl.filter(node => {
-            return node.state !== 2
-        });
+        for(let node of this._unl)
+        {
+            console.error(`fullUnl $$$$$$$$$$$$$$$$ unl: ${node.address}, state: ${node.state}`);
+        }
+
+        return this._unl.filter(node => node.state !== 2);
     }
 
     get unl()
     {
-        return this._unl.filter(node => {
-            return node.state === 0
-        });
+        for(let node of this._unl)
+        {
+            console.error(`unl $$$$$$$$$$$$$$$$ unl: ${node.address}, state: ${node.state}`);
+        }
+
+        return this._unl.filter(node => node.state === 0);
     }
 
     /**

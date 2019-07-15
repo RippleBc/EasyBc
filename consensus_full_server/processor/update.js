@@ -10,8 +10,6 @@ const _ = require("underscore");
 
 const mongo = process[Symbol.for("mongo")];
 const logger = process[Symbol.for("loggerUpdate")];
-const unl = process[Symbol.for("unl")];
-const fullUnl = process[Symbol.for("fullUnl")];
 
 const BN = utils.BN;
 const Buffer = utils.Buffer;
@@ -117,11 +115,13 @@ class Update
 
 	async synchronize()
 	{
+		const fullUnl = process[Symbol.for("fullUnl")];
+		
 		let blockNumberBn = new BN(this.blockChainHeight).addn(1);
 		while(true)
 		{
 			let blocks = new Map();
-
+			
 			for(let i = 0; i < fullUnl.length; i++)
 			{
 				const node = fullUnl[i];

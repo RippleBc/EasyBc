@@ -13,8 +13,6 @@ const loggerStageConsensus = process[Symbol.for("loggerStageConsensus")];
 const loggerConsensus = process[Symbol.for("loggerConsensus")];
 const p2p = process[Symbol.for("p2p")];
 const mysql = process[Symbol.for("mysql")];
-const unl = process[Symbol.for("unl")];
-const fullUnl = process[Symbol.for("fullUnl")];
 
 class Stage extends AsyncEventEmitter
 {
@@ -170,6 +168,8 @@ class Stage extends AsyncEventEmitter
 					this.stageSynchronize.reset();
 					this.stageSynchronize.start();
 
+					const unl = process[Symbol.for("unl")];
+					
 					for(let node of unl)
 					{
 						if(!this.stageSynchronize.checkIfNodeIsFinished(node.address))
@@ -215,6 +215,8 @@ class Stage extends AsyncEventEmitter
 	{
 		this.state = STAGE_STATE_DATA_EXCHANGE_PROCEEDING;
 		
+		const fullUnl = process[Symbol.for("fullUnl")];
+
 		if(fullUnl.length > 0)
 		{
 			this.dataExchange.start();

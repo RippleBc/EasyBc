@@ -73,8 +73,6 @@ process.on("uncaughtException", function(err) {
     const unlManager = new UnlManager();
     await unlManager.init();
     process[Symbol.for("unlManager")] = unlManager;
-    process[Symbol.for("unl")] = unlManager.unl
-    process[Symbol.for("fullUnl")] = unlManager.fullUnl;
     
     // init private key
     const { privateKey } = require("./config.json")
