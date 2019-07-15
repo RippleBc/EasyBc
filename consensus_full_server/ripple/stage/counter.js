@@ -11,6 +11,7 @@ const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerStageConsensus")];
 const privateKey = process[Symbol.for("privateKey")];
 const mysql = process[Symbol.for("mysql")];
+const unlManager = process[Symbol.for("unlManager")];
 
 const COUNTER_DATA_TIMESTAMP_CHEATED_LEFT_GAP = 60 * 1000;
 const COUNTER_DATA_TIMESTAMP_CHEATED_RIGHT_GAP = 60 * 1000;
@@ -73,7 +74,7 @@ class Counter extends Stage
 		// statistic vote result
 		const sortedActionColls = _.sortBy([...actionCollsMap], actionColl => -actionColl[1]);
 
-		const fullUnl = process[Symbol.for("fullUnl")];
+		const fullUnl = unlManager.fullUnl;
 
 		//
 		if(sortedActionColls[0] && sortedActionColls[0][1] / (fullUnl.length + 1) >= TRANSACTIONS_CONSENSUS_THRESHOULD)
@@ -147,7 +148,7 @@ class Counter extends Stage
 	 */
 	handleMessage(address, cmd, data)
 	{
-		const unl = process[Symbol.for("unl")];
+		const unl = unlManager.unl;
 
 		switch(cmd)
 		{
@@ -326,8 +327,8 @@ class Counter extends Stage
 
 	checkIfTriggered()
 	{
-		const unl = process[Symbol.for("unl")];
-		
+		const unl = unlManager.unl;
+
 		const now = Date.now();
 
 		let stageInvalidFrequency = 0;

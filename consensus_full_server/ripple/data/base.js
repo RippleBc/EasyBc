@@ -5,6 +5,7 @@ const rlp = utils.rlp;
 const sha256 = utils.sha256;
 
 const logger = process[Symbol.for("loggerConsensus")]
+const unlManager = process[Symbol.for("unlManager")];
 
 class Base
 {
@@ -106,7 +107,7 @@ class Base
   {
     assert(Buffer.isBuffer(address), `Base checkAddress, address should be an Buffer, now is ${typeof address}`);
 
-    const fullUnl = process[Symbol.for("fullUnl")];
+    const fullUnl = unlManager.fullUnl;
 
     for(let i = 0; i < fullUnl.length; i++)
     {

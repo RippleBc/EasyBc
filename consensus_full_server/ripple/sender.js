@@ -6,6 +6,7 @@ const stripHexPrefix = utils.stripHexPrefix;
 
 const logger = process[Symbol.for("loggerConsensus")];
 const p2p = process[Symbol.for("p2p")];
+const unlManager = process[Symbol.for("unlManager")];
 
 const SENDER_STATE_IDLE = 1;
 const SENDER_STATE_PROCESSING = 2;
@@ -56,7 +57,7 @@ class Sender
 		this.finishAddresses.add(address);
 
 		// check if all nodes is active
-		const unl = process[Symbol.for("unl")];
+		const unl = unlManager.unl;
 		let i;
 		for(i = 0; i < unl.length; i++)
 		{
@@ -90,7 +91,7 @@ class Sender
 
 		this.state = SENDER_STATE_PROCESSING;
 
-		const fullUnl = process[Symbol.for("fullUnl")];
+		const fullUnl = unlManager.fullUnl;
 
 		this.timeout = setTimeout(() => {
 

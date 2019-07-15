@@ -12,6 +12,7 @@ const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
 const privateKey = process[Symbol.for("privateKey")];
 const getStackInfo = process[Symbol.for("getStackInfo")];
+const unlManager = process[Symbol.for("unlManager")];
 
 class CandidateAgreement extends Stage
 {
@@ -68,7 +69,7 @@ class CandidateAgreement extends Stage
 		// statistic vote result
 		const sortedTransactionColls = _.sortBy([...transactionCollsHash], transactionColl => -transactionColl[1].count);
 
-		const fullUnl = process[Symbol.for("fullUnl")];
+		const fullUnl = unlManager.fullUnl;
 
 		if(sortedTransactionColls[0] && sortedTransactionColls[0][1].count / (fullUnl.length + 1) >= TRANSACTIONS_CONSENSUS_THRESHOULD)
 		{

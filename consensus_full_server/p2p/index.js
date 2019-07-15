@@ -40,7 +40,7 @@ class P2p
 
 	async init()
 	{
-		const fullUnl = process[Symbol.for("fullUnl")];
+		const fullUnl = unlManager.fullUnl;
 
 		// init server
 		const server = await createServer({
@@ -76,7 +76,7 @@ class P2p
 
 		// check connections
 		setInterval(() => {
-			const fullUnl = process[Symbol.for("fullUnl")];
+			const fullUnl = unlManager.fullUnl;
 
 			// clear invalid connections
 			connectionsManager.clearInvalidConnections(fullUnl.map(node => node.address))
@@ -110,7 +110,7 @@ class P2p
 	{
 		assert(typeof cmd === "number", `P2p sendAll, cmd should be a Number, now is ${typeof cmd}`);
 
-		const unl = process[Symbol.for("unl")];
+		const unl = unlManager.unl;
 		
 		for(let i = 0; i < unl.length; i++)
 		{
@@ -149,7 +149,7 @@ class P2p
 
 	async reconnectAll()
 	{
-		const fullUnl = process[Symbol.for("fullUnl")];
+		const fullUnl = unlManager.fullUnl;
 
 		for(let i = 0; i < fullUnl.length; i++)
 		{
