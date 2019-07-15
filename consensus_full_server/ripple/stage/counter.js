@@ -254,10 +254,10 @@ class Counter extends Stage
 							// record fall behind node
 							if(action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_TRANSACTION_CONSENSUS_FAILED)
 							{
-								this.timeoutNodes.push({
+								this.ripple.handleTimeoutNodes([{
 									address: counterData.from.toString('hex'),
 									reason: TIMEOUT_REASON_SLOW
-								});
+								}]);
 							}
 
 							// check if spread counter data
