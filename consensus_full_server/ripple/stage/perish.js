@@ -13,6 +13,7 @@ const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerPerishNode")];
 const unlManager = process[Symbol.for("unlManager")];
 const privateKey = process[Symbol.for("privateKey")];
+const mysql = process[Symbol.for("mysql")];
 
 const PERISH_DATA_TIMESTAMP_CHEATED_LEFT_GAP = 60 * 1000;
 const PERISH_DATA_TIMESTAMP_CHEATED_RIGHT_GAP = 60 * 1000;
