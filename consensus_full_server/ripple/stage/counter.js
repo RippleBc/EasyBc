@@ -353,6 +353,11 @@ class Counter extends Stage
 	 */
 	startStageSynchronize({action, counterData})
 	{
+		if(this.state !== STAGE_STATE_EMPTY)
+		{
+			return;
+		}
+
 		if(action === undefined && counterData === undefined)
 		{
 			throw new Error(`Counter startStageSynchronize, action and counterData can not be undefined at the same time`);

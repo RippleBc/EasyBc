@@ -112,7 +112,7 @@ class Stage extends AsyncEventEmitter
 				this.logger.warn(`${this.name} Stage dataExchange, stage: ${this.ripple.stage}, dataExchange is over because of timeout`);
 
 				// data exchange is failed, try to stage consensus
-				if(this.ripple.counter.checkIfTriggered() && this.ripple.counter.state === STAGE_STATE_EMPTY && this.ripple.state !== RIPPLE_STATE_PERISH_NODE)
+				if(this.ripple.counter.checkIfTriggered() && this.ripple.state !== RIPPLE_STATE_PERISH_NODE)
 				{
 					loggerStageConsensus.warn(`${this.name} Counter handleMessage, begin to synchronize stage actively, stage: ${this.ripple.stage}`);
 
@@ -195,7 +195,7 @@ class Stage extends AsyncEventEmitter
 					this.ripple.handleCheatedNodes(this.cheatedNodes);
 
 					// data exchange is failed, try to stage consensus
-					if(this.ripple.counter.checkIfTriggered() && this.ripple.counter.state === STAGE_STATE_EMPTY && this.ripple.state !== RIPPLE_STATE_PERISH_NODE)
+					if(this.ripple.counter.checkIfTriggered() && this.ripple.state !== RIPPLE_STATE_PERISH_NODE)
 					{
 						loggerStageConsensus.warn(`${this.name} Counter handleMessage, begin to synchronize stage actively again, stage: ${this.ripple.stage}`);
 						
