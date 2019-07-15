@@ -132,9 +132,9 @@ class Perish extends Stage
 		{
 			// debug
 			let perishDataInfo = ''
-			for(let perishAddress of perishDataMap)
+			for(let [perishAddress, count] of perishDataMap)
 			{
-				perishDataInfo += `perishAddress: ${perishAddress}, count: ${perishDataMap.get(perishAddress)}, `
+				perishDataInfo += `perishAddress: ${perishAddress}, count: ${count}, `
 			}
 			perishDataInfo = perishDataInfo.slice(0, -1);
 			logger.warn(`Perish handler, handle vicious node failed, ${perishDataInfo}`)
