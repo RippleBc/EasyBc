@@ -31,6 +31,7 @@ class Perish extends Stage
 	constructor(ripple)
 	{
 		super({
+			name: 'perish',
 			synchronize_state_request_cmd: PROTOCOL_CMD_KILL_NODE_FINISH_STATE_REQUEST,
 			synchronize_state_response_cmd: PROTOCOL_CMD_KILL_NODE_FINISH_STATE_RESPONSE
 		});
