@@ -92,7 +92,7 @@ class Perish extends Stage
 				return perishSponsor;
 			});
 
-			logger.warn(`Perish handler, begin to handle vicious node, sponsor node: ${perishData.from.toString('hex')}, perish node: ${perishData.address.toString('hex')}`)
+			logger.warn(`Perish handler, begin to handle vicious node, sponsor node: ${perishSponsors[0]}, perish node: ${perishAddress}`)
 
 			this.ripple.stage = RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES;
 
