@@ -60,7 +60,7 @@ class Perish extends Stage
 
 			if(perishDataMap.has(perishAddress))
 			{
-				const count = perishDataMap.get(perishAddress).count;
+				const count = perishDataMap.get(perishAddress);
 
 				perishDataMap.set(perishAddress, count + 1)
 			}
