@@ -241,7 +241,7 @@ class Stage extends AsyncEventEmitter
 				this.on("runBlockFinished", () => {
 					this.handler({
 						ifSuccess: true,
-						ifCheckState: true
+						ifCheckState: false
 					});
 				});
 			}
