@@ -28,9 +28,9 @@ class CandidateAgreement extends Stage
 		this.candidates = [];
 	}
 
-	handler(ifSuccess)
+	handler({ ifSuccess = true, ifCheckState = true } = { ifSuccess = true, ifCheckState = true })
 	{
-		if(!this.checkIfDataExchangeIsFinish())
+		if(ifCheckState && !this.checkIfDataExchangeIsFinish())
 		{
 			logger.fatal(`CandidateAgreement handler, candidate agreement data exchange should finish, current state is ${this.state}, ${process[Symbol.for("getStackInfo")]()}`);
 			

@@ -138,7 +138,10 @@ class Ripple
 				{
 					loggerPerishNode.info("Ripple handleMessage, perish node success because of node notification");
 
-					this.perish.handler(true);
+					this.perish.handler({
+						ifSuccess: true,
+						ifCheckState: true
+					});
 				}
 				else
 				{
@@ -152,7 +155,10 @@ class Ripple
 				{
 					loggerStageConsensus.info("Ripple handleMessage, sync stage success because of node notification");
 
-					this.counter.handler(true);
+					this.counter.handler({
+						ifSuccess: true,
+						ifCheckState: true
+					});
 				}
 				else
 				{
@@ -164,7 +170,10 @@ class Ripple
 			{
 				logger.info(`Ripple handleMessage, block agreement is over because of node notification`);
 
-				this.blockAgreement.handler(true);
+				this.blockAgreement.handler({
+					ifSuccess: true,
+					ifCheckState: true
+				});
 			}
 			
 
@@ -205,7 +214,10 @@ class Ripple
 			{
 				logger.info(`Ripple handleMessage, amalgamate is over because of node notification`);
 
-				this.amalgamate.handler(true);
+				this.amalgamate.handler({
+					ifSuccess: true,
+					ifCheckState: true
+				});
 			}
 
 			if(this.candidateAgreement.checkDataExchangeIsProceeding() || this.candidateAgreement.checkIfDataExchangeIsFinish())
@@ -235,7 +247,10 @@ class Ripple
 			{
 				logger.info(`Ripple handleMessage, candidate agreement is over because of node notification`);
 
-				this.candidateAgreement.handler(true);
+				this.candidateAgreement.handler({
+					ifSuccess: true,
+					ifCheckState: true
+				});
 			}
 			
 			if(this.blockAgreement.checkDataExchangeIsProceeding() || this.blockAgreement.checkIfDataExchangeIsFinish())

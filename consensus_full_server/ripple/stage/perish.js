@@ -42,8 +42,15 @@ class Perish extends Stage
 		this.ifActive = true;
 	}
 
-	handler(ifSuccess)
+	handler({ ifSuccess = true, ifCheckState = true } = { ifSuccess = true, ifCheckState = true })
 	{
+		if(ifCheckState && !this.checkIfDataExchangeIsFinish())
+		{
+			logger.fatal(`Perish handler, perish data exchange should finish, current state is ${this.state}, ${process[Symbol.for("getStackInfo")]()}`);
+			
+			process.exit(1)
+		}
+
 		if(ifSuccess)
 		{
 			logger.info("Perish handler, perish node success")

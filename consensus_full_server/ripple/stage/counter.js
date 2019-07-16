@@ -43,8 +43,15 @@ class Counter extends Stage
 		this.stageSynchronizeTrigger = [];
 	}
 
-	handler(ifSuccess)
+	handler({ ifSuccess = true, ifCheckState = true } = { ifSuccess = true, ifCheckState = true })
 	{
+		if(ifCheckState && !this.checkIfDataExchangeIsFinish())
+		{
+			logger.fatal(`Counter handler, counter data exchange should finish, current state is ${this.state}, ${process[Symbol.for("getStackInfo")]()}`);
+			
+			process.exit(1)
+		}
+
 		if(ifSuccess)
 		{
 			logger.info("Counter handler, sync stage success")

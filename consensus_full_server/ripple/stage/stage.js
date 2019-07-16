@@ -159,7 +159,10 @@ class Stage extends AsyncEventEmitter
 				}
 				
 				//
-				this.handler(true);
+				this.handler({
+					ifSuccess: true,
+					ifCheckState: true
+				});
 			}
 			else
 			{
@@ -211,7 +214,10 @@ class Stage extends AsyncEventEmitter
 						return
 					}
 
-					this.handler(false);
+					this.handler({
+						ifSuccess: false,
+						ifCheckState: true
+					});
 				}
 			}
 		}, STAGE_STAGE_SYNCHRONIZE_TIMEOUT);
@@ -233,14 +239,20 @@ class Stage extends AsyncEventEmitter
 			{
 				// wait for block agreement run finished
 				this.on("runBlockFinished", () => {
-					this.handler(true);
+					this.handler({
+						ifSuccess: true,
+						ifCheckState: true
+					});
 				});
 			}
 			else
 			{
 				// wait for amalgamate run or candidate agreement run finished
 				process.nextTick(() => {
-					this.handler(true);
+					this.handler({
+						ifSuccess: true,
+						ifCheckState: false
+					});
 				})
 			}
 		}
