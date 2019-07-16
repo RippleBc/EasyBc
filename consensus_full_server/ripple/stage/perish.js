@@ -42,7 +42,7 @@ class Perish extends Stage
 		this.ifActive = true;
 	}
 
-	handler({ ifSuccess = true, ifCheckState = true } = { ifSuccess = true, ifCheckState = true })
+	handler({ ifSuccess = true, ifCheckState = true } = { ifSuccess: true, ifCheckState: true })
 	{
 		if(ifCheckState && !this.checkIfDataExchangeIsFinish())
 		{
