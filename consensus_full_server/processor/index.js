@@ -9,7 +9,6 @@ const Update = require("./update");
 const loggerConsensus = process[Symbol.for("loggerConsensus")];
 const loggerUpdate = process[Symbol.for("loggerUpdate")];
 const mongo = process[Symbol.for("mongo")];
-const mysql = process[Symbol.for("mysql")];
 
 const bufferToInt = utils.bufferToInt;
 const Buffer = utils.Buffer;
@@ -36,17 +35,11 @@ class Processor
 			loggerUpdate.info("update is success");
 		});
 
-		this.consensus.run();
-	}
-
-	/**
-	 * @param {Number} size
-	 */
-	async getTransactions(size)
-	{
-		assert(typeof size === "number", `Processor getTransactions, size should be a Number, now is ${typeof size}`);
-
-		return await mysql.getRawTransactions(size);
+		const newTransactions = this.consensus.getNewTransactions()
+		this.consensus.run({
+			fetchingNewTransaction: true,
+			transactions: newTransactions
+		});
 	}
 
 	/**

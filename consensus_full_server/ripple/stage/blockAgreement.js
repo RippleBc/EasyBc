@@ -4,7 +4,7 @@ const RippleBlock = require("../data/rippleBlock");
 const utils = require("../../../depends/utils");
 const Stage = require("./stage");
 const assert = require("assert");
-const { RIPPLE_STAGE_CANDIDATE_AGREEMENT, STAGE_STATE_EMPTY, BLOCK_AGREEMENT_TIMESTAMP_JUMP_LENGTH, BLOCK_AGREEMENT_TIMESTAMP_MAX_OFFSET, TRANSACTIONS_CONSENSUS_THRESHOULD, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_BLOCK_AGREEMENT, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_REQUEST, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE } = require("../../constant");
+const { RIPPLE_STAGE_COUNTER, RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS, RIPPLE_STAGE_PERISH, RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES, RIPPLE_STAGE_CANDIDATE_AGREEMENT, STAGE_STATE_EMPTY, BLOCK_AGREEMENT_TIMESTAMP_JUMP_LENGTH, BLOCK_AGREEMENT_TIMESTAMP_MAX_OFFSET, TRANSACTIONS_CONSENSUS_THRESHOULD, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_BLOCK_AGREEMENT, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_REQUEST, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE } = require("../../constant");
 const _ = require("underscore");
 
 const Buffer = utils.Buffer;
@@ -107,15 +107,38 @@ class BlockAgreement extends Stage
 
 				logger.info("BlockAgreement handler, block agreement success, process block is over");
 
-				await this.ripple.run(false);
+				// check if stage is invalid
+				if(this.ripple.stage === RIPPLE_STAGE_PERISH 
+					|| this.ripple.stage === RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES
+					|| this.ripple.stage === RIPPLE_STAGE_COUNTER
+					|| this.ripple.stage === RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS)
+					{
+						return this.ripple.amalgamateMessagesCacheBlockAgreement = [];
+					}
 
-				for(let i = 0; i < this.ripple.amalgamateMessagesCache.length; i++)
+				const newTransactions = await this.ripple.getNewTransactions();
+
+				// check if stage is invalid
+				if(this.ripple.stage === RIPPLE_STAGE_PERISH 
+					|| this.ripple.stage === RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES
+					|| this.ripple.stage === RIPPLE_STAGE_COUNTER
+					|| this.ripple.stage === RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS)
+					{
+						return this.ripple.amalgamateMessagesCacheBlockAgreement = [];
+					}
+
+				this.ripple.run({
+					fetchingNewTransaction: true,
+					transactions: newTransactions
+				});
+
+				for(let i = 0; i < this.ripple.amalgamateMessagesCacheBlockAgreement.length; i++)
 				{
-					let {address, cmd, data} = this.ripple.amalgamateMessagesCache[i];
+					let {address, cmd, data} = this.ripple.amalgamateMessagesCacheBlockAgreement[i];
 					this.ripple.amalgamate.handleMessage(address, cmd, data);
 				}
 
-				this.ripple.amalgamateMessagesCache = [];		
+				this.ripple.amalgamateMessagesCacheBlockAgreement = [];		
 
 			})().then(() => {
 				logger.trace("BlockAgreement handler, process block success, new round begin")
@@ -129,7 +152,7 @@ class BlockAgreement extends Stage
 		}
 
 		this.reset();
-		this.ripple.run(true);
+		this.ripple.run();
 	}
 
 	/**

@@ -31,20 +31,29 @@ class Ripple
 		this.processingTransactions = [];
 
 		// used for cache amalgamate message
-		this.amalgamateMessagesCache = [];
+		this.amalgamateMessagesCacheBlockAgreement = [];
+		this.amalgamateMessagesCacheCounter = [];
+		this.amalgamateMessagesCachePerish = [];
 	}
 
-	/*
-	 * @param {Boolean} ifRetry
+	/**
+	 * @param {Array} transactions 
 	 */
-	async run(ifRetry = false)
+	async run({fetchingNewTransaction = false, transactions} = {fetchingNewTransaction: false})
 	{
-		if(!ifRetry)
+		if(fetchingNewTransaction)
 		{
-			this.processingTransactions = await this.processor.getTransactions(MAX_PROCESS_TRANSACTIONS_SIZE);
-		}
+			assert(Array.isArray(transactions), `Ripple run, transactions should be an Array, now is ${typeof transactions}`)
 
+			this.processingTransactions = transactions;
+		}
+		
 		this.amalgamate.run(this.processingTransactions);
+	}
+
+	async getNewTransactions()
+	{
+		return await mysql.getRawTransactions(MAX_PROCESS_TRANSACTIONS_SIZE);
 	}
 
 	/**
@@ -177,11 +186,25 @@ class Ripple
 			}
 			
 
-			if(this.stage === RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK 
-				|| this.stage === RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS
-				|| this.stage === RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES)
+			if(this.stage === RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK)
 			{
-				this.amalgamateMessagesCache.push({
+				this.amalgamateMessagesCacheBlockAgreement.push({
+					address: address,
+					cmd: cmd,
+					data: data
+				});
+			}
+			else if(this.stage === RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS)
+			{
+				this.amalgamateMessagesCacheCounter.push({
+					address: address,
+					cmd: cmd,
+					data: data
+				});
+			}
+			else if(this.stage === RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES)
+			{
+				this.amalgamateMessagesCachePerish.push({
 					address: address,
 					cmd: cmd,
 					data: data

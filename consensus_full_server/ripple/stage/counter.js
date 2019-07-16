@@ -1,6 +1,6 @@
 const CounterData = require("../data/counter");
 const utils = require("../../../depends/utils");
-const { PROTOCOL_CMD_COUNTER_STAGE_SYNC_REQUEST, PROTOCOL_CMD_COUNTER_STAGE_SYNC_RESPONSE, CHEAT_REASON_MALICIOUS_COUNTER_ACTION, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_STAGE_FALL_BEHIND, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_TRANSACTION_CONSENSUS_FAILED, TIMEOUT_REASON_SLOW, CHEAT_REASON_INVALID_SIG, TRANSACTIONS_CONSENSUS_THRESHOULD, CHEAT_REASON_COUNTER_DATA_INVALID_TIMESTAMP, CHEAT_REASON_REPEATED_COUNTER_DATA, CHEAT_REASON_INVALID_COUNTER_ACTION, RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS, COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE, RIPPLE_STAGE_PERISH, COUNTER_CONSENSUS_STAGE_TRIGGER_MAX_SIZE, PROTOCOL_CMD_COUNTER_FINISH_STATE_REQUEST, PROTOCOL_CMD_COUNTER_FINISH_STATE_RESPONSE, RIPPLE_STAGE_COUNTER, COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD, COUNTER_INVALID_STAGE_TIME_SECTION, STAGE_STATE_EMPTY, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_COUNTER_INFO_REQUEST, PROTOCOL_CMD_COUNTER_INFO_RESPONSE } = require("../../constant");
+const { RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES, PROTOCOL_CMD_COUNTER_STAGE_SYNC_REQUEST, PROTOCOL_CMD_COUNTER_STAGE_SYNC_RESPONSE, CHEAT_REASON_MALICIOUS_COUNTER_ACTION, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_STAGE_FALL_BEHIND, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_TRANSACTION_CONSENSUS_FAILED, TIMEOUT_REASON_SLOW, CHEAT_REASON_INVALID_SIG, TRANSACTIONS_CONSENSUS_THRESHOULD, CHEAT_REASON_COUNTER_DATA_INVALID_TIMESTAMP, CHEAT_REASON_REPEATED_COUNTER_DATA, CHEAT_REASON_INVALID_COUNTER_ACTION, RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS, COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE, RIPPLE_STAGE_PERISH, COUNTER_CONSENSUS_STAGE_TRIGGER_MAX_SIZE, PROTOCOL_CMD_COUNTER_FINISH_STATE_REQUEST, PROTOCOL_CMD_COUNTER_FINISH_STATE_RESPONSE, RIPPLE_STAGE_COUNTER, COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD, COUNTER_INVALID_STAGE_TIME_SECTION, STAGE_STATE_EMPTY, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_COUNTER_INFO_REQUEST, PROTOCOL_CMD_COUNTER_INFO_RESPONSE } = require("../../constant");
 const Stage = require("./stage");
 const assert = require("assert");
 const _ = require("underscore");
@@ -96,16 +96,28 @@ class Counter extends Stage
 
 				this.ripple.stage = RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS;
 
-				this.ripple.run(false).then(() => {
+				this.ripple.getNewTransactions().then(newTransactions => {
+
+					// check if stage is invalid
+					if(this.ripple.stage === RIPPLE_STAGE_PERISH 
+						|| this.ripple.stage === RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES)
+						{
+							return this.ripple.amalgamateMessagesCacheCounter = [];
+						}
+
+					this.ripple.run({
+						fetchingNewTransaction: true,
+						transactions: newTransactions
+					});
 
 					// handle cached messages
-					for(let i = 0; i < this.ripple.amalgamateMessagesCache.length; i++)
+					for(let i = 0; i < this.ripple.amalgamateMessagesCacheCounter.length; i++)
 					{
-						let {address, cmd, data} = this.ripple.amalgamateMessagesCache[i];
+						let {address, cmd, data} = this.ripple.amalgamateMessagesCacheCounter[i];
 						this.ripple.amalgamate.handleMessage(address, cmd, data);
 					}
 
-					this.ripple.amalgamateMessagesCache = [];		
+					this.ripple.amalgamateMessagesCacheCounter = [];		
 
 				}).catch(e => {
 					logger.fatal(`Counter handler, throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
@@ -117,13 +129,13 @@ class Counter extends Stage
 			{
 				logger.info("Counter handler, stage synchronize success, begin to reuse cached transactions and amalgamate because of transaction consensus failed")
 
-				this.ripple.run(true);
+				this.ripple.run();
 			}
 			else if(action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_STAGE_FALL_BEHIND)
 			{
 				logger.info("Counter handler, stage synchronize success, begin to reuse cached transactions and amalgamate because of stage fall behind")
 
-				this.ripple.run(true);
+				this.ripple.run();
 			}
 			else
 			{
@@ -144,7 +156,7 @@ class Counter extends Stage
 			logger.error(`Counter handler, stage sync failed, ${counterDataInfo}`);
 
 			this.reset();
-			this.ripple.run(true);
+			this.ripple.run();
 		}
 	}
 

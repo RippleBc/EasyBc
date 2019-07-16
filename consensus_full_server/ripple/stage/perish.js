@@ -110,16 +110,16 @@ class Perish extends Stage
 			// handle perish node
 			this.ripple.handlePerishNode(perishSponsors[0], perishAddress).then(() => {
 				
-				this.ripple.run(true);
+				this.ripple.run();
 
 				// handle cached messages
-				for(let i = 0; i < this.ripple.amalgamateMessagesCache.length; i++)
+				for(let i = 0; i < this.ripple.amalgamateMessagesCachePerish.length; i++)
 				{
-					let {address, cmd, data} = this.ripple.amalgamateMessagesCache[i];
+					let {address, cmd, data} = this.ripple.amalgamateMessagesCachePerish[i];
 					this.ripple.amalgamate.handleMessage(address, cmd, data);
 				}
 
-				this.ripple.amalgamateMessagesCache = [];	
+				this.ripple.amalgamateMessagesCachePerish = [];	
 				
 				// begin to perish node again
 				if(this.ifActive && selfPerishAddress.toString('hex') !== perishAddress)
@@ -151,7 +151,7 @@ class Perish extends Stage
 
 			this.reset();
 
-			this.ripple.run(true);
+			this.ripple.run();
 			
 			// begin to perish node again
 			if(this.ifActive)
