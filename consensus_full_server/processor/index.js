@@ -35,7 +35,7 @@ class Processor
 			loggerUpdate.info("update is success");
 		});
 
-		const newTransactions = this.consensus.getNewTransactions()
+		const newTransactions = await this.consensus.getNewTransactions()
 		this.consensus.run({
 			fetchingNewTransaction: true,
 			transactions: newTransactions
