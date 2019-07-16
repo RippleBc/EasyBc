@@ -1,7 +1,7 @@
 const Amalgamate = require("./stage/amalgamate");
 const CandidateAgreement = require("./stage/candidateAgreement");
 const BlockAgreement = require("./stage/blockAgreement");
-const { RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, RIPPLE_STAGE_AMALGAMATE_FETCHING_NEW_TRANSACTIONS, CHEAT_REASON_INVALID_PROTOCOL_CMD, RIPPLE_STATE_PERISH_NODE, RIPPLE_STAGE_EMPTY, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, RIPPLE_STATE_STAGE_CONSENSUS, RIPPLE_STATE_TRANSACTIONS_CONSENSUS, MAX_PROCESS_TRANSACTIONS_SIZE } = require("../constant");
+const { RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS, CHEAT_REASON_INVALID_PROTOCOL_CMD, RIPPLE_STAGE_PERISH, RIPPLE_STAGE_EMPTY, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, RIPPLE_STAGE_COUNTER, MAX_PROCESS_TRANSACTIONS_SIZE } = require("../constant");
 const assert = require("assert");
 const Counter = require("./stage/counter");
 const Perish = require("./stage/perish");
@@ -19,7 +19,6 @@ class Ripple
 	{
 		this.processor = processor;
 
-		this.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
 		this.stage = RIPPLE_STAGE_EMPTY;
 
 		this.counter = new Counter(this);
@@ -40,8 +39,6 @@ class Ripple
 	 */
 	async run(ifRetry = false)
 	{
-		this.state = RIPPLE_STATE_TRANSACTIONS_CONSENSUS;
-
 		if(!ifRetry)
 		{
 			this.processingTransactions = await this.processor.getTransactions(MAX_PROCESS_TRANSACTIONS_SIZE);
@@ -58,6 +55,14 @@ class Ripple
 		assert(Array.isArray(transactions), `Ripple setProcessingTransactions, transactions should be an Array, now is ${typeof transactions}`);
 
 		this.processingTransactions = transactions;
+	}
+
+	checkIfInTransactionConsensusProcessing()
+	{
+		return this.stage === RIPPLE_STAGE_AMALGAMATE 
+		|| this.stage === RIPPLE_STAGE_CANDIDATE_AGREEMENT 
+		|| this.stage === RIPPLE_STAGE_BLOCK_AGREEMENT 
+		|| this.stage === RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK
 	}
 
 	/**
@@ -127,7 +132,7 @@ class Ripple
 
 		if(cmd >= 100 && cmd < 200)
 		{
-			if(this.state === RIPPLE_STATE_PERISH_NODE)
+			if(this.stage === RIPPLE_STAGE_PERISH)
 			{
 				if(this.perish.checkIfDataExchangeIsFinish())
 				{
@@ -141,7 +146,7 @@ class Ripple
 				}
 			}
 
-			if(this.state === RIPPLE_STATE_STAGE_CONSENSUS)
+			if(this.stage === RIPPLE_STAGE_COUNTER)
 			{
 				if(this.counter.checkIfDataExchangeIsFinish())
 				{
@@ -155,15 +160,16 @@ class Ripple
 				}
 			}
 
-			if(this.blockAgreement.checkIfDataExchangeIsFinish())
+			if(this.stage === RIPPLE_STAGE_BLOCK_AGREEMENT && this.blockAgreement.checkIfDataExchangeIsFinish())
 			{
 				logger.info(`Ripple handleMessage, block agreement is over because of node notification`);
 
 				this.blockAgreement.handler(true);
 			}
+			
 
 			if(this.stage === RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK 
-				|| this.stage === RIPPLE_STAGE_AMALGAMATE_FETCHING_NEW_TRANSACTIONS
+				|| this.stage === RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS
 				|| this.stage === RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES)
 			{
 				this.amalgamateMessagesCache.push({
@@ -185,12 +191,12 @@ class Ripple
 		}
 		else if(cmd >= 200 && cmd < 300)
 		{
-			if(this.state === RIPPLE_STATE_PERISH_NODE)
+			if(this.stage === RIPPLE_STAGE_PERISH)
 			{
 				return loggerPerishNode.warn(`Ripple handleMessage, address ${address.toString("hex")}, processor is perishing node, do not handle transaction consensus messages`);
 			}
 
-			if(this.state === RIPPLE_STATE_STAGE_CONSENSUS)
+			if(this.stage === RIPPLE_STAGE_COUNTER)
 			{
 				return loggerStageConsensus.warn(`Ripple handleMessage, address ${address.toString("hex")}, processor is synchronizing stage, do not handle candidates agreement messages`);
 			}
@@ -215,12 +221,12 @@ class Ripple
 		}
 		else if(cmd >= 300 && cmd < 400)
 		{
-			if(this.state === RIPPLE_STATE_PERISH_NODE)
+			if(this.stage === RIPPLE_STAGE_PERISH)
 			{
 				return loggerPerishNode.warn(`Ripple handleMessage, address ${address.toString("hex")}, processor is perishing node, do not handle transaction consensus messages`);
 			}
 
-			if(this.state === RIPPLE_STATE_STAGE_CONSENSUS)
+			if(this.stage === RIPPLE_STAGE_COUNTER)
 			{
 				return loggerStageConsensus.warn(`Ripple handleMessage, address ${address.toString("hex")}, processor is synchronizing stage, do not handle blocks agreement messages`);
 			}
@@ -245,7 +251,7 @@ class Ripple
 		}
 		else if(cmd >= 400 && cmd < 500)
 		{
-			if(this.state === RIPPLE_STATE_PERISH_NODE)
+			if(this.stage === RIPPLE_STAGE_PERISH)
 			{
 				return loggerPerishNode.warn(`Ripple handleMessage, address ${address.toString("hex")}, processor is perishing node, do not handle stage synchronize messages`);
 			}

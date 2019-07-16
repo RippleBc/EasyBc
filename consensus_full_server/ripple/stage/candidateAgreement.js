@@ -2,7 +2,7 @@ const Candidate = require("../data/candidate");
 const utils = require("../../../depends/utils");
 const Stage = require("./stage");
 const assert = require("assert");
-const { COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_TRANSACTION_CONSENSUS_FAILED, RIPPLE_STATE_PERISH_NODE, STAGE_STATE_EMPTY, TRANSACTIONS_CONSENSUS_THRESHOULD, RIPPLE_STAGE_CANDIDATE_AGREEMENT, PROTOCOL_CMD_CANDIDATE_AGREEMENT, PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_REQUEST, PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_RESPONSE } = require("../../constant");
+const { STAGE_STATE_EMPTY, COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_TRANSACTION_CONSENSUS_FAILED, RIPPLE_STAGE_PERISH, STAGE_STATE_EMPTY, TRANSACTIONS_CONSENSUS_THRESHOULD, RIPPLE_STAGE_CANDIDATE_AGREEMENT, PROTOCOL_CMD_CANDIDATE_AGREEMENT, PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_REQUEST, PROTOCOL_CMD_CANDIDATE_AGREEMENT_FINISH_STATE_RESPONSE } = require("../../constant");
 const _ = require("underscore");
 
 const sha256 = utils.sha256;
@@ -30,6 +30,13 @@ class CandidateAgreement extends Stage
 
 	handler(ifSuccess)
 	{
+		if(!this.checkIfDataExchangeIsFinish())
+		{
+			logger.fatal(`CandidateAgreement handler, candidate agreement data exchange should finish, current state is ${this.state}, ${process[Symbol.for("getStackInfo")]()}`);
+			
+			process.exit(1)
+		}
+
 		if(ifSuccess)
 		{
 			logger.info("CandidateAgreement handler success")
@@ -86,9 +93,9 @@ class CandidateAgreement extends Stage
 					logger.fatal(`CandidateAgreement handler, candidate agreement failed, prepare to stage synchronize, but counter state is not STAGE_STATE_EMPTY, ${getStackInfo()}`);
 					process.exit(1);
 				}
-				if(this.ripple.state === RIPPLE_STATE_PERISH_NODE)
+				if(this.ripple.stage === RIPPLE_STAGE_PERISH)
 				{
-					logger.fatal(`CandidateAgreement handler, candidate agreement failed, prepare to stage synchronize, but counter state is not STAGE_STATE_EMPTY, ${getStackInfo()}`);
+					logger.fatal(`CandidateAgreement handler, candidate agreement failed, prepare to stage synchronize, but ripple stage is RIPPLE_STAGE_PERISH, ${getStackInfo()}`);
 					process.exit(1);
 				}	
 						
@@ -128,9 +135,9 @@ class CandidateAgreement extends Stage
 			logger.fatal(`CandidateAgreement handler, candidate agreement failed, prepare to stage synchronize, but counter state is not STAGE_STATE_EMPTY, ${getStackInfo()}`);
 			process.exit(1);
 		}
-		if(this.ripple.state === RIPPLE_STATE_PERISH_NODE)
+		if(this.ripple.stage === RIPPLE_STAGE_PERISH)
 		{
-			logger.fatal(`CandidateAgreement handler, candidate agreement failed, prepare to stage synchronize, but counter state is not STAGE_STATE_EMPTY, ${getStackInfo()}`);
+			logger.fatal(`CandidateAgreement handler, candidate agreement failed, prepare to stage synchronize, but ripple stage is RIPPLE_STAGE_PERISH, ${getStackInfo()}`);
 			process.exit(1);
 		}
 
@@ -148,6 +155,22 @@ class CandidateAgreement extends Stage
 	run(transactions)
 	{
 		assert(Array.isArray(transactions), `CandidateAgreement run, transactions should be an Array, now is ${typeof transactions}`);
+
+		// check state
+		if(this.state !== STAGE_STATE_EMPTY)
+		{
+			logger.fatal(`CandidateAgreement run, candidate agreement state should be STAGE_STATE_EMPTY, now is ${this.state}, ${process[Symbol.for("getStackInfo")]()}`);
+			
+			process.exit(1)
+		}
+
+		// check stage
+		if(this.ripple.stage !== RIPPLE_STAGE_AMALGAMATE)
+		{
+			logger.fatal(`CandidateAgreement run, ripple stage should be RIPPLE_STAGE_AMALGAMATE, now is ${this.ripple.stage}, ${process[Symbol.for("getStackInfo")]()}`);
+			
+			process.exit(1)
+		}
 
 		this.ripple.stage = RIPPLE_STAGE_CANDIDATE_AGREEMENT;
 		this.start();

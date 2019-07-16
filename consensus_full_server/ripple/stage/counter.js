@@ -1,6 +1,6 @@
 const CounterData = require("../data/counter");
 const utils = require("../../../depends/utils");
-const { PROTOCOL_CMD_COUNTER_STAGE_SYNC_REQUEST, PROTOCOL_CMD_COUNTER_STAGE_SYNC_RESPONSE, CHEAT_REASON_MALICIOUS_COUNTER_ACTION, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_STAGE_FALL_BEHIND, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_TRANSACTION_CONSENSUS_FAILED, TIMEOUT_REASON_SLOW, CHEAT_REASON_INVALID_SIG, TRANSACTIONS_CONSENSUS_THRESHOULD, CHEAT_REASON_COUNTER_DATA_INVALID_TIMESTAMP, CHEAT_REASON_REPEATED_COUNTER_DATA, CHEAT_REASON_INVALID_COUNTER_ACTION, RIPPLE_STAGE_AMALGAMATE_FETCHING_NEW_TRANSACTIONS, COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE, RIPPLE_STATE_PERISH_NODE, COUNTER_CONSENSUS_STAGE_TRIGGER_MAX_SIZE, PROTOCOL_CMD_COUNTER_FINISH_STATE_REQUEST, PROTOCOL_CMD_COUNTER_FINISH_STATE_RESPONSE, RIPPLE_STATE_STAGE_CONSENSUS, COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD, COUNTER_HANDLER_TIME_DETAY, COUNTER_INVALID_STAGE_TIME_SECTION, STAGE_STATE_EMPTY, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_COUNTER_INFO_REQUEST, PROTOCOL_CMD_COUNTER_INFO_RESPONSE } = require("../../constant");
+const { PROTOCOL_CMD_COUNTER_STAGE_SYNC_REQUEST, PROTOCOL_CMD_COUNTER_STAGE_SYNC_RESPONSE, CHEAT_REASON_MALICIOUS_COUNTER_ACTION, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_STAGE_FALL_BEHIND, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_TRANSACTION_CONSENSUS_FAILED, TIMEOUT_REASON_SLOW, CHEAT_REASON_INVALID_SIG, TRANSACTIONS_CONSENSUS_THRESHOULD, CHEAT_REASON_COUNTER_DATA_INVALID_TIMESTAMP, CHEAT_REASON_REPEATED_COUNTER_DATA, CHEAT_REASON_INVALID_COUNTER_ACTION, RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS, COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE, RIPPLE_STAGE_PERISH, COUNTER_CONSENSUS_STAGE_TRIGGER_MAX_SIZE, PROTOCOL_CMD_COUNTER_FINISH_STATE_REQUEST, PROTOCOL_CMD_COUNTER_FINISH_STATE_RESPONSE, RIPPLE_STAGE_COUNTER, COUNTER_CONSENSUS_STAGE_TRIGGER_THRESHOULD, COUNTER_INVALID_STAGE_TIME_SECTION, STAGE_STATE_EMPTY, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, PROTOCOL_CMD_COUNTER_INFO_REQUEST, PROTOCOL_CMD_COUNTER_INFO_RESPONSE } = require("../../constant");
 const Stage = require("./stage");
 const assert = require("assert");
 const _ = require("underscore");
@@ -87,7 +87,7 @@ class Counter extends Stage
 			{
 				logger.info("Counter handler, stage synchronize success, begin to fetch new transaction and amalgamate")
 
-				this.ripple.stage = RIPPLE_STAGE_AMALGAMATE_FETCHING_NEW_TRANSACTIONS;
+				this.ripple.stage = RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS;
 
 				this.ripple.run(false).then(() => {
 
@@ -226,7 +226,7 @@ class Counter extends Stage
 					// check if repeated
 					mysql.checkIfCounterRepeated(counterDataHash).then(repeated => {
 						// there is a timewindow here, so should check again, check if already in sync stage
-						if(this.state === STAGE_STATE_EMPTY && this.ripple.state !== RIPPLE_STATE_PERISH_NODE)
+						if(this.state === STAGE_STATE_EMPTY && this.ripple.stage !== RIPPLE_STAGE_PERISH)
 						{
 							if(repeated)
 							{
@@ -389,7 +389,9 @@ class Counter extends Stage
 	{
 		if(this.state !== STAGE_STATE_EMPTY)
 		{
-			return;
+			logger.fatal(`Counter startStageSynchronizeSpreadMode, counter state should be STAGE_STATE_EMPTY, now is ${this.state}, ${process[Symbol.for("getStackInfo")]()}`);
+
+			process.exit(1)
 		}
 
 		if(action === undefined && counterData === undefined)
@@ -415,7 +417,7 @@ class Counter extends Stage
 		this.start();
 
 		this.ripple.reset();
-		this.ripple.state = RIPPLE_STATE_STAGE_CONSENSUS;
+		this.ripple.stage = RIPPLE_STAGE_COUNTER;
 		
 		this.counterData = counterData;
 		this.action = bufferToInt(counterData.action)
@@ -432,12 +434,19 @@ class Counter extends Stage
 	 */
 	startStageSynchronizeFetchMode({counterData})
 	{
+		if(this.state !== STAGE_STATE_EMPTY)
+		{
+			logger.fatal(`Counter startStageSynchronizeFetchMode, counter state should be STAGE_STATE_EMPTY, now is ${this.state}, ${process[Symbol.for("getStackInfo")]()}`);
+
+			process.exit(1);
+		}
+
 		assert(counterData instanceof CounterData, `Counter startStageSynchronizeFetchMode, counterData should be an instance of CounterData, now is ${typeof counterData}`);
 	
 		this.start();
 
 		this.ripple.reset();
-		this.ripple.state = RIPPLE_STATE_STAGE_CONSENSUS;
+		this.ripple.stage = RIPPLE_STAGE_COUNTER;
 		
 		this.counterData = counterData;
 		this.action = bufferToInt(counterData.action)

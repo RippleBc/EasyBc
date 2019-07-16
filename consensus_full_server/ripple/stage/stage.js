@@ -1,4 +1,4 @@
-const { CHEAT_REASON_INVALID_ADDRESS, CHEAT_REASON_INVALID_SIG, CHEAT_REASON_REPEAT_DATA_EXCHANGE, CHEAT_REASON_REPEAT_SYNC_FINISH, RIPPLE_STAGE_BLOCK_AGREEMENT, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_STAGE_FALL_BEHIND, RIPPLE_STATE_PERISH_NODE, RIPPLE_STATE_TRANSACTIONS_CONSENSUS, RIPPLE_STATE_STAGE_CONSENSUS, STAGE_DATA_EXCHANGE_TIMEOUT, STAGE_STAGE_SYNCHRONIZE_TIMEOUT, STAGE_MAX_FINISH_RETRY_TIMES, STAGE_STATE_EMPTY, STAGE_STATE_DATA_EXCHANGE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING } = require("../../constant");
+const { RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES, RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS, RIPPLE_STAGE_COUNTER, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, CHEAT_REASON_INVALID_ADDRESS, CHEAT_REASON_INVALID_SIG, CHEAT_REASON_REPEAT_DATA_EXCHANGE, CHEAT_REASON_REPEAT_SYNC_FINISH, RIPPLE_STAGE_BLOCK_AGREEMENT, COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_STAGE_FALL_BEHIND, RIPPLE_STAGE_PERISH, STAGE_DATA_EXCHANGE_TIMEOUT, STAGE_STAGE_SYNCHRONIZE_TIMEOUT, STAGE_MAX_FINISH_RETRY_TIMES, STAGE_STATE_EMPTY, STAGE_STATE_DATA_EXCHANGE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING, STAGE_STATE_DATA_EXCHANGE_FINISH_TIMEOUT_AND_SYNCHRONIZE_PROCEEDING } = require("../../constant");
 const utils = require("../../../depends/utils");
 const assert = require("assert");
 const Sender = require("../sender");
@@ -25,21 +25,26 @@ class Stage extends AsyncEventEmitter
 
 		const loggerHandler = {
 			apply: (target, ctx, args) => {
-				switch(this.ripple.state)
+				switch(this.ripple.stage)
 				{
-					case RIPPLE_STATE_TRANSACTIONS_CONSENSUS: 
+					case RIPPLE_STAGE_AMALGAMATE:
+					case RIPPLE_STAGE_CANDIDATE_AGREEMENT:
+					case RIPPLE_STAGE_BLOCK_AGREEMENT:
+					case RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK:
 					{
 						Reflect.apply(target, loggerConsensus, args)
 					}
 					break;
 
-					case RIPPLE_STATE_STAGE_CONSENSUS:
+					case RIPPLE_STAGE_COUNTER:
+					case RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS:
 					{
 						Reflect.apply(target, loggerStageConsensus, args)
 					}
 					break;
 
-					case RIPPLE_STATE_PERISH_NODE:
+					case RIPPLE_STAGE_PERISH:
+					case RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES:
 					{
 						Reflect.apply(target, loggerPerishNode, args)
 					}
@@ -102,7 +107,7 @@ class Stage extends AsyncEventEmitter
 				this.state = STAGE_STATE_DATA_EXCHANGE_FINISH_SUCCESS_AND_SYNCHRONIZE_PROCEEDING;
 
 				// if state is transactions consensus and stage sync success, reset counter
-				if(this.ripple.state === RIPPLE_STATE_TRANSACTIONS_CONSENSUS)
+				if(this.ripple.checkIfInTransactionConsensusProcessing())
 				{
 					this.ripple.counter.resetTrigger();
 				}
@@ -112,7 +117,7 @@ class Stage extends AsyncEventEmitter
 				this.logger.warn(`${this.name} Stage dataExchange, stage: ${this.ripple.stage}, dataExchange is over because of timeout`);
 
 				// data exchange is failed, try to stage consensus
-				if(this.ripple.counter.checkIfTriggered() && this.ripple.state !== RIPPLE_STATE_PERISH_NODE)
+				if(this.ripple.counter.checkIfTriggered() && this.ripple.stage !== RIPPLE_STAGE_PERISH)
 				{
 					loggerStageConsensus.warn(`${this.name} Counter handleMessage, begin to synchronize stage actively, stage: ${this.ripple.stage}`);
 
@@ -148,7 +153,7 @@ class Stage extends AsyncEventEmitter
 				this.ripple.handleCheatedNodes(this.cheatedNodes);
 
 				// if state is transactions consensus and stage sync success, reset counter
-				if(this.ripple.state === RIPPLE_STATE_TRANSACTIONS_CONSENSUS)
+				if(this.ripple.checkIfInTransactionConsensusProcessing())
 				{
 					this.ripple.counter.resetTrigger();
 				}
@@ -195,7 +200,7 @@ class Stage extends AsyncEventEmitter
 					this.ripple.handleCheatedNodes(this.cheatedNodes);
 
 					// data exchange is failed, try to stage consensus
-					if(this.ripple.counter.checkIfTriggered() && this.ripple.state !== RIPPLE_STATE_PERISH_NODE)
+					if(this.ripple.counter.checkIfTriggered() && this.ripple.stage !== RIPPLE_STAGE_PERISH)
 					{
 						loggerStageConsensus.warn(`${this.name} Counter handleMessage, begin to synchronize stage actively again, stage: ${this.ripple.stage}`);
 						

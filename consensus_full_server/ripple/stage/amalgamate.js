@@ -2,7 +2,7 @@ const Candidate = require("../data/candidate");
 const utils = require("../../../depends/utils");
 const Stage = require("./stage");
 const assert = require("assert");
-const { RIPPLE_STAGE_AMALGAMATE, PROTOCOL_CMD_CANDIDATE_AMALGAMATE, PROTOCOL_CMD_CANDIDATE_AMALGAMATE_FINISH_STATE_REQUEST, PROTOCOL_CMD_CANDIDATE_AMALGAMATE_FINISH_STATE_RESPONSE } = require("../../constant");
+const { STAGE_STATE_EMPTY, RIPPLE_STAGE_AMALGAMATE, PROTOCOL_CMD_CANDIDATE_AMALGAMATE, PROTOCOL_CMD_CANDIDATE_AMALGAMATE_FINISH_STATE_REQUEST, PROTOCOL_CMD_CANDIDATE_AMALGAMATE_FINISH_STATE_RESPONSE } = require("../../constant");
 
 const rlp = utils.rlp;
 
@@ -26,6 +26,13 @@ class Amalgamate extends Stage
 
 	handler(ifSuccess)
 	{
+		if(!this.checkIfDataExchangeIsFinish())
+		{
+			logger.fatal(`Amalgamate handler, amalgamate data exchange should finish, current state is ${this.state}, ${process[Symbol.for("getStackInfo")]()}`);
+			
+			process.exit(1)
+		}
+
 		if(ifSuccess)
 		{
 			logger.info("Amalgamate handler success")
@@ -54,6 +61,23 @@ class Amalgamate extends Stage
 	run(transactionRaws)
 	{
 		assert(Array.isArray(transactionRaws), `Amalgamate run, transactionRaws should be an Array, now is ${typeof transactionRaws}`);
+
+		if(this.state !== STAGE_STATE_EMPTY)
+		{
+			logger.fatal(`Amalgamate run, amalgamate state should be STAGE_STATE_EMPTY, now is ${this.state}, ${process[Symbol.for("getStackInfo")]()}`);
+			
+			process.exit(1)
+		}
+		
+		if(this.ripple.stage !== RIPPLE_STAGE_BLOCK_AGREEMENT 
+			&& this.ripple.stage !== RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK
+			&& this.ripple.stage !== RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS
+			&& this.ripple.stage !== RIPPLE_STAGE_COUNTER)
+			{
+				logger.fatal(`Amalgamate run, pre stage is invalid, now is ${this.ripple.stage}, ${process[Symbol.for("getStackInfo")]()}`);
+			
+				process.exit(1)
+			}
 
 		this.ripple.stage = RIPPLE_STAGE_AMALGAMATE;
 		this.start();

@@ -4,7 +4,7 @@ const RippleBlock = require("../data/rippleBlock");
 const utils = require("../../../depends/utils");
 const Stage = require("./stage");
 const assert = require("assert");
-const { BLOCK_AGREEMENT_TIMESTAMP_JUMP_LENGTH, BLOCK_AGREEMENT_TIMESTAMP_MAX_OFFSET, TRANSACTIONS_CONSENSUS_THRESHOULD, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_BLOCK_AGREEMENT, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_REQUEST, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE } = require("../../constant");
+const { RIPPLE_STAGE_CANDIDATE_AGREEMENT, STAGE_STATE_EMPTY, BLOCK_AGREEMENT_TIMESTAMP_JUMP_LENGTH, BLOCK_AGREEMENT_TIMESTAMP_MAX_OFFSET, TRANSACTIONS_CONSENSUS_THRESHOULD, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_BLOCK_AGREEMENT, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_REQUEST, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE } = require("../../constant");
 const _ = require("underscore");
 
 const Buffer = utils.Buffer;
@@ -33,6 +33,13 @@ class BlockAgreement extends Stage
 
 	handler(ifSuccess)
 	{
+		if(!this.checkIfDataExchangeIsFinish())
+		{
+			logger.fatal(`BlockAgreement handler, block agreement data exchange should finish, current state is ${this.state}, ${process[Symbol.for("getStackInfo")]()}`);
+			
+			process.exit(1)
+		}
+
 		if(ifSuccess)
 		{
 			logger.info("BlockAgreement handler success")
@@ -131,7 +138,22 @@ class BlockAgreement extends Stage
  	run(transactions)
  	{
  		assert(Buffer.isBuffer(transactions), `BlockAgreement run, transactions should be an Buffer, now is ${typeof transactions}`);
- 		
+		 
+		if(this.state !== STAGE_STATE_EMPTY)
+		{
+			logger.fatal(`BlockAgreement run, block agreement state should be STAGE_STATE_EMPTY, now is ${this.state}, ${process[Symbol.for("getStackInfo")]()}`);
+			
+			process.exit(1)
+		}
+
+		// check stage
+		if(this.ripple.stage !== RIPPLE_STAGE_CANDIDATE_AGREEMENT)
+		{
+			logger.fatal(`BlockAgreement run, ripple stage should be RIPPLE_STAGE_CANDIDATE_AGREEMENT, now is ${this.ripple.stage}, ${process[Symbol.for("getStackInfo")]()}`);
+			
+			process.exit(1)
+		}
+
  		this.ripple.stage = RIPPLE_STAGE_BLOCK_AGREEMENT;
  		this.start();
  		
