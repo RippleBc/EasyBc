@@ -92,7 +92,7 @@ class CandidateAgreement extends Stage
 					process.exit(1);
 				}	
 						
-				this.ripple.counter.startStageSynchronize({
+				this.ripple.counter.startStageSynchronizeSpreadMode({
 					action: COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE
 				});
 			}
@@ -136,7 +136,7 @@ class CandidateAgreement extends Stage
 
 		this.reset();
 		
-		this.ripple.counter.startStageSynchronize({
+		this.ripple.counter.startStageSynchronizeSpreadMode({
 			action: COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_TRANSACTION_CONSENSUS_FAILED
 		});
 		

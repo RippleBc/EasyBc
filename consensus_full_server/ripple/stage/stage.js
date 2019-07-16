@@ -116,7 +116,7 @@ class Stage extends AsyncEventEmitter
 				{
 					loggerStageConsensus.warn(`${this.name} Counter handleMessage, begin to synchronize stage actively, stage: ${this.ripple.stage}`);
 
-					this.ripple.counter.startStageSynchronize({
+					this.ripple.counter.startStageSynchronizeSpreadMode({
 						action: COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_STAGE_FALL_BEHIND
 					});
 
@@ -199,7 +199,7 @@ class Stage extends AsyncEventEmitter
 					{
 						loggerStageConsensus.warn(`${this.name} Counter handleMessage, begin to synchronize stage actively again, stage: ${this.ripple.stage}`);
 						
-						this.ripple.counter.startStageSynchronize({
+						this.ripple.counter.startStageSynchronizeSpreadMode({
 							action: COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_STAGE_FALL_BEHIND
 						});
 
