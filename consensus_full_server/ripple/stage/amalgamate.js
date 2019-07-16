@@ -2,7 +2,7 @@ const Candidate = require("../data/candidate");
 const utils = require("../../../depends/utils");
 const Stage = require("./stage");
 const assert = require("assert");
-const { STAGE_STATE_EMPTY, RIPPLE_STAGE_AMALGAMATE, PROTOCOL_CMD_CANDIDATE_AMALGAMATE, PROTOCOL_CMD_CANDIDATE_AMALGAMATE_FINISH_STATE_REQUEST, PROTOCOL_CMD_CANDIDATE_AMALGAMATE_FINISH_STATE_RESPONSE } = require("../../constant");
+const { RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES, RIPPLE_STAGE_PERISH, RIPPLE_STAGE_EMPTY, RIPPLE_STAGE_COUNTER, RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, RIPPLE_STAGE_BLOCK_AGREEMENT, STAGE_STATE_EMPTY, RIPPLE_STAGE_AMALGAMATE, PROTOCOL_CMD_CANDIDATE_AMALGAMATE, PROTOCOL_CMD_CANDIDATE_AMALGAMATE_FINISH_STATE_REQUEST, PROTOCOL_CMD_CANDIDATE_AMALGAMATE_FINISH_STATE_RESPONSE } = require("../../constant");
 
 const rlp = utils.rlp;
 
@@ -69,12 +69,15 @@ class Amalgamate extends Stage
 			process.exit(1)
 		}
 		
-		if(this.ripple.stage !== RIPPLE_STAGE_BLOCK_AGREEMENT 
+		if(this.ripple.stage !== RIPPLE_STAGE_EMPTY
+			&& this.ripple.stage !== RIPPLE_STAGE_BLOCK_AGREEMENT 
 			&& this.ripple.stage !== RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK
+			&& this.ripple.stage !== RIPPLE_STAGE_COUNTER
 			&& this.ripple.stage !== RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS
-			&& this.ripple.stage !== RIPPLE_STAGE_COUNTER)
+			&& this.ripple.stage !== RIPPLE_STAGE_PERISH
+			&& this.ripple.stage !== RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES)
 			{
-				logger.fatal(`Amalgamate run, pre stage is invalid, now is ${this.ripple.stage}, ${process[Symbol.for("getStackInfo")]()}`);
+				logger.fatal(`Amalgamate run, ripple stage should be ${RIPPLE_STAGE_BLOCK_AGREEMENT}, ${RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK}, ${RIPPLE_STAGE_COUNTER}, ${RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS}, ${RIPPLE_STAGE_PERISH} or ${RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES}, now is ${this.ripple.stage}, ${process[Symbol.for("getStackInfo")]()}`);
 			
 				process.exit(1)
 			}
