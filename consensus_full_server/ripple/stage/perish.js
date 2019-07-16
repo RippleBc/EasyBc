@@ -75,6 +75,8 @@ class Perish extends Stage
 
 		const fullUnl = unlManager.fullUnl;
 
+		const selfPerishAddress = this.perishData.address;
+
 		if(sortedPerishData[0] && sortedPerishData[0][1] / (fullUnl.length + 1) >= TRANSACTIONS_CONSENSUS_THRESHOULD)
 		{
 			const perishAddress = sortedPerishData[0][0];
@@ -113,13 +115,13 @@ class Perish extends Stage
 				this.ripple.amalgamateMessagesCache = [];	
 				
 				// begin to perish node again
-				if(this.ifActive && this.perishData.address.toString('hex') !== perishData.address.toString('hex'))
+				if(this.ifActive && selfPerishAddress.toString('hex') !== perishAddress)
 				{
 					const waitTime = getRandomPerishInterval()
 
 					setTimeout(() => {
 						this.startPerishNode({
-							address: this.perishData.address
+							address: selfPerishAddress
 						});
 					}, waitTime)
 				}
@@ -151,7 +153,7 @@ class Perish extends Stage
 
 				setTimeout(() => {
 					this.startPerishNode({
-						address: this.perishData.address
+						address: selfPerishAddress
 					});
 				}, waitTime)
 			}
