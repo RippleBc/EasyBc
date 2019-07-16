@@ -27,14 +27,21 @@ class P2p
 		connectionsManager.on("addressConnected", address => {
 			assert(typeof address === 'string', `addressConnected handler, address shoule be an Array, now is ${typeof address}`)
 
-			unlManager.setNodesOnline([address])
+			if(unlManager.fullUnl.find(node => node.address === address))
+			{
+				unlManager.setNodesOnline([address])
+			}
+			
 		});
 
 		connectionsManager.on("addressClosed", address => {
 
 			assert(typeof address === 'string', `addressClosed handler, address shoule be an Array, now is ${typeof address}`)
 
-			unlManager.setNodesOffline([address])
+			if(unlManager.fullUnl.find(node => node.address === address))
+			{
+				unlManager.setNodesOffline([address])
+			}
 		});
 	}
 
