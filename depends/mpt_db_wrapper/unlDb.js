@@ -56,7 +56,7 @@ class UnlDb
     }
 
     const promise = new Promise((resolve, reject) => {
-        this.Unl.update({
+        this.Unl.updateMany({
             address: {
               $in: addresses
             }
