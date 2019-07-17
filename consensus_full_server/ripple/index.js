@@ -144,6 +144,35 @@ class Ripple
 	}
 
 	/**
+	 * @param {Array} nodes 
+	 */
+	async addNodes(nodes)
+	{
+		assert(Array.isArray(nodes), `Ripple addNodes, nodes should be an Array, now is ${typeof nodes}`)
+
+		await unlManager.addNodes(nodes);
+	}
+
+	/**
+	 * @param {Array} nodes 
+	 */
+	async updateNodes(nodes)
+	{
+		assert(Array.isArray(nodes), `Ripple updateNodes, nodes should be an Array, now is ${typeof nodes}`)
+
+		await unlManager.updateNodes(nodes);
+	}
+
+	/**
+	 * @param {Array} nodes 
+	 */
+	async deleteNodes(nodes) {
+		assert(Array.isArray(nodes), `Ripple deleteNodes, nodes should be an Array, now is ${typeof nodes}`)
+
+		await unlManager.deleteNodes(nodes);
+	}
+
+	/**
 	 * @param {Buffer} address
 	 * @param {Number} cmd
 	 * @param {Buffer} data

@@ -43,35 +43,82 @@ class UnlDb
 
   /**
    * @param {Array} addresses
-   * @param {Number} state
    */
-  async updateUnl(addresses, state)
+  async addNodes(nodes)
   {
-    assert(Array.isArray(addresses), `UnlManager updateUnl, addresses should be a String, now is ${typeof addresses}`)
-    assert(typeof state === "number", `UnlManager updateUnl, state should be a Number, now is ${typeof state}`)
+    assert(Array.isArray(nodes), `UnlManager addNodes, nodes should be a String, now is ${typeof nodes}`)
 
-    if(state !== 0 && state !== 1 && state !== 2)
+    
+  }
+
+  /**
+   * @param {Array} addresses
+   */
+  async updateNodes(nodes)
+  {
+    assert(Array.isArray(nodes), `UnlManager updateNodes, nodes should be a String, now is ${typeof nodes}`)
+
+    const updateTasks = []
+
+    for(let node of nodes)
     {
-        throw new Error(`UnlManager updateUnl, state should be normal, offline or cheated, now is ${state}`)
-    }
+      assert(typeof node.address === 'string', `UnlManager updateNodes node.address should be a String, now is ${typeof node.address}`);
 
-    const promise = new Promise((resolve, reject) => {
-        this.Unl.updateMany({
-            address: {
-              $in: addresses
-            }
-        }, {
-            state: state
-        }, err => {
-            if(!!err)
-            {
-                reject(`UnlManager updateUnl, updateOne failed, address: ${address}`)
+      const updateField = {}
+      if(node.host)
+      {
+        updateField.host = node.host
+      }
+      if (node.queryPort) {
+        updateField.queryPort = node.queryPort
+      }
+      if (node.p2pPort) {
+        updateField.p2pPort = node.p2pPort
+      }
+      if (node.state) {
+        updateField.state = node.state
+      }
+
+      const promise = new Promise((resolve, reject) => {
+        this.Unl.update({
+          address: node.address
+        }, updateField, err => {
+            if (!!err) {
+              reject(`UnlManager updateNodes, updateOne failed, address: ${address}`)
             }
 
             resolve();
-        })
-    })
+          })
+      })
+
+      updateTasks.push(promise)
+    }
     
+    
+    return Promise.all(updateTasks)
+  }
+
+  /**
+   * @param {Array} addresses
+   */
+  async deleteNodes(nodes)
+  {
+    assert(Array.isArray(nodes), `UnlManager deleteNodes, nodes should be a String, now is ${typeof nodes}`)
+
+    const promise = new Promise((resolve, reject) => {
+      this.Unl.deleteMany({
+        address: {
+          $in: nodes.map(node => node.address)
+        }
+      }, err => {
+        if (!!err) {
+          reject(`UnlManager updateNodes, updateOne failed, address: ${address}`)
+        }
+
+        resolve();
+      })
+    })
+
     return promise;
   }
 }

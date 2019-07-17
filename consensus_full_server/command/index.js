@@ -53,6 +53,67 @@ app.post("/pardonNodes", (req, res) => {
       msg: e.toString()
     })
   })
-
-  
 });
+
+
+app.post("/addNodes", (req, res) => {
+  if(!req.body.nodes)
+  {
+    return res.send({
+      code: PARAM_ERR,
+      msg: "param error, need nodes"
+    });
+  }
+
+  processor.consensus.addNodes(req.body.nodes).then(() => {
+    res.json({
+      code: SUCCESS
+    })
+  }).catch(e => {
+    res.json({
+      code: OTH_ERR,
+      msg: e.toString()
+    })
+  })
+})
+
+app.post("/updateNodes", (req, res) => {
+  if(!req.body.nodes)
+  {
+    return res.send({
+      code: PARAM_ERR,
+      msg: "param error, need nodes"
+    });
+  }
+
+  processor.consensus.updateNodes(req.body.nodes).then(() => {
+    res.json({
+      code: SUCCESS
+    })
+  }).catch(e => {
+    res.json({
+      code: OTH_ERR,
+      msg: e.toString()
+    })
+  })
+})
+
+app.post("/deleteNodes", (req, res) => {
+  if (!req.body.nodes) {
+    return res.send({
+      code: PARAM_ERR,
+      msg: "param error, need nodes"
+    });
+  }
+
+  processor.consensus.deleteNodes(req.body.nodes).then(() => {
+    res.json({
+      code: SUCCESS
+    })
+  }).catch(e => {
+    res.json({
+      code: OTH_ERR,
+      msg: e.toString()
+    })
+  })
+})
