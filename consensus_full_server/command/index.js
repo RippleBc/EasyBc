@@ -34,3 +34,29 @@ app.post("/perishNode", (req, res) => {
     code: SUCCESS
   })
 });
+
+app.post("/pardonNode", (req, res) => {
+  if (!req.body.addresses) {
+    return res.send({
+      code: PARAM_ERR,
+      msg: "param error, need address"
+    });
+  }
+
+  addresses = addresses.map(address => {
+    return Buffer.from(address, 'hex')
+  })
+
+  processor.consensus.pardonNode(addresses).then(() => {
+    res.json({
+      code: SUCCESS
+    })
+  }).catch(e => {
+    res.json({
+      code: OTH_ERR,
+      msg: e.toString()
+    })
+  })
+
+  
+});

@@ -96,7 +96,12 @@ class Counter extends Stage
 
 				this.ripple.stage = RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS;
 
-				this.ripple.getNewTransactions().then(newTransactions => {
+				(async () => {
+					// fetch new transactions
+					const {
+						transactions: newTransactions,
+						deleteTransactions
+					} = await this.ripple.getNewTransactions();
 
 					// check if stage is invalid
 					if(this.ripple.stage === RIPPLE_STAGE_PERISH 
@@ -110,6 +115,9 @@ class Counter extends Stage
 						transactions: newTransactions
 					});
 
+					// delete transactions from db
+					await deleteTransactions()
+
 					// handle cached messages
 					for(let i = 0; i < this.ripple.amalgamateMessagesCacheCounter.length; i++)
 					{
@@ -117,9 +125,8 @@ class Counter extends Stage
 						this.ripple.amalgamate.handleMessage(address, cmd, data);
 					}
 
-					this.ripple.amalgamateMessagesCacheCounter = [];		
-
-				}).catch(e => {
+					this.ripple.amalgamateMessagesCacheCounter = [];
+				})().catch(e => {
 					logger.fatal(`Counter handler, throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 
 					process.exit(1);

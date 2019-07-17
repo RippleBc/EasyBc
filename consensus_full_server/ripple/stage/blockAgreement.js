@@ -116,7 +116,11 @@ class BlockAgreement extends Stage
 						return this.ripple.amalgamateMessagesCacheBlockAgreement = [];
 					}
 
-				const newTransactions = await this.ripple.getNewTransactions();
+				// fetch new transactions
+				const {
+					transactions: newTransactions,
+					deleteTransactions
+				} = await this.ripple.getNewTransactions();
 
 				// check if stage is invalid
 				if(this.ripple.stage === RIPPLE_STAGE_PERISH 
@@ -131,6 +135,9 @@ class BlockAgreement extends Stage
 					fetchingNewTransaction: true,
 					transactions: newTransactions
 				});
+
+				// delete transactions from db
+				await deleteTransactions()
 
 				for(let i = 0; i < this.ripple.amalgamateMessagesCacheBlockAgreement.length; i++)
 				{

@@ -35,12 +35,21 @@ class Processor
 			loggerUpdate.info("update is success");
 		});
 
-		this.consensus.getNewTransactions().then(newTransactions => {
+		(async () => {
+			// fetch new transactions
+			const { 
+				transactions: newTransactions,
+				deleteTransactions
+			} = await this.consensus.getNewTransactions();
+
 			this.consensus.run({
 				fetchingNewTransaction: true,
 				transactions: newTransactions
 			});
-		}).catch(e => {
+
+			// delete transactions from db
+			await deleteTransactions();
+		})().catch(e => {
 			loggerConsensus.fatal(`Processor run, getNewTransactions throw exception, ${process[Symbol.for("getStackInfo")](e)}`)
 
 			process.exit(1);

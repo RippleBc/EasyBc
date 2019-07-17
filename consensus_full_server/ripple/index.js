@@ -51,6 +51,11 @@ class Ripple
 		this.amalgamate.run(this.processingTransactions);
 	}
 
+	/*
+	 * @return {Object} 
+	 *  - {Array} transactions
+	 *  - {Function} deleteTransactions
+	 */
 	async getNewTransactions()
 	{
 		return await mysql.getRawTransactions(MAX_PROCESS_TRANSACTIONS_SIZE);
@@ -126,6 +131,16 @@ class Ripple
 		this.perish.startPerishNode({
 			address: address
 		});
+	}
+
+	/**
+	 * @param {Array/Buffer} address
+	 */
+	async pardonNode(addresses)
+	{
+		assert(Array.isArray(addresses), `Ripple pardonNode, addresses should be an Array, now is ${typeof addresses}`)
+
+		await unlManager.setNodesRighteous(addresses)
 	}
 
 	/**

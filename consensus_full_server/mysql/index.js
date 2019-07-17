@@ -44,6 +44,9 @@ class Mysql
 
   /**
    * @param {Number} num
+   * @return {Object} 
+   *  - {Array} transactions
+   *  - {Function} deleteTransactions
    */
   async getRawTransactions(num)
   {
@@ -55,14 +58,17 @@ class Mysql
     
     const result = rawTransactions.map(rawTransaction => {
       return Buffer.from(rawTransaction.data, 'hex');
-    })
+    })    
 
-    for(let rawTransaction of rawTransactions)
-    {
-      await rawTransaction.destroy();
-    }
-
-    return result;
+    return {
+      transactions: result,
+      deleteTransactions: async () => {
+        for(let rawTransaction of rawTransactions)
+        {
+          await rawTransaction.destroy();
+        }
+      }
+    };
   }
   
   /**
