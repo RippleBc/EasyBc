@@ -115,9 +115,6 @@ class Counter extends Stage
 						transactions: newTransactions
 					});
 
-					// delete transactions from db
-					await deleteTransactions()
-
 					// handle cached messages
 					for(let i = 0; i < this.ripple.amalgamateMessagesCacheCounter.length; i++)
 					{
@@ -126,6 +123,10 @@ class Counter extends Stage
 					}
 
 					this.ripple.amalgamateMessagesCacheCounter = [];
+					
+					// delete transactions from db
+					await deleteTransactions()
+
 				})().catch(e => {
 					logger.fatal(`Counter handler, throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 

@@ -136,16 +136,16 @@ class BlockAgreement extends Stage
 					transactions: newTransactions
 				});
 
-				// delete transactions from db
-				await deleteTransactions()
-
 				for(let i = 0; i < this.ripple.amalgamateMessagesCacheBlockAgreement.length; i++)
 				{
 					let {address, cmd, data} = this.ripple.amalgamateMessagesCacheBlockAgreement[i];
 					this.ripple.amalgamate.handleMessage(address, cmd, data);
 				}
 
-				this.ripple.amalgamateMessagesCacheBlockAgreement = [];		
+				this.ripple.amalgamateMessagesCacheBlockAgreement = [];
+				
+				// delete transactions from db
+				await deleteTransactions()		
 
 			})().then(() => {
 				logger.trace("BlockAgreement handler, process block success, new round begin")
