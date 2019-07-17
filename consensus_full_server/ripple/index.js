@@ -134,11 +134,11 @@ class Ripple
 	}
 
 	/**
-	 * @param {Array/Buffer} address
+	 * @param {Array/String} address
 	 */
-	async pardonNode(addresses)
+	async pardonNodes(addresses)
 	{
-		assert(Array.isArray(addresses), `Ripple pardonNode, addresses should be an Array, now is ${typeof addresses}`)
+		assert(Array.isArray(addresses), `Ripple pardonNodes, addresses should be an Array, now is ${typeof addresses}`)
 
 		await unlManager.setNodesRighteous(addresses)
 	}

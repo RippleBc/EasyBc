@@ -35,7 +35,7 @@ app.post("/perishNode", (req, res) => {
   })
 });
 
-app.post("/pardonNode", (req, res) => {
+app.post("/pardonNodes", (req, res) => {
   if (!req.body.addresses) {
     return res.send({
       code: PARAM_ERR,
@@ -43,11 +43,7 @@ app.post("/pardonNode", (req, res) => {
     });
   }
 
-  addresses = addresses.map(address => {
-    return Buffer.from(address, 'hex')
-  })
-
-  processor.consensus.pardonNode(addresses).then(() => {
+  processor.consensus.pardonNodes(req.body.addresses).then(() => {
     res.json({
       code: SUCCESS
     })
