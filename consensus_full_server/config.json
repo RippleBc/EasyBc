@@ -1,23 +1,30 @@
 {
-	"privateKey": "459705e79404b3604e4eef0aa1becedef1a227865a122826106f7f511682ea86",
+	"privateKey": "bfd549bfbbb41498b290bfdbefc1810aacf83463ba949569975220b3ceaaa1e0",
 	"tcp":
 	{
 		"host": "0.0.0.0",
 		"port": 9090
+	},
+	"http":
+	{
+		"host": "localhost",
+		"port": 8080
 	},
 	"mysql":
 	{
 		"host": "localhost",
 		"port": 3306,
 		"user": "root",
-		"password": "root"
+		"password": "root",
+		"dbName": "consensus"
 	},
 	"mongo":
 	{
 		"host": "localhost",
 		"port": 4406,
 		"user": "blockChain",
-		"password": "blockChain"
+		"password": "blockChain",
+		"dbName": "blockChain"
 	},
 	"genesis":
 	[

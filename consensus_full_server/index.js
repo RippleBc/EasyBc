@@ -66,7 +66,7 @@ process.on("uncaughtException", function(err) {
     await process[Symbol.for("mysql")].init();
 
     // init mongo
-    await process[Symbol.for("mongo")].initBaseDb(mongoConfig.host, mongoConfig.port, mongoConfig.user, mongoConfig.password);
+    await process[Symbol.for("mongo")].initBaseDb(mongoConfig.host, mongoConfig.port, mongoConfig.user, mongoConfig.password, mongoConfig.dbName);
 
     // init unl
     const UnlManager = require("./unlManager");

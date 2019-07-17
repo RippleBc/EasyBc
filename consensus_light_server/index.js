@@ -55,7 +55,7 @@ process.on('uncaughtException', err => {
 
   // init mongo
   const mongo = require("../depends/mpt_db_wrapper");
-  await mongo.initBaseDb(mongoConfig.host, mongoConfig.port, mongoConfig.user, mongoConfig.password);
+  await mongo.initBaseDb(mongoConfig.host, mongoConfig.port, mongoConfig.user, mongoConfig.password, mongoConfig.dbName);
   const trieDb = mongo.generateMptDb()
   process[Symbol.for("accountTrie")] = new Trie(trieDb);
   process[Symbol.for("blockDb")] = mongo.generateBlockDb();

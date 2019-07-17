@@ -16,7 +16,7 @@ class Mysql
 {
   constructor()
   {
-    this.sequelize = new Sequelize('consensus', mysqlConfig.user, mysqlConfig.password, {
+    this.sequelize = new Sequelize(mysqlConfig.dbName, mysqlConfig.user, mysqlConfig.password, {
       host: mysqlConfig.host,
       port: mysqlConfig.port,
       dialect: 'mysql',

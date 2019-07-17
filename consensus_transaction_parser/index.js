@@ -25,7 +25,7 @@ process.on("uncaughtException", function(err) {
 
 	// init mongo
   const mongo = require("../depends/mpt_db_wrapper");
-  await mongo.initBaseDb(mongoConfig.host, mongoConfig.port, mongoConfig.user, mongoConfig.password);
+  await mongo.initBaseDb(mongoConfig.host, mongoConfig.port, mongoConfig.user, mongoConfig.password, mongoConfig.dbName);
 
 	await run(mongo.generateBlockDb())
 })()
