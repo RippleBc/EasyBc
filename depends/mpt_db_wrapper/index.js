@@ -11,7 +11,7 @@ var blockDb;
 var unlDb;
 
 module.exports = {
-  initBaseDb: async (host, port, user, password) => {
+  initBaseDb: async (host, port, user, password, dbName) => {
     assert(typeof host === 'string', `mongo initBaseDb, host should be a String, now is ${typeof host}`)
     assert(typeof port === 'number', `mongo initBaseDb, port should be a Number, now is ${typeof port}`)
     assert(typeof user === 'string', `mongo initBaseDb, user should be a String, now is ${typeof user}`)
@@ -22,7 +22,7 @@ module.exports = {
     mongoose.set('useCreateIndex', true);
 
     mongooseInstance = await mongoose.connect(`mongodb://${host}:${port}`, {
-      dbName: "blockChain", 
+      dbName: dbName, 
       user: user,
       pass: password
     });
