@@ -9,49 +9,49 @@ log4js.configure({
         command: {
             type: "dateFile",
             filename: "consensus_full_server/logs/command_log/",
-            pattern: "command-yyyy-MM-dd.log",
+            pattern: "command-yyyy-MM-dd hh:mm.log",
             alwaysIncludePattern: true
         },
         p2p: {
             type: "dateFile",
             filename: "consensus_full_server/logs/p2p_log/",
-            pattern: "p2p-yyyy-MM-dd.log",
+            pattern: "p2p-yyyy-MM-dd hh:mm.log",
             alwaysIncludePattern: true
         },
         net: {
             type: "dateFile",
             filename: "consensus_full_server/logs/net_log/",
-            pattern: "net-yyyy-MM-dd.log",
+            pattern: "net-yyyy-MM-dd hh:mm.log",
             alwaysIncludePattern: true
         },
         consensus: {
             type: "dateFile",
             filename: "consensus_full_server/logs/consensus_log/",
-            pattern: "consensus-yyyy-MM-dd.log",
+            pattern: "consensus-yyyy-MM-dd hh:mm.log",
             alwaysIncludePattern: true
         },
         mysql: {
             type: "dateFile",
             filename: "consensus_full_server/logs/mysql_log/",
-            pattern: "mysql-yyyy-MM-dd.log",
+            pattern: "mysql-yyyy-MM-dd hh:mm.log",
             alwaysIncludePattern: true
         },
         update: {
             type: "dateFile",
             filename: "consensus_full_server/logs/update_log/",
-            pattern: "update-yyyy-MM-dd.log",
+            pattern: "update-yyyy-MM-dd hh:mm.log",
             alwaysIncludePattern: true
         },
         stageConsensus: {
             type: "dateFile",
             filename: "consensus_full_server/logs/stageConsensus_log/",
-            pattern: "stageConsensus-yyyy-MM-dd.log",
+            pattern: "stageConsensus-yyyy-MM-dd hh:mm.log",
             alwaysIncludePattern: true
         },
         perishNode: {
             type: "dateFile",
             filename: "consensus_full_server/logs/perishNode_log/",
-            pattern: "perishNode-yyyy-MM-dd.log",
+            pattern: "perishNode-yyyy-MM-dd hh:mm.log",
             alwaysIncludePattern: true
         }
     },

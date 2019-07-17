@@ -103,12 +103,14 @@ const run = async function(dir, logsBufferMaxSize)
 		{
 			let line = await rl.readLine();
 
+			logger.trace(`fileName: ${files[index]}, line: ${line}`)
+
 			if(line === null)
 			{
 				await mysql.saveLogs(logs);
 				await saveOffset(dir, offset);
 
-				if(index === (files.length - 1) && Date.now() - new Date(files[index].match(/(?<=\-)[\d-]+/g)).valueOf() < (24 * 60 * 60 * 1000 + 5000))
+				if(index === (files.length - 1) && Date.now() - new Date(files[index].match(/(?<=-)[\d- ]+/g)).valueOf() < (65 * 1000))
 				{
 					// read log file has finished and may be there will have new logs to write in, wait a moment and try to read this log file again
 					return new Promise((resolve, reject) => {
