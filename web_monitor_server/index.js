@@ -62,7 +62,7 @@ process[Symbol.for('cookieSet')] = new Set();
 	app.use(passport.initialize())
 	app.use(cors({
 	  credentials: true, 
-	  origin: 'http://localhost:8080', // web前端服务器地址
+	  origin: 'http://localhost:7999', // web前端服务器地址
 	}));
 	app.use("/", express.static(path.join(__dirname + "/dist")));
 

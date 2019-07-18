@@ -64,7 +64,7 @@ app.post("/unl", (req, res) => {
     })
 })
 
-app.use((req, res) => {
+app.use((req, res, next) => {
     if (req.url.includes("addNodes")
         || req.url.includes("updateNodes")
         || req.url.includes("deleteNodes")

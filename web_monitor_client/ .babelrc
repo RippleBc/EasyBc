@@ -6,10 +6,10 @@
             // transform-runtime 来将这些辅助函数“搬”到一个单独的模块babel-runtime中，这样做能减小项目文件的大小。
             "transform-runtime",
             {
-            "helpers": false,
-            "polyfill": false,
-            "regenerator": true,
-            "moduleName": "babel-runtime"
+                "helpers": false,
+                "polyfill": false,
+                "regenerator": true,
+                "moduleName": "babel-runtime"
             }
         ]
     ]
