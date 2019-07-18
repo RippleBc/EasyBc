@@ -7,7 +7,8 @@ module.exports = new Schema({
     address: {
         type: String,
         unique: true,
-        required: true
+        required: true,
+        index: true
     },
     host: {
         type: String,

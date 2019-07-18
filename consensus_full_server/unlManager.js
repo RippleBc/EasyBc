@@ -94,7 +94,7 @@ class UnlManager
         const nodes = addresses.map(address => {
             return {
                 address: address,
-                state: 0
+                state: 1
             }
         });
 
@@ -140,7 +140,7 @@ class UnlManager
 	 * @param {Array} nodes 
 	 */
     async updateNodes({nodes, firstUpdateMemory = false}) {
-        assert(Array.isArray(nodes), `UnlManager addNodes, nodes should be an Array, now is ${typeof nodes}`);
+        assert(Array.isArray(nodes), `UnlManager updateNodes, nodes should be an Array, now is ${typeof nodes}`);
 
         if(firstUpdateMemory)
         {
@@ -149,32 +149,26 @@ class UnlManager
 
                 if (existNode) {
                     // update unl in memory
-                    if (node.host) {
-                        assert(typeof node.host === 'string', `UnlManager addNodes, node.host should be a String, now is ${typeof node.host}`);
+                    if (undefined !== node.host) {
+                        assert(typeof node.host === 'string', `UnlManager updateNodes, node.host should be a String, now is ${typeof node.host}`);
 
                         existNode.host = node.host;
                     }
 
-                    if (node.queryPort) {
-                        assert(typeof node.queryPort === 'number', `UnlManager addNodes, node.queryPort should be a Number, now is ${typeof node.queryPort}`);
+                    if (undefined !== node.queryPort) {
+                        assert(typeof node.queryPort === 'number', `UnlManager updateNodes, node.queryPort should be a Number, now is ${typeof node.queryPort}`);
 
                         existNode.queryPort = node.queryPort;
                     }
 
-                    if (node.p2pPort) {
-                        assert(typeof node.p2pPort === 'number', `UnlManager addNodes, node.p2pPort should be a Number, now is ${typeof node.p2pPort}`);
+                    if (undefined !== node.p2pPort) {
+                        assert(typeof node.p2pPort === 'number', `UnlManager updateNodes, node.p2pPort should be a Number, now is ${typeof node.p2pPort}`);
 
                         existNode.p2pPort = node.p2pPort;
                     }
 
-                    if (node.address) {
-                        assert(typeof node.address === 'string', `UnlManager addNodes, node.address should be a String, now is ${typeof node.address}`);
-
-                        existNode.address = node.address;
-                    }
-
-                    if (node.state) {
-                        assert(typeof node.state === 'number', `UnlManager addNodes, node.state should be a Number, now is ${typeof node.state}`);
+                    if (undefined !== node.state) {
+                        assert(typeof node.state === 'number', `UnlManager updateNodes, node.state should be a Number, now is ${typeof node.state}`);
 
                         existNode.state = node.state;
                     }
@@ -193,32 +187,26 @@ class UnlManager
                 if (existNode) 
                 {
                     // update unl in memory
-                    if (node.host) {
-                        assert(typeof node.host === 'string', `UnlManager addNodes, node.host should be a String, now is ${typeof node.host}`);
+                    if (undefined !== node.host) {
+                        assert(typeof node.host === 'string', `UnlManager updateNodes, node.host should be a String, now is ${typeof node.host}`);
 
                         existNode.host = node.host;
                     }
 
-                    if (node.queryPort) {
-                        assert(typeof node.queryPort === 'number', `UnlManager addNodes, node.queryPort should be a Number, now is ${typeof node.queryPort}`);
+                    if (undefined !== node.queryPort) {
+                        assert(typeof node.queryPort === 'number', `UnlManager updateNodes, node.queryPort should be a Number, now is ${typeof node.queryPort}`);
 
                         existNode.queryPort = node.queryPort;
                     }
 
-                    if (node.p2pPort) {
-                        assert(typeof node.p2pPort === 'number', `UnlManager addNodes, node.p2pPort should be a Number, now is ${typeof node.p2pPort}`);
+                    if (undefined !== node.p2pPort) {
+                        assert(typeof node.p2pPort === 'number', `UnlManager updateNodes, node.p2pPort should be a Number, now is ${typeof node.p2pPort}`);
 
                         existNode.p2pPort = node.p2pPort;
                     }
 
-                    if (node.address) {
-                        assert(typeof node.address === 'string', `UnlManager addNodes, node.address should be a String, now is ${typeof node.address}`);
-
-                        existNode.address = node.address;
-                    }
-
-                    if (node.state) {
-                        assert(typeof node.state === 'number', `UnlManager addNodes, node.state should be a Number, now is ${typeof node.state}`);
+                    if (undefined !== node.state) {
+                        assert(typeof node.state === 'number', `UnlManager updateNodes, node.state should be a Number, now is ${typeof node.state}`);
 
                         existNode.state = node.state;
                     }

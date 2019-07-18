@@ -46,9 +46,26 @@ class UnlDb
    */
   async addNodes(nodes)
   {
-    assert(Array.isArray(nodes), `UnlManager addNodes, nodes should be a String, now is ${typeof nodes}`)
+    assert(Array.isArray(nodes), `UnlDb addNodes, nodes should be a String, now is ${typeof nodes}`)
 
-    
+    nodes = nodes.map(node => {
+
+      assert(typeof node.host === 'string', `UnlDb addNodes, node.host should be a String, now is ${typeof node.host}`);
+      assert(typeof node.queryPort === 'number', `UnlDb addNodes, node.queryPort should be a Number, now is ${typeof node.queryPort}`);
+      assert(typeof node.p2pPort === 'number', `UnlDb addNodes, node.p2pPort should be a Number, now is ${typeof node.p2pPort}`);
+      assert(typeof node.address === 'string', `UnlDb addNodes, node.address should be a String, now is ${typeof node.address}`);
+
+      return {
+        address: node.address,
+        host: node.host,
+        queryPort: node.queryPort,
+        p2pPort: node.p2pPort,
+        state: 1
+      }
+    })
+
+
+    await this.Unl.create(nodes)
   }
 
   /**
@@ -65,17 +82,17 @@ class UnlDb
       assert(typeof node.address === 'string', `UnlManager updateNodes node.address should be a String, now is ${typeof node.address}`);
 
       const updateField = {}
-      if(node.host)
+      if(undefined !== node.host)
       {
         updateField.host = node.host
       }
-      if (node.queryPort) {
+      if (undefined !== node.queryPort) {
         updateField.queryPort = node.queryPort
       }
-      if (node.p2pPort) {
+      if (undefined !== node.p2pPort) {
         updateField.p2pPort = node.p2pPort
       }
-      if (node.state) {
+      if (undefined !== node.state) {
         updateField.state = node.state
       }
 

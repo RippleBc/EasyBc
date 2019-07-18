@@ -160,7 +160,9 @@ class Ripple
 	{
 		assert(Array.isArray(nodes), `Ripple updateNodes, nodes should be an Array, now is ${typeof nodes}`)
 
-		await unlManager.updateNodes(nodes);
+		await unlManager.updateNodes({
+			nodes: nodes
+		});
 	}
 
 	/**
