@@ -29,14 +29,16 @@
                 </el-table-column>
                 <el-table-column prop="host" label="地址" width="200">
                 </el-table-column>
-                <el-table-column prop="port" label="端口">
+                <el-table-column prop="queryPort" label="查询端口">
+                </el-table-column>
+                <el-table-column prop="p2pPort" label="点对点端口">
+                </el-table-column>
+                <el-table-column prop="state" label="状态码">
                 </el-table-column>
                 <el-table-column label="操作" width="180" align="center">
                     <template slot-scope="scope">
-                        
                         <el-button type="text" @click="handleEdit(scope.row)">编辑</el-button>
                         <el-button type="text" class="red" @click="handleDelete(scope.row)">删除</el-button>
-                        <el-button type="text" @click="checkNodeDetail(scope.row)">查看详情</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -50,16 +52,16 @@
         <el-dialog title="新增" :visible.sync="addVisible" width="30%">
             <el-form :model="currentHandleNode" label-width="90px">
                 <el-form-item label="公钥">
-                    <el-input v-model="currentHandleNode.address"></el-input>
+                   <el-input v-model="currentHandleNode.address"></el-input>
                 </el-form-item>
                 <el-form-item label="地址">
                     <el-input v-model="currentHandleNode.host"></el-input>
                 </el-form-item>
-                <el-form-item label="端口">
-                    <el-input v-model="currentHandleNode.port"></el-input>
+                <el-form-item label="查询端口">
+                    <el-input v-model="currentHandleNode.queryPort"></el-input>
                 </el-form-item>
-                <el-form-item label="备注信息">
-                    <el-input v-model="currentHandleNode.remarks"></el-input>
+                <el-form-item label="点对点端口">
+                    <el-input v-model="currentHandleNode.p2pPort"></el-input>
                 </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
@@ -71,14 +73,20 @@
         <!-- 编辑弹出框 -->
         <el-dialog title="编辑" :visible.sync="editVisible" width="30%">
             <el-form :model="currentHandleNode" label-width="90px">
+                <el-form-item label="公钥">
+                   {{currentHandleNode.address}}
+                </el-form-item>
                 <el-form-item label="地址">
                     <el-input v-model="currentHandleNode.host"></el-input>
                 </el-form-item>
-                <el-form-item label="端口">
-                    <el-input v-model="currentHandleNode.port"></el-input>
+                <el-form-item label="查询端口">
+                    <el-input v-model="currentHandleNode.queryPort"></el-input>
                 </el-form-item>
-                <el-form-item label="备注信息">
-                    <el-input v-model="currentHandleNode.remarks"></el-input>
+                <el-form-item label="点对点端口">
+                    <el-input v-model="currentHandleNode.p2pPort"></el-input>
+                </el-form-item>
+                <el-form-item label="状态码">
+                    <el-input v-model="currentHandleNode.state"></el-input>
                 </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
@@ -105,6 +113,7 @@
         name: 'nodeList',
         data() {
             return {
+                allData: [],
                 tableData: [],
                 pageSize: 6,
                 cur_page: 1,
@@ -117,23 +126,26 @@
                     id: 0,
                     address: '',
                     host: '',
-                    port: '',
+                    queryPort: '',
+                    p2pPort: '',
+                    state: ''
                 }
             }
         },
         created() {
-            this.tableData = this.unl;
+            // fetch all data
+            this.getAllData();
         },
         watch: {
             select_word: function(val, oldVal)
             {
                 if(oldVal !== '' && val === '')
                 {
-                    this.tableData = this.unl;
+                    this.tableData = this.allData;
                 }
             },
 
-            unl: function(val, oldVal)
+            allData: function(val, oldVal)
             {
                 this.tableData = val;
                 this.search();
@@ -143,14 +155,26 @@
         {
             pageData() {
                 return this.tableData.slice(this.pageSize * (this.cur_page - 1), this.pageSize * this.cur_page)
-            },
-
-            ...mapState(['unl'])
+            }
         },
         methods: {
+            getAllData() {
+                this.$axios.post('/unl', {}).then(res => {
+                    if(res.code !== 0)
+                    {
+                        this.$message.error(res.msg);
+                    }
+                    else
+                    {
+                        this.tableData = this.allData = res.data;
+                    }
+                }).catch(err => {
+                    this.$message.error(err);
+                });
+            },
             search() {
-                this.tableData = this.unl.filter(data => {
-                    else if(data.address.includes(this.select_word))
+                this.tableData = this.allData.filter(data => {
+                    if(data.address.includes(this.select_word))
                     {
                         return true;
                     }
@@ -158,11 +182,15 @@
                     {
                         return true;
                     }
-                    else if(data.port.toString().includes(this.select_word))
+                    else if(data.queryPort.toString().includes(this.select_word))
                     {
                         return true;
                     }
-                    else if(data.remarks.includes(this.select_word))
+                    else if(data.p2pPort.toString().includes(this.select_word))
+                    {
+                        return true;
+                    }
+                    else if(data.state.toString().includes(this.select_word))
                     {
                         return true;
                     }
@@ -184,42 +212,30 @@
             handleSelectionChange(val) {
                 this.multipleSelection = val;
             },
-            checkNodeDetail(row)
-            {
-                this.$router.push(`dashboard/${row.id}`);
-            },
             delBatch() {
                 const errMsgs = [];
 
-                (async () => {
-                    for(let node of this.multipleSelection)
+                this.$axios.post('/deleteNodes', this.multipleSelection).then(() => {
+                    if(res.code !== 0)
                     {
-                        let res = await this.$axios.post('/deleteNode', node)
-                        if(res.code !== 0)
-                        {
-                            errMsgs.push(res.msg)
-                        }
-                        else
-                        {
-                            this.$message.success(`删除成功, ${node.address}`);
-                        }
+                        this.$message.error(res.msg);
                     }
-                })().then(() => {
-                    if(errMsgs.length > 0)
+                    else
                     {
-                        this.$message.error(errMsgs.join(', '));
+                        this.$message.success('删除成功');
+
+                        this.getAllData();
                     }
                 }).catch(err => {
                     this.$message.error(err);
                 }).finally(() => {
-                    this.$store.dispatch('getUnl');
                     this.multipleSelection = [];
                 });
             },
             saveAdd() {
                 this.addVisible = false;
 
-                this.$axios.post('/addNode', this.currentHandleNode).then(res => {
+                this.$axios.post('/addNodes', [this.currentHandleNode]).then(res => {
                     if(res.code !== 0)
                     {
                         this.$message.error(res.msg);
@@ -227,7 +243,8 @@
                     else
                     {
                         this.$message.success('新增成功');
-                        this.$store.dispatch('getUnl');
+
+                        this.getAllData();
                     }
                 }).catch(err => {
                     this.$message.error(err);
@@ -236,7 +253,7 @@
             saveEdit() {
                 this.editVisible = false;
                 
-                this.$axios.post('/modifyNode', this.currentHandleNode).then(res => {
+                this.$axios.post('/updateNodes', [this.currentHandleNode]).then(res => {
                     if(res.code !== 0)
                     {
                         this.$message.error(res.msg);
@@ -244,7 +261,8 @@
                     else
                     {
                         this.$message.success('修改成功');
-                        this.$store.dispatch('getUnl');
+
+                        this.getAllData();
                     }
                 }).catch(err => {
                     this.$message.error(err);
@@ -253,7 +271,7 @@
             saveDelete(){
                 this.delVisible = false;
 
-                this.$axios.post('/deleteNode', this.currentHandleNode).then(res => {
+                this.$axios.post('/deleteNodes', [this.currentHandleNode]).then(res => {
                     if(res.code !== 0)
                     {
                         this.$message.error(res.msg);
@@ -261,7 +279,8 @@
                     else
                     {
                         this.$message.success('删除成功');
-                        this.$store.dispatch('getUnl');
+
+                        this.getAllData();
                     }
                 }).catch(err => {
                     this.$message.error(err);

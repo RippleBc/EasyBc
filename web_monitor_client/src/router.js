@@ -53,6 +53,15 @@ export default new Router({
                     }
                 },
                 {
+                    path: '/unl/:index',
+                    name: 'unl',
+                    component: () => import('./views/Unl.vue'),
+                    meta: { 
+                        title: '节点概况',
+                        keepAlive: false
+                    }
+                },
+                {
                     path: '/nodeDetail/:index',
                     name: 'nodeDetail',
                     component: () => import('./views/NodeDetail.vue'),

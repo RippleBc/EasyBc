@@ -8,7 +8,7 @@ const { Node, Cpu, Memory } = process[Symbol.for('models')]
 const logger = process[Symbol.for('logger')];
 const printErrorStack = process[Symbol.for("printErrorStack")]
 
-app.get('/nodes', checkCookie, (req, res) => {
+app.get('/monitorNodes', checkCookie, (req, res) => {
 	Node.findAll().then(nodes => {
 		res.json({
 	    code: SUCCESS,
@@ -24,7 +24,7 @@ app.get('/nodes', checkCookie, (req, res) => {
   })
 });
 
-app.post('/addNode', checkCookie, (req, res) => {
+app.post('/addMonitorNode', checkCookie, (req, res) => {
 	const name = req.body.name;
   const address = req.body.address;
 	const host = req.body.host;
@@ -104,7 +104,7 @@ app.post('/addNode', checkCookie, (req, res) => {
   })
 });
 
-app.post('/modifyNode', checkCookie, (req, res) => {
+app.post('/modifyMonitorNode', checkCookie, (req, res) => {
 	const id = req.body.id;
 	const name = req.body.name;
 	const host = req.body.host;
@@ -183,7 +183,7 @@ app.post('/modifyNode', checkCookie, (req, res) => {
   })
 });
 
-app.post('/deleteNode', checkCookie, (req, res) => {
+app.post('/deleteMonitorNode', checkCookie, (req, res) => {
 	const id = req.body.id;
 	
 	if(!!!id)

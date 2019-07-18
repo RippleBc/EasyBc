@@ -86,8 +86,11 @@ process[Symbol.for('cookieSet')] = new Set();
 	require('./block');
 	logger.info('load block module success')
 	
-	require('./unl');
-	logger.info('load unl module success')
+	require('./monitor_nodes');
+	logger.info('load monitor_nodes module success')
+
+	require('./config_nodes');
+	logger.info('load config_nodes module success')
 })().then(() => {
 	logger.info("server init success")
 }).catch(e => {

@@ -205,7 +205,7 @@
                 (async () => {
                     for(let node of this.multipleSelection)
                     {
-                        let res = await this.$axios.post('/deleteNode', node)
+                        let res = await this.$axios.post('/deleteMonitorNode', node)
                         if(res.code !== 0)
                         {
                             errMsgs.push(res.msg)
@@ -230,7 +230,7 @@
             saveAdd() {
                 this.addVisible = false;
 
-                this.$axios.post('/addNode', this.currentHandleNode).then(res => {
+                this.$axios.post('/addMonitorNode', this.currentHandleNode).then(res => {
                     if(res.code !== 0)
                     {
                         this.$message.error(res.msg);
@@ -247,7 +247,7 @@
             saveEdit() {
                 this.editVisible = false;
                 
-                this.$axios.post('/modifyNode', this.currentHandleNode).then(res => {
+                this.$axios.post('/modifyMonitorNode', this.currentHandleNode).then(res => {
                     if(res.code !== 0)
                     {
                         this.$message.error(res.msg);
@@ -264,7 +264,7 @@
             saveDelete(){
                 this.delVisible = false;
 
-                this.$axios.post('/deleteNode', this.currentHandleNode).then(res => {
+                this.$axios.post('/deleteMonitorNode', this.currentHandleNode).then(res => {
                     if(res.code !== 0)
                     {
                         this.$message.error(res.msg);

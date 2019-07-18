@@ -52,6 +52,11 @@
             title: '节点概况'
         },
         {
+            icon: 'el-icon-lx-home',
+            index: '/unl',
+            title: '配置节点信息'
+        },
+        {
             icon: 'el-icon-lx-sort',
             index: '/nodeDetail',
             title: '节点详细信息'
