@@ -1,5 +1,5 @@
 const { TRANSACTION_STATE_PACKED, SUCCESS } = require("../../constant");
-const {assert, expect, should} = require("chai"); 
+const { assert, expect, should } = require("chai"); 
 const rp = require("request-promise");
 const Account = require("../../depends/account")
 const Block = require("../../depends/block")

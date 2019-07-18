@@ -5,9 +5,10 @@ const { host, port } = require("./config.json");
 const Mysql = require("./mysql");
 const log4js= require("./logConfig");
 const Trie = require("../depends/merkle_patricia_tree");
-const mongoConfig = require("./config").mongo;
+const { mongo: mongoConfig } = require("./config");
 
 const logger = log4js.getLogger();
+
 process[Symbol.for("errLogger")] = log4js.getLogger("err");
 process[Symbol.for("mysql")] = new Mysql();
 
@@ -57,8 +58,10 @@ process.on('uncaughtException', err => {
   const mongo = require("../depends/mpt_db_wrapper");
   await mongo.initBaseDb(mongoConfig.host, mongoConfig.port, mongoConfig.user, mongoConfig.password, mongoConfig.dbName);
   const trieDb = mongo.generateMptDb()
+
   process[Symbol.for("accountTrie")] = new Trie(trieDb);
   process[Symbol.for("blockDb")] = mongo.generateBlockDb();
+  process[Symbol.for("unlDb")] = mongo.generateUnlDb();
 
   // express
   const app = express();
@@ -70,9 +73,12 @@ process.on('uncaughtException', err => {
     credentials: true, 
     origin: 'http://localhost:8080'
   }));
+
+  //
   process[Symbol.for('app')] = app;
 
   // load module
+  require('./unl');
   require('./block_chain');
   require('./consensus_state');
 

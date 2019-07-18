@@ -8,7 +8,7 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceFolder}/consensus_full_server/index.js"
+            "program": "${workspaceFolder}/consensus_light_server/index.js"
         }
     ]
 }

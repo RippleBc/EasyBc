@@ -4,23 +4,6 @@ const rp = require("request-promise");
 const { TEST_URL } = require("../constant")
 
 describe("processor state check", function() {
-  it("check status", done => {
-  	const options = {
-        method: "POST",
-        uri: `${TEST_URL}/status`,
-        body: {
-           
-        },
-        json: true // Automatically stringifies the body to JSON
-    };
-    
-    rp(options).then(response => {
-        done();
-    }).catch(e => {
-        done(e.toString());
-    });
-  })
-
   it("check logs", done => {
   	const options = {
         method: "POST",
