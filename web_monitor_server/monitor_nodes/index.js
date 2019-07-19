@@ -228,6 +228,13 @@ app.use((req, res, next) => {
     || req.url.includes("timeConsume")
     || req.url.includes("abnormalNodes"))
   { 
+    if (!req.body.url) {
+      return res.send({
+        code: PARAM_ERR,
+        msg: "param error, need url"
+      });
+    }
+    
     const options = {
       method: "POST",
       uri: `${req.body.url}${req.url}`,

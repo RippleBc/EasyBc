@@ -21,10 +21,10 @@ export default new Router({
     },
     {
       path: '/transactions/:address',
-      name: 'transactions',
+      name: 'transactionsSpecifyAddress',
       component: () => import('./views/Transactions.vue')
     },
-     {
+    {
       path: '/transactions',
       name: 'transactions',
       component: () => import('./views/Transactions.vue')

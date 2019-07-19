@@ -25,22 +25,16 @@ export default new Vuex.Store({
   	getNodesInfo: function(context) {
 			(async () => {
 				for(let nodeInfo of nodesInfo) {
-					const promise =  new Promise((resolve, reject) => {
-	        	axios.get('getLastestBlock', { url: nodeInfo.url }, response => {
-		          if (response.code === 0) {
-		            nodeInfo.detail = response.data
-		          } else {
-		            Vue.prototype.$notify.error({
-		              title: 'getLastestBlock',
-		              message: response.msg
-		            });
-		          }
-
-		          resolve()
-		        })
-	        });
-
-	        await promise;
+					const response = await axios.get('getLastestBlock', { url: nodeInfo.url });
+					
+					if (response.code === 0) {
+						nodeInfo.detail = response.data
+					} else {
+						Vue.prototype.$notify.error({
+							title: 'getLastestBlock',
+							message: response.msg
+						});
+					}
 				}
   		})().then(() => {
         context.commit('updateNodesInfo', nodesInfo);
@@ -51,8 +45,6 @@ export default new Vuex.Store({
           message: e
         });
   		})
-
-  		
   	}
   }
 })

@@ -34,7 +34,7 @@
       <div class="border" style="height: 500px;justify-content:start;align-items:start;padding:20px;margin:20px 20px 20px 0px;">
         <span>账户列表</span>
         <div style="overflow: auto;justify-content: flex-start;">
-          <div v-bind:key="account" v-for="account in accounts">
+          <div :key="index" v-for="(account, index) in accounts">
             <div>
               <p style="cursor:pointer;width:100%;text-align:left;">{{account}}</p>
               <div style="flex-direction:row;justify-content:flex-start;">
@@ -52,7 +52,7 @@
 			<div class="border" style="height: 500px;justify-content:start;align-items:start;padding:20px;margin:20px 20px 20px 0px;">
         <span>发送者记录</span>
         <div style="overflow: auto;justify-content: flex-start;">
-          <div v-bind:key="from" v-for="from in froms">
+          <div :key="index" v-for="(from, index) in froms">
             <div>
               <p style="cursor:pointer;width:100%;text-align:left;" @dblclick="chooseFrom(from)">{{from}}</p>
               <div style="flex-direction:row;justify-content:flex-start;">
@@ -68,7 +68,7 @@
 			<div class="border" style="height: 500px;justify-content:start;align-items:start;padding:20px;margin:20px 0px 20px 0px;">
 				<span>接收者记录</span>
         <div style="overflow: auto;justify-content:flex-start;">
-          <div v-bind:key="to" v-for="to in tos">
+          <div :key="index" v-for="(to, index) in tos">
             <div>
               <p style="cursor:pointer;width:100%;text-align:left;" @dblclick="chooseTo(to)">{{to}}</p>
               <div style="flex-direction:row;justify-content:flex-start;">
@@ -130,9 +130,9 @@ const TRANSACTION_STATE_PACKED = 3;
 
     data () {
       return {
-        accounts: ["test", "test"],
-      	froms: ["test", "test"],
-      	tos: ["test", "test"],
+        accounts: [],
+      	froms: [],
+      	tos: [],
       	from: '',
       	to: '',
       	value: 0,
@@ -161,7 +161,7 @@ const TRANSACTION_STATE_PACKED = 3;
     	importAccount () {
         axios.get('importAccount', {
           privateKey: this.privateKey
-        }, response => {
+        }).then(response => {
           if (response.code === 0) {
             this.getAccounts();
 
@@ -189,7 +189,7 @@ const TRANSACTION_STATE_PACKED = 3;
     	generateKeyPiar: function () {
     		axios.get('generateKeyPiar', {
           cacheAccount: true
-        }, response => {
+        }).then(response => {
           if (response.code === 0) {
             this.getAccounts()
           } else {
@@ -202,7 +202,10 @@ const TRANSACTION_STATE_PACKED = 3;
     	},
 
       getAccounts: function() {
-        axios.get('getAccounts', {offset: 0}, response => {
+        axios.get('getAccounts', {
+          offset: 0,
+          limit: 100
+        }).then(response => {
           if (response.code === 0) {
             this.accounts = response.data
           } else {
@@ -215,7 +218,10 @@ const TRANSACTION_STATE_PACKED = 3;
       },
 
       getFromHistory: function () {
-      	axios.get('getFromHistory', {offset: 0}, response => {
+      	axios.get('getFromHistory', {
+          offset: 0,
+          limit: 100
+        }).then(response => {
           if (response.code === 0) {
             this.froms = response.data
           } else {
@@ -228,7 +234,10 @@ const TRANSACTION_STATE_PACKED = 3;
       },
 
       getToHistory: function () {
-      	axios.get('getToHistory', {offset: 0}, response => {
+      	axios.get('getToHistory', {
+          offset: 0,
+          limit: 100
+        }).then(response => {
           if (response.code === 0) {
             this.tos = response.data
           } else {
@@ -246,7 +255,7 @@ const TRANSACTION_STATE_PACKED = 3;
         	from: this.from,
         	to: this.to,
         	value: this.value
-        }, response => {
+        }).then(response => {
           if (response.code === 0) {
             this.transactionHash = this.transactionHashInfo = response.data;
             this.transactionInfoVisible = true;
@@ -266,7 +275,7 @@ const TRANSACTION_STATE_PACKED = 3;
         axios.get('getTransactionState', {
         	url: this.currentNode.url,
         	hash: this.transactionHash
-        }, response => {
+        }).then(response => {
           if (response.code === 0) {
             if (response.data === TRANSACTION_STATE_PACKED) {
               this.$notify.warn({
@@ -302,7 +311,7 @@ const TRANSACTION_STATE_PACKED = 3;
         axios.get('getAccountInfo', {
         	url: this.currentNode.url,
         	address: address
-        }, response => {
+        }).then(response => {
           if (response.code === 0) {
             this.address = address;
             this.nonce = response.data.nonce;
@@ -320,7 +329,7 @@ const TRANSACTION_STATE_PACKED = 3;
       getPrivateKey: function (address) {
         axios.get('getPrivateKey', {
         	address: address
-        }, response => {
+        }).then(response => {
           if (response.code === 0) {
             this.privateKeyInfo = response.data;
             this.privateKeyInfoVisible = true;

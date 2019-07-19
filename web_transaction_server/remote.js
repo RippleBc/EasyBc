@@ -1,9 +1,100 @@
-const utils = require("../depends/utils")
-const {SUCCESS, PARAM_ERR, OTH_ERR} = require("../constant")
+const { SUCCESS, PARAM_ERR, OTH_ERR } = require("../constant")
 const Account = require("../depends/account");
-const Block = require("../depends/block");
 const rp = require("request-promise");
 const assert = require("assert");
+const Block = require("../depends/block")
+const utils = require("../depends/utils")
+
+const Buffer = utils.Buffer;
+
+const app = process[Symbol.for("app")]
+const printErrorStack = process[Symbol.for("printErrorStack")];
+
+app.use((req, res, next) => {
+	if (req.url.includes("getTransactionState")
+		|| req.url.includes("getTransactions")
+		|| req.url.includes("getAccountInfo")
+		|| req.url.includes("getLastestBlock")) {
+		if (!req.query.url) {
+			res.send({
+				code: PARAM_ERR,
+				msg: "param error, need url"
+			});
+			return;
+		}
+
+		if (req.query.offset)
+		{
+			req.query.offset = parseInt(req.query.offset)
+		}
+		if(req.query.limit)
+		{
+			req.query.limit = parseInt(req.query.limit)
+		}
+
+		if (req.query.beginTime === '' || req.query.endTime === undefined)
+		{
+			req.query.beginTime = 0;
+		}
+		else
+		{
+			req.query.beginTime = parseInt(req.query.beginTime)
+		}
+
+		if (req.query.endTime === '' || req.query.endTime === undefined)
+		{
+			req.query.endTime = Date.now()
+		}
+		else
+		{
+			req.query.endTime = parseInt(req.query.endTime)
+		}
+
+		const options = {
+			method: "POST",
+			uri: `${req.query.url}${req.url}`,
+			body: req.query,
+			json: true
+		};
+
+		rp(options).then(response => {
+			if (req.url.includes("getLastestBlock"))
+			{
+				const block = new Block(Buffer.from(response.data, "hex"));
+
+				return res.send({
+					code: response.code,
+					data: {
+						hash: block.hash().toString("hex"),
+						number: block.header.number.toString("hex")
+					},
+					msg: response.msg
+				})
+			}
+			if (req.url.includes("getAccountInfo"))
+			{
+				return res.send({
+					code: response.code,
+					data: new Account(response.data ? `0x${response.data}` : undefined),
+					msg: response.msg
+				})
+			}
+			res.send({
+				code: response.code,
+				data: response.data,
+				msg: response.msg
+			})
+		}).catch(e => {
+			res.send({
+				code: OTH_ERR,
+				msg: e.toString()
+			})
+		});
+	}
+	else {
+		next();
+	}
+})
 
 /**
  * @param {String} url
@@ -41,40 +132,6 @@ module.exports.sendTransaction = async function(url, tx)
 
 /**
  * @param {String} url
- * @param {String} transactionHash
- */
-module.exports.getTransactionState = async function(url, transactionHash)
-{
-	assert(typeof url === "string", `net getTransactionState, url should be a String, now is ${typeof url}`);
-	assert(typeof transactionHash === "string", `net getTransactionState, transactionHash should be a String, now is ${typeof transactionHash}`);
-
-	const options = {
-    method: "POST",
-    uri: `${url}/getTransactionState`,
-    body: {
-			hash: transactionHash
-		},
-    json: true
-	};
-
-	const promise = new Promise((resolve, reject) => {
-		rp(options).then(response => {
-			if(response.code !== SUCCESS)
-			{
-				reject(response.msg);
-			}
-
-			resolve(response.data);
-		}).catch(e => {
-			reject(e.toString());
-		});
-	});
-
-	return promise;
-}
-
-/**
- * @param {String} url
  * @param {String} address
  */
 module.exports.getAccountInfo = async function(url, address)
@@ -102,103 +159,6 @@ module.exports.getAccountInfo = async function(url, address)
 		}).catch(e => {
 			reject(e);
 		});
-	});
-
-	return promise;
-}
-
-/**
- * @param {String} url
- */
-module.exports.getLastestBlock = async function(url)
-{
-	assert(typeof url === "string", `net getAccountInfo, url should be a String, now is ${typeof url}`);
-
-	const options = {
-    method: "POST",
-    uri: `${url}/getLastestBlock`,
-    body: {
-			
-		},
-    json: true
-	};
-
-	const promise = new Promise((resolve, reject) => {
-		rp(options).then(response => {
-			if(response.code !== SUCCESS)
-			{
-				reject(response.msg);
-			}
-
-			resolve(new Block(response.data ? `0x${response.data}` : undefined));
-		}).catch(e => {
-			reject(e);
-		})
-	});
-
-	return promise;
-}
-
-module.exports.getTransactions = async function(url, offset, limit, hash, from, to, beginTime, endTime) {
-	assert(typeof url === "string", `net getTransactions, url should be a String, now is ${typeof url}`);
-	assert(/^\d+$/.test(offset), `net getTransactions, url should be a String, now is ${typeof url}`);
-	assert(/^\d+$/.test(limit), `net getTransactions, url should be a String, now is ${typeof url}`);
-
-	offset = parseInt(offset)
-	limit = parseInt(limit)
-
-	const options = {
-    method: "POST",
-    uri: `${url}/getTransactions`,
-    body: {
-			offset: offset,
-			limit: limit
-		},
-    json: true
-	};
-
-	if(hash)
-	{
-		options.body.hash = hash
-		assert(typeof hash === "string", `net getTransactions, hash should be a String, now is ${typeof hash}`);
-	}
-	if(from)
-	{
-		options.body.from = from
-		assert(typeof from === "string", `net getTransactions, from should be a String, now is ${typeof from}`);
-	}
-	if(to)
-	{
-		options.body.to = to
-		assert(typeof to === "string", `net getTransactions, to should be a String, now is ${typeof to}`);
-	}
-	if(beginTime)
-	{
-		assert(/^\d+$/.test(beginTime), `net getTransactions, beginTime should be a Number, now is ${typeof beginTime}`);
-		options.body.beginTime = parseInt(beginTime)
-	}
-	if(endTime)
-	{
-		assert(/^\d+$/.test(endTime), `net getTransactions, endTime should be a Number, now is ${typeof endTime}`);
-		options.body.endTime = parseInt(endTime)
-	}
-
-	if(options.body.beginTime === undefined || options.body.beginTime === null || options.body.beginTime === "")
-	{
-		options.body.beginTime = 0;
-	}
-
-	const promise = new Promise((resolve, reject) => {
-		rp(options).then(response => {
-			if(response.code !== SUCCESS)
-			{
-				reject(response.msg);
-			}
-
-			resolve(response.data);
-		}).catch(e => {
-			reject(e);
-		})
 	});
 
 	return promise;

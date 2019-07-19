@@ -135,7 +135,7 @@ import axios from '../net/axios.js'
 	  			to: this.to,
 	  			beginTime: this.beginTime,
 	  			endTime: this.endTime
-	  		}, response => {
+	  		}).then(response => {
 					if (response.code === 0) {
             this.transactions = response.data.transactions
           } else {

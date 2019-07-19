@@ -1,251 +1,427 @@
-const levelup = require("levelup");
-const leveldown = require("leveldown");
-const Trie = require("merkle-patricia-tree");
-const path = require("path");
 const utils = require("../depends/utils");
 const Transaction = require("../depends/transaction");
 const { sendTransaction, getAccountInfo } = require("./remote");
 const assert = require("assert");
+const { Account: AccountModel, TransactionsHistory: TransactionsHistoryModel } = process[Symbol.for("models")];
+const { QUERY_MAX_LIMIT, SUCCESS, OTH_ERR, PARAM_ERR } = require("../constant");
 
-const rlp = utils.rlp;
+const app = process[Symbol.for("app")];
+const printErrorStack = process[Symbol.for("printErrorStack")];
+
 const Buffer = utils.Buffer;
 const BN = utils.BN;
 
-const { Account: AccountModel, TransactionsHistory: TransactionsHistoryModel } = process[Symbol.for("models")];
-
-/**
- * @param {String} privateKey
- */
-exports.importAccount = async function(privateKey)
-{
-	assert(typeof privateKey === "string", `importAccount privateKey should be a String, now is ${typeof privateKey}`);
-
-	privateKey = Buffer.from(privateKey, "hex");
-
-	if(!utils.isValidPrivate(privateKey))
-	{
-		await Promise.reject("importAccount, invalid privateKey");
+app.get("/importAccount", function (req, res) {
+	if (!req.query.privateKey) {
+		return res.send({
+			code: PARAM_ERR,
+			msg: "param error, need privateKey"
+		});
 	}
 
-	return await saveAccount(privateKey);
-}
+	const privateKey = Buffer.from(req.query.privateKey, "hex");
 
-/**
- * @return {Number} offset
- * @return {Array}
- */
-exports.getAccounts = async function(offset)
-{
-	assert(/^\d+$/.test(offset), `getAccounts offset should be a Number, now is ${typeof offset}`);
+	if (!utils.isValidPrivate(privateKey)) {
+		res.send({
+			code: OTH_ERR,
+			msg: "importAccount, invalid privateKey"
+		});
+	}
 
-	offset = parseInt(offset)
+	saveAccount(privateKey).then(() => {
+		res.send({
+			code: SUCCESS
+		});
+	}).catch(e => {
+		printErrorStack(e);
 
-	const accounts = await AccountModel.findAll({
-		attributes: ["address"],
-		offset: offset,
-		limit: 100,
-		order: [['id', 'DESC']]
-	})
-
-	return accounts.map(account => {
-		return account.address;
+		res.send({
+			code: OTH_ERR,
+			msg: e.toString()
+		});
 	});
-}
+});
 
-/**
- * @param {Boolean} cacheAccount - default is false
- * @return {Object}
- *   @prop {String} address
- *   @prop {String} privateKey 
- */
-exports.generateKeyPiar = async function(cacheAccount = false)
-{
+app.get("/generateKeyPiar", function (req, res) {
 	let privateKey = utils.createPrivateKey();
-	
+
 	let address;
-	if(cacheAccount)
-	{
-		address = await saveAccount(privateKey);
-	}
-	else
-	{
-		const publicKey = utils.privateToPublic(privateKey);
-		address = utils.publicToAddress(publicKey).toString("hex");
-	}
 
-	return { address, privateKey: privateKey.toString("hex") }
-}
-
-/**
- * @param {String} address
- * @return {String}
- */
-exports.getPrivateKey = async function(address)
-{
-	assert(typeof address === "string", `getPrivateKey address should be a String, now is ${typeof address}`);
-
-	const privateKey = await AccountModel.findOne({
-		attributes: ["privateKey"],
-		where: {
-			address: address
+	(async () => {
+		if (req.query.cacheAccount) {
+			address = await saveAccount(privateKey);
 		}
-	})
+		else {
+			const publicKey = utils.privateToPublic(privateKey);
+			address = utils.publicToAddress(publicKey).toString("hex");
+		}
 
-	if(privateKey === undefined || privateKey === null)
-	{
-		await Promise.reject(`address: ${address} has no corresponding privateKey`)
-	}
+		return { address, privateKey: privateKey.toString("hex") }
+	})().then(({ address, privateKey }) => {
+		res.send({
+			code: SUCCESS,
+			data: {
+				address: address,
+				privateKey: privateKey
+			}
+		});
+	}).catch(e => {
+		printErrorStack(e);
 
-	return privateKey.privateKey;
-}
-
-/**
- * @return {Number} offset
- * @return {Array}
- */
-exports.getFromHistory = async function(offset)
-{
-	assert(/^\d+$/.test(offset), `getFromHistory offset should be a Number, now is ${typeof offset}`);
-
-	offset = parseInt(offset)
-
-	const froms = await TransactionsHistoryModel.findAll({
-		attributes: ["from"],
-		offset: offset,
-		limit: 100,
-		order: [['id', 'DESC']]
+		res.send({
+			code: OTH_ERR,
+			msg: e.toString()
+		});
 	});
+});
 
-	// get addresses
-	let addresses =  froms.map(from => {
-		return from.from;
-	})
-
-	// filter same address
-	return [...new Set(addresses)];
-}
-
-/**
- * @return {Number} offset
- * @return {Array}
- */
-exports.getToHistory = async function(offset)
-{
-	assert(/^\d+$/.test(offset), `getFromHistory offset should be a Number, now is ${typeof offset}`);
-
-	offset = parseInt(offset)
-
-	const tos =  await TransactionsHistoryModel.findAll({
-		attributes: ["to"],
-		offset: offset,
-		limit: 100,
-		order: [['id', 'DESC']]
-	})
-
-	// get addresses
-	let addresses =  tos.map(to => {
-		return to.to;
-	})
-
-	// filter same address
-	return [...new Set(addresses)];
-}
-
-/**
- * @param {String} url
- * @param {String|Undefined} privateKey
- * @param {String|Undefined} from
- * @param {String} to
- * @param {String} value
- * @return {String}
- */
-exports.sendTransaction = async function(url, privateKey, from, to, value)
-{
-	assert(typeof url === "string", `sendTransaction, url should be a String, now is ${typeof url}`);
-
-	if(privateKey)
-	{
-		assert(typeof privateKey === "string", `sendTransaction, privateKey should be an String, now is ${typeof privateKey}`);
-		if(privateKey.length !== 64)
-		{
-			await Promise.reject("sendTransaction, invalid privateKey");
-		}
-	}
-	if(from)
-	{
-		assert(typeof from === "string", `sendTransaction, from should be an String, now is ${typeof from}`);
-		if(from.length !== 40)
-		{
-			await Promise.reject("sendTransaction, invalid from address");
-		}
-	}
-	assert(typeof to === "string", `sendTransaction, to should be an String, now is ${typeof to}`);
-	assert(typeof value === "string", `sendTransaction, value should be an String, now is ${typeof value}`);
-
-	if(to.length !== 40)
-	{
-		await Promise.reject("sendTransaction, invalid to address");
+app.get("/getPrivateKey", function (req, res) {
+	if (!req.query.address) {
+		return res.send({
+			code: PARAM_ERR,
+			msg: "param error, need address"
+		});
 	}
 
-	if(value === "")
-	{
-		await Promise.reject("sendTransaction, invalid value");
-	}
+	assert(typeof req.query.address === "string", `getPrivateKey req.query.address should be a String, now is ${typeof req.query.address}`);
 
-	// try to get privateKey
-	if(privateKey === undefined)
-	{
-		if(from === undefined)
-		{
-			await Promise.reject("sendTransaction, when privateKey is undefined, from must be supplied")
-		}
-
-		privateKey = await AccountModel.findOne({
+	(async () => {
+		const privateKey = await AccountModel.findOne({
 			attributes: ["privateKey"],
 			where: {
-				address: from
+				address: req.query.address
 			}
 		})
 
-		if(privateKey === undefined || privateKey === null)
-		{
-			await Promise.reject(`sendTransaction, from ${from}'s corresponding privateKey is not exist`)
+		if (privateKey === undefined || privateKey === null) {
+			await Promise.reject(`address: ${address} has no corresponding privateKey`)
 		}
 
-		privateKey = privateKey.privateKey;
+		return privateKey.privateKey;
+	})().then(privateKey => {
+		res.send({
+			code: SUCCESS,
+			data: privateKey
+		});
+	}).catch(e => {
+		printErrorStack(e);
+
+		res.send({
+			code: OTH_ERR,
+			msg: e.toString()
+		});
+	});
+})
+
+app.get("/getAccounts", function (req, res) {
+	if (!req.query.offset) {
+		return res.send({
+			code: PARAM_ERR,
+			msg: "param error, need offset"
+		});
 	}
-	
-	// try to get from
-	if(from === undefined)
+
+	if (!req.query.limit) {
+		return res.send({
+			code: PARAM_ERR,
+			msg: "param error, need limit"
+		});
+	}
+
+	assert(/^\d+$/.test(req.query.offset), `getAccounts req.query.offset should be a Number, now is ${typeof req.query.offset}`);
+	assert(/^\d+$/.test(req.query.limit), `getAccounts req.query.limit should be a Number, now is ${typeof req.query.limit}`);
+
+	if (parseInt(req.query.limit) > QUERY_MAX_LIMIT)
 	{
-		const public = utils.privateToPublic(Buffer.from(privateKey, "hex"))
-		from = utils.publicToAddress(public).toString("hex");
+		return res.send({
+			code: OTH_ERR,
+			msg: `limit should little or equal to ${QUERY_MAX_LIMIT}, now is ${req.query.limit}`
+		})
 	}
 
-	// get account
-	const accountInfo =  await getAccountInfo(url, from);
+	(async () => {
+		const accounts = await AccountModel.findAll({
+			attributes: ["address"],
+			offset: parseInt(req.query.offset),
+			limit: parseInt(req.query.limit),
+			order: [['id', 'DESC']]
+		})
+
+		return accounts.map(account => {
+			return account.address;
+		});
+	})().then(accounts => {
+		res.send({
+			code: SUCCESS,
+			data: accounts
+		});
+	}).catch(e => {
+		printErrorStack(e);
+
+		res.send({
+			code: OTH_ERR,
+			msg: e.toString()
+		});
+	});
+});
+
+app.get("/getFromHistory", function (req, res) {
+	if (!req.query.offset) {
+		return res.send({
+			code: PARAM_ERR,
+			msg: "param error, need offset"
+		});
+	}
+
+	if (!req.query.limit) {
+		return res.send({
+			code: PARAM_ERR,
+			msg: "param error, need limit"
+		});
+	}
+
+	assert(/^\d+$/.test(req.query.offset), `getFromHistory req.query.offset should be a Number, now is ${typeof req.query.offset}`);
+	assert(/^\d+$/.test(req.query.limit), `getFromHistory req.query.limit should be a Number, now is ${typeof req.query.limit}`);
 	
-	// init tx
-	const tx = new Transaction();
-	tx.nonce = (new BN(accountInfo.nonce).addn(1)).toArrayLike(Buffer);
-	tx.timestamp = Date.now();
-	tx.value = Buffer.from(value, "hex");
-	tx.data = "";
-	tx.to = Buffer.from(to, "hex");
-	tx.sign(Buffer.from(privateKey, "hex"));
+	if (parseInt(req.query.limit) > QUERY_MAX_LIMIT) {
+		return res.send({
+			code: OTH_ERR,
+			msg: `limit should little or equal to ${QUERY_MAX_LIMIT}, now is ${req.query.limit}`
+		})
+	}
 
-	// save transaction history
-	await TransactionsHistoryModel.create({
-		from: from,
-		to: to,
-		value: value
+	(async () => {
+		const froms = await TransactionsHistoryModel.findAll({
+			attributes: ["from"],
+			offset: parseInt(req.query.offset),
+			limit: parseInt(req.query.limit),
+			order: [['id', 'DESC']]
+		});
+
+		// get addresses
+		let addresses = froms.map(from => {
+			return from.from;
+		})
+
+		// filter same address
+		return [...new Set(addresses)];
+	})().then(fromHistory => {
+		res.send({
+			code: SUCCESS,
+			data: fromHistory
+		});
+	}).catch(e => {
+		printErrorStack(e);
+
+		res.send({
+			code: OTH_ERR,
+			msg: e.toString()
+		});
+	});
+});
+
+app.get("/getToHistory", function (req, res) {
+	if (!req.query.offset) {
+		return res.send({
+			code: PARAM_ERR,
+			msg: "param error, need offset"
+		});
+	}
+
+	if (!req.query.limit) {
+		return res.send({
+			code: PARAM_ERR,
+			msg: "param error, need limit"
+		});
+	}
+
+	assert(/^\d+$/.test(req.query.offset), `getToHistory req.query.offset should be a Number, now is ${typeof req.query.offset}`);
+	assert(/^\d+$/.test(req.query.limit), `getToHistory req.query.limit should be a Number, now is ${typeof req.query.limit}`);
+
+	if (parseInt(req.query.limit) > QUERY_MAX_LIMIT) {
+		return res.send({
+			code: OTH_ERR,
+			msg: `limit should little or equal to ${QUERY_MAX_LIMIT}, now is ${req.query.limit}`
+		})
+	}
+	
+	(async () => {
+		const tos = await TransactionsHistoryModel.findAll({
+			attributes: ["to"],
+			offset: parseInt(req.query.offset),
+			limit: parseInt(req.query.limit),
+			order: [['id', 'DESC']]
+		})
+
+		// get addresses
+		let addresses = tos.map(to => {
+			return to.to;
+		})
+
+		// filter same address
+		return [...new Set(addresses)];
+	})().then(toHistory => {
+		res.send({
+			code: SUCCESS,
+			data: toHistory
+		});
+	}).catch(e => {
+		printErrorStack(e);
+
+		res.send({
+			code: OTH_ERR,
+			msg: e.toString()
+		});
+	});
+});
+
+app.get("/sendTransaction", function (req, res) {
+
+	const url = req.query.url
+	const from = req.query.from;
+	const to = req.query.to;
+	const value = req.query.value;
+
+	let privateKey = req.query.privateKey;
+
+	if (!url) {
+		return res.send({
+			code: PARAM_ERR,
+			msg: "param error, need url"
+		});
+	}
+
+	if (!from) {
+		return res.send({
+			code: PARAM_ERR,
+			msg: "param error, need from"
+		});
+	}
+
+	if (!to) {
+		return res.send({
+			code: PARAM_ERR,
+			msg: "param error, need to"
+		});
+	}
+
+	if (!value) {
+		return res.send({
+			code: PARAM_ERR,
+			msg: "param error, need value"
+		});
+	}
+
+	// check url
+	assert(typeof url === "string", `sendTransaction, url should be a String, now is ${typeof url}`);
+
+	// check privateKey
+	if (privateKey) {
+		assert(typeof privateKey === "string", `sendTransaction, privateKey should be an String, now is ${typeof privateKey}`);
+		if (privateKey.length !== 64) {
+			return res.send({
+				code: OTH_ERR,
+				msg: "sendTransaction, invalid privateKey"
+			})
+		}
+	}
+
+	// check from
+	if (from) {
+		assert(typeof from === "string", `sendTransaction, from should be an String, now is ${typeof from}`);
+		if (from.length !== 40) {
+			return res.send({
+				code: OTH_ERR,
+				msg: "sendTransaction, invalid from address"
+			})
+		}
+	}
+
+	// check to
+	assert(typeof to === "string", `sendTransaction, to should be an String, now is ${typeof to}`);
+	if (to.length !== 40) {
+		return res.send({
+			code: OTH_ERR,
+			msg: "sendTransaction, invalid to address"
+		})
+	}
+
+	// check value
+	assert(typeof value === "string", `sendTransaction, value should be an String, now is ${typeof value}`);
+	if (value === "") {
+		return res.send({
+			code: OTH_ERR,
+			msg: "sendTransaction, invalid value"
+		})
+	}
+
+	(async () => {
+		if (privateKey === undefined) {
+			// fetch privateKey from db according from
+			if (from === undefined) {
+				return res.send({
+					code: OTH_ERR,
+					msg: "sendTransaction, when privateKey is undefined, from must be supplied"
+				})
+			}
+
+			({ privateKey } = await AccountModel.findOne({
+				attributes: ["privateKey"],
+				where: {
+					address: from
+				}
+			}))
+
+			if (privateKey === undefined || privateKey === null) {
+				return res.send({
+					code: OTH_ERR,
+					msg: `sendTransaction, from ${from}'s corresponding privateKey is not exist`
+				})
+			}
+		}
+		else {
+			// compute from according privateKey
+			const public = utils.privateToPublic(Buffer.from(privateKey, "hex"))
+			from = utils.publicToAddress(public).toString("hex");
+		}
+
+		// get account
+		const accountInfo = await getAccountInfo(url, from);
+
+		// init tx
+		const tx = new Transaction();
+		tx.nonce = (new BN(accountInfo.nonce).addn(1)).toArrayLike(Buffer);
+		tx.timestamp = Date.now();
+		tx.value = Buffer.from(value, "hex");
+		tx.data = "";
+		tx.to = Buffer.from(to, "hex");
+		tx.sign(Buffer.from(privateKey, "hex"));
+
+		// save transaction history
+		await TransactionsHistoryModel.create({
+			from: from,
+			to: to,
+			value: value
+		})
+
+		// send transaction
+		await sendTransaction(url, tx.serialize().toString("hex"));
+
+		return tx.hash().toString("hex");
+	})().then(transactionHash => {
+		res.send({
+			code: SUCCESS,
+			data: transactionHash
+		});
+	}).catch(e => {
+		printErrorStack(e);
+
+		res.send({
+			code: OTH_ERR,
+			msg: e.toString()
+		});
 	})
-
-	// send transaction
-	await sendTransaction(url, tx.serialize().toString("hex"));
-
-	return tx.hash().toString("hex");
-}
+});
 
 /**
  * @param {Buffer} privateKey
