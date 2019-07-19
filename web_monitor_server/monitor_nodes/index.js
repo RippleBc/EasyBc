@@ -227,65 +227,13 @@ app.use((req, res, next) => {
   if (req.url.includes("logs")
     || req.url.includes("timeConsume")
     || req.url.includes("abnormalNodes"))
-  {
-    // check url, offset and limit
-    assert(typeof req.body.url === 'string', `req.body.url should be a String, now is ${typeof req.body.url}`);
-    assert(typeof req.body.offset === 'number', `req.body.offset should be a Number, now is ${typeof req.body.offset}`);
-    assert(typeof req.body.limit === 'number', `req.body.limit should be a Number, now is ${typeof req.body.limit}`);
-    
+  { 
     const options = {
       method: "POST",
       uri: `${req.body.url}${req.url}`,
-      body: {
-        offset: req.body.offset,
-        limit: req.body.limit
-      },
+      body: req.body,
       json: true
     };
-    
-    // check beginTime
-    if (req.body.beginTime) 
-    {
-      assert(typeof req.body.beginTime === 'number', `req.body.beginTime should be a Number, now is ${typeof req.body.beginTime}`)
-      options.body.beginTime = req.body.beginTime
-    }
-    // check endTime
-    if (req.body.endTime) 
-    {
-      assert(typeof req.body.endTime === 'number', `req.body.endTime should be a Number, now is ${typeof req.body.endTime}`)
-      options.body.endTime = req.body.endTime
-    }
-    
-    if (req.url.includes("logs"))
-    {
-      if (req.body.type) {
-        assert(typeof req.body.type === 'string', `req.body.type should be a String, now is ${typeof req.body.type}`);
-        options.body.type = req.body.type;
-      }
-
-      if (req.body.title) {
-        assert(typeof req.body.title === 'string', `req.body.title should be a String, now is ${typeof req.body.title}`);
-        options.body.title = req.body.title;
-      }
-    }
-    else if (req.url.includes("timeConsume"))
-    {
-      if (req.body.type) {
-        assert(typeof req.body.type === 'number', `req.body.type should be a Number, now is ${typeof req.body.type}`)
-        options.body.type = req.body.type;
-      }
-      if (req.body.stage) {
-        assert(typeof req.body.stage === 'number', `req.body.stage should be a Number, now is ${typeof req.body.stage}`)
-        options.body.stage = parseInt(req.body.stage);
-      }
-    }
-    else if (req.url.includes("abnormalNodes"))
-    {
-      if (req.body.type) {
-        assert(typeof req.body.type === 'number', `req.body.type should be a Number, now is ${typeof req.body.type}`)
-        options.body.type = req.body.type;
-      }
-    }
 
     // retransmit data
     rp(options).then(response => {
