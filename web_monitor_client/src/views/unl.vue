@@ -18,13 +18,12 @@
             <div class="handle-box">
                 <el-input v-model="select_word" placeholder="筛选关键词" class="handle-input mr10"></el-input>
                 <el-button type="primary" @click="search">服务器筛选</el-button>
-                <el-button type="primary" @click="delBatch">批量删除</el-button>
+                <el-button type="primary" @click="batchDelVisible=true">批量删除</el-button>
                 <el-button type="primary" class="mr10" @click="addVisible=true">新增节点</el-button>
             </div>
             <el-table :data="pageData" border class="table" @selection-change="handleSelectionChange">
                 <el-table-column type="selection" width="55" align="center"></el-table-column>
-                <el-table-column prop="id" label="id" sortable width="120">
-                </el-table-column>
+                <el-table-column type="index" label="索引" sortable width="120"></el-table-column>
                 <el-table-column prop="address" label="公钥" sortable width="120">
                 </el-table-column>
                 <el-table-column prop="host" label="地址" width="200">
@@ -51,6 +50,9 @@
         <!-- 新增弹出框 -->
         <el-dialog title="新增" :visible.sync="addVisible" width="30%">
             <el-form :model="currentHandleNode" label-width="90px">
+                <el-form-item label="密钥">
+                    <el-input v-model="privateKey"></el-input>
+                </el-form-item>
                 <el-form-item label="公钥">
                    <el-input v-model="currentHandleNode.address"></el-input>
                 </el-form-item>
@@ -74,7 +76,10 @@
         <el-dialog title="编辑" :visible.sync="editVisible" width="30%">
             <el-form :model="currentHandleNode" label-width="90px">
                 <el-form-item label="公钥">
-                   {{currentHandleNode.address}}
+                   <strong style="padding: 20px;">{{currentHandleNode.address}}</strong>
+                </el-form-item>
+                <el-form-item label="密钥">
+                    <el-input v-model="privateKey"></el-input>
                 </el-form-item>
                 <el-form-item label="地址">
                     <el-input v-model="currentHandleNode.host"></el-input>
@@ -95,12 +100,39 @@
             </span>
         </el-dialog>
 
-        <!-- 删除提示框 -->
-        <el-dialog title="提示" :visible.sync="delVisible" width="300px" center>
-            <div class="del-dialog-cnt">删除不可恢复，是否确定删除？</div>
+        <!-- 单个删除提示框 -->
+        <el-dialog title="提示" :visible.sync="delVisible" width="30%" center>
+            <el-form :model="currentHandleNode" label-width="90px">
+                <el-form-item label="公钥">
+                   <strong style="padding: 20px;">{{currentHandleNode.address}}</strong>
+                </el-form-item>
+                <el-form-item label="密钥">
+                    <el-input v-model="privateKey"></el-input>
+                </el-form-item>
+            </el-form>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="delVisible=false">取 消</el-button>
                 <el-button type="primary" @click="saveDelete">确 定</el-button>
+            </span>
+        </el-dialog>
+
+        <!-- 批量删除提示框 -->
+        <el-dialog title="提示" :visible.sync="batchDelVisible" width="30%" center>
+            <el-form :model="currentHandleNode" label-width="90px">
+                <el-form-item label="公钥">
+                    <div style="display:flex;flex-direction:column;justify-content:flex-start;">
+                        <template v-for="(item, index) in multipleSelection">
+                            <strong :key="index">{{item.address}}</strong>
+                        </template>
+                    </div>
+                </el-form-item>
+                <el-form-item label="密钥">
+                    <el-input v-model="privateKey"></el-input>
+                </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="batchDelVisible=false">取 消</el-button>
+                <el-button type="primary" @click="saveBatchDelete">确 定</el-button>
             </span>
         </el-dialog>
     </div>
@@ -110,9 +142,11 @@
     import { mapState } from 'vuex'
 
     export default {
-        name: 'nodeList',
+        name: 'unl',
         data() {
             return {
+                privateKey: "",
+                currentNode: undefined,
                 allData: [],
                 tableData: [],
                 pageSize: 6,
@@ -122,8 +156,8 @@
                 addVisible: false,
                 editVisible: false,
                 delVisible: false,
+                batchDelVisible: false,
                 currentHandleNode: {
-                    id: 0,
                     address: '',
                     host: '',
                     queryPort: '',
@@ -133,6 +167,10 @@
             }
         },
         created() {
+            const nodeIndex = this.$route.path.split('/')[2];
+            const nodeInfo = this.$store.state.unl.find(n => nodeIndex == n.id)
+            this.currentNode = nodeInfo;
+
             // fetch all data
             this.getAllData();
         },
@@ -159,7 +197,9 @@
         },
         methods: {
             getAllData() {
-                this.$axios.post('/unl', {}).then(res => {
+                this.$axios.post('/unl', {
+                    url: `${this.currentNode.host}:${this.currentNode.port}`
+                }).then(res => {
                     if(res.code !== 0)
                     {
                         this.$message.error(res.msg);
@@ -202,20 +242,30 @@
                 this.cur_page = page;
             },
             handleEdit(row) {
-                this.currentHandleNode = row;
+                Object.assign(this.currentHandleNode, row);
+
                 this.editVisible = true;
             },
             handleDelete(row) {
-                this.currentHandleNode = row;
+                Object.assign(this.currentHandleNode, row);
+
                 this.delVisible = true;
             },          
             handleSelectionChange(val) {
                 this.multipleSelection = val;
             },
-            delBatch() {
+            saveBatchDelete() {
                 const errMsgs = [];
 
-                this.$axios.post('/deleteNodes', this.multipleSelection).then(() => {
+                this.$axios.post('/deleteNodes', {
+                    url: `${this.currentNode.host}:${this.currentNode.port}`,
+                    data: this.multipleSelection.map(ele => {
+                        return {
+                            address: this.ele.address
+                        }
+                    }),
+                    privateKey: this.privateKey
+                }).then(() => {
                     if(res.code !== 0)
                     {
                         this.$message.error(res.msg);
@@ -235,7 +285,16 @@
             saveAdd() {
                 this.addVisible = false;
 
-                this.$axios.post('/addNodes', [this.currentHandleNode]).then(res => {
+                this.$axios.post('/addNodes', {
+                    url: `${this.currentNode.host}:${this.currentNode.port}`,
+                    data: [{
+                        address: this.currentHandleNode.address,
+                        host: this.currentHandleNode.host,
+                        queryPort: parseInt(this.currentHandleNode.queryPort),
+                        p2pPort: parseInt(this.currentHandleNode.p2pPort)
+                    }],
+                    privateKey: this.privateKey
+                }).then(res => {
                     if(res.code !== 0)
                     {
                         this.$message.error(res.msg);
@@ -253,7 +312,17 @@
             saveEdit() {
                 this.editVisible = false;
                 
-                this.$axios.post('/updateNodes', [this.currentHandleNode]).then(res => {
+                this.$axios.post('/updateNodes', {
+                    url: `${this.currentNode.host}:${this.currentNode.port}`,
+                    data: [{
+                        address: this.currentHandleNode.address,
+                        host: this.currentHandleNode.host,
+                        queryPort: parseInt(this.currentHandleNode.queryPort),
+                        p2pPort: parseInt(this.currentHandleNode.p2pPort),
+                        state: parseInt(this.currentHandleNode.state)
+                    }],
+                    privateKey: this.privateKey
+                }).then(res => {
                     if(res.code !== 0)
                     {
                         this.$message.error(res.msg);
@@ -271,7 +340,13 @@
             saveDelete(){
                 this.delVisible = false;
 
-                this.$axios.post('/deleteNodes', [this.currentHandleNode]).then(res => {
+                this.$axios.post('/deleteNodes', {
+                    url: `${this.currentNode.host}:${this.currentNode.port}`,
+                    data: [{
+                        address: this.currentHandleNode.address
+                    }],
+                    privateKey: this.privateKey
+                }).then(res => {
                     if(res.code !== 0)
                     {
                         this.$message.error(res.msg);
