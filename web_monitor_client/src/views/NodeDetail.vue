@@ -81,7 +81,7 @@
         methods:
         {
             getTimeConsume() {
-                this.$axios.get("timeConsume", {
+                this.$axios.post("timeConsume", {
                     url: `${this.currentNode.host}:${this.currentNode.port}`,
                     beginTime: Date.now() - 2 * 60 * 60 * 1000,
                     endTime: Date.now(),
@@ -104,7 +104,7 @@
                 });
             },
             getTimeoutNodes() {
-                this.$axios.get("abnormalNodes", {
+                this.$axios.post("abnormalNodes", {
                     url: `${this.currentNode.host}:${this.currentNode.port}`,
                     type: 1,
                     beginTime: Date.now() - 24 * 60 * 60 * 1000,
@@ -129,7 +129,7 @@
                 });
             },
             getCheatedNodes() {
-                this.$axios.get("abnormalNodes", {
+                this.$axios.post("abnormalNodes", {
                     url: `${this.currentNode.host}:${this.currentNode.port}`,
                     type: 2,
                     beginTime: Date.now() - 24 * 60 * 60 * 1000,

@@ -261,7 +261,7 @@
                 });
             },
             getData(){
-                this.$axios.get('/users', {}).then(res => {
+                this.$axios.post('/users', {}).then(res => {
                     if(res.code !== 0)
                     {
                         this.$message.error(res.msg);

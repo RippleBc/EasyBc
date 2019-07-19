@@ -23,7 +23,7 @@ export default new Vuex.Store({
         background: 'rgba(0, 0, 0, 0.7)'
       });
 
-      Vue.prototype.$axios.get('/monitorNodes', {}).then(res => {
+      Vue.prototype.$axios.post('/monitorNodes', {}).then(res => {
         if(res.code !== 0)
         {
           Vue.prototype.$message.error(res.msg);

@@ -49,7 +49,7 @@ router.beforeEach((to, from, next) => {
         }
 
         // init data
-        axios.get('/monitorNodes', {}).then(res => {
+        axios.post('/monitorNodes', {}).then(res => {
             if(res.code !== 0)
             {
                 if(res.code === 100)

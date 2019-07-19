@@ -1,14 +1,13 @@
-const checkCookie = require('../user/checkCookie')
 const { SUCCESS, PARAM_ERR, OTH_ERR } = require('../../constant')
 const rp = require("request-promise");
 const assert = require("assert");
 
 const app = process[Symbol.for('app')]
-const { Node, Cpu, Memory } = process[Symbol.for('models')]
+const { Node } = process[Symbol.for('models')]
 const logger = process[Symbol.for('logger')];
 const printErrorStack = process[Symbol.for("printErrorStack")]
 
-app.get('/monitorNodes', checkCookie, (req, res) => {
+app.post('/monitorNodes', (req, res) => {
 	Node.findAll().then(nodes => {
 		res.json({
 	    code: SUCCESS,
@@ -24,7 +23,7 @@ app.get('/monitorNodes', checkCookie, (req, res) => {
   })
 });
 
-app.post('/addMonitorNode', checkCookie, (req, res) => {
+app.post('/addMonitorNode', (req, res) => {
 	const name = req.body.name;
   const address = req.body.address;
 	const host = req.body.host;
@@ -104,7 +103,7 @@ app.post('/addMonitorNode', checkCookie, (req, res) => {
   })
 });
 
-app.post('/modifyMonitorNode', checkCookie, (req, res) => {
+app.post('/modifyMonitorNode', (req, res) => {
 	const id = req.body.id;
 	const name = req.body.name;
 	const host = req.body.host;
@@ -183,7 +182,7 @@ app.post('/modifyMonitorNode', checkCookie, (req, res) => {
   })
 });
 
-app.post('/deleteMonitorNode', checkCookie, (req, res) => {
+app.post('/deleteMonitorNode', (req, res) => {
 	const id = req.body.id;
 	
 	if(!!!id)
@@ -224,206 +223,88 @@ app.post('/deleteMonitorNode', checkCookie, (req, res) => {
   })
 });
 
-app.get('/logs', checkCookie, (req, res) => {
-  const url = req.query.url;
-  let offset = req.query.offset;
-  let limit = req.query.limit;
-  const type = req.query.type;
-  const title = req.query.title;
-  const beginTime = req.query.beginTime;
-  const endTime = req.query.endTime;
-
-  assert(typeof url === 'string', `url should be a String, now is ${typeof url}`);
-  assert(typeof type === 'string', `type should be a String, now is ${typeof type}`);
-  assert(/^\d+$/.test(offset), `offset should be a Number, now is ${typeof offset}`);
-  assert(/^\d+$/.test(limit), `limit should be a Number, now is ${typeof limit}`);
-
-  offset = parseInt(offset)
-  limit = parseInt(limit);
-
-  (async function() {
-    let options = {
+app.use((req, res, next) => {
+  if (req.url.includes("logs")
+    || req.url.includes("timeConsume")
+    || req.url.includes("abnormalNodes"))
+  {
+    // check url, offset and limit
+    assert(typeof req.body.url === 'string', `req.body.url should be a String, now is ${typeof req.body.url}`);
+    assert(typeof req.body.offset === 'number', `req.body.offset should be a Number, now is ${typeof req.body.offset}`);
+    assert(typeof req.body.limit === 'number', `req.body.limit should be a Number, now is ${typeof req.body.limit}`);
+    
+    const options = {
       method: "POST",
-      uri: `${url}/logs`,
+      uri: `${req.body.url}${req.url}`,
       body: {
-        type: type,
-        offset: offset,
-        limit: limit
+        offset: req.body.offset,
+        limit: req.body.limit
       },
-      json: true // Automatically stringifies the body to JSON
+      json: true
     };
-
-    if(title)
+    
+    // check beginTime
+    if (req.body.beginTime) 
     {
-      options.body.title = title;
+      assert(typeof req.body.beginTime === 'number', `req.body.beginTime should be a Number, now is ${typeof req.body.beginTime}`)
+      options.body.beginTime = req.body.beginTime
     }
-    if(beginTime)
+    // check endTime
+    if (req.body.endTime) 
     {
-      assert(/^\d+$/.test(beginTime), `beginTime should be a Number, now is ${typeof beginTime}`)
-      options.body.beginTime = parseInt(beginTime);
-    }
-    if(endTime)
-    {
-      assert(/^\d+$/.test(endTime), `endTime should be a Number, now is ${typeof endTime}`)
-      options.body.endTime = parseInt(endTime);
-    }
-
-    const response = await rp(options);
-
-    if(response.code !== SUCCESS)
-    {
-        await Promise.reject(response.msg) 
-    }
-
-    return response.data;
-  })().then(results => {
-    res.json({
-      code: SUCCESS,
-      data: results
-    })
-  }).catch(e => {
-    printErrorStack(e);
-
-    res.json({
-      code: OTH_ERR,
-      msg: e.toString()
-    })
-  });
-});
-
-
-app.get('/timeConsume', checkCookie, (req, res) => {
-  const url = req.query.url;
-  let offset = req.query.offset;
-  let limit = req.query.limit;
-  const type = req.query.type;
-  const stage = req.query.stage;
-  const beginTime = req.query.beginTime;
-  const endTime = req.query.endTime;
-
-  assert(typeof url === 'string', `url should be a String, now is ${typeof url}`);
-  assert(/^\d+$/.test(offset), `offset should be a Number, now is ${typeof offset}`)
-  assert(/^\d+$/.test(limit), `limit should be a Number, now is ${typeof limit}`);
-
-  offset = parseInt(offset);
-  limit = parseInt(limit);
-
-  (async function() {
-    let options = {
-      method: "POST",
-      uri: `${url}/timeConsume`,
-      body: {
-        offset: offset,
-        limit: limit
-      },
-      json: true // Automatically stringifies the body to JSON
-    };
-
-    if(type)
-    {
-      assert(/^\d+$/.test(type), `type should be a Number, now is ${typeof type}`)
-      options.body.type = parseInt(type);
-    }
-    if(stage)
-    {
-      assert(/^\d+$/.test(stage), `stage should be a Number, now is ${typeof stage}`)
-      options.body.stage = parseInt(stage);
-    }
-    if(beginTime)
-    {
-      assert(/^\d+$/.test(beginTime), `beginTime should be a Number, now is ${typeof beginTime}`)
-      options.body.beginTime = parseInt(beginTime);
-    }
-    if(endTime)
-    {
-      assert(/^\d+$/.test(endTime), `endTime should be a Number, now is ${typeof endTime}`)
-      options.body.endTime = parseInt(endTime);
-    }
-
-    const response = await rp(options);
-
-    if(response.code !== SUCCESS)
-    {
-        await Promise.reject(response.msg) 
-    }
-
-    return response.data;
-  })().then(results => {
-    res.json({
-      code: SUCCESS,
-      data: results
-    })
-  }).catch(e => {
-    printErrorStack(e)
-
-    res.json({
-      code: OTH_ERR,
-      msg: e.toString()
-    })
-  });
-});
-
-app.get('/abnormalNodes', checkCookie, (req, res) => {
-  const url = req.query.url;
-  let offset = req.query.offset;
-  let limit = req.query.limit;
-  const type = req.query.type;
-  const beginTime = req.query.beginTime;
-  const endTime = req.query.endTime;
-
-  assert(typeof url === 'string', `url should be a String, now is ${typeof url}`);
-  assert(/^\d+$/.test(offset), `offset should be a Number, now is ${typeof offset}`)
-  assert(/^\d+$/.test(limit), `limit should be a Number, now is ${typeof limit}`);
-
-  offset = parseInt(offset);
-  limit = parseInt(limit);
-
-  (async function() {
-    let options = {
-      method: "POST",
-      uri: `${url}/abnormalNodes`,
-      body: {
-        offset: offset,
-        limit: limit
-      },
-      json: true // Automatically stringifies the body to JSON
-    };
-
-    if(type)
-    {
-      assert(/^\d+$/.test(type), `type should be a Number, now is ${typeof type}`)
-      options.body.type = parseInt(type);
-    }
-    if(beginTime)
-    {
-      assert(/^\d+$/.test(beginTime), `beginTime should be a Number, now is ${typeof beginTime}`)
-      options.body.beginTime = parseInt(beginTime);
-    }
-    if(endTime)
-    {
-      assert(/^\d+$/.test(endTime), `endTime should be a Number, now is ${typeof endTime}`)
-      options.body.endTime = parseInt(endTime);
+      assert(typeof req.body.endTime === 'number', `req.body.endTime should be a Number, now is ${typeof req.body.endTime}`)
+      options.body.endTime = req.body.endTime
     }
     
-    const response = await rp(options);
-
-    if(response.code !== SUCCESS)
+    if (req.url.includes("logs"))
     {
-      await Promise.reject(response.msg) 
+      if (req.body.type) {
+        assert(typeof req.body.type === 'string', `req.body.type should be a String, now is ${typeof req.body.type}`);
+        options.body.type = req.body.type;
+      }
+
+      if (req.body.title) {
+        assert(typeof req.body.title === 'string', `req.body.title should be a String, now is ${typeof req.body.title}`);
+        options.body.title = req.body.title;
+      }
+    }
+    else if (req.url.includes("timeConsume"))
+    {
+      if (req.body.type) {
+        assert(typeof req.body.type === 'number', `req.body.type should be a Number, now is ${typeof req.body.type}`)
+        options.body.type = req.body.type;
+      }
+      if (req.body.stage) {
+        assert(typeof req.body.stage === 'number', `req.body.stage should be a Number, now is ${typeof req.body.stage}`)
+        options.body.stage = parseInt(req.body.stage);
+      }
+    }
+    else if (req.url.includes("abnormalNodes"))
+    {
+      if (req.body.type) {
+        assert(typeof req.body.type === 'number', `req.body.type should be a Number, now is ${typeof req.body.type}`)
+        options.body.type = req.body.type;
+      }
     }
 
-    return response.data;
-  })().then(results => {
-    res.json({
-      code: SUCCESS,
-      data: results
-    })
-  }).catch(e => {
-    printErrorStack(e)
+    // retransmit data
+    rp(options).then(response => {
+      res.json({
+        code: response.code,
+        data: response.data,
+        msg: response.msg
+      })
+    }).catch(e => {
+      printErrorStack(e);
 
-    res.json({
-      code: OTH_ERR,
-      msg: e.toString()
-    })
-  });
-});
+      res.json({
+        code: OTH_ERR,
+        msg: e.toString()
+      })
+    });
+  }
+  else 
+  {
+    next()
+  }
+})

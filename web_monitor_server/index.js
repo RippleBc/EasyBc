@@ -66,6 +66,10 @@ process[Symbol.for('cookieSet')] = new Set();
 	}));
 	app.use("/", express.static(path.join(__dirname + "/dist")));
 
+	// check cookie
+	const checkCookie = require('./user/checkCookie')
+	app.use(checkCookie);
+
 	// logger
 	log4js.useLogger(app, logger)
 

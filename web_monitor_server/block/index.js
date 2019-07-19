@@ -1,4 +1,3 @@
-const checkCookie = require('../user/checkCookie')
 const { SUCCESS, PARAM_ERR, OTH_ERR } = require('../../constant')
 const Block = require("../../depends/block");
 const rp = require("request-promise");
@@ -14,8 +13,8 @@ const printErrorStack = process[Symbol.for("printErrorStack")]
 
 const BLOCKS_MAX_NUM = 4;
 
-app.get('/blocks', checkCookie, (req, res) => {
-	const url = req.query.url;
+app.post('/blocks', (req, res) => {
+	const url = req.body.url;
 
     assert(typeof url === 'string', `url should be a String, now is ${typeof url}`);
 

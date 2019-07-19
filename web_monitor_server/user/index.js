@@ -5,7 +5,6 @@ const cookie = require('cookie');
 const { ERR_SERVER_INNER, ERR_LOGIN_FAILED } = require('../constant');
 const { SUCCESS, PARAM_ERR, OTH_ERR } = require('../../constant')
 const { randomBytes } = require('crypto');
-const checkCookie = require('./checkCookie')
 const assert = require('assert')
 
 const app = process[Symbol.for('app')]
@@ -42,7 +41,7 @@ passport.use(new LocalStrategy({
   }
 ));
 
-app.get('/users', checkCookie, function(req, res) {
+app.post('/users', function(req, res) {
   User.findAll().then(users => {
     const formattedUsers = users.map(user => {
       return { id: user.id, username: user.username, privilege: user.privilege, remarks: user.remarks, createdAt: user.createdAt, updatedAt: user.updatedAt }
@@ -62,7 +61,7 @@ app.get('/users', checkCookie, function(req, res) {
   })
 });
 
-app.post('/addUser', checkCookie, function(req, res) {
+app.post('/addUser', function(req, res) {
   const username = req.body.username;
   const password = req.body.password;
   const privilege = req.body.privilege;
@@ -131,7 +130,7 @@ app.post('/addUser', checkCookie, function(req, res) {
   })
 })
 
-app.post('/modifyUser', checkCookie, function(req, res) {
+app.post('/modifyUser', function(req, res) {
   const username = req.body.username;
   const password = req.body.password;
   const privilege = req.body.privilege;
@@ -207,7 +206,7 @@ app.post('/modifyUser', checkCookie, function(req, res) {
   })  
 })
 
-app.post('/deleteUser', checkCookie, function(req, res) {
+app.post('/deleteUser', function(req, res) {
   const username = req.body.username;
 
   if(!!!username)

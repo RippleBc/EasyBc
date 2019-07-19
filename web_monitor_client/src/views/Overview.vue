@@ -96,7 +96,7 @@
             
                 for(let node of this.unl)
                 {
-                    this.$axios.get('/blocks', {
+                    this.$axios.post('/blocks', {
                         url: `${node.host}:${node.port}`
                     }).then(res => {
                         if(res.code !== 0)

@@ -96,7 +96,7 @@
         methods: {
             getLogs(type)
             {
-                this.$axios.get('/logs', {
+                this.$axios.post('/logs', {
                     url: `${this.currentNode.host}:${this.currentNode.port}`,
                     type: type,
                     offset: 0,

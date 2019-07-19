@@ -4,6 +4,11 @@ const { ERR_COOKIE_INVALID } = require('../constant')
 const cookieSet = process[Symbol.for('cookieSet')];
 
 module.exports = function (req, res, next) {
+  if (req.url.includes("login"))
+  {
+    return next();
+  }
+
   // Parse the cookieData on the request
   var cookieData = cookie.parse(req.headers.cookie || '');
 
