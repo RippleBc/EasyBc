@@ -57,7 +57,7 @@ export default new Router({
                     name: 'unl',
                     component: () => import('./views/Unl.vue'),
                     meta: { 
-                        title: '节点概况',
+                        title: '配置节点信息',
                         keepAlive: false
                     }
                 },

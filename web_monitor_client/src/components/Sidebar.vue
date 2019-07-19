@@ -118,6 +118,7 @@
                     }
                     break;
                     case 'dashboard':
+                    case 'unl':
                     case 'nodeDetail':
                     case 'warnRule':
                     {
