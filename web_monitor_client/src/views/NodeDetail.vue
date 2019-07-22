@@ -14,29 +14,29 @@
                 </el-breadcrumb-item>
             </el-breadcrumb>
         </div>
-        <el-col>
-            <el-row :gutter="20" style="margin-bottom: 20px;">
-                <el-col :span="24">
+        <div class="container">
+            <el-tabs v-model="message">
+                <el-tab-pane label="超时情况" name="first">
                     <el-card shadow="hover">
                         <ve-histogram ref="timeoutNodes" :data="timeoutNodesData" :settings="timeoutNodesSettings" :resizeable="true"></ve-histogram>
                     </el-card>
-                </el-col>
-            </el-row>
-            <el-row :gutter="20" style="margin-bottom: 20px;">
-                <el-col :span="24">
-                    <el-card shadow="hover">
-                        <ve-histogram ref="cheatedNodes" :data="cheatedNodesData" :settings="cheatedNodesSettings" :resizeable="true"></ve-histogram>
-                    </el-card>
-                </el-col>
-            </el-row>
-            <el-row :gutter="20" style="margin-bottom: 20px;">
-                <el-col :span="24">
-                    <el-card shadow="hover">
-                        <ve-line :data="timeConsume" :resizeable="true"></ve-line>
-                    </el-card>
-                </el-col>
-            </el-row>
-        </el-col>
+                </el-tab-pane>
+                <el-tab-pane label="作弊情况" name="second">
+                    <template v-if="message === 'second'">
+                        <el-card shadow="hover">
+                            <ve-histogram ref="cheatedNodes" :data="cheatedNodesData" :settings="cheatedNodesSettings" :resizeable="true"></ve-histogram>
+                        </el-card>
+                    </template>
+                </el-tab-pane>
+                <el-tab-pane label="共识情况" name="last">
+                    <template v-if="message === 'last'">
+                        <el-card shadow="hover">
+                            <ve-line :data="timeConsume" :resizeable="true"></ve-line>
+                        </el-card>
+                    </template>
+                </el-tab-pane>
+            </el-tabs>
+        </div>
     </div>
 </template>
 
@@ -44,6 +44,7 @@
     export default {
         name: 'nodeDetail',
         data: () => ({
+            message: 'first',
             currentNode: undefined,
             timeoutNodesData:{
                 columns: ['address', 'times', 'frequency'],

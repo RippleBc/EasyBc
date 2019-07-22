@@ -34,8 +34,10 @@
                 </el-table-column>
                 <el-table-column prop="state" label="状态码">
                 </el-table-column>
-                <el-table-column label="操作" width="180" align="center">
+                <el-table-column label="操作" width="240" align="center">
                     <template slot-scope="scope">
+                        <el-button type="text" @click="handlePerish(scope.row)">自爆</el-button>
+                        <el-button type="text" @click="handlePardon(scope.row)">原谅</el-button>
                         <el-button type="text" @click="handleEdit(scope.row)">编辑</el-button>
                         <el-button type="text" class="red" @click="handleDelete(scope.row)">删除</el-button>
                     </template>
@@ -48,7 +50,7 @@
         </div>
 
         <!-- 新增弹出框 -->
-        <el-dialog title="新增" :visible.sync="addVisible" width="30%">
+        <el-dialog title="新增节点" :visible.sync="addVisible" width="30%">
             <el-form :model="currentHandleNode" label-width="90px">
                 <el-form-item label="密钥">
                     <el-input v-model="privateKey"></el-input>
@@ -73,7 +75,7 @@
         </el-dialog>
 
         <!-- 编辑弹出框 -->
-        <el-dialog title="编辑" :visible.sync="editVisible" width="30%">
+        <el-dialog title="编辑节点" :visible.sync="editVisible" width="30%">
             <el-form :model="currentHandleNode" label-width="90px">
                 <el-form-item label="公钥">
                    <strong style="padding: 20px;">{{currentHandleNode.address}}</strong>
@@ -101,7 +103,7 @@
         </el-dialog>
 
         <!-- 单个删除提示框 -->
-        <el-dialog title="提示" :visible.sync="delVisible" width="30%" center>
+        <el-dialog title="删除节点" :visible.sync="delVisible" width="30%" center>
             <el-form :model="currentHandleNode" label-width="90px">
                 <el-form-item label="公钥">
                    <strong style="padding: 20px;">{{currentHandleNode.address}}</strong>
@@ -117,7 +119,7 @@
         </el-dialog>
 
         <!-- 批量删除提示框 -->
-        <el-dialog title="提示" :visible.sync="batchDelVisible" width="30%" center>
+        <el-dialog title="批量删除节点" :visible.sync="batchDelVisible" width="30%" center>
             <el-form :model="currentHandleNode" label-width="90px">
                 <el-form-item label="公钥">
                     <div style="display:flex;flex-direction:column;justify-content:flex-start;">
@@ -133,6 +135,38 @@
             <span slot="footer" class="dialog-footer">
                 <el-button @click="batchDelVisible=false">取 消</el-button>
                 <el-button type="primary" @click="saveBatchDelete">确 定</el-button>
+            </span>
+        </el-dialog>
+
+        <!-- 毁灭节点提示框 -->
+        <el-dialog title="毁灭节点" :visible.sync="perishVisible" width="30%" center>
+            <el-form :model="currentHandleNode" label-width="90px">
+                <el-form-item label="公钥">
+                   <strong style="padding: 20px;">{{currentHandleNode.address}}</strong>
+                </el-form-item>
+                <el-form-item label="密钥">
+                    <el-input v-model="privateKey"></el-input>
+                </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="perishVisible=false">取 消</el-button>
+                <el-button type="primary" @click="savePerish">确 定</el-button>
+            </span>
+        </el-dialog>
+
+        <!-- 原谅节点提示框 -->
+        <el-dialog title="原谅节点" :visible.sync="pardonVisible" width="30%" center>
+            <el-form :model="currentHandleNode" label-width="90px">
+                <el-form-item label="公钥">
+                   <strong style="padding: 20px;">{{currentHandleNode.address}}</strong>
+                </el-form-item>
+                <el-form-item label="密钥">
+                    <el-input v-model="privateKey"></el-input>
+                </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="pardonVisible=false">取 消</el-button>
+                <el-button type="primary" @click="savePardon">确 定</el-button>
             </span>
         </el-dialog>
     </div>
@@ -156,6 +190,8 @@
                 addVisible: false,
                 editVisible: false,
                 delVisible: false,
+                perishVisible: false,
+                pardonVisible: false,
                 batchDelVisible: false,
                 currentHandleNode: {
                     address: '',
@@ -240,6 +276,16 @@
             },
             handleCurrentChange(page) {
                 this.cur_page = page;
+            },
+            handlePerish(row) {
+                Object.assign(this.currentHandleNode, row);
+
+                this.perishVisible = true;
+            },
+            handlePardon(row) {
+                Object.assign(this.currentHandleNode, row);
+
+                this.pardonVisible = true;
             },
             handleEdit(row) {
                 Object.assign(this.currentHandleNode, row);
@@ -354,6 +400,52 @@
                     else
                     {
                         this.$message.success('删除成功');
+
+                        this.getAllData();
+                    }
+                }).catch(err => {
+                    this.$message.error(err);
+                });
+            },
+            savePerish()
+            {
+                this.perishVisible = false;
+
+                this.$axios.post('/perishNode', {
+                    url: `${this.currentNode.host}:${this.currentNode.port}`,
+                    data: this.currentHandleNode.address,
+                    privateKey: this.privateKey
+                }).then(res => {
+                    if(res.code !== 0)
+                    {
+                        this.$message.error(res.msg);
+                    }
+                    else
+                    {
+                        this.$message.success('毁灭提交成功');
+
+                        this.getAllData();
+                    }
+                }).catch(err => {
+                    this.$message.error(err);
+                });
+            },
+            savePardon()
+            {
+                this.delVisible = false;
+
+                this.$axios.post('/pardonNodes', {
+                    url: `${this.currentNode.host}:${this.currentNode.port}`,
+                    data: [this.currentHandleNode.address],
+                    privateKey: this.privateKey
+                }).then(res => {
+                    if(res.code !== 0)
+                    {
+                        this.$message.error(res.msg);
+                    }
+                    else
+                    {
+                        this.$message.success('原谅节点成功');
 
                         this.getAllData();
                     }

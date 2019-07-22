@@ -1,7 +1,7 @@
 const Amalgamate = require("./stage/amalgamate");
 const CandidateAgreement = require("./stage/candidateAgreement");
 const BlockAgreement = require("./stage/blockAgreement");
-const { RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS, CHEAT_REASON_INVALID_PROTOCOL_CMD, RIPPLE_STAGE_PERISH, RIPPLE_STAGE_EMPTY, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, RIPPLE_STAGE_COUNTER, MAX_PROCESS_TRANSACTIONS_SIZE } = require("../constant");
+const { STAGE_STATE_EMPTY, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS, CHEAT_REASON_INVALID_PROTOCOL_CMD, RIPPLE_STAGE_PERISH, RIPPLE_STAGE_EMPTY, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, RIPPLE_STAGE_COUNTER, MAX_PROCESS_TRANSACTIONS_SIZE } = require("../constant");
 const assert = require("assert");
 const Counter = require("./stage/counter");
 const Perish = require("./stage/perish");
@@ -125,12 +125,22 @@ class Ripple
 
 	/**
 	 * @param {Buffer} address
+	 * @return {Boolean}
 	 */
 	perishNode(address)
 	{
-		this.perish.startPerishNode({
-			address: address
-		});
+		if (this.perish.state !== STAGE_STATE_EMPTY)
+		{
+			return false;
+		}
+		else
+		{
+			this.perish.startPerishNodeSpreadMode({
+				address: address
+			});
+
+			return true;
+		}
 	}
 
 	/**

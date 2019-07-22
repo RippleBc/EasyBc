@@ -77,6 +77,15 @@ app.use((req, res, next) => {
                 });
             }
 
+            // check privateKey
+            if(!utils.isValidPrivate(Buffer.from(req.body.privateKey, 'hex')))
+            {
+                return res.send({
+                    code: PARAM_ERR,
+                    msg: "param error, invalid privateKey"
+                });
+            }
+
             const { timestamp, sig } = sign(req.body.data, Buffer.from(req.body.privateKey, "hex"))
 
             options.body = {

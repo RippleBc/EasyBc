@@ -1,7 +1,7 @@
 const PerishData = require("../data/perish");
 const utils = require("../../../depends/utils");
 const Stage = require("./stage");
-const { CHEAT_REASON_REPEATED_PERISH_DATA, RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES, CHEAT_REASON_PERISH_DATA_INVALID_TIMESTAMP, CHEAT_REASON_INVALID_SIG, TRANSACTIONS_CONSENSUS_THRESHOULD, PROTOCOL_CMD_KILL_NODE_FINISH_STATE_REQUEST, PROTOCOL_CMD_KILL_NODE_FINISH_STATE_RESPONSE, STAGE_STATE_EMPTY, RIPPLE_STAGE_PERISH, PROTOCOL_CMD_KILL_NODE_REQUEST, PROTOCOL_CMD_KILL_NODE_RESPONSE } = require("../../constant");
+const { STAGE_SYNCHRONIZE_EMPTY_MODE, STAGE_SYNCHRONIZE_SPREAD_MODE, STAGE_SYNCHRONIZE_FETCH_MODE, PROTOCOL_CMD_KILL_NODE_INFO_REQUEST, PROTOCOL_CMD_KILL_NODE_INFO_RESPONSE, CHEAT_REASON_REPEATED_PERISH_DATA, RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES, CHEAT_REASON_PERISH_DATA_INVALID_TIMESTAMP, CHEAT_REASON_INVALID_SIG, TRANSACTIONS_CONSENSUS_THRESHOULD, PROTOCOL_CMD_KILL_NODE_FINISH_STATE_REQUEST, PROTOCOL_CMD_KILL_NODE_FINISH_STATE_RESPONSE, STAGE_STATE_EMPTY, RIPPLE_STAGE_PERISH, PROTOCOL_CMD_KILL_NODE_REQUEST, PROTOCOL_CMD_KILL_NODE_RESPONSE } = require("../../constant");
 const _ = require("underscore");
 const { randomBytes } = require("crypto");
 const assert = require("assert");
@@ -37,9 +37,8 @@ class Perish extends Stage
 		});
 
 		this.ripple = ripple;
-
 		this.perishDatas = [];
-		this.ifActive = true;
+		this.syncMode = STAGE_SYNCHRONIZE_EMPTY_MODE;
 	}
 
 	handler({ ifSuccess = true, ifCheckState = true } = { ifSuccess: true, ifCheckState: true })
@@ -82,8 +81,6 @@ class Perish extends Stage
 
 		const fullUnl = unlManager.fullUnl;
 
-		const selfPerishAddress = this.perishData.address;
-
 		if(sortedPerishData[0] && sortedPerishData[0][1] / (fullUnl.length + 1) >= TRANSACTIONS_CONSENSUS_THRESHOULD)
 		{
 			const perishAddress = sortedPerishData[0][0];
@@ -120,18 +117,6 @@ class Perish extends Stage
 				}
 
 				this.ripple.amalgamateMessagesCachePerish = [];	
-				
-				// begin to perish node again
-				if(this.ifActive && selfPerishAddress.toString('hex') !== perishAddress)
-				{
-					const waitTime = getRandomPerishInterval()
-
-					setTimeout(() => {
-						this.startPerishNode({
-							address: selfPerishAddress
-						});
-					}, waitTime)
-				}
 			}).catch(e => {
 				logger.fatal(`Perish handler, this.ripple.handlePerishNode throw exception, ${process[Symbol.for("getStackInfo")](e)}`)
 
@@ -152,18 +137,6 @@ class Perish extends Stage
 			this.reset();
 
 			this.ripple.run();
-			
-			// begin to perish node again
-			if(this.ifActive)
-			{
-				const waitTime = getRandomPerishInterval()
-
-				setTimeout(() => {
-					this.startPerishNode({
-						address: selfPerishAddress
-					});
-				}, waitTime)
-			}
 		}
 	}
 
@@ -176,6 +149,35 @@ class Perish extends Stage
 	{
 		switch(cmd)
 		{
+			case PROTOCOL_CMD_KILL_NODE_INFO_REQUEST:
+			{
+				if (this.state === STAGE_STATE_EMPTY) {
+					return;
+				}
+
+				p2p.send(address, PROTOCOL_CMD_KILL_NODE_INFO_RESPONSE, this.perishData)
+			}
+			break;
+
+			case PROTOCOL_CMD_KILL_NODE_INFO_RESPONSE:
+			{
+				if (this.state === STAGE_STATE_EMPTY) {
+					return;
+				}
+				
+				if (this.syncMode !== STAGE_SYNCHRONIZE_FETCH_MODE)
+				{
+					return;
+				}
+
+				const perishData = new PerishData(data);
+
+				this.validateAndProcessExchangeData(perishData, this.perishDatas, address.toString("hex"), {
+					addressCheck: false
+				});
+			} 
+			break;
+
 			case PROTOCOL_CMD_KILL_NODE_REQUEST:
 			{
 				if(this.state === STAGE_STATE_EMPTY)
@@ -226,14 +228,15 @@ class Perish extends Stage
 							if(timestamp < now + PERISH_DATA_TIMESTAMP_STOP_SPREAD_RIGHT_GAP && timestamp > now - PERISH_DATA_TIMESTAMP_STOP_SPREAD_LEFT_GAP)
 							{
 								// 
-								this.ifActive = false;
-								this.startPerishNode({
+								this.startPerishNodeSpreadMode({
 									perishData: perishData
 								});
 							}
 							else
 							{
-								this.perishData = perishData;
+								this.startPerishNodeFetchMode({
+									perishData: perishData
+								})
 							}
 						}
 						
@@ -248,12 +251,16 @@ class Perish extends Stage
 				{
 					p2p.send(address, PROTOCOL_CMD_KILL_NODE_RESPONSE, this.perishData.serialize());
 				}
-				
 			}
 			break;
 			case PROTOCOL_CMD_KILL_NODE_RESPONSE:
 			{
 				if(this.state === STAGE_STATE_EMPTY)
+				{
+					return;
+				}
+
+				if(this.syncMode !== STAGE_SYNCHRONIZE_SPREAD_MODE)
 				{
 					return;
 				}
@@ -282,32 +289,34 @@ class Perish extends Stage
 		super.reset();
 
 		this.perishDatas = [];
-		this.ifActive = true;
+		this.syncMode = STAGE_SYNCHRONIZE_EMPTY_MODE;
 	}
 
 	/**
 	 * @param {Buffer} address
 	 * @param {PerishData} perishData
 	 */
-	startPerishNode({address, perishData})
+	startPerishNodeSpreadMode({address, perishData})
 	{
 		if(this.state !== STAGE_STATE_EMPTY)
 		{
-			return;
+			logger.fatal(`Perish startPerishNodeSpreadMode, perish state should be STAGE_STATE_EMPTY, now is ${this.state}, ${process[Symbol.for("getStackInfo")]()}`);
+
+			process.exit(1)
 		}
 
 		if(address === undefined && perishData === undefined)
 		{
-			throw new Error(`Perish startPerishNode, address and perishData can not be undefined at the same time`);
+			throw new Error(`Perish startPerishNodeSpreadMode, address and perishData can not be undefined at the same time`);
 		}
 
 		if(perishData)
 		{
-			assert(perishData instanceof PerishData, `Perish startPerishNode, perishData should be an instance of PerishData, now is ${typeof perishData}`);
+			assert(perishData instanceof PerishData, `Perish startPerishNodeSpreadMode, perishData should be an instance of PerishData, now is ${typeof perishData}`);
 		}
 		else
 		{
-			assert(Buffer.isBuffer(address), `Perish startPerishNode, address should be an Buffer, now is ${typeof address}`);
+			assert(Buffer.isBuffer(address), `Perish startPerishNodeSpreadMode, address should be an Buffer, now is ${typeof address}`);
 
 			perishData = new PerishData({
 				timestamp: Date.now(),
@@ -326,9 +335,40 @@ class Perish extends Stage
 		this.perishData = perishData;
 		this.perishDatas.push(perishData)
 		
-		logger.info(`Perish startPerishNode, begin to send perish node protocol, stage: ${this.ripple.stage}`);
+		this.syncMode = STAGE_SYNCHRONIZE_SPREAD_MODE;
+
+		logger.info(`Perish startPerishNodeSpreadMode, begin to send perish node protocol, stage: ${this.ripple.stage}`);
 
 		p2p.sendAll(PROTOCOL_CMD_KILL_NODE_REQUEST, perishData.serialize());
+	}
+
+	/**
+	 * @param {Buffer} address
+	 * @param {PerishData} perishData
+	 */
+	startPerishNodeFetchMode({ perishData }) {
+		if (this.state !== STAGE_STATE_EMPTY) {
+			logger.fatal(`Perish startPerishNodeFetchMode, counter state should be STAGE_STATE_EMPTY, now is ${this.state}, ${process[Symbol.for("getStackInfo")]()}`);
+
+			process.exit(1);
+		}
+
+		assert(perishData instanceof PerishData, `Perish startPerishNodeFetchMode, perishData should be an instance of PerishData, now is ${typeof perishData}`);
+
+		this.start();
+
+		this.ripple.reset();
+		this.ripple.counter.reset();
+		this.ripple.stage = RIPPLE_STAGE_PERISH;
+
+		this.perishData = perishData;
+		this.perishDatas.push(perishData)
+
+		this.syncMode = STAGE_SYNCHRONIZE_FETCH_MODE;
+
+		logger.info(`Perish startPerishNodeFetchMode, begin to send perish node protocol, stage: ${this.ripple.stage}`);
+
+		p2p.sendAll(PROTOCOL_CMD_KILL_NODE_INFO_REQUEST);
 	}
 }
 

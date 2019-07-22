@@ -28,11 +28,19 @@ app.post("/perishNode", (req, res) => {
     });
   }
 
-  processor.consensus.perishNode(Buffer.from(req.body.address, 'hex'))
-
-  res.json({
-    code: SUCCESS
-  })
+  if(processor.consensus.perishNode(Buffer.from(req.body.address, 'hex')))
+  {
+    res.json({
+      code: SUCCESS
+    })
+  }
+  else
+  {
+    res.json({
+      code: PARAM_ERR,
+      msg: "perish is processing"
+    })
+  }
 });
 
 app.post("/pardonNodes", (req, res) => {
