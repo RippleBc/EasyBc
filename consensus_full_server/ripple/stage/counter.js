@@ -460,8 +460,9 @@ class Counter extends Stage
 		
 		this.counterData = counterData;
 		this.action = bufferToInt(counterData.action)
-
 		this.counterDatas.push(counterData);
+
+		this.syncMode = STAGE_SYNCHRONIZE_SPREAD_MODE;
 
 		logger.info(`Counter startStageSynchronizeSpreadMode, begin to send stage sync protocol, stage: ${this.ripple.stage}`);
 
@@ -488,9 +489,10 @@ class Counter extends Stage
 		this.ripple.stage = RIPPLE_STAGE_COUNTER;
 		
 		this.counterData = counterData;
-		this.action = bufferToInt(counterData.action)
-
+		this.action = bufferToInt(counterData.action);
 		this.counterDatas.push(counterData);
+
+		this.syncMode = STAGE_SYNCHRONIZE_FETCH_MODE;
 
 		logger.info(`Counter startStageSynchronizeFetchMode, begin to send info protocol, stage: ${this.ripple.stage}`);
 
