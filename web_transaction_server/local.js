@@ -278,7 +278,7 @@ app.get("/getToHistory", function (req, res) {
 app.get("/sendTransaction", function (req, res) {
 
 	const url = req.query.url
-	const from = req.query.from;
+	let from = req.query.from;
 	const to = req.query.to;
 	const value = req.query.value;
 
