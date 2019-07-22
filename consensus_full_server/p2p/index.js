@@ -175,7 +175,7 @@ class P2p
 						address: Buffer.from(node.address, "hex")
 					});
 
-					loggerP2p.trace(`P2p reconnectAll, connect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort}, successed`);
+					loggerP2p.info(`P2p reconnectAll, connect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort}, successed`);
 				}
 				catch(e)
 				{
