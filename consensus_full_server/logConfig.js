@@ -63,7 +63,7 @@ log4js.configure({
         net: { appenders: ["stdout", "net"], level: "info" },
         mysql: { appenders: ["stdout", "mysql"], level: "info" },
         update: { appenders: ["stdout", "update"], level: "info" },
-        stageConsensus: { appenders: ["stdout", "stageConsensus"], level: "info" },
+        stageConsensus: { appenders: ["stdout", "stageConsensus"], level: "warn" },
         perishNode: { appenders: ["stdout", "perishNode"], level: "info" }
     }
 })
