@@ -244,9 +244,25 @@ class Connection extends AsyncEventEmitter
 				case AUTHORIZE_REQ_CMD:
 				{
 					const privateKey = process[Symbol.for("privateKey")];
-					const token = new Token({
-						nonce: message.data
-					});
+
+					let token;
+					try
+					{
+						token = new Token({
+							nonce: message.data
+						});
+					}
+					catch(e)
+					{
+						this.write(AUTHORIZE_FAILED_CMD);
+
+						this.emit("meDoNotTrustOther");
+
+						this.logger.error(`Connection parse, invalid token data, ${e}`)
+
+						return;
+					}
+				
 					token.sign(privateKey);
 
 					this.write(AUTHORIZE_RES_CMD, token.serialize());
