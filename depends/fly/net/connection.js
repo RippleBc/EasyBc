@@ -271,7 +271,21 @@ class Connection extends AsyncEventEmitter
 
 				case AUTHORIZE_RES_CMD:
 				{
-					const token = new Token(message.data);
+					let token;
+					try {
+						token = new Token(message.data);
+					} 
+					catch (e) 
+					{
+						this.write(AUTHORIZE_FAILED_CMD);
+
+						this.emit("meDoNotTrustOther");
+
+						this.logger.error(`Connection parse, invalid token data, ${e}`)
+
+						return;
+					}
+					
 
 					token.nonce = this.nonce;
 					if (token.verifySignature()) {
