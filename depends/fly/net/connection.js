@@ -249,7 +249,7 @@ class Connection extends AsyncEventEmitter
 					});
 					token.sign(privateKey);
 
-					this.write(AUTHORIZE_BEGIN_CMD, token.serialize());
+					this.write(AUTHORIZE_RES_CMD, token.serialize());
 				}
 				break;
 
