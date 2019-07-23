@@ -2,7 +2,7 @@ const net = require("net");
 const assert = require("assert");
 const Connection = require("./net/connection");
 const ConnectionsManager =require("./manager");
-const { AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT, AUTHORIZE_FAILED_BECAUSE_OF_INVALID_SIGNATURE } = require("./constant");
+const { AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT, AUTHORIZE_FAILED_BECAUSE_OF_OTHER_INVALID_SIGNATURE, AUTHORIZE_FAILED_BECAUSE_OF_SELF_INVALID_SIGNATURE  } = require("./constant");
 
 exports.connectionsManager = new ConnectionsManager();
 
@@ -33,7 +33,6 @@ exports.createClient = async function(opts)
 				const connection = new Connection({
 					socket: client,
 					dispatcher: dispatcher,
-					address: address,
 					logger: logger
 				});
 
@@ -68,9 +67,14 @@ exports.createClient = async function(opts)
 
 			connection.close();
 		}
-		else if(errCode === AUTHORIZE_FAILED_BECAUSE_OF_INVALID_SIGNATURE)
+		else if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_OTHER_INVALID_SIGNATURE)
 		{
-			logger.error(`fly createClient, authorize failed because of invalid signature, host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
+			logger.error(`fly createClient, authorize failed because of other invalid signature, me do not trust host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
+
+			connection.close();
+		}
+		else if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_SELF_INVALID_SIGNATURE) {
+			logger.error(`fly createClient, authorize failed because of invalid signature, host: ${socket.remoteAddress}, port: ${socket.remotePort} do not trust me`)
 
 			connection.close();
 		}
@@ -129,9 +133,13 @@ exports.createServer = function(opts)
 
 				connection.close();
 			}
-			else if(errCode === AUTHORIZE_FAILED_BECAUSE_OF_INVALID_SIGNATURE)
-			{
-				logger.error(`fly createServer, authorize failed because of invalid signature, host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
+			else if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_OTHER_INVALID_SIGNATURE) {
+				logger.error(`fly createServer, authorize failed because of other invalid signature, me do not trust host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
+
+				connection.close();
+			}
+			else if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_SELF_INVALID_SIGNATURE) {
+				logger.error(`fly createServer, authorize failed because of invalid signature, host: ${socket.remoteAddress}, port: ${socket.remotePort} do not trust me`)
 
 				connection.close();
 			}

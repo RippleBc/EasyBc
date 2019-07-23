@@ -8,7 +8,7 @@ const crypto = require("crypto");
 const process = require("process");
 const AsyncEventEmitter = require("async-eventemitter");
 const utils = require("../../utils");
-const { AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT, AUTHORIZE_FAILED_BECAUSE_OF_INVALID_SIGNATURE } = require("../constant");
+const { AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT, AUTHORIZE_FAILED_BECAUSE_OF_OTHER_INVALID_SIGNATURE, AUTHORIZE_FAILED_BECAUSE_OF_SELF_INVALID_SIGNATURE } = require("../constant");
 
 const Buffer = utils.Buffer;
 
@@ -16,12 +16,10 @@ const END_CLEAR_SEND_BUFFER_TIME_DEAY = 1000 * 5;
 const HEART_BEAT_TIME = 1000 * 10;
 const AUTHORIZE_DELAY_TIME = 5000;
 
-const AUTHORIZE_GET_NONCE_CMD = 1;
-const AUTHORIZE_RETURN_NONCE_CMD = 2;
-const AUTHORIZE_BEGIN_CMD = 3;
-const AUTHORIZE_SUCCESS_CMD = 4;
-const AUTHORIZE_FAILED_CMD = 5;
-const AUTHORIZE_END_CMD = 6;
+const AUTHORIZE_REQ_CMD = 1;
+const AUTHORIZE_RES_CMD = 2;
+const AUTHORIZE_SUCCESS_CMD = 3;
+const AUTHORIZE_FAILED_CMD = 4;
 
 class Connection extends AsyncEventEmitter
 {
@@ -32,12 +30,6 @@ class Connection extends AsyncEventEmitter
 		assert(opts.socket instanceof Socket, `Connection	constructor, opts.socket should be a Socket Object, now is ${typeof opts.socket}`);
 		assert(typeof opts.dispatcher	=== "function", `Connection	constructor, opts.dispatcher should be a Function, now is ${typeof opts.dispatcher}`);
 		assert(typeof opts.logger	=== "object", `Connection	constructor, opts.logger should be an Object, now is ${typeof opts.logger}`);
-
-		if(opts.address)
-		{
-			assert(Buffer.isBuffer(opts.address), `Connection constructor, opts.address should be an Buffer, now is ${typeof opts.address}`);
-			this.address = opts.address;
-		}
 
 		this.socket = opts.socket;
 		this.dispatcher = opts.dispatcher;
@@ -54,6 +46,9 @@ class Connection extends AsyncEventEmitter
 
 		// if stop write to buffer
 		this.stopWriteToBuffer = false;
+
+		// if authrozed over
+		this.ifAuthorizeSuccess = false;
 
 		this.sendKenelBufferFull = false;
 		this.sendBufferArray = [];
@@ -107,20 +102,47 @@ class Connection extends AsyncEventEmitter
 
 	async authorize()
 	{
-		this.write(AUTHORIZE_GET_NONCE_CMD);
+		this.write(AUTHORIZE_REQ_CMD, this.nonce);
+
+		let meTrustOther = false;
+		let otherTrustMe = false;
 
 		const promise = new Promise((resolve, reject) => {
 			setTimeout(() => {
 				reject(AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT);
 			}, AUTHORIZE_DELAY_TIME).unref();
 
-			this.on("authorizeSuccessed", () => {
-				resolve();
+			
+
+			this.nonce("meTrustOther", () => {
+				meTrustOther = true;
+
+				if (otherTrustMe)
+				{
+					this.ifAuthorizeSuccess = true;
+
+					resolve();
+				}
 			});
 
-			this.on("authorizeFailed", () => {
-				reject(AUTHORIZE_FAILED_BECAUSE_OF_INVALID_SIGNATURE);
+			this.nonce("otherTrustMe", () => {
+				otherTrustMe = true;
+
+				if (meTrustOther) {
+					this.ifAuthorizeSuccess = true;
+
+					resolve();
+				}
 			});
+
+			this.nonce("meDoNotTrustOther", () => {
+				reject(AUTHORIZE_FAILED_BECAUSE_OF_OTHER_INVALID_SIGNATURE);
+			});
+
+			this.nonce("otherDoNotTrustMe", () => {
+				reject(AUTHORIZE_FAILED_BECAUSE_OF_SELF_INVALID_SIGNATURE);
+			})
+
 		});
 
 		return promise;
@@ -219,13 +241,7 @@ class Connection extends AsyncEventEmitter
 
 			switch(cmd)
 			{
-				case AUTHORIZE_GET_NONCE_CMD:
-				{
-					this.write(AUTHORIZE_RETURN_NONCE_CMD, this.nonce);
-				}
-				break;
-
-				case AUTHORIZE_RETURN_NONCE_CMD:
+				case AUTHORIZE_REQ_CMD:
 				{
 					const privateKey = process[Symbol.for("privateKey")];
 					const token = new Token({
@@ -237,62 +253,40 @@ class Connection extends AsyncEventEmitter
 				}
 				break;
 
-				case AUTHORIZE_BEGIN_CMD:
+				case AUTHORIZE_RES_CMD:
 				{
 					const token = new Token(message.data);
 
 					token.nonce = this.nonce;
-					if(token.verifySignature())
-					{
-						if (this.address)
-						{
-							if (this.address.toString("hex") !== token.address.toString("hex"))
-							{
-								this.logger.error(`Connection parser, opts address ${this.address.toString("hex")} is not correspond to token address ${token.address.toString("hex")}`);
+					if (token.verifySignature()) {
+						this.address = token.address;
+						this.write(AUTHORIZE_SUCCESS_CMD);
 
-								this.write(AUTHORIZE_FAILED_CMD);
-
-								this.emit("authorizeFailed");
-							}
-							else
-							{
-								this.write(AUTHORIZE_SUCCESS_CMD);
-
-								this.emit("authorizeSuccessed");
-							}
-						}
-						else
-						{
-							this.address = token.address;
-							this.write(AUTHORIZE_SUCCESS_CMD);
-
-							this.emit("authorizeSuccessed");
-						}
+						this.emit("meTrustOther");
 					}
-					else
-					{
+					else {
 						this.write(AUTHORIZE_FAILED_CMD);
 
-						this.emit("authorizeFailed");
+						this.emit("meDoNotTrustOther");
 					}
 				}
 				break;
 
 				case AUTHORIZE_SUCCESS_CMD:
 				{
-					this.emit("authorizeSuccessed");
+					this.emit("otherTrustMe");
 				}
 				break;
 
 				case AUTHORIZE_FAILED_CMD:
 				{
-					this.emit("authorizeFailed");
+					this.emit("otherDoNotTrustMe");
 				}
 				break;
 
 				default: 
 				{
-					if(this.address)
+					if (this.ifAuthorizeSuccess)
 					{
 						this.dispatcher(message);
 					}
