@@ -433,6 +433,11 @@ class Counter extends Stage
 			process.exit(1)
 		}
 
+		if(this.ripple.stage === RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS)
+		{
+			return;
+		}
+
 		if(action === undefined && counterData === undefined)
 		{
 			throw new Error(`Counter startStageSynchronizeSpreadMode, action and counterData can not be undefined at the same time`);
@@ -479,6 +484,11 @@ class Counter extends Stage
 			logger.fatal(`Counter startStageSynchronizeFetchMode, counter state should be STAGE_STATE_EMPTY, now is ${this.state}, ${process[Symbol.for("getStackInfo")]()}`);
 
 			process.exit(1);
+		}
+
+		if(this.ripple.stage === RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS)
+		{
+			return;
 		}
 
 		assert(counterData instanceof CounterData, `Counter startStageSynchronizeFetchMode, counterData should be an instance of CounterData, now is ${typeof counterData}`);
