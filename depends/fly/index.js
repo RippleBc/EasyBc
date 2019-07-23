@@ -78,7 +78,7 @@ exports.createClient = async function(opts)
 		}
 		else
 		{
-			logger.fatal(`fly createClient, authorize throw unexpected err, ${errCode}`);
+			logger.fatal(`fly createClient, authorize throw unexpected err, ${process[Symbol.for("getStackInfo")](errCode)}`);
 
 			connection.close();
 		}
@@ -143,7 +143,7 @@ exports.createServer = function(opts)
 			}
 			else
 			{
-				logger.fatal(`fly createServer, authorize throw unexpected err, ${errCode}`);
+				logger.fatal(`fly createServer, authorize throw unexpected err, ${process[Symbol.for("getStackInfo")](errCode)}`);
 
 				connection.close();
 			}
