@@ -114,7 +114,7 @@ class Connection extends AsyncEventEmitter
 
 			
 
-			this.nonce("meTrustOther", () => {
+			this.once("meTrustOther", () => {
 				meTrustOther = true;
 
 				if (otherTrustMe)
@@ -125,7 +125,7 @@ class Connection extends AsyncEventEmitter
 				}
 			});
 
-			this.nonce("otherTrustMe", () => {
+			this.once("otherTrustMe", () => {
 				otherTrustMe = true;
 
 				if (meTrustOther) {
@@ -135,11 +135,11 @@ class Connection extends AsyncEventEmitter
 				}
 			});
 
-			this.nonce("meDoNotTrustOther", () => {
+			this.once("meDoNotTrustOther", () => {
 				reject(AUTHORIZE_FAILED_BECAUSE_OF_OTHER_INVALID_SIGNATURE);
 			});
 
-			this.nonce("otherDoNotTrustMe", () => {
+			this.once("otherDoNotTrustMe", () => {
 				reject(AUTHORIZE_FAILED_BECAUSE_OF_SELF_INVALID_SIGNATURE);
 			})
 
