@@ -244,19 +244,30 @@ class Connection extends AsyncEventEmitter
 					token.nonce = this.nonce;
 					if(token.verifySignature())
 					{
-						if (this.address && this.address.toString("hex") !== token.address.toString("hex"))
+						if (this.address)
 						{
-							this.logger.error(`Connection parser, opts address ${this.address.toString("hex")} is not correspond to token address ${token.address.toString("hex")}`);
-							
-							this.close();
+							if (this.address.toString("hex") !== token.address.toString("hex"))
+							{
+								this.logger.error(`Connection parser, opts address ${this.address.toString("hex")} is not correspond to token address ${token.address.toString("hex")}`);
 
-							return;
+								this.write(AUTHORIZE_FAILED_CMD);
+
+								this.emit("authorizeFailed");
+							}
+							else
+							{
+								this.write(AUTHORIZE_SUCCESS_CMD);
+
+								this.emit("authorizeSuccessed");
+							}
 						}
+						else
+						{
+							this.address = token.address;
+							this.write(AUTHORIZE_SUCCESS_CMD);
 
-						this.address = token.address;
-						this.write(AUTHORIZE_SUCCESS_CMD);
-
-						this.emit("authorizeSuccessed");
+							this.emit("authorizeSuccessed");
+						}
 					}
 					else
 					{
