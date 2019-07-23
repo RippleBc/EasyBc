@@ -33,6 +33,10 @@ class Processor
 	{
 		update.run().then(() => {
 			loggerUpdate.info("update is success");
+		}).catch(e => {
+			loggerUpdate.fatal(`update throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+
+			process.exit(1)
 		});
 
 		(async () => {
