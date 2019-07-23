@@ -210,7 +210,7 @@ class Ripple
 				}
 				else
 				{
-					return loggerPerishNode.warn(`Ripple handleMessage, address ${address.toString("hex")}, processor is perishing node, do not handle transaction consensus messages`);
+					return loggerPerishNode.info(`Ripple handleMessage, address ${address.toString("hex")}, processor is perishing node, do not handle transaction consensus messages`);
 				}
 			}
 
@@ -227,7 +227,7 @@ class Ripple
 				}
 				else
 				{
-					return loggerStageConsensus.warn(`Ripple handleMessage, address ${address.toString("hex")}, processor is synchronizing stage, do not transactions amalgamate messages`);
+					return loggerStageConsensus.info(`Ripple handleMessage, address ${address.toString("hex")}, processor is synchronizing stage, do not transactions amalgamate messages`);
 				}
 			}
 
@@ -281,12 +281,12 @@ class Ripple
 		{
 			if(this.stage === RIPPLE_STAGE_PERISH)
 			{
-				return loggerPerishNode.warn(`Ripple handleMessage, address ${address.toString("hex")}, processor is perishing node, do not handle transaction consensus messages`);
+				return loggerPerishNode.info(`Ripple handleMessage, address ${address.toString("hex")}, processor is perishing node, do not handle transaction consensus messages`);
 			}
 
 			if(this.stage === RIPPLE_STAGE_COUNTER)
 			{
-				return loggerStageConsensus.warn(`Ripple handleMessage, address ${address.toString("hex")}, processor is synchronizing stage, do not handle candidates agreement messages`);
+				return loggerStageConsensus.info(`Ripple handleMessage, address ${address.toString("hex")}, processor is synchronizing stage, do not handle candidates agreement messages`);
 			}
 
 			if(this.amalgamate.checkIfDataExchangeIsFinish())
@@ -314,12 +314,12 @@ class Ripple
 		{
 			if(this.stage === RIPPLE_STAGE_PERISH)
 			{
-				return loggerPerishNode.warn(`Ripple handleMessage, address ${address.toString("hex")}, processor is perishing node, do not handle transaction consensus messages`);
+				return loggerPerishNode.info(`Ripple handleMessage, address ${address.toString("hex")}, processor is perishing node, do not handle transaction consensus messages`);
 			}
 
 			if(this.stage === RIPPLE_STAGE_COUNTER)
 			{
-				return loggerStageConsensus.warn(`Ripple handleMessage, address ${address.toString("hex")}, processor is synchronizing stage, do not handle blocks agreement messages`);
+				return loggerStageConsensus.info(`Ripple handleMessage, address ${address.toString("hex")}, processor is synchronizing stage, do not handle blocks agreement messages`);
 			}
 
 			if(this.candidateAgreement.checkIfDataExchangeIsFinish())
@@ -347,7 +347,7 @@ class Ripple
 		{
 			if(this.stage === RIPPLE_STAGE_PERISH)
 			{
-				return loggerPerishNode.warn(`Ripple handleMessage, address ${address.toString("hex")}, processor is perishing node, do not handle stage synchronize messages`);
+				return loggerPerishNode.info(`Ripple handleMessage, address ${address.toString("hex")}, processor is perishing node, do not handle stage synchronize messages`);
 			}
 
 			this.counter.handleMessage(address, cmd, data);
