@@ -14,10 +14,8 @@ exports.createClient = async function(opts)
 	const port = opts.port || 8080;
 	const logger = opts.logger || { trace: console.info, debug: console.info, info: console.info, warn: console.warn, error: console.error, fatal: console.error };
 
-	const address = opts.address;
 	const dispatcher = opts.dispatcher;
 
-	assert(Buffer.isBuffer(address), `fly createClient, address should be an Buffer, now is ${typeof address}`);
 	assert(typeof dispatcher === "function", `fly createServer, dispatcher should be a function, now is ${typeof dispatcher}`);
 
 	const client = net.createConnection({ 
@@ -40,11 +38,11 @@ exports.createClient = async function(opts)
 			});
 
 			client.on("error", e => {
-				reject(`fly onConnect, client connected to address: ${address.toString("hex")}, host: ${client.remoteAddress}, port: ${client.remotePort}, failed, ${e}`);
+				reject(`fly onConnect, client connected to host: ${client.remoteAddress}, port: ${client.remotePort}, failed, ${e}`);
 			});
 
 			const timeout = setTimeout(() => {
-				reject(`fly onConnect, client connected to address: ${address.toString("hex")}, host: ${client.remoteAddress}, port: ${client.remotePort}, timeout`);
+				reject(`fly onConnect, client connected to host: ${client.remoteAddress}, port: ${client.remotePort}, timeout`);
 			}, CONNECT_TIMEOUT);
 
 			timeout.unref();
@@ -53,7 +51,7 @@ exports.createClient = async function(opts)
 		return promise;
 	})();
 
-	logger.trace(`fly createClient, create an connection to address: ${address.toString("hex")}, host: ${client.remoteAddress}, port: ${client.remotePort}`);
+	logger.trace(`fly createClient, create an connection to host: ${client.remoteAddress}, port: ${client.remotePort}`);
 
 	try
 	{
@@ -88,7 +86,7 @@ exports.createClient = async function(opts)
 		return;
 	}
 
-	logger.trace(`fly createClient, authorize successed to address: ${address.toString("hex")}, host: ${client.remoteAddress}, port: ${client.remotePort}`);
+	logger.trace(`fly createClient, authorize successed, host: ${client.remoteAddress}, port: ${client.remotePort}`);
 
 	exports.connectionsManager.push(connection);
 
