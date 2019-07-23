@@ -142,6 +142,8 @@ class Mysql
   {
     assert(typeof hash === 'string', `Mysql checkIfCounterRepeated, hash should be a String, now is ${typeof hash}`);
 
+    return false;
+
     const [, created] = await this.CounterHash.findOrCreate({
       where: {
         hash: hash
