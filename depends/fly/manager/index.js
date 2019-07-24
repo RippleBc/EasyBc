@@ -66,7 +66,7 @@ class ConnectionsManager extends AsyncEventEmitter
 			}
 			else
 			{
-				this.connections[i].logger.info(`ConnectionsManager push, address ${connection.address.toString("hex")} has connected, close the same connection`);
+				this.connections[i].logger.error(`ConnectionsManager push, address ${connection.address.toString("hex")} has connected, close the same connection`);
 
 				connection.close();
 			}
