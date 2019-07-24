@@ -157,44 +157,82 @@ class Connection extends AsyncEventEmitter
 
 		if(this.socket && !this.socket.destroyed)
 		{
-			// try to flush all data
-			this.flush();
-
-			// wait specialized time for flush data from kenel to network
-			setTimeout(() => {
-				this.writeChannelClosed = true;
-				this.socket.end();
+			// wait specialized time for flush data from system to kernel
+			const closeTimeout = setTimeout(() => {
+				// try to close socket
+				if (!writeChannelClosed)
+				{
+					this.writeChannelClosed = true;
+					this.socket.end();
+				}
 			}, END_CLEAR_SEND_BUFFER_TIME_DEAY).unref()
+
+			// try to flush all data
+			(async () => {
+				// flush data
+				let flushResultCode = this.flush();
+				while (flushResultCode === 2 || flushResultCode === 3)
+				{
+					await new Promise((resolve, reject) => {
+						setTimeout(() => {
+							resolve();
+						});
+					})
+
+					flushResultCode = this.flush();
+				}
+			})().catch(e => {
+				this.logger.error(`Connection close, flush throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+			}).finally(() => {
+				// try to clear close timeout
+				clearTimeout(closeTimeout)
+
+				// try to close socket
+				if (!writeChannelClosed) 
+				{
+					this.writeChannelClosed = true;
+					this.socket.end();
+				}
+			})
+			
 		}
 	}
 
 	/**
-	 * @return {Number} 1 show all data is pump to kenel buffer, 2 show part of the data is pump to kenel buffer
+	 * @return {Number} 0 show sendKenelBufferIs full1 show all data is pump to kernel buffer, 3 
 	 */
 	flush()
 	{
-		// check if send kenel buffer is full
-		if(this.sendKenelBufferFull || this.writeChannelClosed)
+		// write channel has closed
+		if (this.writeChannelClosed) 
 		{
-			return 0;
+			return 1;
+		}
+
+		// check if send kernel buffer is full
+		if(this.sendKenelBufferFull)
+		{
+			return 2;
 		}
 
 		while(this.sendBufferArray.length > 0)
 		{
+			// 如果全部数据都成功刷新到内核的缓冲则返回true。如果全部或部分数据在用户内中排队，则返回false。
 			const writeResult = this.socket.write(this.sendBufferArray[0]);
 
 			this.sendBufferArray.splice(0, 1);
 
-			// part or all of the data is queuing up at the system send buffer waiting to be pump to kenel buffer
+			// part or all of the data is queuing up at the system send buffer waiting to be pump to kernel buffer
 			if(writeResult === false)
 			{
 				this.sendKenelBufferFull = true;
 				
-				return 2;
+				return 3;
 			}
 		}
 
-		return 1;
+		// all data has send to kernel buffer
+		return 4;
 	}
 
 	/**
