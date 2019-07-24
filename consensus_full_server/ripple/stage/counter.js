@@ -435,6 +435,8 @@ class Counter extends Stage
 
 		if(this.ripple.stage === RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS)
 		{
+			logger.error(`Counter startStageSynchronizeSpreadMode, ripple stage is RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS, do not process counter sync request`);
+
 			return;
 		}
 
@@ -488,6 +490,8 @@ class Counter extends Stage
 
 		if(this.ripple.stage === RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS)
 		{
+			logger.error(`Counter startStageSynchronizeFetchMode, ripple stage is RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS, do not process counter sync request`);
+
 			return;
 		}
 

@@ -95,3 +95,6 @@ module.exports.CHEAT_REASON_PERISH_DATA_INVALID_TIMESTAMP = 'perishDataInvalidTi
 module.exports.STAGE_SYNCHRONIZE_EMPTY_MODE = 0;
 module.exports.STAGE_SYNCHRONIZE_SPREAD_MODE = 1;
 module.exports.STAGE_SYNCHRONIZE_FETCH_MODE = 2;
+
+// 
+module.exports.STAGE_MAX_ID = 19901112

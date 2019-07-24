@@ -21,11 +21,6 @@ const PERISH_DATA_TIMESTAMP_CHEATED_RIGHT_GAP = 60 * 1000;
 const PERISH_DATA_TIMESTAMP_STOP_SPREAD_LEFT_GAP = 30 * 1000;
 const PERISH_DATA_TIMESTAMP_STOP_SPREAD_RIGHT_GAP = 30 * 1000;
 
-const getRandomPerishInterval = function()
-{
-	return new BN(randomBytes(2)).toNumber() % 5000;
-}
-
 class Perish extends Stage
 {
 	constructor(ripple)
@@ -104,9 +99,27 @@ class Perish extends Stage
 
 			this.reset();
 
+			const originId = this.id;
+
 			// handle perish node
 			this.ripple.handlePerishNode(perishSponsors[0], perishAddress).then(() => {
+
+				// check if a new perish state is empty
+				if(this.state !== STAGE_STATE_EMTPY)
+				{
+					logger.error(`Perish handler, a new perish stage has begin, its state is ${this.state}`);
+
+					return;
+				}
 				
+				// check if this is the same round 
+				if(originId !== this.id)
+				{
+					logger.error(`Perish handler, stage id should be ${origin}, now is ${this.id}`);
+
+					return;
+				}
+
 				this.ripple.run();
 
 				// handle cached messages

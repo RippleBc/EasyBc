@@ -39,7 +39,7 @@ class Ripple
 	/**
 	 * @param {Array} transactions 
 	 */
-	async run({fetchingNewTransaction = false, transactions} = {fetchingNewTransaction: false})
+	run({fetchingNewTransaction = false, transactions} = {fetchingNewTransaction: false})
 	{
 		if(fetchingNewTransaction)
 		{
@@ -210,7 +210,7 @@ class Ripple
 				}
 				else
 				{
-					return loggerPerishNode.info(`Ripple handleMessage, address ${address.toString("hex")}, processor is perishing node, do not handle transaction consensus messages`);
+					return loggerPerishNode.info(`Ripple handleMessage, address ${address.toString("hex")}, perish data exchange, do not handle transaction amalgamate messages`);
 				}
 			}
 
@@ -227,18 +227,25 @@ class Ripple
 				}
 				else
 				{
-					return loggerStageConsensus.info(`Ripple handleMessage, address ${address.toString("hex")}, processor is synchronizing stage, do not transactions amalgamate messages`);
+					return loggerStageConsensus.info(`Ripple handleMessage, address ${address.toString("hex")}, counter date exchange, do not handle transaction amalgamate messages`);
 				}
 			}
 
-			if(this.stage === RIPPLE_STAGE_BLOCK_AGREEMENT && this.blockAgreement.checkIfDataExchangeIsFinish())
+			if(this.stage === RIPPLE_STAGE_BLOCK_AGREEMENT)
 			{
-				logger.info(`Ripple handleMessage, block agreement is over because of node notification`);
+				if (this.blockAgreement.checkIfDataExchangeIsFinish())
+				{
+					logger.info(`Ripple handleMessage, block agreement is over because of node notification`);
 
-				this.blockAgreement.handler({
-					ifSuccess: true,
-					ifCheckState: true
-				});
+					this.blockAgreement.handler({
+						ifSuccess: true,
+						ifCheckState: true
+					});
+				}
+				else
+				{
+					return loggerStageConsensus.info(`Ripple handleMessage, address ${address.toString("hex")}, block agreement data exchange, do not handle transaction amalgamate messages`);
+				}
 			}
 			
 
