@@ -85,8 +85,8 @@ class Connection extends AsyncEventEmitter
 			this.flush();
 		});
 
-		this.socket.on("close", () => {
-			this.logger.info(`Connection constructor, socket close, address: ${this.address ? this.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}, close success`);
+		this.socket.on("close", had_error => {
+			this.logger.info(`Connection constructor, socket close because of ${ had_error ? 'transmit error' : 'other reason' }, address: ${this.address ? this.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}, close success`);
 
 			this.writeChannelClosed = true;
 			this.readChannelClosed = true;
@@ -155,48 +155,49 @@ class Connection extends AsyncEventEmitter
 		// stop new data write to buffer
 		this.stopWriteToBuffer = true;
 
-		if(this.socket && !this.socket.destroyed)
+		if(this.allChannelClosed)
 		{
-			// wait specialized time for flush data from system to kernel
-			const closeTimeout = setTimeout(() => {
-				// try to close socket
-				if (!this.writeChannelClosed)
-				{
-					this.writeChannelClosed = true;
-					this.socket.end();
-				}
-			}, END_CLEAR_SEND_BUFFER_TIME_DEAY);
-			closeTimeout.unref();
-
-			// try to flush all data
-			(async () => {
-				// flush data
-				let flushResultCode = this.flush();
-				while (flushResultCode === 2 || flushResultCode === 3)
-				{
-					await new Promise((resolve, reject) => {
-						setTimeout(() => {
-							resolve();
-						});
-					})
-
-					flushResultCode = this.flush();
-				}
-			})().catch(e => {
-				this.logger.error(`Connection close, flush throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
-			}).finally(() => {
-				// try to clear close timeout
-				clearTimeout(closeTimeout)
-
-				// try to close socket
-				if (!this.writeChannelClosed) 
-				{
-					this.writeChannelClosed = true;
-					this.socket.end();
-				}
-			})
-			
+			return this.logger.error(`Connection close, repeat close socket, address: ${this.address ? this.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}, ${process[Symbol.for("getStackInfo")]()}`)
 		}
+	
+		// wait specialized time for flush data from system to kernel
+		const closeTimeout = setTimeout(() => {
+			// try to close socket
+			if (!this.writeChannelClosed)
+			{
+				this.writeChannelClosed = true;
+				this.socket.end();
+			}
+		}, END_CLEAR_SEND_BUFFER_TIME_DEAY);
+		closeTimeout.unref();
+
+		// try to flush all data
+		(async () => {
+			// flush data
+			let flushResultCode = this.flush();
+			while (flushResultCode === 2 || flushResultCode === 3)
+			{
+				await new Promise((resolve, reject) => {
+					setTimeout(() => {
+						resolve();
+					});
+				})
+
+				flushResultCode = this.flush();
+			}
+		})().catch(e => {
+			this.logger.error(`Connection close, flush throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+		}).finally(() => {
+			// try to clear close timeout
+			clearTimeout(closeTimeout)
+
+			// try to close socket
+			if (!this.writeChannelClosed) 
+			{
+				this.writeChannelClosed = true;
+				this.socket.end();
+			}
+		})
 	}
 
 	/**
