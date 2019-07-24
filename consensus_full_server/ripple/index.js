@@ -195,6 +195,13 @@ class Ripple
 		assert(typeof cmd === "number", `Ripple handleMessage, cmd should be a Number, now is ${typeof cmd}`);
 		assert(Buffer.isBuffer(data), `Ripple handleMessage, data should be an Buffer, now is ${typeof data}`);
 
+		if (this.stage === RIPPLE_STAGE_EMPTY)
+		{
+			logger.info(`Ripple handleMessage, ripple has not begin, do not process messages`);
+
+			return;
+		}
+
 		if(cmd >= 100 && cmd < 200)
 		{
 			if(this.stage === RIPPLE_STAGE_PERISH)
@@ -379,8 +386,6 @@ class Ripple
 		this.amalgamate.reset();
 		this.candidateAgreement.reset();
 		this.blockAgreement.reset();
-
-		this.stage = RIPPLE_STAGE_EMPTY;
 	}
 }
 
