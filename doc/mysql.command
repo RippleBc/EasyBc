@@ -1,3 +1,34 @@
+/********************************************* 初始化mysql *********************************************/
+
+# login
+mysql -uroot
+
+#
+use mysql
+
+# 修改mysql root密码
+ALTER user 'root'@'localhost' IDENTIFIED BY 'root';
+
+#修改mysql root的访问权限，支持远程访问
+update user set host = '%' where user = 'root';
+
+# 创建数据库
+CREATE DATABASE consensus
+
+/********************************************* 开启外网访问 *********************************************/
+
+#
+sudo vim /etc/mysql/my.cnf
+
+#
+[mysqld]
+bind-address=0.0.0.0
+
+#
+sudo service mysql restart
+
+/********************************************* 定时清理表中过期的数据 *********************************************/
+
 #
 sudo vim /etc/mysql/my.cnf
 
@@ -58,3 +89,14 @@ show events;
 
 #
 SELECT count(*) FROM counterHashes;
+
+/********************************************* 清除节点信息 *********************************************/
+
+#
+mysql -uroot -proot
+
+#
+DROP DATABASE consensus
+
+#
+CREATE DATABASE consensus
