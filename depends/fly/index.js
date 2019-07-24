@@ -155,7 +155,7 @@ exports.createServer = function(opts)
 	});
 
 	server.on("error", e => {
-		logger.error(`fly createServer, server throw exception, ${e}`);
+		logger.error(`fly createServer, server throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 
 		server.close();
 

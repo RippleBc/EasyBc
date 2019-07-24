@@ -96,7 +96,7 @@ class Connection extends AsyncEventEmitter
 		});
 
 		this.socket.on("error", e => {
-			this.logger.error(`Connection constructor, socket throw error, address: ${this.address ? this.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}, ${e}`);
+			this.logger.error(`Connection constructor, socket throw error, address: ${this.address ? this.address.toString("hex") : ""}, host: ${this.socket.remoteAddress}, port: ${this.socket.remotePort}, ${process[Symbol.for("getStackInfo")](e)}`);
 		});
 	}
 
@@ -160,7 +160,7 @@ class Connection extends AsyncEventEmitter
 			// wait specialized time for flush data from system to kernel
 			const closeTimeout = setTimeout(() => {
 				// try to close socket
-				if (!writeChannelClosed)
+				if (!this.writeChannelClosed)
 				{
 					this.writeChannelClosed = true;
 					this.socket.end();
@@ -189,7 +189,7 @@ class Connection extends AsyncEventEmitter
 				clearTimeout(closeTimeout)
 
 				// try to close socket
-				if (!writeChannelClosed) 
+				if (!this.writeChannelClosed) 
 				{
 					this.writeChannelClosed = true;
 					this.socket.end();
@@ -268,7 +268,7 @@ class Connection extends AsyncEventEmitter
 		}
 		catch(e)
 		{
-			this.logger.error(`Connection parse, receiveMessageChunkQueue.getMessage, ${e}`);
+			this.logger.error(`Connection parse, receiveMessageChunkQueue.getMessage, ${process[Symbol.for("getStackInfo")](e)}`);
 
 			// half close socket, socket will not write data, but will read data from socket
 			this.close();
@@ -297,7 +297,7 @@ class Connection extends AsyncEventEmitter
 
 						this.emit("meDoNotTrustOther");
 
-						this.logger.error(`Connection parse, invalid token data, ${e}`)
+						this.logger.error(`Connection parse, invalid token data, ${process[Symbol.for("getStackInfo")](e)}`)
 
 						return;
 					}
@@ -320,7 +320,7 @@ class Connection extends AsyncEventEmitter
 
 						this.emit("meDoNotTrustOther");
 
-						this.logger.error(`Connection parse, invalid token data, ${e}`)
+						this.logger.error(`Connection parse, invalid token data, ${process[Symbol.for("getStackInfo")](e)}`)
 
 						return;
 					}
@@ -368,7 +368,7 @@ class Connection extends AsyncEventEmitter
 			}
 			catch(e)
 			{
-				this.logger.error(`Connection parse, receiveMessageChunkQueue.getMessage, ${e}`);
+				this.logger.error(`Connection parse, receiveMessageChunkQueue.getMessage, ${process[Symbol.for("getStackInfo")](e)}`);
 
 				// half close socket, socket will not write data, but will read data from socket
 				this.close();
