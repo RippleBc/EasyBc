@@ -165,7 +165,8 @@ class Connection extends AsyncEventEmitter
 					this.writeChannelClosed = true;
 					this.socket.end();
 				}
-			}, END_CLEAR_SEND_BUFFER_TIME_DEAY).unref()
+			}, END_CLEAR_SEND_BUFFER_TIME_DEAY);
+			closeTimeout.unref();
 
 			// try to flush all data
 			(async () => {
