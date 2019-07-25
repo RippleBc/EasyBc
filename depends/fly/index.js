@@ -54,7 +54,7 @@ exports.createClient = async function(opts)
 	//
 	exports.connectionsManager.pushToAllConnections(connection)
 	
-	logger.trace(`fly createClient, create an connection to host: ${client.remoteAddress}, port: ${client.remotePort}`);
+	logger.info(`fly createClient, create an connection to host: ${client.remoteAddress}, port: ${client.remotePort}`);
 
 	try
 	{
@@ -81,7 +81,7 @@ exports.createClient = async function(opts)
 		}
 		else
 		{
-			logger.fatal(`fly createClient, authorize throw unexpected err, ${process[Symbol.for("getStackInfo")](errCode)}`);
+			logger.fatal(`fly createClient, authorize throw unexpected err, host: ${socket.remoteAddress}, port: ${socket.remotePort}, ${process[Symbol.for("getStackInfo")](errCode)}`);
 
 			connection.close();
 		}
@@ -91,7 +91,14 @@ exports.createClient = async function(opts)
 
 	logger.trace(`fly createClient, authorize successed, host: ${client.remoteAddress}, port: ${client.remotePort}`);
 
-	exports.connectionsManager.push(connection);
+	try {
+		exports.connectionsManager.push(connection);
+	}
+	catch (e) {
+		logger.fatal(`fly createClient, connectionsManager.push throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+
+		process.exit(1)
+	}
 
 	return connection;
 }
@@ -158,7 +165,7 @@ exports.createServer = function(opts)
 			}
 			else
 			{
-				logger.fatal(`fly createServer, authorize throw unexpected err, ${process[Symbol.for("getStackInfo")](errCode)}`);
+				logger.fatal(`fly createServer, authorize throw unexpected err, host: ${socket.remoteAddress}, port: ${socket.remotePort}, ${process[Symbol.for("getStackInfo")](errCode)}`);
 
 				connection.close();
 			}
