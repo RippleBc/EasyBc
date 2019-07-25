@@ -33,7 +33,7 @@ class ConnectionsManager extends AsyncEventEmitter
 			// add new connection
 			this.connections.push(connection);
 			
-			connection.logger.info(`ConnectionsManager push, new address ${connection.address.toString("hex")}`);
+			connection.logger.info(`ConnectionsManager push, new address ${connection.address.toString("hex")}, url: ${connection.socket.remoteAddress}:${connection.socket.remotePort}`);
 
 			this.emit("addressConnected", connection.address.toString("hex"));
 
@@ -51,10 +51,10 @@ class ConnectionsManager extends AsyncEventEmitter
 				// delete connectionClosed event listeners
 				this.connections[i].removeAllListeners("connectionClosed")
 
+				connection.logger.info(`ConnectionsManager push, address ${connections[i].address.toString("hex")}, url: ${connections[i].socket.remoteAddress}:${connections[i].socket.remotePort} has closed, replace with new connection, url: ${connection.socket.remoteAddress}:${connection.socket.remotePort}`);
+
 				// replace closed collection
 				this.connections[i] = connection
-
-				connection.logger.info(`ConnectionsManager push, address ${connection.address.toString("hex")} has closed, replace with new connection`);
 				
 				this.emit("addressConnected", connection.address.toString("hex"))
 
@@ -193,7 +193,7 @@ class ConnectionsManager extends AsyncEventEmitter
 				address: connection.address ? connection.address.toString("hex") : 'undefined',
 				url: connection.socket ? `${connection.socket.remoteAddress}:${connection.socket.remotePort}` : 'undefined',
 				readChannelClosed: connection.readChannelClosed,
-				writeChannelClosed: connection.writeChannelClose,
+				writeChannelClosed: connection.writeChannelClosed,
 				allChannelClosed: connection.allChannelClosed,
 				stopWriteToBuffer: connection.stopWriteToBuffer,
 				ifAuthorizeSuccess: connection.ifAuthorizeSuccess
