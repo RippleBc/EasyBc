@@ -306,7 +306,7 @@ class Counter extends Stage
 								|| this.ripple.blockAgreement.checkIfDataExchangeIsFinish() 
 								|| this.ripple.blockAgreement.checkDataExchangeIsProceeding() )
 								{
-									logger.error(`Counter handleMessage, address: ${address.toString('hex')}, want to fetching new transctions or reuse cached transactions, but own stage is not not support`)
+									logger.error(`Counter handleMessage, address: ${address.toString('hex')}, want to fetching new transctions or reuse cached transactions, but own stage is ${this.ripple.stage}`)
 
 									return this.cheatedNodes.push({
 										address: counterData.from.toString('hex'),

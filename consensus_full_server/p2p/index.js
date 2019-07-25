@@ -187,6 +187,14 @@ class P2p
 			}	
 		}
 	}
+
+	/**
+	 * @return {Array}
+	 */
+	getAllConnections()
+	{
+		return connectionsManager.getAllConnections();
+	}
 }
 
 

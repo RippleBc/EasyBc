@@ -9,6 +9,7 @@ class ConnectionsManager extends AsyncEventEmitter
 		super();
 
 		this.connections = [];
+		this.allConnections = []
 	}
 
 	/**
@@ -167,6 +168,39 @@ class ConnectionsManager extends AsyncEventEmitter
 				originConnections[i].logger.warn(`ConnectionManager clearInvalidConnections, close address ${originConnections[i].address.toString("hex")}`)
 			}
 		}
+	}
+
+	/**
+	 * @param {Connection} connection
+	 */
+	pushToAllConnections(connection) 
+	{
+		assert(connection instanceof Connection, `ConnectionsManager pushToAllConnections, connection should be an Connection Object, now is ${typeof connection}`);
+
+		this.allConnections.push(connection)
+	}
+
+	/**
+	 * @return {Array}
+	 */
+	getAllConnections()
+	{
+		const connectionsInfo = [];
+
+		for(connection of this.allConnections)
+		{
+			connectionsInfo.push({
+				address: connection.address ? connection.address.toString("hex") : 'undefined',
+				url: connection.socket ? `${connection.socket.remoteAddress}:${connection.socket.remotePort}` : 'undefined',
+				readChannelClosed: connection.readChannelClosed,
+				writeChannelClosed: connection.writeChannelClose,
+				allChannelClosed: connection.allChannelClosed,
+				stopWriteToBuffer: connection.stopWriteToBuffer,
+				ifAuthorizeSuccess: connection.ifAuthorizeSuccess
+			});
+		}
+
+		return connectionsInfo;
 	}
 }
 

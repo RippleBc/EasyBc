@@ -51,6 +51,9 @@ exports.createClient = async function(opts)
 		return promise;
 	})();
 
+	//
+	exports.connectionsManager.pushToAllConnections(connection)
+	
 	logger.trace(`fly createClient, create an connection to host: ${client.remoteAddress}, port: ${client.remotePort}`);
 
 	try
@@ -117,6 +120,9 @@ exports.createServer = function(opts)
 			dispatcher: dispatcher,
 			logger: logger
 		});
+
+		//
+		exports.connectionsManager.pushToAllConnections(connection)
 
 		logger.info(`fly createServer, receive an connection, host: ${socket.remoteAddress}, port: ${socket.remotePort}`);
 

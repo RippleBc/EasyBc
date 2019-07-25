@@ -7,6 +7,7 @@ const log4js = require("../logConfig");
 const logger = log4js.getLogger("command");
 
 const processor = process[Symbol.for("processor")]
+const p2p = process[Symbol.for("loggerP2p")];
 
 const app = express();
 app.use(bodyParser.urlencoded({
@@ -123,5 +124,12 @@ app.post("/deleteNodes", (req, res) => {
       code: OTH_ERR,
       msg: e.toString()
     })
+  })
+})
+
+app.post("/getAllConnections", (req, res) => {
+  res.send({
+    code: SUCCESS,
+    data: p2p.getAllConnections()
   })
 })
