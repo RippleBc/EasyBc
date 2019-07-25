@@ -41,6 +41,12 @@ class ConnectionsManager extends AsyncEventEmitter
 
 				this.emit("addressClosed", connection.address.toString("hex"));
 
+				if (connection.id !== this.connections[i].id) {
+					console.error(`id: ${connection.id}, address: ${connection.address.toString("hex")}, url: ${connection.socket.remoteAddress}:${connection.socket.remotePort}`)
+					console.error(`id: ${this.connections[i].id}, address: ${this.connections[i].address.toString("hex")}, url: ${this.connections[i].socket.remoteAddress}:${this.connections[i].socket.remotePort}`)
+					process.exit(1)
+				}
+				
 				this.connections.splice(i, 1);
 			})
 		}
@@ -61,6 +67,13 @@ class ConnectionsManager extends AsyncEventEmitter
 				connection.once("connectionClosed", () => {
 
 					this.emit("addressClosed", connection.address.toString("hex"))
+
+					if (connection.id !== this.connections[i].id)
+					{
+						console.error(`id: ${connection.id}, address: ${connection.address.toString("hex")}, url: ${connection.socket.remoteAddress}:${connection.socket.remotePort}`)
+						console.error(`id: ${this.connections[i].id}, address: ${this.connections[i].address.toString("hex")}, url: ${this.connections[i].socket.remoteAddress}:${this.connections[i].socket.remotePort}`)
+						process.exit(1)
+					}
 
 					this.connections.splice(i, 1);
 				})

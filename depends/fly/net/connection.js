@@ -21,6 +21,10 @@ const AUTHORIZE_RES_CMD = 2;
 const AUTHORIZE_SUCCESS_CMD = 3;
 const AUTHORIZE_FAILED_CMD = 4;
 
+const MAX_CONNECTION_ID = 19901112;
+
+let id = 0;
+
 class Connection extends AsyncEventEmitter
 {
 	constructor(opts)
@@ -30,6 +34,15 @@ class Connection extends AsyncEventEmitter
 		assert(opts.socket instanceof Socket, `Connection	constructor, opts.socket should be a Socket Object, now is ${typeof opts.socket}`);
 		assert(typeof opts.dispatcher	=== "function", `Connection	constructor, opts.dispatcher should be a Function, now is ${typeof opts.dispatcher}`);
 		assert(typeof opts.logger	=== "object", `Connection	constructor, opts.logger should be an Object, now is ${typeof opts.logger}`);
+
+		//
+		id ++;
+		if (id > MAX_CONNECTION_ID)
+		{
+			id = 0;
+		}
+
+		this.id = id;
 
 		this.socket = opts.socket;
 		this.dispatcher = opts.dispatcher;
