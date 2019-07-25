@@ -15,6 +15,8 @@ const p2p = process[Symbol.for("p2p")];
 const mysql = process[Symbol.for("mysql")];
 const unlManager = process[Symbol.for("unlManager")];
 
+const CONSENSUS_ABNORMAL_TIME_CONSUME_THRESHOULD = 500;
+
 class Stage extends AsyncEventEmitter
 {
 	constructor(opts)
@@ -96,9 +98,12 @@ class Stage extends AsyncEventEmitter
 
 		this.dataExchange = new Sender(result => {
 			// record data exchange time consume
-			mysql.saveDataExchangeTimeConsume(this.ripple.stage, this.dataExchange.consensusTimeConsume).catch(e => {
-				this.logger.error(`${this.name} Stage dataExchange, stage: ${this.ripple.stage}, saveDataExchangeTimeConsume throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
-			});
+			if (this.dataExchange.consensusTimeConsume > CONSENSUS_ABNORMAL_TIME_CONSUME_THRESHOULD)
+			{
+				mysql.saveDataExchangeTimeConsume(this.ripple.stage, this.dataExchange.consensusTimeConsume).catch(e => {
+					this.logger.error(`${this.name} Stage dataExchange, stage: ${this.ripple.stage}, saveDataExchangeTimeConsume throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+				});
+			}
 
 			// handle abnormal nodes
 			this.ripple.handleTimeoutNodes(this.dataExchange.timeoutNodes);
@@ -147,9 +152,13 @@ class Stage extends AsyncEventEmitter
 				this.logger.info(`${this.name} Stage stageSynchronize, stage: ${this.ripple.stage}, stage synchronize is over success`);
 
 				// record synchronize time consume
-				mysql.saveStageSynchronizeTimeConsume(this.ripple.stage, this.stageSynchronize.consensusTimeConsume).catch(e => {
-					this.logger.error(`${this.name} Stage stageSynchronize, stage: ${this.ripple.stage}, saveStageSynchronizeTimeConsume throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
-				});
+				if (this.stageSynchronize.consensusTimeConsume > CONSENSUS_ABNORMAL_TIME_CONSUME_THRESHOULD)
+				{	
+					mysql.saveStageSynchronizeTimeConsume(this.ripple.stage, this.stageSynchronize.consensusTimeConsume).catch(e => {
+						this.logger.error(`${this.name} Stage stageSynchronize, stage: ${this.ripple.stage}, saveStageSynchronizeTimeConsume throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+					});
+				}
+			
 
 				// handle abnormal nodes
 				this.ripple.handleTimeoutNodes(this.stageSynchronize.timeoutNodes);
@@ -197,10 +206,12 @@ class Stage extends AsyncEventEmitter
 					this.logger.warn(`${this.name} Stage stageSynchronize, stage: ${this.ripple.stage}, stage synchronize is over because of timeout`);
 
 					// record synchronize time consume
-					mysql.saveStageSynchronizeTimeConsume(this.ripple.stage, this.stageSynchronize.consensusTimeConsume).catch(e => {
-						this.logger.error(`${this.name} Stage stageSynchronize, stage: ${this.ripple.stage}, saveStageSynchronizeTimeConsume throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
-					});
-
+					if (this.stageSynchronize.consensusTimeConsume > CONSENSUS_ABNORMAL_TIME_CONSUME_THRESHOULD) {	
+						mysql.saveStageSynchronizeTimeConsume(this.ripple.stage, this.stageSynchronize.consensusTimeConsume).catch(e => {
+							this.logger.error(`${this.name} Stage stageSynchronize, stage: ${this.ripple.stage}, saveStageSynchronizeTimeConsume throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+						});
+					}
+					
 					// handle abnormal nodes
 					this.ripple.handleTimeoutNodes(this.stageSynchronize.timeoutNodes);
 					this.ripple.handleCheatedNodes(this.cheatedNodes);

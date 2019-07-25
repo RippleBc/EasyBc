@@ -10,14 +10,15 @@ const bufferToInt = utils.bufferToInt;
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerStageConsensus")];
 const privateKey = process[Symbol.for("privateKey")];
-const mysql = process[Symbol.for("mysql")];
 const unlManager = process[Symbol.for("unlManager")];
 
-const COUNTER_DATA_TIMESTAMP_CHEATED_LEFT_GAP = 60 * 1000;
-const COUNTER_DATA_TIMESTAMP_CHEATED_RIGHT_GAP = 60 * 1000;
+const COUNTER_DATA_TIMESTAMP_CHEATED_LEFT_GAP = 10 * 1000;
+const COUNTER_DATA_TIMESTAMP_CHEATED_RIGHT_GAP = 10 * 1000;
 
-const COUNTER_DATA_TIMESTAMP_STOP_SPREAD_LEFT_GAP = 30 * 1000;
-const COUNTER_DATA_TIMESTAMP_STOP_SPREAD_RIGHT_GAP = 30 * 1000;
+const COUNTER_DATA_TIMESTAMP_STOP_SPREAD_LEFT_GAP = 5 * 1000;
+const COUNTER_DATA_TIMESTAMP_STOP_SPREAD_RIGHT_GAP = 5 * 1000;
+
+const COUNTERS_MAP_CLEAR_INTERVAL = 12 * 1000;
 
 class Counter extends Stage
 {
@@ -35,6 +36,17 @@ class Counter extends Stage
 		this.stageSynchronizeTrigger = [];
 
 		this.syncMode = STAGE_SYNCHRONIZE_EMPTY_MODE;
+
+		this.countersMap = new Map();
+		this.countersMapClearInterval = setInterval(() => {
+			const now = Date.now();
+			
+			// filter expire couner data
+			this.countersMap = new Map(
+				[...this.countersMap].filter(([, v]) => v > now - COUNTERS_MAP_CLEAR_INTERVAL)
+			);
+		}, COUNTERS_MAP_CLEAR_INTERVAL);
+		this.countersMapClearInterval.unref();
 	}
 
 	reset()
@@ -254,101 +266,90 @@ class Counter extends Stage
 						})
 					}
 
-					const action = bufferToInt(counterData.action);
-
+					// 
 					const counterDataHash = counterData.hash().toString("hex");
-
-					// check if repeated
-					mysql.checkIfCounterRepeated(counterDataHash).then(repeated => {
-						// there is a timewindow here, so should check again, check if already in sync stage
-						if(this.state === STAGE_STATE_EMPTY && this.ripple.stage !== RIPPLE_STAGE_PERISH)
-						{
-							if(repeated)
-							{
-								logger.error(`Counter handleMessage, counter data is repeated, address: ${address.toString('hex')}`)
-
-								return this.cheatedNodes.push({
-									address: address.toString('hex'),
-									reason: CHEAT_REASON_REPEATED_COUNTER_DATA
-								})
-							}
 						
-							if(action === COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE)
-							{
-								logger.info(`Counter handleMessage, begin to synchronize stage negatively, stage: ${this.ripple.stage}, begin to fetch new transactions and amalgamate`);
-							}
-							else if(action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_TRANSACTION_CONSENSUS_FAILED)
-							{
-								logger.info(`Counter handleMessage, begin to synchronize stage negatively, stage: ${this.ripple.stage}, begin to use cached tranasctions and amalgamate because of transaction consensus failed`);
-							}
-							else if(action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_STAGE_FALL_BEHIND)
-							{
-								logger.info(`Counter handleMessage, begin to synchronize stage negatively, stage: ${this.ripple.stage}, begin to use cached tranasctions and amalgamate because of stage fall behind`);
-							}
-							else
-							{
-								logger.error(`Counter handleMessage, invalid action, ${action}`)
+					// check if counter is repeated
+					if (this.countersMap.has(counterDataHash))
+					{
+						logger.error(`Counter handleMessage, counter data is repeated, address: ${address.toString('hex')}`)
 
-								return this.cheatedNodes.push({
-									address: address.toString('hex'),
-									reason: CHEAT_REASON_INVALID_COUNTER_ACTION
-								})
-							}
+						return this.cheatedNodes.push({
+							address: address.toString('hex'),
+							reason: CHEAT_REASON_REPEATED_COUNTER_DATA
+						})
+					}
+					
+					// record counter 
+					this.countersMap.set(counterDataHash, timestamp);
 
-							// handle cheated nodes
-							if(action === COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE 
-								|| action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_TRANSACTION_CONSENSUS_FAILED)
-							{
-								// then amalgamate is processing, or block agreement is processing, or candidate agreement data exchange is processing
-								if(this.ripple.candidateAgreement.checkDataExchangeIsProceeding() 
-								|| this.ripple.amalgamate.checkIfDataExchangeIsFinish()
-								|| this.ripple.amalgamate.checkDataExchangeIsProceeding() 
-								|| this.ripple.blockAgreement.checkIfDataExchangeIsFinish() 
-								|| this.ripple.blockAgreement.checkDataExchangeIsProceeding() )
-								{
-									logger.error(`Counter handleMessage, address: ${address.toString('hex')}, want to fetching new transctions or reuse cached transactions, but own stage is ${this.ripple.stage}`)
+					const action = bufferToInt(counterData.action);
+					if(action === COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE)
+					{
+						logger.info(`Counter handleMessage, begin to synchronize stage negatively, stage: ${this.ripple.stage}, begin to fetch new transactions and amalgamate`);
+					}
+					else if(action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_TRANSACTION_CONSENSUS_FAILED)
+					{
+						logger.info(`Counter handleMessage, begin to synchronize stage negatively, stage: ${this.ripple.stage}, begin to use cached tranasctions and amalgamate because of transaction consensus failed`);
+					}
+					else if(action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_STAGE_FALL_BEHIND)
+					{
+						logger.info(`Counter handleMessage, begin to synchronize stage negatively, stage: ${this.ripple.stage}, begin to use cached tranasctions and amalgamate because of stage fall behind`);
+					}
+					else
+					{
+						logger.error(`Counter handleMessage, invalid action, ${action}`)
 
-									return this.cheatedNodes.push({
-										address: counterData.from.toString('hex'),
-										reason: CHEAT_REASON_MALICIOUS_COUNTER_ACTION
-									})
-								}
-							}
+						return this.cheatedNodes.push({
+							address: address.toString('hex'),
+							reason: CHEAT_REASON_INVALID_COUNTER_ACTION
+						})
+					}
 
-							// record fall behind node
-							if(action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_STAGE_FALL_BEHIND)
-							{
-								this.ripple.handleTimeoutNodes([{
-									address: counterData.from.toString('hex'),
-									reason: TIMEOUT_REASON_SLOW
-								}]);
-							}
-
-							// check if spread counter data
-							if(timestamp < now + COUNTER_DATA_TIMESTAMP_STOP_SPREAD_RIGHT_GAP && timestamp > now - COUNTER_DATA_TIMESTAMP_STOP_SPREAD_LEFT_GAP)
-							{
-								this.startStageSynchronizeSpreadMode({
-									counterData: counterData
-								});
-							}
-							else
-							{
-								this.startStageSynchronizeFetchMode({
-									counterData: counterData
-								})
-							}
-						}
-						
-						// check if still in counter stage
-						if(this.state !== STAGE_STATE_EMPTY)
+					// handle cheated nodes
+					if(action === COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE 
+						|| action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_TRANSACTION_CONSENSUS_FAILED)
+					{
+						// then amalgamate is processing, or block agreement is processing, or candidate agreement data exchange is processing
+						if(this.ripple.candidateAgreement.checkDataExchangeIsProceeding() 
+						|| this.ripple.amalgamate.checkIfDataExchangeIsFinish()
+						|| this.ripple.amalgamate.checkDataExchangeIsProceeding() 
+						|| this.ripple.blockAgreement.checkIfDataExchangeIsFinish() 
+						|| this.ripple.blockAgreement.checkDataExchangeIsProceeding() )
 						{
-							p2p.send(address, PROTOCOL_CMD_COUNTER_STAGE_SYNC_RESPONSE, this.counterData.serialize());
-						}
-					}).catch(e => {
-						logger.fatal(`Counter handleMessage, checkIfCounterRepeated throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+							logger.error(`Counter handleMessage, address: ${address.toString('hex')}, want to fetching new transctions or reuse cached transactions, but own stage is ${this.ripple.stage}`)
 
-						process.exit(1)
-					})
+							return this.cheatedNodes.push({
+								address: counterData.from.toString('hex'),
+								reason: CHEAT_REASON_MALICIOUS_COUNTER_ACTION
+							})
+						}
+					}
+
+					// record fall behind node
+					if(action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_STAGE_FALL_BEHIND)
+					{
+						this.ripple.handleTimeoutNodes([{
+							address: counterData.from.toString('hex'),
+							reason: TIMEOUT_REASON_SLOW
+						}]);
+					}
+
+					// check if spread counter data
+					if(timestamp < now + COUNTER_DATA_TIMESTAMP_STOP_SPREAD_RIGHT_GAP && timestamp > now - COUNTER_DATA_TIMESTAMP_STOP_SPREAD_LEFT_GAP)
+					{
+						this.startStageSynchronizeSpreadMode({
+							counterData: counterData
+						});
+					}
+					else
+					{
+						this.startStageSynchronizeFetchMode({
+							counterData: counterData
+						})
+					}
+			
+					p2p.send(address, PROTOCOL_CMD_COUNTER_STAGE_SYNC_RESPONSE, this.counterData.serialize());
 				}
 				else
 				{
