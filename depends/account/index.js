@@ -20,6 +20,12 @@ class Account
       allowZero: true,
       allowLess: true,
       default: Buffer.alloc(0)
+    }, {
+      length: 32,
+      name: "data",
+      allowZero: true,
+      allowLess: true,
+      default: Buffer.alloc(0)
     }];
 
     utils.defineProperties(this, fields, data);

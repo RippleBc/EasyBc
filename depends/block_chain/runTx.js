@@ -2,7 +2,6 @@ const async = require("async");
 const utils = require("../utils");
 const Transaction = require('../transaction');
 const assert = require("assert");
-
 const Buffer = utils.Buffer;
 const BN = utils.BN;
 
@@ -47,11 +46,21 @@ module.exports = async function(opts)
   }
   fromAccount.balance = utils.toBuffer(newBalance);
   
- 
+  //
   let toAccount = this.stateManager.cache.get(tx.to);
+
   // add coin
   newBalance = new BN(toAccount.balance).add(new BN(tx.value));
   toAccount.balance = utils.toBuffer(newBalance);
+
+  // run contract
+  const errMsg = this.runContract({
+    account: toAccount, 
+    txData: opts.tx.data})
+  if(errMsg)
+  {
+    await Promise.reject(`run contract error ${errMsg}`);
+  }
 
   await this.stateManager.putAccount(tx.from, fromAccount.serialize());
   await this.stateManager.putAccount(tx.to, toAccount.serialize());
