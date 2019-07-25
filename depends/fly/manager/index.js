@@ -51,7 +51,7 @@ class ConnectionsManager extends AsyncEventEmitter
 						&& ele.socket.remotePort === connection.socket.remotePort
 						&& ele.checkIfClosed()) {
 
-						this.logger.info(`ConnectionsManager delete connection from this.connections, id: ${connection.id}, address: ${connection.address.toString("hex")}, url:${connection.socket.remoteAddress}:${connection.socket.remotePort}`)
+						connection.logger.info(`ConnectionsManager delete connection from this.connections, id: ${connection.id}, address: ${connection.address.toString("hex")}, url:${connection.socket.remoteAddress}:${connection.socket.remotePort}`)
 						
 						this.connections.splice(i, 1);
 
@@ -88,7 +88,7 @@ class ConnectionsManager extends AsyncEventEmitter
 							&& ele.socket.remotePort === connection.socket.remotePort
 							&& ele.checkIfClosed()) {
 
-							this.logger.info(`ConnectionsManager delete connection from this.connections, id: ${connection.id}, address: ${connection.address.toString("hex")}, url:${connection.socket.remoteAddress}:${connection.socket.remotePort}`)
+							connection.logger.info(`ConnectionsManager delete connection from this.connections, id: ${connection.id}, address: ${connection.address.toString("hex")}, url:${connection.socket.remoteAddress}:${connection.socket.remotePort}`)
 
 							this.connections.splice(i, 1);
 
