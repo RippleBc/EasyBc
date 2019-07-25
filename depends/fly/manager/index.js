@@ -41,13 +41,23 @@ class ConnectionsManager extends AsyncEventEmitter
 
 				this.emit("addressClosed", connection.address.toString("hex"));
 
-				if (connection.id !== this.connections[i].id) {
-					console.error(`id: ${connection.id}, address: ${connection.address.toString("hex")}, url: ${connection.socket.remoteAddress}:${connection.socket.remotePort}`)
-					console.error(`id: ${this.connections[i].id}, address: ${this.connections[i].address.toString("hex")}, url: ${this.connections[i].socket.remoteAddress}:${this.connections[i].socket.remotePort}`)
-					process.exit(1)
+				// delete
+				for (let i = 0; i < this.connections.length; i++) {
+					const ele = this.connections[i];
+
+					if (ele.id === connection.id
+						&& ele.address.toString("hex") === connection.address.toString("hex")
+						&& ele.socket.remoteAddress === connection.socket.remoteAddress
+						&& ele.socket.remotePort === connection.socket.remotePort
+						&& ele.checkIfClosed()) {
+
+						this.logger.info(`ConnectionsManager delete connection from this.connections, id: ${connection.id}, address: ${connection.address.toString("hex")}, url:${connection.socket.remoteAddress}:${connection.socket.remotePort}`)
+						
+						this.connections.splice(i, 1);
+
+						break;
+					}
 				}
-				
-				this.connections.splice(i, 1);
 			})
 		}
 		else
@@ -68,14 +78,23 @@ class ConnectionsManager extends AsyncEventEmitter
 
 					this.emit("addressClosed", connection.address.toString("hex"))
 
-					if (connection.id !== this.connections[i].id)
-					{
-						console.error(`id: ${connection.id}, address: ${connection.address.toString("hex")}, url: ${connection.socket.remoteAddress}:${connection.socket.remotePort}`)
-						console.error(`id: ${this.connections[i].id}, address: ${this.connections[i].address.toString("hex")}, url: ${this.connections[i].socket.remoteAddress}:${this.connections[i].socket.remotePort}`)
-						process.exit(1)
-					}
+					// delete
+					for (let i = 0; i < this.connections.length; i++) {
+						const ele = this.connections[i];
 
-					this.connections.splice(i, 1);
+						if (ele.id === connection.id
+							&& ele.address.toString("hex") === connection.address.toString("hex")
+							&& ele.socket.remoteAddress === connection.socket.remoteAddress
+							&& ele.socket.remotePort === connection.socket.remotePort
+							&& ele.checkIfClosed()) {
+
+							this.logger.info(`ConnectionsManager delete connection from this.connections, id: ${connection.id}, address: ${connection.address.toString("hex")}, url:${connection.socket.remoteAddress}:${connection.socket.remotePort}`)
+
+							this.connections.splice(i, 1);
+
+							break;
+						}
+					}
 				})
 			}
 			else
