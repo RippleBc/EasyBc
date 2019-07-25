@@ -51,7 +51,7 @@ class ConnectionsManager extends AsyncEventEmitter
 				// delete connectionClosed event listeners
 				this.connections[i].removeAllListeners("connectionClosed")
 
-				connection.logger.info(`ConnectionsManager push, address ${connections[i].address.toString("hex")}, url: ${connections[i].socket.remoteAddress}:${connections[i].socket.remotePort} has closed, replace with new connection, url: ${connection.socket.remoteAddress}:${connection.socket.remotePort}`);
+				connection.logger.info(`ConnectionsManager push, address ${this.connections[i].address.toString("hex")}, url: ${this.connections[i].socket.remoteAddress}:${this.connections[i].socket.remotePort} has closed, replace with new connection, url: ${connection.socket.remoteAddress}:${connection.socket.remotePort}`);
 
 				// replace closed collection
 				this.connections[i] = connection
