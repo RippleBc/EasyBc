@@ -129,7 +129,16 @@ exports.createServer = function(opts)
 		connection.authorize().then(() => {
 			logger.info(`fly createServer, authorize successed, host: ${socket.remoteAddress}, port: ${socket.remotePort}`);
 			
-			exports.connectionsManager.push(connection);
+			try
+			{
+				exports.connectionsManager.push(connection);
+			}
+			catch(e)
+			{
+				logger.fatal(`fly createServer, connectionsManager.push throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+
+				process.exit(1)
+			}
 		}).catch(errCode => {
 			if(errCode === AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT)
 			{
