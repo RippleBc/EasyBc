@@ -19,8 +19,11 @@ flush privileges;
 #
 use mysql
 
-# 修改mysql root密码
-ALTER user 'root'@'localhost' IDENTIFIED BY 'root';
+# 修改登录模式，传统的密码登录模式
+UPDATE user SET plugin='mysql_native_password' where user='root';
+
+# 修改mysql root密码，这里注意密码必须包含大小写字母，数字以及特殊符号
+ALTER user 'root'@'localhost' IDENTIFIED BY 'Walker!@#$%12345';
 
 # 修改mysql root的访问权限，支持远程访问
 update user set host = '%' where user = 'root';
