@@ -187,7 +187,7 @@ class ConnectionsManager extends AsyncEventEmitter
 	{
 		const connectionsInfo = [];
 
-		for(connection of this.allConnections)
+		for(let connection of this.allConnections)
 		{
 			connectionsInfo.push({
 				address: connection.address ? connection.address.toString("hex") : 'undefined',
