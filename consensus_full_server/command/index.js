@@ -7,7 +7,7 @@ const log4js = require("../logConfig");
 const logger = log4js.getLogger("command");
 
 const processor = process[Symbol.for("processor")]
-const p2p = process[Symbol.for("loggerP2p")];
+const p2p = process[Symbol.for("p2p")];
 
 const app = express();
 app.use(bodyParser.urlencoded({
