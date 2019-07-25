@@ -9,7 +9,6 @@ class ConnectionsManager extends AsyncEventEmitter
 		super();
 
 		this.connections = [];
-		this.allConnections = []
 	}
 
 	/**
@@ -203,23 +202,13 @@ class ConnectionsManager extends AsyncEventEmitter
 	}
 
 	/**
-	 * @param {Connection} connection
-	 */
-	pushToAllConnections(connection) 
-	{
-		assert(connection instanceof Connection, `ConnectionsManager pushToAllConnections, connection should be an Connection Object, now is ${typeof connection}`);
-
-		this.allConnections.push(connection)
-	}
-
-	/**
 	 * @return {Array}
 	 */
 	getAllConnections()
 	{
 		const connectionsInfo = [];
 
-		for(let connection of this.allConnections)
+		for(let connection of this.connections)
 		{
 			connectionsInfo.push({
 				address: connection.address ? connection.address.toString("hex") : 'undefined',
