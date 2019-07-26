@@ -55,8 +55,16 @@ module.exports = async function(opts)
 
   // run contract
   const errMsg = this.runContract({
-    account: toAccount, 
-    txData: opts.tx.data})
+    stateManager: this.stateManager,
+    fromAccount: Object.assign(fromAccount, { 
+      address: tx.from 
+    }),
+    toAccount: Object.assign(toAccount, {
+      address: tx.to
+    }), 
+    txData: opts.tx.data,
+    txValue: opts.tx.value
+  })
   if(errMsg)
   {
     await Promise.reject(`run contract error ${errMsg}`);
