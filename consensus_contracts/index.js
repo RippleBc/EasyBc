@@ -1,4 +1,4 @@
-const CrowdFund = require("./crowdFund");
+const CrowdFundContract = require("./crowdFundContract");
 const utils = require("../depends/utils");
 const assert = require("assert");
 const StageManager = require("../depends/block_chain/stateManager");
@@ -15,7 +15,7 @@ class ContractsManager
   {
     this.contractsMap = new Map();
 
-    this.contractsMap.set(CrowdFund.id, CrowdFund);
+    this.contractsMap.set(CrowdFundContract.id, CrowdFundContract);
   }
 
   /**

@@ -98,40 +98,6 @@ app.use((req, res, next) => {
 
 /**
  * @param {String} url
- * @param {String} tx
- */
-module.exports.sendTransaction = async function(url, tx)
-{
-	assert(typeof url === "string", `net sendTransaction, url should be a String, now is ${typeof url}`);
-	assert(typeof tx === "string", `net sendTransaction, tx should be a String, now is ${typeof tx}`);
-
-	const options = {
-    method: "POST",
-    uri: `${url}/sendTransaction`,
-    body: {
-			tx: tx
-    },
-    json: true
-	};
-	
-	const promise = new Promise((resolve, reject) => {
-		rp(options).then(response => {
-			if(response.code !== SUCCESS)
-			{
-				reject(response.msg);
-			}
-
-			resolve();
-		}).catch(e => {
-			reject(e.toString());
-		});
-	});
-
-	return promise;
-}
-
-/**
- * @param {String} url
  * @param {String} address
  */
 module.exports.getAccountInfo = async function(url, address)

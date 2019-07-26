@@ -13,11 +13,11 @@ const COMMAND_FUND = 1;
 const COMMAND_REFUND = 2;
 const COMMAND_RECEIVE = 3;
 
-class CrowdFund extends Contract
+class CrowdFundContract extends Contract
 {
   constructor(data)
   {
-    super(CrowdFund.id);
+    super(CrowdFundContract.id);
 
     data = data || {};
 
@@ -96,10 +96,10 @@ class CrowdFund extends Contract
    */
   async commandHandler(stateManager, tx, fromAccount, toAccount)
   {
-    assert(stateManager instanceof StageManager, `CrowdFund run, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
-    assert(tx instanceof Transaction, `CrowdFund run, tx should be an instance of Transaction, now is ${typeof tx}`);
-    assert(fromAccount instanceof Account, `CrowdFund run, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
-    assert(toAccount instanceof Account, `CrowdFund run, toAccount should be an instance of Account, now is ${typeof toAccount}`);
+    assert(stateManager instanceof StageManager, `CrowdFundContract run, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
+    assert(tx instanceof Transaction, `CrowdFundContract run, tx should be an instance of Transaction, now is ${typeof tx}`);
+    assert(fromAccount instanceof Account, `CrowdFundContract run, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
+    assert(toAccount instanceof Account, `CrowdFundContract run, toAccount should be an instance of Account, now is ${typeof toAccount}`);
 
     // check timestamp
     const beginTimeBn = new BN(this.beginTime);
@@ -107,7 +107,7 @@ class CrowdFund extends Contract
     const now = Date.now();
     if(new BN(beginTimeBn).gtn(now) || new BN(endTimeBn).ltn(now))
     {
-      throw new Error(`CrowdFund, contract has expired`)
+      throw new Error(`CrowdFundContract, contract has expired`)
     }
 
     switch (commands[0]) {
@@ -140,21 +140,21 @@ class CrowdFund extends Contract
    */
   create({ beginTime, endTime, receiveAddress, target, limit })
   {
-    assert(Buffer.isBuffer(beginTime), `CrowdFund create, beginTime should be an Buffer, now is ${typeof beginTime}`);
-    assert(Buffer.isBuffer(endTime), `CrowdFund create, endTime should be an Buffer, now is ${typeof endTime}`);
-    assert(Buffer.isBuffer(receiveAddress), `CrowdFund create, receiveAddress should be an Buffer, now is ${typeof receiveAddress}`);
-    assert(Buffer.isBuffer(target), `CrowdFund create, target should be an Buffer, now is ${typeof target}`);
-    assert(Buffer.isBuffer(limit), `CrowdFund create, limit should be an Buffer, now is ${typeof limit}`);
+    assert(Buffer.isBuffer(beginTime), `CrowdFundContract create, beginTime should be an Buffer, now is ${typeof beginTime}`);
+    assert(Buffer.isBuffer(endTime), `CrowdFundContract create, endTime should be an Buffer, now is ${typeof endTime}`);
+    assert(Buffer.isBuffer(receiveAddress), `CrowdFundContract create, receiveAddress should be an Buffer, now is ${typeof receiveAddress}`);
+    assert(Buffer.isBuffer(target), `CrowdFundContract create, target should be an Buffer, now is ${typeof target}`);
+    assert(Buffer.isBuffer(limit), `CrowdFundContract create, limit should be an Buffer, now is ${typeof limit}`);
 
     // check fundTarget
     if (target.length <= 0)
     {
-      throw new Error('CrowdFund create, invalid target');
+      throw new Error('CrowdFundContract create, invalid target');
     }
 
     if (limit.length <= 0)
     {
-      throw new Error('CrowdFund create, invalid limit');
+      throw new Error('CrowdFundContract create, invalid limit');
     }
 
     this.beginTime = beginTime;
@@ -170,13 +170,13 @@ class CrowdFund extends Contract
    */
   fund(from, value)
   {
-    assert(Buffer.isBuffer(from), `CrowdFund fund, from should be an Buffer, now is ${typeof from}`);
-    assert(Buffer.isBuffer(value), `CrowdFund fund, value should be an Buffer, now is ${typeof value}`);
+    assert(Buffer.isBuffer(from), `CrowdFundContract fund, from should be an Buffer, now is ${typeof from}`);
+    assert(Buffer.isBuffer(value), `CrowdFundContract fund, value should be an Buffer, now is ${typeof value}`);
 
     // check limit
     if (new BN(this.limit).gt(new BN(value)))
     {
-      throw new Error(`CrowdFund fund, value should not little than 0x${this.limit.toString("hex")}, now is 0x${value.toString("hex")}`)
+      throw new Error(`CrowdFundContract fund, value should not little than 0x${this.limit.toString("hex")}, now is 0x${value.toString("hex")}`)
     }
 
     if (this.fundMap.has(from))
@@ -197,8 +197,8 @@ class CrowdFund extends Contract
    */
   refund(fromAddress, fromAccount)
   {
-    assert(fromAccount instanceof Account, `CrowdFund refund, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
-    assert(Buffer.isBuffer(fromAddress), `CrowdFund refund, fromAddress should be an Buffer, now is ${typeof fromAddress}`);
+    assert(fromAccount instanceof Account, `CrowdFundContract refund, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
+    assert(Buffer.isBuffer(fromAddress), `CrowdFundContract refund, fromAddress should be an Buffer, now is ${typeof fromAddress}`);
     
     if (this.fundMap.has(fromAddress)) {
       const fundValue = this.fundMap.get(fromAddress);
@@ -228,6 +228,6 @@ class CrowdFund extends Contract
   }
 }
 
-CrowdFund.id = "01";
+CrowdFundContract.id = "01";
 
-module.exports = CrowdFund;
+module.exports = CrowdFundContract;
