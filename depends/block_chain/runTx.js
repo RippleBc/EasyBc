@@ -54,20 +54,17 @@ module.exports = async function(opts)
   toAccount.balance = utils.toBuffer(newBalance);
 
   // run contract
-  const errMsg = this.runContract({
-    stateManager: this.stateManager,
-    fromAccount: Object.assign(fromAccount, { 
-      address: tx.from 
-    }),
-    toAccount: Object.assign(toAccount, {
-      address: tx.to
-    }), 
-    txData: opts.tx.data,
-    txValue: opts.tx.value
-  })
-  if(errMsg)
+  try 
   {
-    await Promise.reject(`run contract error ${errMsg}`);
+    await this.runContract({
+      stateManager: this.stateManager,
+      tx: tx,
+      fromAccount: fromAccount,
+      toAccount: toAccount
+    });
+  } 
+  catch (error) {
+    await Promise.reject(`run contract error ${error}`);
   }
 
   await this.stateManager.putAccount(tx.from, fromAccount.serialize());

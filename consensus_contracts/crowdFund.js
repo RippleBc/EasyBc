@@ -1,21 +1,35 @@
 const assert = require("assert");
 const Account = require("../depends/account");
 const utils = require("../depends/utils");
+const StageManager = require("../depends/block_chain/stateManager");
+const Transaction = require("../depends/transaction");
+const { STATE_DESTROYED } = require("./constant");
+const Contract = require("./contract");
 
 const rlp = utils.rlp;
 const BN = utils.BN;
 
-class CrowdFund
-{
-  static ip = "01";
+const COMMAND_FUND = 1;
+const COMMAND_REFUND = 2;
+const COMMAND_RECEIVE = 3;
 
+class CrowdFund extends Contract
+{
   constructor(data)
   {
+    super(CrowdFund.id);
+
     data = data || {};
 
     let fields = [{
       length: 32,
       name: "id",
+      allowZero: true,
+      allowLess: true,
+      default: Buffer.alloc(0)
+    }, {
+      length: 32,
+      name: "state",
       allowZero: true,
       allowLess: true,
       default: Buffer.alloc(0)
@@ -32,13 +46,23 @@ class CrowdFund
       allowLess: true,
       default: Buffer.alloc(0)
     }, {
-      length: 32,
+      length: 20,
       name: "receiveAddress",
+      default: Buffer.alloc(20)
+    }, {
+      length: 32,
+      name: "target",
       allowZero: true,
       allowLess: true,
       default: Buffer.alloc(0)
     }, {
-      length: 256,
+      length: 32,
+      name: "limit",
+      allowZero: true,
+      allowLess: true,
+      default: Buffer.alloc(0)
+    }, {
+      length: 6000,
       name: "fundInfo",
       allowZero: true,
       allowLess: true,
@@ -65,58 +89,145 @@ class CrowdFund
   }
 
   /**
+   * @param {StageManager} stateManager
+   * @param {Transaction} tx
    * @param {Account} fromAccount
    * @param {Account} toAccount
-   * @param {Array} command
-   * @param {Buffer} value
    */
-  run(fromAccount, toAccount, command, value)
+  async commandHandler(stateManager, tx, fromAccount, toAccount)
   {
-    assert(fromAccount instanceof Account, `CrowdFund runContract, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
-    assert(toAccount instanceof Account, `CrowdFund runContract, toAccount should be an instance of Account, now is ${typeof toAccount}`);
-    assert(Array.isArray(command), `CrowdFund runContract, command should be an Array, now is ${typeof command}`);
-    assert(Buffer.isBuffer(value), `CrowdFund runContract, value should be an Buffer, now is ${typeof value}`);
+    assert(stateManager instanceof StageManager, `CrowdFund run, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
+    assert(tx instanceof Transaction, `CrowdFund run, tx should be an instance of Transaction, now is ${typeof tx}`);
+    assert(fromAccount instanceof Account, `CrowdFund run, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
+    assert(toAccount instanceof Account, `CrowdFund run, toAccount should be an instance of Account, now is ${typeof toAccount}`);
+
+    // check timestamp
+    const beginTimeBn = new BN(this.beginTime);
+    const endTimeBn = new BN(this.endTime);
+    const now = Date.now();
+    if(new BN(beginTimeBn).gtn(now) || new BN(endTimeBn).ltn(now))
+    {
+      throw new Error(`CrowdFund, contract has expired`)
+    }
+
+    switch (commands[0]) {
+      case COMMAND_FUND:
+        {
+          this.fund(tx.from, tx.value);
+        }
+        break;
+
+      case COMMAND_REFUND:
+        {
+          this.refund(fromAccount, tx.value);
+        }
+        break;
+
+      case COMMAND_RECEIVE:
+        {
+          await this.receive(stateManager, tx.to);
+        }
+        break;
+    }
   }
 
   /**
-   * @param {Buffer} address 
+   * @param {Buffer} beginTime
+   * @param {Buffer} endTime
+   * @param {Buffer} receiveAddress
+   * @param {Buffer} target
+   * @param {Buffer} limit
+   */
+  create({ beginTime, endTime, receiveAddress, target, limit })
+  {
+    assert(Buffer.isBuffer(beginTime), `CrowdFund create, beginTime should be an Buffer, now is ${typeof beginTime}`);
+    assert(Buffer.isBuffer(endTime), `CrowdFund create, endTime should be an Buffer, now is ${typeof endTime}`);
+    assert(Buffer.isBuffer(receiveAddress), `CrowdFund create, receiveAddress should be an Buffer, now is ${typeof receiveAddress}`);
+    assert(Buffer.isBuffer(target), `CrowdFund create, target should be an Buffer, now is ${typeof target}`);
+    assert(Buffer.isBuffer(limit), `CrowdFund create, limit should be an Buffer, now is ${typeof limit}`);
+
+    // check fundTarget
+    if (target.length <= 0)
+    {
+      throw new Error('CrowdFund create, invalid target');
+    }
+
+    if (limit.length <= 0)
+    {
+      throw new Error('CrowdFund create, invalid limit');
+    }
+
+    this.beginTime = beginTime;
+    this.endTime = endTime;
+    this.receiveMoney = receiveAddress;
+    this.target = target;
+    this.limit = limit;
+  }
+
+  /**
+   * @param {Buffer} from 
    * @param {Buffer} value
    */
-  fund(address, value)
+  fund(from, value)
   {
-    assert(Buffer.isBuffer(address), `CrowdFund fund, address should be an Buffer, now is ${typeof address}`);
+    assert(Buffer.isBuffer(from), `CrowdFund fund, from should be an Buffer, now is ${typeof from}`);
     assert(Buffer.isBuffer(value), `CrowdFund fund, value should be an Buffer, now is ${typeof value}`);
 
-    if (this.fundMap.has(address))
+    // check limit
+    if (new BN(this.limit).gt(new BN(value)))
     {
-      const originValue = this.fundMap.get(address);
-      this.fundMap.set(address, new BN(originValue).add(new BN(value)).toBuffer())
+      throw new Error(`CrowdFund fund, value should not little than 0x${this.limit.toString("hex")}, now is 0x${value.toString("hex")}`)
+    }
+
+    if (this.fundMap.has(from))
+    {
+      const originValue = this.fundMap.get(from);
+
+      this.fundMap.set(from, new BN(originValue).add(new BN(value)).toBuffer())
     }
     else
     {
-      this.fundMap.set(address, value)
+      this.fundMap.set(from, value)
     }
   }
 
   /**
    * @param {Account} fromAccount
+   * @param {Buffer} fromAddress
    */
-  refund(fromAccount)
+  refund(fromAddress, fromAccount)
   {
     assert(fromAccount instanceof Account, `CrowdFund refund, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
+    assert(Buffer.isBuffer(fromAddress), `CrowdFund refund, fromAddress should be an Buffer, now is ${typeof fromAddress}`);
+    
+    if (this.fundMap.has(fromAddress)) {
+      const fundValue = this.fundMap.get(fromAddress);
 
-    if (this.fundMap.has(fromAccount.address)) {
-      const fundValue = this.fundMap.get(fromAccount.address);
-
-      fromAccount.balance = new BN(fromAccount.balance).add(new BN(fundValue));
+      fromAccount.balance = new BN(fromAccount.balance).add(new BN(fundValue)).toBuffer();
     }
   }
 
   /**
-   * @param {param} 
+   * @param {stateManager} stateManager
+   * @param {Buffer} contractAddress
    */
-  receiveMoney()
+  async receive(stateManager, contractAddress)
   {
-    
+    assert(stateManager instanceof StageManager, `ContractsManager receive, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
+    assert(Buffer.isBuffer(contractAddress), `ContractsManager receive, contractAddress should be an Buffer, now is ${typeof contractAddress}`);
+
+    const receiveAccount = await stateManager.cache.get(this.receiveAddress);
+    const contractAccount = await stateManager.cache.get(contractAddress);
+
+    // update receiveAccount
+    receiveAccount.balance = new BN(receiveAccount.balance).add(new BN(contractAccount.balance)).toBuffer();
+
+    // detroy contract
+    contractAccount.state = STATE_DESTROYED;
+    contractAccount.balance = 0;
   }
 }
+
+CrowdFund.id = "01";
+
+module.exports = CrowdFund;
