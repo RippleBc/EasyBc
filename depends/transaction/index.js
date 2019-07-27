@@ -36,10 +36,8 @@ class Transaction
       default: Buffer.alloc(0)
     }, {
       name: "data",
-      length: 32,
       alias: "input",
       allowZero: true,
-      allowLess: true,
       default: Buffer.alloc(0)
     }, {
       name: "v",

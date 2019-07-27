@@ -107,6 +107,8 @@ class Processor
 			}
 			else if(state === 1)
 			{
+				loggerConsensus.error(`Processor processBlock, throw exception, ${msg}`)
+
 				for(let i = 0; i < transactions.length; i++)
 				{
 					const transaction = transactions[i];

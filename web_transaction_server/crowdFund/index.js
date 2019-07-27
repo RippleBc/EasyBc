@@ -4,6 +4,8 @@ const assert = require("assert");
 const { QUERY_MAX_LIMIT, SUCCESS, OTH_ERR, PARAM_ERR } = require("../../constant");
 const CrowdFundContract = require("../../consensus_contracts/crowdFundContract");
 const { getAccountInfo } = require("../remote")
+const crowdFundContractId = require("../../consensus_contracts/crowdFundContract").id;
+const { COMMAND_CREATE } = require("../../consensus_contracts/constant");
 
 const app = process[Symbol.for("app")];
 const printErrorStack = process[Symbol.for("printErrorStack")];
@@ -83,7 +85,7 @@ app.get("/createCrowdFundContract", (req, res) => {
   assert(/^\d+$/.test(req.query.target), `getAccounts req.query.target should be a Number, now is ${typeof req.query.target}`);
   assert(/^\d+$/.test(req.query.limit), `getAccounts req.query.limit should be a Number, now is ${typeof req.query.limit}`);
 
-  const data = rlp.encode([toBuffer(parseInt(req.query.beginTime)), toBuffer(parseInt(req.query.endTime)), 
+  const data = rlp.encode([toBuffer(COMMAND_CREATE), Buffer.from(crowdFundContractId, "hex"), toBuffer(parseInt(req.query.beginTime)), toBuffer(parseInt(req.query.endTime)), 
     Buffer.from(req.query.receiveAddress, "hex"), toBuffer(parseInt(req.query.target)), 
     toBuffer(parseInt(req.query.limit))]).toString("hex");
 

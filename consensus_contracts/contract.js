@@ -6,6 +6,7 @@ const Transaction = require("../depends/transaction");
 const { COMMAND_CREATE, STATE_DESTROYED, STATE_LIVE } = require("./constant");
 
 const rlp = utils.rlp;
+const BN = utils.BN;
 
 class Contract 
 {
@@ -22,7 +23,7 @@ class Contract
    * @param {Account} toAccount
    */
   async run(timestamp, stateManager, tx, fromAccount, toAccount) {
-    assert(Buffer.isBuffer(timestamp), `Contract run, timestamp should be an Buffer, now is ${typeof opts.timestamp}`);
+    assert(Buffer.isBuffer(timestamp), `Contract run, timestamp should be an Buffer, now is ${typeof timestamp}`);
     assert(stateManager instanceof StageManager, `Contract run, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
     assert(tx instanceof Transaction, `Contract run, tx should be an instance of Transaction, now is ${typeof tx}`);
     assert(fromAccount instanceof Account, `Contract run, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
@@ -30,11 +31,11 @@ class Contract
 
     const commands = rlp.decode(tx.data)
 
-    if (commands[0] === COMMAND_CREATE) 
+    if (new BN(commands[0]).eqn(COMMAND_CREATE))
     {
-      this.id = this.contractId;
+      this.id = Buffer.from(this.contractId);
       this.state = STATE_LIVE;
-      this.create(commands.slice(2));
+      this.create(...commands.slice(2));
     }
     else
     {

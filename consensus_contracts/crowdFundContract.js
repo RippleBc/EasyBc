@@ -83,7 +83,7 @@ class CrowdFundContract extends Contract
           return this.fundMap;
         }
         
-        this.fundMap = new Map(rlp.decode(this.fundInfo));
+        this.fundMap = this.fundInfo.length > 0 ? new Map(rlp.decode(this.fundInfo)) : new Map();
       }
     });
   }
@@ -97,7 +97,7 @@ class CrowdFundContract extends Contract
    */
   async commandHandler(timestamp, stateManager, tx, fromAccount, toAccount)
   {
-    assert(Buffer.isBuffer(timestamp), `CrowdFundContract run, timestamp should be an Buffer, now is ${typeof opts.timestamp}`);
+    assert(Buffer.isBuffer(timestamp), `CrowdFundContract run, timestamp should be an Buffer, now is ${typeof timestamp}`);
     assert(stateManager instanceof StageManager, `CrowdFundContract run, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
     assert(tx instanceof Transaction, `CrowdFundContract run, tx should be an instance of Transaction, now is ${typeof tx}`);
     assert(fromAccount instanceof Account, `CrowdFundContract run, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
@@ -139,7 +139,7 @@ class CrowdFundContract extends Contract
    * @param {Buffer} target
    * @param {Buffer} limit
    */
-  create({ beginTime, endTime, receiveAddress, target, limit })
+  create(beginTime, endTime, receiveAddress, target, limit)
   {
     assert(Buffer.isBuffer(beginTime), `CrowdFundContract create, beginTime should be an Buffer, now is ${typeof beginTime}`);
     assert(Buffer.isBuffer(endTime), `CrowdFundContract create, endTime should be an Buffer, now is ${typeof endTime}`);
@@ -160,7 +160,7 @@ class CrowdFundContract extends Contract
 
     this.beginTime = beginTime;
     this.endTime = endTime;
-    this.receiveMoney = receiveAddress;
+    this.receiveAddress = receiveAddress;
     this.target = target;
     this.limit = limit;
   }
@@ -229,6 +229,6 @@ class CrowdFundContract extends Contract
   }
 }
 
-CrowdFundContract.id = 1000;
+CrowdFundContract.id = "01";
 
 module.exports = CrowdFundContract;

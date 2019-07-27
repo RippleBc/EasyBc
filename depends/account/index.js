@@ -22,6 +22,7 @@ class Account
       default: Buffer.alloc(0)
     }, {
       name: "data",
+      allowZero: true,
       default: Buffer.alloc(0)
     }];
 

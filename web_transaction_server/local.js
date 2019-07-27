@@ -4,6 +4,7 @@ const { getAccountInfo } = require("./remote");
 const assert = require("assert");
 const { Account: AccountModel, TransactionsHistory: TransactionsHistoryModel } = process[Symbol.for("models")];
 const { QUERY_MAX_LIMIT, SUCCESS, OTH_ERR, PARAM_ERR } = require("../constant");
+const rp = require("request-promise");
 
 const app = process[Symbol.for("app")];
 const printErrorStack = process[Symbol.for("printErrorStack")];
@@ -304,7 +305,13 @@ app.get("/sendTransaction", function (req, res) {
 		});
 	}
 	
-	module.exports.sendTransaction(req.query.url, req.query.from, req.query.to, req.query.value, req.query.data, req.query.privateKey).then(transactionHash => {
+	let data;
+	if(req.query.data)
+	{
+		data = utils.rlp([Buffer.from("00", "hex"), Buffer.from(req.query.data)]).toString("hex");
+	}
+
+	module.exports.sendTransaction(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(transactionHash => {
 		res.send({
 			code: SUCCESS,
 			data: transactionHash
@@ -414,7 +421,7 @@ module.exports.sendTransaction = async(url, from, to, value, data, privateKey) =
 	tx.nonce = (new BN(accountInfo.nonce).addn(1)).toArrayLike(Buffer);
 	tx.timestamp = Date.now();
 	tx.value = Buffer.from(value, "hex");
-	tx.data = data || "";
+	tx.data = data ? Buffer.from(data, "hex") : Buffer.alloc(0);
 	tx.to = Buffer.from(to, "hex");
 	tx.sign(Buffer.from(privateKey, "hex"));
 

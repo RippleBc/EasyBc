@@ -31,7 +31,9 @@ module.exports = async function(opts)
   let fromAccount = this.stateManager.cache.get(tx.from);
 
   // check fromAccount type
-  const accountType = this.constractsManager.checkAccountType(fromAccount);
+  const accountType = constractsManager.checkAccountType({
+    account: fromAccount
+  });
   if(accountType === ACCOUNT_TYPE_CONTRACT)
   {
     await Promise.reject(`runTx ${tx.hash(true).toString("hex")}, address: ${tx.from.toString("hex")}} is an contract account, not support directly transform`)
@@ -64,15 +66,16 @@ module.exports = async function(opts)
   // get toAccount
   let toAccount = this.stateManager.cache.get(tx.to);
 
+  // add coin
+  newBalance = new BN(toAccount.balance).add(new BN(tx.value));
+  toAccount.balance = utils.toBuffer(newBalance);
+
   // run contract
-  const txType = constractsManager.checkTxType();
-  if (txType === TX_TYPE_TRANSACTION)
-  {
-    // add coin
-    newBalance = new BN(toAccount.balance).add(new BN(tx.value));
-    toAccount.balance = utils.toBuffer(newBalance);
-  }
-  else 
+  const txType = constractsManager.checkTxType({
+    tx: tx
+  });
+
+  if (txType === TX_TYPE_CREATE_CONTRACT || txType === TX_TYPE_UPDATE_CONTRACT)
   {
     if (txType === TX_TYPE_CREATE_CONTRACT) 
     {
@@ -86,7 +89,7 @@ module.exports = async function(opts)
     }
 
     try {
-      await this.runContract({
+      await constractsManager.run({
         timestamp: timestamp,
         stateManager: this.stateManager,
         tx: tx,
@@ -98,7 +101,7 @@ module.exports = async function(opts)
       await Promise.reject(`runTx, run contract throw exception, ${e}`);
     }
   }
-
+  
   await this.stateManager.putAccount(tx.from, fromAccount.serialize());
   await this.stateManager.putAccount(tx.to, toAccount.serialize());
 }

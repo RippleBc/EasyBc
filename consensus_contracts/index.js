@@ -41,7 +41,7 @@ class ContractsManager
     if (commandId === COMMAND_CREATE)
     {
       // contract is not exist
-      contractId = commands[1];
+      contractId = commands[1].toString("hex");
 
       commands.splice(1, 1);
     }
@@ -80,21 +80,13 @@ class ContractsManager
   }
 
   /**
-   * @param {Buffer} timestamp
-   * @param {StageManager} stateManager
    * @param {Transaction} tx
-   * @param {Account} fromAccount
-   * @param {Account} toAccount
    * @return {Number}
    */
-  checkTxType({ timestamp, stateManager, tx, fromAccount, toAccount })
+  checkTxType({ tx })
   {
-    assert(Buffer.isBuffer(opts.timestamp), `ContractsManager checkTxType, timestamp should be an Buffer, now is ${typeof opts.timestamp}`);
-    assert(stateManager instanceof StageManager, `ContractsManager checkTxType, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
     assert(tx instanceof Transaction, `ContractsManager checkTxType, tx should be an instance of Transaction, now is ${typeof tx}`);
-    assert(fromAccount instanceof Account, `ContractsManager checkTxType, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
-    assert(toAccount instanceof Account, `ContractsManager checkTxType, toAccount should be an instance of Account, now is ${typeof toAccount}`);
-
+    
     if (tx.data.length <= 0) 
     {
       return TX_TYPE_TRANSACTION;
