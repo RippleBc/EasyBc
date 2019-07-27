@@ -4,7 +4,7 @@ const assert = require("assert");
 const StageManager = require("../depends/block_chain/stateManager");
 const Account = require("../depends/account");
 const Transaction = require("../depends/transaction");
-const { COMMAND_CREATE } = require("./constant");
+const { ACCOUNT_TYPE_NORMAL, ACCOUNT_TYPE_CONTRACT, COMMAND_TX, COMMAND_CREATE, TX_TYPE_TRANSACTION, TX_TYPE_CREATE_CONTRACT, TX_TYPE_UPDATE_CONTRACT } = require("./constant");
 
 const rlp = utils.rlp;
 const bufferToInt = utils.bufferToInt;
@@ -19,43 +19,22 @@ class ContractsManager
   }
 
   /**
+   * @param {Buffer} timestamp
    * @param {StageManager} stateManager
    * @param {Transaction} tx
    * @param {Account} fromAccount
    * @param {Account} toAccount
    */
-  run({ stateManager, tx, fromAccount, toAccount }) {
+  run({ timestamp, stateManager, tx, fromAccount, toAccount }) {
+    assert(Buffer.isBuffer(timestamp), `ContractsManager run, timestamp should be an Buffer, now is ${typeof timestamp}`);
     assert(stateManager instanceof StageManager, `ContractsManager run, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
     assert(tx instanceof Transaction, `ContractsManager run, tx should be an instance of Transaction, now is ${typeof tx}`);
     assert(fromAccount instanceof Account, `ContractsManager run, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
     assert(toAccount instanceof Account, `ContractsManager run, toAccount should be an instance of Account, now is ${typeof toAccount}`);
 
-    // transaction is not to operate an contract(command is empty)
-    if (tx.data.length <= 0) 
-    {
-      return;
-    }
-
-    let commands;
-    try 
-    {
-      commands = rlp.decode(tx.data)
-    } 
-    catch (err) 
-    {
-      // transaction is not to operate an contract(invalid commands)
-      return;
-    }
-    
-
     // get command id
+    const commands = rlp.decode(tx.data)
     const commandId = bufferToInt(commands[0]);
-
-    // transaction is not to operate an contract(constract is empty and command is no not to create an contract)
-    if (toAccount.data.length == 0 && commandId !== COMMAND_CREATE)
-    {
-      return
-    }
 
     // fetch contract id
     let contractId;
@@ -78,10 +57,64 @@ class ContractsManager
     const contractInstacne = new Contract(toAccount.data.length > 0 ? toAccount.data : undefined);
 
     // run contract
-    contractInstacne.run(stateManager, tx, fromAccount, toAccount);
+    contractInstacne.run(timestamp, stateManager, tx, fromAccount, toAccount);
 
     // update contract
     toAccount.data = contractInstacne.serialize();
+  }
+
+  /**
+   * 
+   * @param {Account} account
+   */
+  checkAccountType({account})
+  {
+    assert(account instanceof Account, `ContractsManager checkAccountType, account should be an instance of Account, now is ${typeof account}`);
+
+    if(account.data.length <= 0)
+    {
+      return ACCOUNT_TYPE_NORMAL;
+    }
+
+    return ACCOUNT_TYPE_CONTRACT;
+  }
+
+  /**
+   * @param {Buffer} timestamp
+   * @param {StageManager} stateManager
+   * @param {Transaction} tx
+   * @param {Account} fromAccount
+   * @param {Account} toAccount
+   * @return {Number}
+   */
+  checkTxType({ timestamp, stateManager, tx, fromAccount, toAccount })
+  {
+    assert(Buffer.isBuffer(opts.timestamp), `ContractsManager checkTxType, timestamp should be an Buffer, now is ${typeof opts.timestamp}`);
+    assert(stateManager instanceof StageManager, `ContractsManager checkTxType, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
+    assert(tx instanceof Transaction, `ContractsManager checkTxType, tx should be an instance of Transaction, now is ${typeof tx}`);
+    assert(fromAccount instanceof Account, `ContractsManager checkTxType, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
+    assert(toAccount instanceof Account, `ContractsManager checkTxType, toAccount should be an instance of Account, now is ${typeof toAccount}`);
+
+    if (tx.data.length <= 0) 
+    {
+      return TX_TYPE_TRANSACTION;
+    }
+
+    // get command id
+    const commands = rlp.decode(tx.data)
+    const commandId = bufferToInt(commands[0]);
+
+    if (commandId === COMMAND_TX)
+    {
+      return TX_TYPE_TRANSACTION;
+    }
+    
+    if (commandId === COMMAND_CREATE)
+    {
+      return TX_TYPE_CREATE_CONTRACT;
+    }
+
+    return TX_TYPE_UPDATE_CONTRACT;
   }
 }
 

@@ -63,6 +63,7 @@ module.exports = async function(opts) {
     try
     {
       await this.runTx({
+        timestamp: block.header.timestamp,
         tx: transaction,
         skipNonce: opts.skipNonce,
         skipBalance: opts.skipBalance

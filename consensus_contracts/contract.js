@@ -15,12 +15,14 @@ class Contract
   }
 
   /**
+   * @param {Buffer} timestamp
    * @param {StageManager} stateManager
    * @param {Transaction} tx
    * @param {Account} fromAccount
    * @param {Account} toAccount
    */
-  async run(stateManager, tx, fromAccount, toAccount) {
+  async run(timestamp, stateManager, tx, fromAccount, toAccount) {
+    assert(Buffer.isBuffer(timestamp), `Contract run, timestamp should be an Buffer, now is ${typeof opts.timestamp}`);
     assert(stateManager instanceof StageManager, `Contract run, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
     assert(tx instanceof Transaction, `Contract run, tx should be an instance of Transaction, now is ${typeof tx}`);
     assert(fromAccount instanceof Account, `Contract run, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
@@ -41,7 +43,7 @@ class Contract
         throw new Error(`CrowdFund, contract has destroyed`)
       }
 
-      this.commandHandler(stateManager, tx, fromAccount, toAccount);
+      this.commandHandler(timestamp, stateManager, tx, fromAccount, toAccount);
     }
   }
 

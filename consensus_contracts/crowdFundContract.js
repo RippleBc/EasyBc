@@ -89,13 +89,15 @@ class CrowdFundContract extends Contract
   }
 
   /**
+   * @param {Buffer} timestamp
    * @param {StageManager} stateManager
    * @param {Transaction} tx
    * @param {Account} fromAccount
    * @param {Account} toAccount
    */
-  async commandHandler(stateManager, tx, fromAccount, toAccount)
+  async commandHandler(timestamp, stateManager, tx, fromAccount, toAccount)
   {
+    assert(Buffer.isBuffer(timestamp), `CrowdFundContract run, timestamp should be an Buffer, now is ${typeof opts.timestamp}`);
     assert(stateManager instanceof StageManager, `CrowdFundContract run, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
     assert(tx instanceof Transaction, `CrowdFundContract run, tx should be an instance of Transaction, now is ${typeof tx}`);
     assert(fromAccount instanceof Account, `CrowdFundContract run, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
@@ -104,8 +106,7 @@ class CrowdFundContract extends Contract
     // check timestamp
     const beginTimeBn = new BN(this.beginTime);
     const endTimeBn = new BN(this.endTime);
-    const now = Date.now();
-    if(new BN(beginTimeBn).gtn(now) || new BN(endTimeBn).ltn(now))
+    if(new BN(beginTimeBn).gt(new BN(timestamp)) || new BN(endTimeBn).lt(new BN(timestamp)))
     {
       throw new Error(`CrowdFundContract, contract has expired`)
     }
@@ -228,6 +229,6 @@ class CrowdFundContract extends Contract
   }
 }
 
-CrowdFundContract.id = "01";
+CrowdFundContract.id = 1000;
 
 module.exports = CrowdFundContract;

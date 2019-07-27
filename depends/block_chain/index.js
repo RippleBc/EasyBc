@@ -3,7 +3,6 @@ const StateManager = require("./stateManager.js");
 const Block = require("../block");
 const assert = require("assert");
 const Trie = require("../merkle_patricia_tree");
-const constractsManager = require("../../consensus_contracts");
 
 const Buffer = utils.Buffer;
 
@@ -22,7 +21,6 @@ class BlockChain
     this.runBlockChain = require("./runBlockChain.js");
     this.runBlock = require("./runBlock.js");
     this.runTx = require("./runTx.js");
-    this.runContract = constractsManager.run;
   }
 
   /**
