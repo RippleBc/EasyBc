@@ -48,7 +48,7 @@ class TrieNodeDb
     }).then(() => {
       cb()
     }).catch(e => {
-      cb(`TrieNodeDb put, throw exception ${e}`)
+      cb(`TrieNodeDb put, key: ${key.toString("hex")}, val: ${val.toString("hex")}, throw exception ${e}`)
     })
   }
 
@@ -63,7 +63,7 @@ class TrieNodeDb
     }, e => {
       if(!!e)
       {
-        return cb(`TrieNodeDb del, trhow exception ${e}`)
+        return cb(`TrieNodeDb del, key: ${key.toString("hex")}, trhow exception ${e}`)
       }
 
       cb()
@@ -76,17 +76,21 @@ class TrieNodeDb
    */
   batch(opStack, options, cb)
   {
-    opStack = opStack.map(op => {
+    const dbOpts = opStack.map(op => {
       return {
         hash: op.key.toString("hex"),
         data: op.value.toString("hex")
       }
-    });
+    });  
 
-    this.TrieNode.create(opStack).then(() => {
+    this.TrieNode.create(dbOpts).then(() => {
       cb()
     }).catch(e => {
-      cb(e)
+      const errMsg = opStack.map(op => {
+        return `key: ${op.key.toString("hex")}, val: ${op.value.toString("hex")}`;
+      }).join(", ");
+
+      cb(`TrieNode batch, ${errMsg}, ${e}`);
     })
   }
 }

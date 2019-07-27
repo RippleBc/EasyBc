@@ -108,10 +108,10 @@ class CrowdFundContract extends Contract
     const endTimeBn = new BN(this.endTime);
     if(new BN(beginTimeBn).gt(new BN(timestamp)) || new BN(endTimeBn).lt(new BN(timestamp)))
     {
-      throw new Error(`CrowdFundContract, contract has expired`)
+      throw new Error(`CrowdFundContract commandHandler, contract has expired`)
     }
 
-    switch (commands[0]) {
+    switch (parseInt(commands[0])) {
       case COMMAND_FUND:
         {
           this.fund(tx.from, tx.value);
@@ -129,6 +129,10 @@ class CrowdFundContract extends Contract
           await this.receive(stateManager, tx.to);
         }
         break;
+      default:
+        {
+          await Promise.reject(`CrowdFundContract commandHandler, invaid command, ${parseInt(commands[0])}`)
+        }
     }
   }
 

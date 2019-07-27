@@ -33,7 +33,7 @@ class Contract
 
     if (new BN(commands[0]).eqn(COMMAND_CREATE))
     {
-      this.id = Buffer.from(this.contractId);
+      this.id = Buffer.from(this.contractId, "hex");
       this.state = STATE_LIVE;
       this.create(...commands.slice(2));
     }

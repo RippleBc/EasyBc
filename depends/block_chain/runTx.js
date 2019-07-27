@@ -64,19 +64,16 @@ module.exports = async function(opts)
   fromAccount.balance = utils.toBuffer(newBalance);
   
   // get toAccount
-  let toAccount = this.stateManager.cache.get(tx.to);
+  let toAccount;
 
-  // add coin
-  newBalance = new BN(toAccount.balance).add(new BN(tx.value));
-  toAccount.balance = utils.toBuffer(newBalance);
-
-  // run contract
+  // check tx type
   const txType = constractsManager.checkTxType({
     tx: tx
   });
 
   if (txType === TX_TYPE_CREATE_CONTRACT || txType === TX_TYPE_UPDATE_CONTRACT)
   {
+    // run contract
     if (txType === TX_TYPE_CREATE_CONTRACT) 
     {
       // generate new contract address
@@ -84,14 +81,16 @@ module.exports = async function(opts)
       const publicKey = privateToPublic(privateKey);
       const address = publicToAddress(publicKey);
 
-      //
+      // generate a new contract address
       tx.to = address;
     }
+
+    toAccount = this.stateManager.cache.get(tx.to);
 
     try {
       await constractsManager.run({
         timestamp: timestamp,
-        stateManager: this.stateManager,
+        stateManager: this.stateManager, 
         tx: tx,
         fromAccount: fromAccount,
         toAccount: toAccount
@@ -101,7 +100,16 @@ module.exports = async function(opts)
       await Promise.reject(`runTx, run contract throw exception, ${e}`);
     }
   }
-  
+  else
+  {
+    toAccount = this.stateManager.cache.get(tx.to);
+  }
+
+  // add coin
+  newBalance = new BN(toAccount.balance).add(new BN(tx.value));
+  toAccount.balance = utils.toBuffer(newBalance);
+
+  //
   await this.stateManager.putAccount(tx.from, fromAccount.serialize());
   await this.stateManager.putAccount(tx.to, toAccount.serialize());
 }
