@@ -42,10 +42,20 @@ class TrieNodeDb
    */
   put(key, val, options, cb)
   {
-    this.TrieNode.create({
-      hash: key.toString("hex"),
-      data: val.toString("hex")
-    }).then(() => {
+
+    (async () => {
+      const ifKeyExists = await this.TrieNode.exists({ 
+        hash: key.toString("hex")
+      });
+
+      if (!ifKeyExists)
+      {
+        await this.TrieNode.create({
+          hash: key.toString("hex"),
+          data: val.toString("hex")
+        })
+      }
+    })().then(() => {
       cb()
     }).catch(e => {
       cb(`TrieNodeDb put, throw exception ${e}`)
@@ -76,18 +86,24 @@ class TrieNodeDb
    */
   batch(opStack, options, cb)
   {
-    opStack = opStack.map(op => {
-      return {
-        hash: op.key.toString("hex"),
-        data: op.value.toString("hex")
-      }
-    });
+    (async () => {
+      for (let op of opStack) {
+        const ifKeyExists = await this.TrieNode.exists({
+          hash: op.key.toString("hex")
+        });
 
-    this.TrieNode.create(opStack).then(() => {
+        if (!ifKeyExists) {
+          await this.TrieNode.create({
+            hash: op.key.toString("hex"),
+            data: op.value.toString("hex")
+          })
+        }
+      }
+    })().then(() => {
       cb()
     }).catch(e => {
-      cb(e)
-    })
+      cb(`TrieNodeDb batch, throw exception ${e}`)
+    });
   }
 }
 

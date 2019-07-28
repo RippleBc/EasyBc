@@ -3,11 +3,11 @@ const { Readable } = require('readable-stream')
 // ScratchReadStream this is used to minimally dump the scratch into the db
 class ScratchReadStream extends Readable 
 {
-  constructor(scratch)
+  constructor(trie)
   {
     super({ objectMode: true })
 
-    this.scratch = scratch
+    this.trie = trie
     this.next = null
   }
 
@@ -16,14 +16,17 @@ class ScratchReadStream extends Readable
     if(!this._started) 
     {
       this._started = true
-      this.scratch._db.createReadStream().on('data', entry => {
+      this.trie._findDbNodes((nodeRef, node, key, next) => {
         this.push({
-          key: entry.key,
-          value: entry.value
+          key: nodeRef,
+          value: node.serialize()
         })
-      }).on('end', () => {
-        this.push(null);
-      });
+
+        next()
+      }, () => {
+        // close stream
+        this.push(null)
+      })
     }
   }
 }
