@@ -167,9 +167,7 @@ class CheckpointTrie extends BaseTrie
    */
   _createScratchReadStream(scratch)
   {
-    scratch = scratch || this._scratch
-    const trie = new BaseTrie(scratch, this.root)
-    return new ScratchReadStream(trie)
+    return new ScratchReadStream(scratch)
   }
 }
 
