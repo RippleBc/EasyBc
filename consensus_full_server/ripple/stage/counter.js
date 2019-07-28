@@ -253,7 +253,7 @@ class Counter extends Stage
 						});
 					}
 
-					// check timestamp
+					// check timestamp is valid
 					const now = Date.now();
 					const timestamp = bufferToInt(counterData.timestamp)
 					if(timestamp > now + COUNTER_DATA_TIMESTAMP_CHEATED_RIGHT_GAP || timestamp < now - COUNTER_DATA_TIMESTAMP_CHEATED_LEFT_GAP)
@@ -266,23 +266,7 @@ class Counter extends Stage
 						})
 					}
 
-					// 
-					const counterDataHash = counterData.hash().toString("hex");
-						
-					// check if counter is repeated
-					if (this.countersMap.has(counterDataHash))
-					{
-						logger.error(`Counter handleMessage, counter data is repeated, address: ${address.toString('hex')}`)
-
-						return this.cheatedNodes.push({
-							address: address.toString('hex'),
-							reason: CHEAT_REASON_REPEATED_COUNTER_DATA
-						})
-					}
-					
-					// record counter 
-					this.countersMap.set(counterDataHash, timestamp);
-
+					// check action is  valid
 					const action = bufferToInt(counterData.action);
 					if(action === COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE)
 					{
@@ -306,9 +290,21 @@ class Counter extends Stage
 						})
 					}
 
+					// check if counter is repeated
+					const counterDataHash = counterData.hash().toString("hex");
+					if (this.countersMap.has(counterDataHash))
+					{
+						logger.error(`Counter handleMessage, counter data is repeated, address: ${address.toString('hex')}`)
+
+						return this.cheatedNodes.push({
+							address: address.toString('hex'),
+							reason: CHEAT_REASON_REPEATED_COUNTER_DATA
+						})
+					}
+					this.countersMap.set(counterDataHash, timestamp);
+
 					// handle cheated nodes
-					if(action === COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE 
-						|| action === COUNTER_CONSENSUS_ACTION_REUSE_CACHED_TRANSACTIONS_AND_AMALGAMATE_BECAUSE_OF_TRANSACTION_CONSENSUS_FAILED)
+					if(action === COUNTER_CONSENSUS_ACTION_FETCH_NEW_TRANSACTIONS_AND_AMALGAMATE)
 					{
 						// then amalgamate is processing, or block agreement is processing, or candidate agreement data exchange is processing
 						if(this.ripple.candidateAgreement.checkDataExchangeIsProceeding() 
@@ -317,9 +313,9 @@ class Counter extends Stage
 						|| this.ripple.blockAgreement.checkIfDataExchangeIsFinish() 
 						|| this.ripple.blockAgreement.checkDataExchangeIsProceeding() )
 						{
-							logger.error(`Counter handleMessage, address: ${address.toString('hex')}, want to fetching new transctions or reuse cached transactions, but own stage is ${this.ripple.stage}`)
+							logger.error(`Counter handleMessage, address: ${address.toString('hex')}, want to fetching new transctions, but own stage is ${this.ripple.stage}`)
 
-							return this.cheatedNodes.push({
+							this.cheatedNodes.push({
 								address: counterData.from.toString('hex'),
 								reason: CHEAT_REASON_MALICIOUS_COUNTER_ACTION
 							})

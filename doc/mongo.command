@@ -1,5 +1,8 @@
 /********************************************* 初始化mongo *********************************************/
 
+#
+sudo service mongod start
+
 # login
 mongo
 
@@ -42,7 +45,7 @@ db.grantRolesToUser(
 /********************************************* 开启外网访问 *********************************************/
 
 #
-vim /etc/mongod.conf
+sudo vim /etc/mongod.conf
 
 # network interfaces
 net:
@@ -63,6 +66,9 @@ mongo --port 4406 -u "root" -p "root" --authenticationDatabase "admin"
 
 #
 use blockChain
+
+#
+db.auth("root", "root")
 
 #
 db.blocks.remove({})
