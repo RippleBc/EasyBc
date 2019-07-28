@@ -1,0 +1,35 @@
+blockChainHeight: 2
+root: f64bdb16ea33da9d60b2d337eda4df1bc4d71895e8cc114739e0b63f8f7559f0
+
+nodeRef: f64bdb16ea33da9d60b2d337eda4df1bc4d71895e8cc114739e0b63f8f7559f0, node: branch: [empty, empty, b46b62cd6bd6e8a5e03dec6c03ac1e874bfb086d5549183cdb921658a29a91e5, empty, empty, empty, empty, empty, TrieNode: leaf: [5,13,6,0,0,14,2,9,11,4,9,13,0,3,10,13,15,2,2,10,13,2,5,3,5,13,4,3,15,1,0,8,2,0,10,3,9,0,14, nonce=01&balance=00], empty, empty, empty, empty, empty, empty, empty], key: 
+
+
+nodeRef: b46b62cd6bd6e8a5e03dec6c03ac1e874bfb086d5549183cdb921658a29a91e5, node: leaf: [1,13,2,1,11,6,8,13,14,13,2,7,12,14,2,14,15,6,1,9,6,5,1,13,3,8,2,8,9,2,12,1,15,7,7,11,10,10,4, nonce=&balance=ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff], key: 2
+
+
+****************************** end ******************************
+
+root: 6501ba10b929ca625451a54ef5febf0a925ea2642409599625a5c32a8b3d6b73
+
+nodeRef: 6501ba10b929ca625451a54ef5febf0a925ea2642409599625a5c32a8b3d6b73, node: branch: [empty, empty, 1900df8bee961302594f93015b02a1ea4f893c2c9d41615bbb56343b86a9f7ec, empty, TrieNode: leaf: [2,3,9,5,13,1,6,5,9,9,15,11,5,15,14,13,7,11,11,15,13,0,1,4,14,11,3,1,2,14,3,10,4,10,13,10,7,13,9, nonce=&balance=10], empty, empty, empty, TrieNode: leaf: [5,13,6,0,0,14,2,9,11,4,9,13,0,3,10,13,15,2,2,10,13,2,5,3,5,13,4,3,15,1,0,8,2,0,10,3,9,0,14, nonce=01&balance=00], empty, empty, empty, empty, empty, empty, empty], key: 
+
+
+nodeRef: 1900df8bee961302594f93015b02a1ea4f893c2c9d41615bbb56343b86a9f7ec, node: leaf: [1,13,2,1,11,6,8,13,14,13,2,7,12,14,2,14,15,6,1,9,6,5,1,13,3,8,2,8,9,2,12,1,15,7,7,11,10,10,4, nonce=01&balance=ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffef], key: 2
+
+
+****************************** end ******************************
+
+root: aeac31c8f6280aa71cc007be79311138e2d45d10eb457f872a06192e641e2d12
+
+nodeRef: aeac31c8f6280aa71cc007be79311138e2d45d10eb457f872a06192e641e2d12, node: branch: [empty, empty, 71155508cc3375da0759e2ca59fb722312e0852c324429da442161100714f9f3, empty, TrieNode: leaf: [2,3,9,5,13,1,6,5,9,9,15,11,5,15,14,13,7,11,11,15,13,0,1,4,14,11,3,1,2,14,3,10,4,10,13,10,7,13,9, nonce=01&balance=00], empty, empty, empty, TrieNode: leaf: [5,13,6,0,0,14,2,9,11,4,9,13,0,3,10,13,15,2,2,10,13,2,5,3,5,13,4,3,15,1,0,8,2,0,10,3,9,0,14, nonce=01&balance=00], empty, empty, empty, empty, empty, empty, empty], key: 
+
+
+nodeRef: 71155508cc3375da0759e2ca59fb722312e0852c324429da442161100714f9f3, node: branch: [empty, be34271a1f93b601f25826262fb7dc4a1630c8bf7b546f9cf99c0744f64c64c5, empty, empty, empty, empty, TrieNode: leaf: [13,5,12,9,7,4,6,0,8,12,8,9,15,13,11,4,15,4,13,15,1,10,3,0,7,13,12,3,3,11,2,12,12,12,4,3,4,5, nonce=&balance=10], empty, empty, empty, empty, empty, empty, empty, empty, empty], key: 2
+
+
+nodeRef: be34271a1f93b601f25826262fb7dc4a1630c8bf7b546f9cf99c0744f64c64c5, node: leaf: [13,2,1,11,6,8,13,14,13,2,7,12,14,2,14,15,6,1,9,6,5,1,13,3,8,2,8,9,2,12,1,15,7,7,11,10,10,4, nonce=01&balance=ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffef], key: 2,1
+
+
+****************************** end ******************************
+
+over
