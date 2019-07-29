@@ -8,7 +8,7 @@ const { COMMAND_CREATE, STATE_DESTROYED, STATE_LIVE } = require("./constant");
 const rlp = utils.rlp;
 const BN = utils.BN;
 
-class Contract 
+class Constract 
 {
   constructor(contractId) 
   {
@@ -23,11 +23,11 @@ class Contract
    * @param {Account} toAccount
    */
   async run(timestamp, stateManager, tx, fromAccount, toAccount) {
-    assert(Buffer.isBuffer(timestamp), `Contract run, timestamp should be an Buffer, now is ${typeof timestamp}`);
-    assert(stateManager instanceof StageManager, `Contract run, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
-    assert(tx instanceof Transaction, `Contract run, tx should be an instance of Transaction, now is ${typeof tx}`);
-    assert(fromAccount instanceof Account, `Contract run, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
-    assert(toAccount instanceof Account, `Contract run, toAccount should be an instance of Account, now is ${typeof toAccount}`);
+    assert(Buffer.isBuffer(timestamp), `Constract run, timestamp should be an Buffer, now is ${typeof timestamp}`);
+    assert(stateManager instanceof StageManager, `Constract run, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
+    assert(tx instanceof Transaction, `Constract run, tx should be an instance of Transaction, now is ${typeof tx}`);
+    assert(fromAccount instanceof Account, `Constract run, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
+    assert(toAccount instanceof Account, `Constract run, toAccount should be an instance of Account, now is ${typeof toAccount}`);
 
     const commands = rlp.decode(tx.data)
 
@@ -49,8 +49,22 @@ class Contract
   }
 
   create() {
-    throw new Error(`Contract please inplement create`)
+    throw new Error(`Constract please inplement create`)
+  }
+
+  encodeArray(array) {
+    return rlp.encode(array);
+  }
+
+  encodeMap(map)
+  {
+    return rlp.encode([...map]);
+  }
+
+  encodeSet(set)
+  {
+    return rlp.encode([...set]);
   }
 }
 
-module.exports = Contract;
+module.exports = Constract;

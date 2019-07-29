@@ -4,11 +4,7 @@ const assert = require("assert");
 const Buffer = utils.Buffer;
 const BN = utils.BN;
 const constractsManager = require("../../consensus_contracts");
-const { ACCOUNT_TYPE_NORMAL, ACCOUNT_TYPE_CONTRACT, TX_TYPE_TRANSACTION, TX_TYPE_CREATE_CONTRACT, TX_TYPE_UPDATE_CONTRACT } = require("../../consensus_contracts/constant");
-
-const createPrivateKey = utils.createPrivateKey;
-const publicToAddress = utils.publicToAddress;
-const privateToPublic = utils.privateToPublic;
+const { ACCOUNT_TYPE_NORMAL, ACCOUNT_TYPE_CONSTRACT, TX_TYPE_TRANSACTION, TX_TYPE_CREATE_CONSTRACT, TX_TYPE_UPDATE_CONSTRACT } = require("../../consensus_contracts/constant");
 
 /**
  * Process a transaction.
@@ -34,7 +30,7 @@ module.exports = async function(opts)
   const accountType = constractsManager.checkAccountType({
     account: fromAccount
   });
-  if(accountType === ACCOUNT_TYPE_CONTRACT)
+  if(accountType === ACCOUNT_TYPE_CONSTRACT)
   {
     await Promise.reject(`runTx ${tx.hash(true).toString("hex")}, address: ${tx.from.toString("hex")}} is an contract account, not support directly transform`)
   }
@@ -64,28 +60,27 @@ module.exports = async function(opts)
   fromAccount.balance = utils.toBuffer(newBalance);
   
   // get toAccount
-  let toAccount;
+  const toAccount = this.stateManager.cache.get(tx.to);;
 
   // check tx type
   const txType = constractsManager.checkTxType({
     tx: tx
   });
 
-  if (txType === TX_TYPE_CREATE_CONTRACT || txType === TX_TYPE_UPDATE_CONTRACT)
+  // run contract
+  if (txType === TX_TYPE_CREATE_CONSTRACT || txType === TX_TYPE_UPDATE_CONSTRACT)
   {
-    // run contract
-    if (txType === TX_TYPE_CREATE_CONTRACT) 
+    if (txType === TX_TYPE_CREATE_CONSTRACT && (toAccount.balance.toString("hex") !== '' || toAccount.nonce.toString("hex") !== '')) 
     {
-      // generate new contract address
-      const privateKey = createPrivateKey();
-      const publicKey = privateToPublic(privateKey);
-      const address = publicToAddress(publicKey);
-
-      // generate a new contract address
-      tx.to = address;
+      await Promise.reject(`runTx, to address ${tx.to.toString("hex")} has existed, can not create`);
     }
 
-    toAccount = this.stateManager.cache.get(tx.to);
+    if (txType === TX_TYPE_UPDATE_CONSTRACT 
+      && toAccount.balance.toString("hex") === '' 
+      && toAccount.nonce.toString("hex") === '')
+      {
+        await Promise.reject(`runTx, to address ${tx.to.toString("hex")} not exist, can not update`);
+      }
 
     try {
       await constractsManager.run({
@@ -99,10 +94,6 @@ module.exports = async function(opts)
     catch (e) {
       await Promise.reject(`runTx, run contract throw exception, ${e}`);
     }
-  }
-  else
-  {
-    toAccount = this.stateManager.cache.get(tx.to);
   }
 
   // add coin

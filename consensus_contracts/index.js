@@ -1,10 +1,10 @@
-const CrowdFundContract = require("./crowdFundContract");
+const CrowdFundConstract = require("./crowdFundConstract");
 const utils = require("../depends/utils");
 const assert = require("assert");
 const StageManager = require("../depends/block_chain/stateManager");
 const Account = require("../depends/account");
 const Transaction = require("../depends/transaction");
-const { ACCOUNT_TYPE_NORMAL, ACCOUNT_TYPE_CONTRACT, COMMAND_TX, COMMAND_CREATE, TX_TYPE_TRANSACTION, TX_TYPE_CREATE_CONTRACT, TX_TYPE_UPDATE_CONTRACT } = require("./constant");
+const { ACCOUNT_TYPE_NORMAL, ACCOUNT_TYPE_CONSTRACT, COMMAND_TX, COMMAND_CREATE, TX_TYPE_TRANSACTION, TX_TYPE_CREATE_CONSTRACT, TX_TYPE_UPDATE_CONSTRACT } = require("./constant");
 
 const rlp = utils.rlp;
 const bufferToInt = utils.bufferToInt;
@@ -15,7 +15,7 @@ class ContractsManager
   {
     this.contractsMap = new Map();
 
-    this.contractsMap.set(CrowdFundContract.id, CrowdFundContract);
+    this.contractsMap.set(CrowdFundConstract.id, CrowdFundConstract);
   }
 
   /**
@@ -37,30 +37,30 @@ class ContractsManager
     const commandId = bufferToInt(commands[0]);
 
     // fetch contract id
-    let contractId;
+    let constractId;
     if (commandId === COMMAND_CREATE)
     {
       // contract is not exist
-      contractId = commands[1].toString("hex");
+      constractId = commands[1].toString("hex");
 
       commands.splice(1, 1);
     }
     else
     {
       // contract is exist
-      contractId = rlp.decode(toAccount.data)[0].toString("hex"); 
+      constractId = rlp.decode(toAccount.data)[0].toString("hex"); 
     }
     
     // get contract
-    const Contract = this.contractsMap.get(contractId)
+    const Constract = this.contractsMap.get(constractId)
 
-    const contractInstacne = new Contract(toAccount.data.length > 0 ? toAccount.data : undefined);
+    const constractInstacne = new Constract(toAccount.data.length > 0 ? toAccount.data : undefined);
 
     // run contract
-    contractInstacne.run(timestamp, stateManager, tx, fromAccount, toAccount);
+    constractInstacne.run(timestamp, stateManager, tx, fromAccount, toAccount);
 
     // update contract
-    toAccount.data = contractInstacne.serialize();
+    toAccount.data = constractInstacne.serialize();
   }
 
   /**
@@ -76,7 +76,7 @@ class ContractsManager
       return ACCOUNT_TYPE_NORMAL;
     }
 
-    return ACCOUNT_TYPE_CONTRACT;
+    return ACCOUNT_TYPE_CONSTRACT;
   }
 
   /**
@@ -103,10 +103,10 @@ class ContractsManager
     
     if (commandId === COMMAND_CREATE)
     {
-      return TX_TYPE_CREATE_CONTRACT;
+      return TX_TYPE_CREATE_CONSTRACT;
     }
 
-    return TX_TYPE_UPDATE_CONTRACT;
+    return TX_TYPE_UPDATE_CONSTRACT;
   }
 }
 
