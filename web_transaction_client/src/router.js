@@ -28,6 +28,11 @@ export default new Router({
       path: '/transactions',
       name: 'transactions',
       component: () => import('./views/Transactions.vue')
+    },
+    {
+      path: '/constracts',
+      name: 'constracts',
+      component: () => import('./views/Constracts.vue')
     }
   ]
 })

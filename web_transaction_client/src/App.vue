@@ -13,7 +13,11 @@
         <i class="el-icon-folder"></i>
         <span>交易</span>
       </el-menu-item>
-      <el-menu-item index="/transactions">
+      <el-menu-item index="/constracts">
+        <i class="el-icon-date"></i>
+        <span>合约</span>
+      </el-menu-item>
+       <el-menu-item index="/transactions">
         <i class="el-icon-date"></i>
         <span>记录</span>
       </el-menu-item>

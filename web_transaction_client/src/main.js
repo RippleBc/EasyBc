@@ -5,8 +5,10 @@ import store from './store'
 import './registerServiceWorker'
 import '~/../../web_depends/assets/css/theme-green/index.css'
 
-import { TableColumn, Table, DatePicker, Dialog, Card, Button, Select, Input, Notification, Menu, Submenu, MenuItemGroup, MenuItem } from 'element-ui';
+import { FormItem, Form, TableColumn, Table, DatePicker, Dialog, Card, Button, Select, Input, Notification, Menu, Submenu, MenuItemGroup, MenuItem } from 'element-ui';
 
+Vue.use(FormItem);
+Vue.use(Form);
 Vue.use(TableColumn);
 Vue.use(Table);
 Vue.use(DatePicker);
