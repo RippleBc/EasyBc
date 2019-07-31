@@ -44,7 +44,7 @@ class Constract
         throw new Error(`CrowdFund, contract has destroyed`)
       }
 
-      this.commandHandler(timestamp, stateManager, tx, fromAccount, toAccount);
+      await this.commandHandler(timestamp, stateManager, tx, fromAccount, toAccount);
     }
   }
 
