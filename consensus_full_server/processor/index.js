@@ -15,6 +15,8 @@ const Buffer = utils.Buffer;
 
 const update = new Update();
 
+let ifProcessingBlock = false;
+
 class Processor
 {
 	constructor()
@@ -83,6 +85,13 @@ class Processor
 	 */
 	async processBlock(opts)
 	{
+		if (ifProcessingBlock)
+		{
+			await Promise.reject("Processor processBlock, process block is exceeding, do not support processs multi blocks at the same time");
+		}
+
+		ifProcessingBlock = true;
+
 		const block = opts.block;
 		const generate = opts.generate || true;
 
@@ -138,6 +147,8 @@ class Processor
 			}
 		}
 		while(true);
+
+		ifProcessingBlock = false;
 	}
 }
 

@@ -8,7 +8,12 @@ const perishHashModelConfig = require('./perishHash');
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 
+const logger = process[Symbol.for("loggerMysql")];
+
 const Buffer = utils.Buffer;
+
+let ifDeletingRawTransactions = false;
+let ifGettingRawTransactions = false;
 
 class Mysql
 {
@@ -49,10 +54,27 @@ class Mysql
   {
     assert(typeof num === 'number', `Mysql getRawTransactions, num should be an Number, now is ${typeof num}`);
 
+    if (ifGettingRawTransactions)
+    {
+      await Promise.reject("Mysql getRawTransactions, can not gettingRawTransactions at the same time");
+    }
+    ifGettingRawTransactions = true;
+
+    while(ifDeletingRawTransactions)
+    {
+      await new Promise(resolve => {
+        setTimeout(() => {
+          resolve();
+        });
+      });
+    }
+
     const rawTransactions = await this.RawTransaction.findAll({
       limit: num
     });
     
+    ifGettingRawTransactions = false;
+
     const result = rawTransactions.map(rawTransaction => {
       return Buffer.from(rawTransaction.data, 'hex');
     })    
@@ -60,10 +82,19 @@ class Mysql
     return {
       transactions: result,
       deleteTransactions: async () => {
+
+        if (ifDeletingRawTransactions)
+        {
+          await Promise.reject("Mysql getRawTransactions, can not deleteTransactions at the same time");
+        }
+        ifDeletingRawTransactions = true;
+
         for(let rawTransaction of rawTransactions)
         {
           await rawTransaction.destroy();
         }
+
+        ifDeletingRawTransactions = false;
       }
     };
   }

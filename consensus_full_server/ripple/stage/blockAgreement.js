@@ -101,6 +101,8 @@ class BlockAgreement extends Stage
 
 			// begin process block
 			(async () => {
+
+				// notice !!!!!! processor can only process one block at one time, or it will throw an exception.
 				await this.ripple.processor.processBlock({
 					block: consensusBlock
 				});
