@@ -110,7 +110,7 @@ class CrowdFundConstract extends Constract
 
     const beginTimeBn = new BN(this.beginTime);
     const endTimeBn = new BN(this.endTime);
-    
+
     switch (bufferToInt(commands[0])) {
       case COMMAND_FUND:
         {
@@ -129,7 +129,7 @@ class CrowdFundConstract extends Constract
             throw new Error(`CrowdFundConstract commandHandler, constract has not end, can not refund`)
           }
 
-          this.refund(fromAccount, tx.value);
+          this.refund(tx.from, fromAccount, toAccount);
         }
         break;
 
@@ -139,7 +139,7 @@ class CrowdFundConstract extends Constract
             throw new Error(`CrowdFundConstract commandHandler, constract has not end, can not receive`)
           }
 
-          await this.receive(stateManager, tx.to);
+          await this.receive(stateManager, toAccount);
         }
         break;
       default:
@@ -213,24 +213,34 @@ class CrowdFundConstract extends Constract
   }
 
   /**
-   * @param {Account} fromAccount
    * @param {Buffer} fromAddress
+   * @param {Account} fromAccount
+   * @param {Buffer} toAccount
    */
-  refund(fromAddress, fromAccount)
+  refund(fromAddress, fromAccount, toAccount)
   {
-    assert(fromAccount instanceof Account, `CrowdFundConstract refund, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
     assert(Buffer.isBuffer(fromAddress), `CrowdFundConstract refund, fromAddress should be an Buffer, now is ${typeof fromAddress}`);
-    
+    assert(fromAccount instanceof Account, `CrowdFundConstract refund, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
+    assert(toAccount instanceof Account, `CrowdFundConstract refund, toAccount should be an instance of Account, now is ${typeof toAccount}`);
+
+    if (new BN(toAccount.balance).gte(new BN(this.target)))
+    {
+      throw new Error(`CrowdFundConstract refund, target has reached, can not refund`);
+    }
+
     // check if has fund
     if (this.fundMap.has(fromAddress.toString("hex"))) {
 
       // get fund
       const fundValue = this.fundMap.get(fromAddress.toString("hex"));
 
-      // refund
+      // refund, add
       fromAccount.balance = new BN(fromAccount.balance).add(new BN(fundValue)).toBuffer();
 
-      // delte
+      // sub
+      toAccount.balance = new BN(toAccount.balance).sub(new BN(fundValue)).toBuffer();
+
+      // delete
       this.fundMap.delete(fromAddress.toString("hex"))
 
 
@@ -241,25 +251,29 @@ class CrowdFundConstract extends Constract
 
   /**
    * @param {stateManager} stateManager
-   * @param {Buffer} contractAddress
+   * @param {Account} toAccount
    */
-  async receive(stateManager, contractAddress)
+  async receive(stateManager, toAccount)
   {
     assert(stateManager instanceof StageManager, `ContractsManager receive, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
-    assert(Buffer.isBuffer(contractAddress), `ContractsManager receive, contractAddress should be an Buffer, now is ${typeof contractAddress}`);
+    assert(toAccount instanceof Account, `ContractsManager refund, toAccount should be an instance of Account, now is ${typeof toAccount}`);
+
+    if (new BN(toAccount.balance).lt(new BN(this.target))) {
+      throw new Error(`CrowdFundConstract refund, target has not reached, can not receive`);
+    }
 
     // get receive account
     const receiveAccount = await stateManager.cache.get(this.receiveAddress);
 
-    // get contract account
-    const contractAccount = await stateManager.cache.get(contractAddress);
-
     // update receiveAccount
-    receiveAccount.balance = new BN(receiveAccount.balance).add(new BN(contractAccount.balance)).toBuffer();
+    receiveAccount.balance = new BN(receiveAccount.balance).add(new BN(toAccount.balance)).toBuffer();
+    await stateManager.putAccount(this.receiveAddress, receiveAccount.serialize());
 
     // detroy contract
-    contractAccount.state = STATE_DESTROYED;
-    contractAccount.balance = 0;
+    this.state = STATE_DESTROYED;
+
+    // reset balance
+    toAccount.balance = 0;
   }
 }
 

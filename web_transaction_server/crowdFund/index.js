@@ -121,7 +121,7 @@ app.get("/getCrowdFundContract", (req, res) => {
   }
 
   getAccountInfo(req.query.url, req.query.address).then(account => {
-    if(new BN(account.balance).eqn(0))
+    if (new BN(account.balance).eqn(0) && new BN(account.nonce).eqn(0) && account.data.length <= 0)
     {
       return res.json({
         code: OTH_ERR,

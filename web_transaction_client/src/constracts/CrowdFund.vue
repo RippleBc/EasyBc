@@ -224,6 +224,10 @@ export default {
           });
 
           this.constractAddress = data.ctAddress;
+
+          setTimeout(() => {
+            this.search();
+          }, 1000);
         }
         else
         {
@@ -351,7 +355,7 @@ export default {
           });
         }
       }).finally(() => {
-        this.receive = false;
+        this.receiveVisible = false;
       });
     }
   },
