@@ -1,7 +1,7 @@
 const utils = require("../../depends/utils");
 const { sendTransaction } = require("../local");
 const assert = require("assert");
-const { QUERY_MAX_LIMIT, SUCCESS, OTH_ERR, PARAM_ERR } = require("../../constant");
+const { SUCCESS, OTH_ERR, PARAM_ERR } = require("../../constant");
 const CrowdFundConstract = require("../../consensus_contracts/crowdFundConstract");
 const { getAccountInfo } = require("../remote")
 const crowdFundConstractId = require("../../consensus_contracts/crowdFundConstract").id;
@@ -17,6 +17,7 @@ const toBuffer = utils.toBuffer;
 const createPrivateKey = utils.createPrivateKey;
 const privateToPublic = utils.privateToPublic;
 const publicToAddress = utils.publicToAddress;
+const bufferToInt = utils.bufferToInt;
 
 const COMMAND_FUND = 100;
 const COMMAND_REFUND = 101;
@@ -27,13 +28,6 @@ app.get("/createCrowdFundContract", (req, res) => {
     return res.send({
       code: PARAM_ERR,
       msg: "param error, need url"
-    });
-  }
-
-  if (!req.query.from) {
-    return res.send({
-      code: PARAM_ERR,
-      msg: "param error, need from"
     });
   }
 
@@ -147,22 +141,25 @@ app.get("/getCrowdFundContract", (req, res) => {
     const crowdFundConstract = new CrowdFundConstract(account.data);
 
     res.json({
-      address: req.query.address,
-      nonce: account.nonce.toString("hex"),
-      balance: account.balance.toString("hex"),
-      id: crowdFundConstract.id.toString("hex"),
-      state: crowdFundConstract.state.toString("hex"),
-      beginTime: crowdFundConstract.beginTime.toString("hex"),
-      endTime: crowdFundConstract.endTime.toString("hex"),
-      receiveAddress: crowdFundConstract.receiveAddress.toString("hex"),
-      target: crowdFundConstract.target.toString("hex"),
-      limit: crowdFundConstract.limit.toString("hex"),
-      fundInfo: rlp.decode(crowdFundConstract.fundInfo).map(entry => {
-        return {
-          address: `0x${entry[0].toString()}`,
-          value: `0x${entry[1].toString("hex")}`
-        }
-      }),
+      code: SUCCESS,
+      data: {
+        address: req.query.address,
+        nonce: bufferToInt(account.nonce),
+        balance: bufferToInt(account.balance),
+        id: crowdFundConstract.id.toString("hex"),
+        state: bufferToInt(crowdFundConstract.state),
+        beginTime: bufferToInt(crowdFundConstract.beginTime),
+        endTime: bufferToInt(crowdFundConstract.endTime),
+        receiveAddress: crowdFundConstract.receiveAddress.toString("hex"),
+        target: bufferToInt(crowdFundConstract.target),
+        limit: bufferToInt(crowdFundConstract.limit),
+        fundInfo: crowdFundConstract.fundInfo.length > 0 ? rlp.decode(crowdFundConstract.fundInfo).map(entry => {
+          return [
+            `0x${entry[0].toString()}`,
+            `0x${entry[1].toString("hex")}`
+          ]
+        }) : [],
+      }
     })
   }).catch(e => {
     res.json({
@@ -177,13 +174,6 @@ app.get("/fundCrowdFundContract", (req, res) => {
     return res.send({
       code: PARAM_ERR,
       msg: "param error, need url"
-    });
-  }
-
-  if (!req.query.from) {
-    return res.send({
-      code: PARAM_ERR,
-      msg: "param error, need from"
     });
   }
 
@@ -226,13 +216,6 @@ app.get("/reFundCrowdFundContract", (req, res) => {
     });
   }
 
-  if (!req.query.from) {
-    return res.send({
-      code: PARAM_ERR,
-      msg: "param error, need from"
-    });
-  }
-
   if (!req.query.to) {
     return res.send({
       code: PARAM_ERR,
@@ -269,13 +252,6 @@ app.get("/receiveCrowdFundContract", (req, res) => {
     return res.send({
       code: PARAM_ERR,
       msg: "param error, need url"
-    });
-  }
-
-  if (!req.query.from) {
-    return res.send({
-      code: PARAM_ERR,
-      msg: "param error, need from"
     });
   }
 

@@ -32,9 +32,9 @@ export default {
 <style scoped>
 .container {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-start;
   width: 100%;
   line-height: 50px;
 }

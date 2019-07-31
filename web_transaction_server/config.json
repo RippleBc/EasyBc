@@ -6,6 +6,6 @@
 		"host": "localhost",
 		"port": 3306,
 		"user": "root",
-		"password": "Walker!@#$%12345"
+		"password": "root"
 	}
 }

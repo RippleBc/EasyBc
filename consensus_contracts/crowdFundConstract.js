@@ -108,12 +108,13 @@ class CrowdFundConstract extends Constract
 
     const commands = rlp.decode(tx.data);
 
+    const beginTimeBn = new BN(this.beginTime);
+    const endTimeBn = new BN(this.endTime);
+    
     switch (bufferToInt(commands[0])) {
       case COMMAND_FUND:
         {
           // check timestamp
-          const beginTimeBn = new BN(this.beginTime);
-          const endTimeBn = new BN(this.endTime);
           if (new BN(beginTimeBn).gt(new BN(timestamp)) || new BN(endTimeBn).lt(new BN(timestamp))) {
             throw new Error(`CrowdFundConstract commandHandler, contract has expired`)
           }
