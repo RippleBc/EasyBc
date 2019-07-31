@@ -184,7 +184,7 @@ class Update
 					});
 					if(result.state !== 0)
 					{
-						logger.fatal(`Update synchronize, runBlockChain failed, please clear the entrie database and synchronize again, ${process[Symbol.for("getStackInfo")]()}`);
+						logger.fatal(`Update synchronize, runBlockChain failed, please clear the entrie database and synchronize again, ${result.msg}, ${process[Symbol.for("getStackInfo")]()}`);
 						
 						process.exit(1);
 					}
