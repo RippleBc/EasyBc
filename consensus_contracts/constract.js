@@ -41,7 +41,7 @@ class Constract
     {
       // check state
       if (new BN(this.state).eqn(STATE_DESTROYED)) {
-        throw new Error(`CrowdFund, contract has destroyed`)
+        throw new Error(`Constract, contract has destroyed`)
       }
 
       await this.commandHandler(timestamp, stateManager, tx, fromAccount, toAccount);

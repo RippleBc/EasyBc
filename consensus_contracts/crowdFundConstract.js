@@ -255,11 +255,11 @@ class CrowdFundConstract extends Constract
    */
   async receive(stateManager, toAccount)
   {
-    assert(stateManager instanceof StageManager, `ContractsManager receive, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
-    assert(toAccount instanceof Account, `ContractsManager refund, toAccount should be an instance of Account, now is ${typeof toAccount}`);
+    assert(stateManager instanceof StageManager, `CrowdFundConstract receive, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
+    assert(toAccount instanceof Account, `CrowdFundConstract receive, toAccount should be an instance of Account, now is ${typeof toAccount}`);
 
     if (new BN(toAccount.balance).lt(new BN(this.target))) {
-      throw new Error(`CrowdFundConstract refund, target has not reached, can not receive`);
+      throw new Error(`CrowdFundConstract receive, target has not reached, can not receive`);
     }
 
     // get receive account
