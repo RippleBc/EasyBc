@@ -70,18 +70,21 @@ module.exports = async function(opts)
   // run contract
   if (txType === TX_TYPE_CREATE_CONSTRACT || txType === TX_TYPE_UPDATE_CONSTRACT)
   {
-    if (txType === TX_TYPE_CREATE_CONSTRACT && (toAccount.balance.toString("hex") !== '' || toAccount.nonce.toString("hex") !== '')) 
+    if (txType === TX_TYPE_CREATE_CONSTRACT && !toAccount.isEmpty()) 
     {
       await Promise.reject(`runTx, to address ${tx.to.toString("hex")} has existed, can not create`);
     }
 
-    if (txType === TX_TYPE_UPDATE_CONSTRACT 
-      && toAccount.balance.toString("hex") === '' 
-      && toAccount.nonce.toString("hex") === '')
+    if (txType === TX_TYPE_UPDATE_CONSTRACT && toAccount.isEmpty())
       {
         await Promise.reject(`runTx, to address ${tx.to.toString("hex")} not exist, can not update`);
       }
 
+    // add coin
+    newBalance = new BN(toAccount.balance).add(new BN(tx.value));
+    toAccount.balance = utils.toBuffer(newBalance);
+
+    // run constract
     try {
       await constractsManager.run({
         timestamp: timestamp,
@@ -95,11 +98,12 @@ module.exports = async function(opts)
       await Promise.reject(`runTx, run contract throw exception, ${e}`);
     }
   }
-
-  // add coin
-  newBalance = new BN(toAccount.balance).add(new BN(tx.value));
-  toAccount.balance = utils.toBuffer(newBalance);
-
+  else
+  {
+    // add coin
+    newBalance = new BN(toAccount.balance).add(new BN(tx.value));
+    toAccount.balance = utils.toBuffer(newBalance);
+  }
   //
   await this.stateManager.putAccount(tx.from, fromAccount.serialize());
   await this.stateManager.putAccount(tx.to, toAccount.serialize());

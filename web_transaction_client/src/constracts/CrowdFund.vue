@@ -26,6 +26,10 @@
         <strong style="margin-left:10px;">{{searchConstractDetail.state}}</strong>
       </div>
       <div style="display:flex;width:100%;margin-bottom:10px;">
+        <span>众筹接受账户</span>
+        <strong style="margin-left:10px;">{{searchConstractDetail.receiveAddress}}</strong>
+      </div>
+      <div style="display:flex;width:100%;margin-bottom:10px;">
         <span>开始时间</span>
         <strong style="margin-left:10px;">{{new Date(searchConstractDetail.beginTime).toString()}}</strong>
       </div>
@@ -169,6 +173,7 @@ export default {
       searchConstractDetail: {
         balance: "",
         state: "",
+        receiveAddress: "",
         beginTime: "",
         endTime: "",
         receiveAddress: "",

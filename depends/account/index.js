@@ -31,7 +31,7 @@ class Account
 
   isEmpty()
   {
-    return this.nonce.toString("hex") === "" && this.balance.toString("hex") === "";
+    return this.nonce.toString("hex") === "" && this.balance.toString("hex") === "" && this.data.toString("hex") === "";
   }
 }
 

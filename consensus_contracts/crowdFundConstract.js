@@ -263,7 +263,7 @@ class CrowdFundConstract extends Constract
     }
 
     // get receive account
-    const receiveAccount = await stateManager.cache.get(this.receiveAddress);
+    const receiveAccount = await stateManager.cache.getOrLoad(this.receiveAddress);
 
     // update receiveAccount
     receiveAccount.balance = new BN(receiveAccount.balance).add(new BN(toAccount.balance)).toBuffer();
