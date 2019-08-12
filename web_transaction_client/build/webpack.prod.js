@@ -32,7 +32,11 @@ module.exports = merge(webpackConfig, {
         test: /\.(css|scss|sass)$/,
         use: [
           {
-            loader: MiniCssExtractPlugin.loader
+            loader: MiniCssExtractPlugin.loader,
+            options: {
+              publicPath: '../',
+              hmr: process.env.NODE_ENV === 'development',
+            }
           },
           {
             // interprets @import and url() like import/require() and will resolve them
