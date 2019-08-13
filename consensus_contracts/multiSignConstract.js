@@ -24,44 +24,48 @@ class MultiSignConstract extends Constract {
             length: 32,
             name: "id",
             allowLess: true,
-            default: Buffer.alloc(0)
+            default: Buffer.alloc(1)
         }, {
             length: 32,
             name: "state",
             allowLess: true,
-            default: Buffer.alloc(0)
+            default: Buffer.alloc(1)
         }, {
             length: 32,
             name: "timestamp",
             allowLess: true,
+            allowZero: true,
             default: Buffer.alloc(0)
         }, {
             length: 32,
             name: "expireInverval",
             allowLess: true,
-            default: Buffer.alloc(0)
+            default: Buffer.alloc(1)
         }, {
             length: 20,
             name: "to",
+            allowZero: true,
+            allowLess: true,
             default: Buffer.alloc(0)
         }, {
             length: 32,
             name: "value",
+            allowZero: true,
             allowLess: true,
             default: Buffer.alloc(0)
         }, {
             length: 2,
             name: "threshold",
             allowLess: true,
-            default: Buffer.alloc(0)
+            default: Buffer.alloc(1)
         }, {
             length: 200,
             name: "authorityAddresses",
             allowLess: true,
-            default: Buffer.alloc(0)
+            default: Buffer.alloc(1)
         }, {
             length: 200,
-            name: "argreeAddresses",
+            name: "agreeAddresses",
             allowZero: true,
             allowLess: true,
             default: Buffer.alloc(0)
@@ -84,7 +88,7 @@ class MultiSignConstract extends Constract {
             configurable: true,
             get: function () {
                 if (!this._authorityAddressesArray) {
-                    this._authorityAddressesArray = this.authorityAddresses.length > 0 ? new Array : rlp.decode(this.authorityAddresses);
+                    this._authorityAddressesArray = this.authorityAddresses.length <= 0 ? [] : rlp.decode(this.authorityAddresses);
                 }
 
                 return this._authorityAddressesArray;
@@ -100,7 +104,7 @@ class MultiSignConstract extends Constract {
             configurable: true,
             get: function () {
                 if (!this._agreeAddressesArray) {
-                    this._agreeAddressesArray = this.agreeAddresses.length > 0 ? new Array : rlp.decode(this.agreeAddresses);
+                    this._agreeAddressesArray = this.agreeAddresses.length <= 0 ? [] : rlp.decode(this.agreeAddresses);
                 }
 
                 return this._agreeAddressesArray;
@@ -116,7 +120,7 @@ class MultiSignConstract extends Constract {
             configurable: true,
             get: function () {
                 if (!this._rejectAddressesArray) {
-                    this._rejectAddressesArray = this.rejectAddresses.length > 0 ? new Array : rlp.decode(this.rejectAddresses);
+                    this._rejectAddressesArray = this.rejectAddresses.length <= 0 ? [] : rlp.decode(this.rejectAddresses);
                 }
 
                 return this._rejectAddressesArray;
@@ -140,23 +144,20 @@ class MultiSignConstract extends Constract {
 
         const commands = rlp.decode(tx.data);
 
-        const constractTimestampBn = new BN(this.constractTimestamp);
+        const constractTimestampBn = new BN(this.timestamp);
         const timestampNowBn = new BN(timestamp);
-
-        // check privilege
-        if (!this.authorityAddressesArray.find(el => el.toString("hex") === tx.from.toString("hex"))) {
-            throw new Error(`MultiSignConstract commandHandler, address ${tx.from.toString("hex")} has not privilege`)
-        }
 
         switch (bufferToInt(commands[0])) {
             case COMMAND_SEND:
                 {
-                    // check send state
-                    if(this.to.length > 0 
-                    || this.value.length > 0 )
-                    {
-                        throw new Error(`MultiSignConstract commandHandle send, constract's send request has existed`)
+                    // check privilege
+                    if (undefined === this.authorityAddressesArray.find(el => { 
+                        return el.toString("hex") === tx.from.toString("hex")
+                    })) {
+                        throw new Error(`MultiSignConstract commandHandler, address ${tx.from.toString("hex")} has not privilege`)
                     }
+
+                    // check send state
                     if(constractTimestampBn.add(new BN(this.expireInverval)).gt(timestampNowBn))
                     {
                         throw new Error(`MultiSignConstract commandHandler send, constract's send request has not expired`)
@@ -165,38 +166,56 @@ class MultiSignConstract extends Constract {
                     // check value
                     this.to = commands[1];
                     this.value = commands[2];
-                    if (new BN(toAccount.value).lt(new BN(this.value)))
+                    if (new BN(toAccount.balance).lt(new BN(this.value)))
                     {
-                        throw new Error(`MultiSignConstract commandHandler send, constract's value is not enough, constract value is ${bufferToInt(toAccount.value)}, need ${bufferToInt(this.value)}`);
+                        throw new Error(`MultiSignConstract commandHandler send, constract's value is not enough, constract balance is ${bufferToInt(toAccount.balance)}, need ${bufferToInt(this.value)}`);
                     }
 
                     // init timestamp
                     this.timestamp = timestamp;
+
+                    //
+                    this.agreeAddressesArray.push(tx.from)
+                    this.agreeAddresses = this.encodeArray(this.agreeAddressesArray)
                 }
                 break;
 
             case COMMAND_AGREE:
                 {
+                    // check privilege
+                    if (undefined === this.authorityAddressesArray.find(el => {
+                        return el.toString("hex") === tx.from.toString("hex")
+                    })) {
+                        throw new Error(`MultiSignConstract commandHandler, address ${tx.from.toString("hex")} has not privilege`)
+                    }
+
                     // check send state
                     if (this.to.length <= 0 || this.value.length <= 0)
                     {
                         throw new Error(`MultiSignConstract commandHandler agree, constract's send request is not exist`)
                     }
-                    if (constractTimestampBn.add(new BN(this.expireInverval)).ltn(timestampNowBn)) {
+                    if (constractTimestampBn.add(new BN(this.expireInverval)).lt(timestampNowBn)) {
                         throw new Error(`MultiSignConstract commandHandler agree, constract's send request has expired`)
                     }
 
-                    await this.agree(stateManager, tx.from, toAccount, command[1]);
+                    await this.agree(stateManager, tx.from, toAccount, commands[1]);
                 }
                 break;
 
             case COMMAND_REJECT:
                 {
+                    // check privilege
+                    if (undefined === this.authorityAddressesArray.find(el => {
+                        return el.toString("hex") === tx.from.toString("hex")
+                    })) {
+                        throw new Error(`MultiSignConstract commandHandler, address ${tx.from.toString("hex")} has not privilege`)
+                    }
+
                     // check send state
                     if (this.to.length <= 0 || this.value.length <= 0) {
                         throw new Error(`MultiSignConstract commandHandler reject, constract's send request is not exist`)
                     }
-                    if (constractTimestampBn.add(new BN(this.expireInverval)).ltn(timestampNowBn)) {
+                    if (constractTimestampBn.add(new BN(this.expireInverval)).lt(timestampNowBn)) {
                         throw new Error(`MultiSignConstract commandHandler reject, constract's send request has expired`)
                     }
 

@@ -1,4 +1,5 @@
 const CrowdFundConstract = require("./crowdFundConstract");
+const MultiSignConstract = require("./multiSignConstract");
 const utils = require("../depends/utils");
 const assert = require("assert");
 const StageManager = require("../depends/block_chain/stateManager");
@@ -16,6 +17,7 @@ class ContractsManager
     this.contractsMap = new Map();
 
     this.contractsMap.set(CrowdFundConstract.id, CrowdFundConstract);
+    this.contractsMap.set(MultiSignConstract.id, MultiSignConstract);
   }
 
   /**
@@ -53,7 +55,7 @@ class ContractsManager
     
     // get contract
     const Constract = this.contractsMap.get(constractId)
-
+    
     const constractInstacne = new Constract(toAccount.data.length > 0 ? toAccount.data : undefined);
 
     // run contract

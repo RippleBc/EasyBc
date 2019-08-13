@@ -26,12 +26,12 @@ class CrowdFundConstract extends Constract
       length: 32,
       name: "id",
       allowLess: true,
-      default: Buffer.alloc(0)
+      default: Buffer.alloc(1)
     }, {
       length: 32,
       name: "state",
       allowLess: true,
-      default: Buffer.alloc(0)
+      default: Buffer.alloc(1)
     }, {
       length: 32,
       name: "beginTime",
@@ -52,12 +52,12 @@ class CrowdFundConstract extends Constract
       length: 32,
       name: "target",
       allowLess: true,
-      default: Buffer.alloc(0)
+      default: Buffer.alloc(1)
     }, {
       length: 32,
       name: "limit",
       allowLess: true,
-      default: Buffer.alloc(0)
+      default: Buffer.alloc(1)
     }, {
       length: 6000,
       name: "fundInfo",

@@ -23,7 +23,7 @@ const COMMAND_SEND = 100;
 const COMMAND_AGREE = 101;
 const COMMAND_REJECT = 102;
 
-app.get("/createMultiSignContract", (req, res) => {
+app.get("/createMultiSignConstract", (req, res) => {
     if (!req.query.url) {
         return res.send({
             code: PARAM_ERR,
@@ -58,8 +58,9 @@ app.get("/createMultiSignContract", (req, res) => {
             msg: "param error, need authorityAddresses"
         });
     }
-
+    
     // check address
+    req.query.authorityAddresses = JSON.parse(req.query.authorityAddresses)
     for (let authorityAddress of req.query.authorityAddresses)
     {
         if (authorityAddress.length !== 40)
@@ -138,8 +139,8 @@ app.get("/getMultiSignConstract", (req, res) => {
             code: SUCCESS,
             data: {
                 address: `0x${req.query.address}`,
-                nonce: `0x${bufferToInt(account.nonce)}`,
-                balance: `0x${bufferToInt(account.balance)}`,
+                nonce: `0x${account.nonce.toString("hex")}`,
+                balance: `0x${account.balance.toString("hex")}`,
                 id: `0x${multiSignConstract.id.toString("hex")}`,
                 state: bufferToInt(multiSignConstract.state),
                 timestamp: bufferToInt(multiSignConstract.timestamp),
@@ -148,7 +149,7 @@ app.get("/getMultiSignConstract", (req, res) => {
                 value: `0x${multiSignConstract.value.toString("hex")}`,
                 threshold: bufferToInt(multiSignConstract.threshold),
                 authorityAddresses: multiSignConstract.authorityAddresses.length > 0 ? rlp.decode(multiSignConstract.authorityAddresses).map(el => `0x${el.toString("hex")}`) : [],
-                argreeAddresses: multiSignConstract.argreeAddresses.length > 0 ? rlp.decode(multiSignConstract.argreeAddresses).map(el => `0x${el.toString("hex")}`) : [],
+                agreeAddresses: multiSignConstract.agreeAddresses.length > 0 ? rlp.decode(multiSignConstract.agreeAddresses).map(el => `0x${el.toString("hex")}`) : [],
                 rejectAddresses: multiSignConstract.rejectAddresses.length > 0 ? rlp.decode(multiSignConstract.rejectAddresses).map(el => `0x${el.toString("hex")}`) : []
             }
         })
@@ -160,7 +161,7 @@ app.get("/getMultiSignConstract", (req, res) => {
     })
 })
 
-app.get("/sendMultiSignContract", (req, res) => {
+app.get("/sendMultiSignConstract", (req, res) => {
     if (!req.query.url) {
         return res.send({
             code: PARAM_ERR,
@@ -215,7 +216,7 @@ app.get("/sendMultiSignContract", (req, res) => {
     })
 });
 
-app.get("/agreeMultiSignContract", (req, res) => {
+app.get("/agreeMultiSignConstract", (req, res) => {
     if (!req.query.url) {
         return res.send({
             code: PARAM_ERR,
@@ -244,7 +245,7 @@ app.get("/agreeMultiSignContract", (req, res) => {
         });
     }
 
-    const data = rlp.encode([toBuffer(COMMAND_AGREE), Buffer.from(req.query.timestamp, "hex")]).toString("hex");
+    const data = rlp.encode([toBuffer(COMMAND_AGREE), toBuffer(req.query.timestamp)]).toString("hex");
 
     sendTransaction(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(transactionHash => {
         res.send({
@@ -261,7 +262,7 @@ app.get("/agreeMultiSignContract", (req, res) => {
     })
 });
 
-app.get("/rejectMultiSignContract", (req, res) => {
+app.get("/rejectMultiSignConstract", (req, res) => {
     if (!req.query.url) {
         return res.send({
             code: PARAM_ERR,
@@ -290,7 +291,7 @@ app.get("/rejectMultiSignContract", (req, res) => {
         });
     }
 
-    const data = rlp.encode([toBuffer(COMMAND_REJECT), Buffer.from(req.query.timestamp, "hex")]).toString("hex");
+    const data = rlp.encode([toBuffer(COMMAND_REJECT), toBuffer(req.query.timestamp)]).toString("hex");
 
     sendTransaction(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(transactionHash => {
         res.send({
