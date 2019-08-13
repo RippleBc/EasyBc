@@ -25,13 +25,11 @@ class CrowdFundConstract extends Constract
     let fields = [{
       length: 32,
       name: "id",
-      allowZero: true,
       allowLess: true,
       default: Buffer.alloc(0)
     }, {
       length: 32,
       name: "state",
-      allowZero: true,
       allowLess: true,
       default: Buffer.alloc(0)
     }, {
@@ -53,13 +51,11 @@ class CrowdFundConstract extends Constract
     }, {
       length: 32,
       name: "target",
-      allowZero: true,
       allowLess: true,
       default: Buffer.alloc(0)
     }, {
       length: 32,
       name: "limit",
-      allowZero: true,
       allowLess: true,
       default: Buffer.alloc(0)
     }, {

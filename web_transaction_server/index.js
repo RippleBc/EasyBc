@@ -71,8 +71,8 @@ process[Symbol.for("printErrorStack")] = printErrorStack;
   require('./remote');
   logger.info('load remote module success')
 
-  require('./crowdFund');
-  logger.info('load crowdFund module success')
+  require('./constracts');
+  logger.info('load constracts module success')
 })().then(() => {
   logger.info("server init ok")
 }).catch(e => {
