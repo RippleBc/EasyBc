@@ -76,16 +76,19 @@ app.get("/createCrowdFundContract", (req, res) => {
   assert(/^\d+$/.test(req.query.beginTime), `getAccounts req.query.beginTime should be a Number, now is ${typeof req.query.beginTime}`);
   assert(/^\d+$/.test(req.query.endTime), `getAccounts req.query.endTime should be a Number, now is ${typeof req.query.endTime}`);
   assert(req.query.receiveAddress.length === 40, `getAccounts req.query.receiveAddress's should be 40 now is ${req.query.receiveAddress.length}`);
-  assert(/^\d+$/.test(req.query.target), `getAccounts req.query.target should be a Number, now is ${typeof req.query.target}`);
-  assert(/^\d+$/.test(req.query.limit), `getAccounts req.query.limit should be a Number, now is ${typeof req.query.limit}`);
 
   const privateKey = createPrivateKey();
   const publicKey = privateToPublic(privateKey);
   const to = publicToAddress(publicKey)
 
-  const data = rlp.encode([toBuffer(COMMAND_CREATE), Buffer.from(crowdFundConstractId, "hex"), toBuffer(parseInt(req.query.beginTime)), toBuffer(parseInt(req.query.endTime)), 
-    Buffer.from(req.query.receiveAddress, "hex"), toBuffer(parseInt(req.query.target)), 
-    toBuffer(parseInt(req.query.limit))]).toString("hex");
+  const data = rlp.encode([
+    toBuffer(COMMAND_CREATE), 
+    Buffer.from(crowdFundConstractId, "hex"), 
+    toBuffer(parseInt(req.query.beginTime)), 
+    toBuffer(parseInt(req.query.endTime)), 
+    Buffer.from(req.query.receiveAddress, "hex"), 
+    Buffer.from(req.query.target, "hex"), 
+    Buffer.from(req.query.limit, "hex")]).toString("hex");
 
   sendTransaction(req.query.url, req.query.from, to.toString("hex"), req.query.value, data, req.query.privateKey).then(transactionHash => {
     res.send({
@@ -143,16 +146,16 @@ app.get("/getCrowdFundContract", (req, res) => {
     res.json({
       code: SUCCESS,
       data: {
-        address: req.query.address,
-        nonce: bufferToInt(account.nonce),
-        balance: bufferToInt(account.balance),
-        id: crowdFundConstract.id.toString("hex"),
+        address: `0x${req.query.address}`,
+        nonce: `0x${account.nonce.toString("hex")}`,
+        balance: `0x${account.balance.toString("hex")}`,
+        id: `0x${crowdFundConstract.id.toString("hex")}`,
         state: bufferToInt(crowdFundConstract.state),
         beginTime: bufferToInt(crowdFundConstract.beginTime),
         endTime: bufferToInt(crowdFundConstract.endTime),
-        receiveAddress: crowdFundConstract.receiveAddress.toString("hex"),
-        target: bufferToInt(crowdFundConstract.target),
-        limit: bufferToInt(crowdFundConstract.limit),
+        receiveAddress: `0x${crowdFundConstract.receiveAddress.toString("hex")}`,
+        target: `0x${crowdFundConstract.target.toString("hex")}`,
+        limit: `0x${crowdFundConstract.limit.toString("hex")}`,
         fundInfo: crowdFundConstract.fundInfo.length > 0 ? rlp.decode(crowdFundConstract.fundInfo).map(entry => {
           return [
             `0x${entry[0].toString()}`,

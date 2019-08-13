@@ -186,7 +186,7 @@ class MultiSignConstract extends Constract {
                         throw new Error(`MultiSignConstract commandHandler agree, constract's send request has expired`)
                     }
 
-                    await this.agree(stateManager, tx.from, toAccount);
+                    await this.agree(stateManager, tx.from, toAccount, command[1]);
                 }
                 break;
 
@@ -200,7 +200,7 @@ class MultiSignConstract extends Constract {
                         throw new Error(`MultiSignConstract commandHandler reject, constract's send request has expired`)
                     }
 
-                    this.reject(tx.from);
+                    this.reject(tx.from, command[1]);
                 }
                 break;
             default:
@@ -231,11 +231,18 @@ class MultiSignConstract extends Constract {
      * @param {stateManager} stateManager
      * @param {Buffer} from
      * @param {Account} toAccount
+     * @param {Buffer} timestamp
      */
-    async agree(stateManager, from, constractAccount) {
+    async agree(stateManager, from, constractAccount, timestamp) {
         assert(stateManager instanceof StageManager, `MultiSignConstract agree, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
         assert(Buffer.isBuffer(from), `MultiSignConstract agree, from should be an Buffer, now is ${typeof from}`);
         assert(constractAccount instanceof Account, `MultiSignConstract agree, constractAccount should be an instance of Account, now is ${typeof constractAccount}`);
+        assert(Buffer.isBuffer(timestamp), `MultiSignConstract agree, timestamp should be an Buffer, now is ${typeof timestamp}`);
+
+        // check timetamp
+        if (this.timestamp.toString("hex") !== timestamp.toString("hex")) {
+            throw new Error(`MultiSignConstract agree, invalid timestamp`)
+        }
 
         // check repeat
         if (this.agreeAddressesArray.find(el => el.toString("hex") === from.toString("hex"))) {
@@ -267,11 +274,17 @@ class MultiSignConstract extends Constract {
 
     /**
      * @param {stateManager} stateManager
-     * @param {Account} toAccount
+     * @param {Buffer} timestamp
      */
-    async reject(stateManager, toAccount) {
+    async reject(stateManager, timestamp) {
         assert(stateManager instanceof StageManager, `MultiSignConstract reject, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
-        assert(toAccount instanceof Account, `MultiSignConstract reject, toAccount should be an instance of Account, now is ${typeof toAccount}`);
+        assert(Buffer.isBuffer(timestamp), `MultiSignConstract reject, timestamp should be an Buffer, now is ${typeof timestamp}`);
+
+        // check timetamp
+        if(this.timestamp.toString("hex") !== timestamp.toString("hex"))
+        {
+            throw new Error(`MultiSignConstract reject, invalid timestamp`)
+        }
 
         // check repeat
         if (this.rejectAddressesArray.find(el => el.toString("hex") === from.toString("hex"))) {

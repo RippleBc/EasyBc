@@ -2,9 +2,9 @@ const utils = require("../../depends/utils");
 const { sendTransaction } = require("../local");
 const assert = require("assert");
 const { SUCCESS, OTH_ERR, PARAM_ERR } = require("../../constant");
-const CrowdFundConstract = require("../../consensus_contracts/crowdFundConstract");
+const MultiSignConstract = require("../../consensus_contracts/multiSignConstract");
 const { getAccountInfo } = require("../remote")
-const crowdFundConstractId = require("../../consensus_contracts/crowdFundConstract").id;
+const multiSignConstractId = require("../../consensus_contracts/multiSignConstract").id;
 const { COMMAND_CREATE } = require("../../consensus_contracts/constant");
 
 const app = process[Symbol.for("app")];
@@ -19,11 +19,11 @@ const privateToPublic = utils.privateToPublic;
 const publicToAddress = utils.publicToAddress;
 const bufferToInt = utils.bufferToInt;
 
-const COMMAND_FUND = 100;
-const COMMAND_REFUND = 101;
-const COMMAND_RECEIVE = 102;
+const COMMAND_SEND = 100;
+const COMMAND_AGREE = 101;
+const COMMAND_REJECT = 102;
 
-app.get("/createCrowdFundContract", (req, res) => {
+app.get("/createMultiSignContract", (req, res) => {
     if (!req.query.url) {
         return res.send({
             code: PARAM_ERR,
@@ -38,54 +38,50 @@ app.get("/createCrowdFundContract", (req, res) => {
         });
     }
 
-    if (!req.query.beginTime) {
+    if (!req.query.expireInverval) {
         return res.send({
             code: PARAM_ERR,
-            msg: "param error, need beginTime"
+            msg: "param error, need expireInverval"
         });
     }
 
-    if (!req.query.endTime) {
+    if (!req.query.threshold) {
         return res.send({
             code: PARAM_ERR,
-            msg: "param error, need endTime"
+            msg: "param error, need threshold"
         });
     }
 
-    if (!req.query.receiveAddress) {
+    if (!req.query.authorityAddresses) {
         return res.send({
             code: PARAM_ERR,
-            msg: "param error, need receiveAddress"
+            msg: "param error, need authorityAddresses"
         });
     }
 
-    if (!req.query.target) {
-        return res.send({
-            code: PARAM_ERR,
-            msg: "param error, need target"
-        });
+    // check address
+    for (let authorityAddress of req.query.authorityAddresses)
+    {
+        if (authorityAddress.length !== 40)
+        {
+            return res.send({
+                code: OTH_ERR,
+                msg: `param error, address ${authorityAddress} at authorityAddresses is invalid`
+            });
+        }
     }
-
-    if (!req.query.limit) {
-        return res.send({
-            code: PARAM_ERR,
-            msg: "param error, need limit"
-        });
-    }
-
-    assert(/^\d+$/.test(req.query.beginTime), `getAccounts req.query.beginTime should be a Number, now is ${typeof req.query.beginTime}`);
-    assert(/^\d+$/.test(req.query.endTime), `getAccounts req.query.endTime should be a Number, now is ${typeof req.query.endTime}`);
-    assert(req.query.receiveAddress.length === 40, `getAccounts req.query.receiveAddress's should be 40 now is ${req.query.receiveAddress.length}`);
-    assert(/^\d+$/.test(req.query.target), `getAccounts req.query.target should be a Number, now is ${typeof req.query.target}`);
-    assert(/^\d+$/.test(req.query.limit), `getAccounts req.query.limit should be a Number, now is ${typeof req.query.limit}`);
+    const authorityAddressesBuffer = rlp.encode(req.query.authorityAddresses.map(el => Buffer.from(el, "hex")))
 
     const privateKey = createPrivateKey();
     const publicKey = privateToPublic(privateKey);
     const to = publicToAddress(publicKey)
 
-    const data = rlp.encode([toBuffer(COMMAND_CREATE), Buffer.from(crowdFundConstractId, "hex"), toBuffer(parseInt(req.query.beginTime)), toBuffer(parseInt(req.query.endTime)),
-    Buffer.from(req.query.receiveAddress, "hex"), toBuffer(parseInt(req.query.target)),
-    toBuffer(parseInt(req.query.limit))]).toString("hex");
+    const data = rlp.encode([
+        toBuffer(COMMAND_CREATE), 
+        Buffer.from(multiSignConstractId, "hex"), 
+        toBuffer(parseInt(req.query.expireInverval)), 
+        toBuffer(parseInt(req.query.threshold)),
+        authorityAddressesBuffer]).toString("hex");
 
     sendTransaction(req.query.url, req.query.from, to.toString("hex"), req.query.value, data, req.query.privateKey).then(transactionHash => {
         res.send({
@@ -105,7 +101,7 @@ app.get("/createCrowdFundContract", (req, res) => {
     })
 });
 
-app.get("/getCrowdFundContract", (req, res) => {
+app.get("/getMultiSignConstract", (req, res) => {
     if (!req.query.url) {
         return res.send({
             code: PARAM_ERR,
@@ -129,45 +125,42 @@ app.get("/getCrowdFundContract", (req, res) => {
         }
 
         const contractId = rlp.decode(account.data)[0].toString("hex");
-        if (contractId !== CrowdFundConstract.id) {
+        if (contractId !== MultiSignConstract.id) {
             return res.json({
                 code: OTH_ERR,
-                msg: "contract exist, but is not CrowdFundConstract"
+                msg: "contract exist, but is not MultiSignConstract"
             })
         }
 
-        const crowdFundConstract = new CrowdFundConstract(account.data);
+        const multiSignConstract = new MultiSignConstract(account.data);
 
         res.json({
             code: SUCCESS,
             data: {
-                address: req.query.address,
-                nonce: bufferToInt(account.nonce),
-                balance: bufferToInt(account.balance),
-                id: crowdFundConstract.id.toString("hex"),
-                state: bufferToInt(crowdFundConstract.state),
-                beginTime: bufferToInt(crowdFundConstract.beginTime),
-                endTime: bufferToInt(crowdFundConstract.endTime),
-                receiveAddress: crowdFundConstract.receiveAddress.toString("hex"),
-                target: bufferToInt(crowdFundConstract.target),
-                limit: bufferToInt(crowdFundConstract.limit),
-                fundInfo: crowdFundConstract.fundInfo.length > 0 ? rlp.decode(crowdFundConstract.fundInfo).map(entry => {
-                    return [
-                        `0x${entry[0].toString()}`,
-                        `0x${entry[1].toString("hex")}`
-                    ]
-                }) : [],
+                address: `0x${req.query.address}`,
+                nonce: `0x${bufferToInt(account.nonce)}`,
+                balance: `0x${bufferToInt(account.balance)}`,
+                id: `0x${multiSignConstract.id.toString("hex")}`,
+                state: bufferToInt(multiSignConstract.state),
+                timestamp: bufferToInt(multiSignConstract.timestamp),
+                expireInverval: bufferToInt(multiSignConstract.expireInverval),
+                to: `0x${multiSignConstract.to.toString("hex")}`,
+                value: `0x${multiSignConstract.value.toString("hex")}`,
+                threshold: bufferToInt(multiSignConstract.threshold),
+                authorityAddresses: multiSignConstract.authorityAddresses.length > 0 ? rlp.decode(multiSignConstract.authorityAddresses).map(el => `0x${el.toString("hex")}`) : [],
+                argreeAddresses: multiSignConstract.argreeAddresses.length > 0 ? rlp.decode(multiSignConstract.argreeAddresses).map(el => `0x${el.toString("hex")}`) : [],
+                rejectAddresses: multiSignConstract.rejectAddresses.length > 0 ? rlp.decode(multiSignConstract.rejectAddresses).map(el => `0x${el.toString("hex")}`) : []
             }
         })
     }).catch(e => {
         res.json({
             code: OTH_ERR,
-            msg: `getCrowdFundContract throw exception, ${e}`
+            msg: `getMultiSignConstract throw exception, ${e}`
         })
     })
 })
 
-app.get("/fundCrowdFundContract", (req, res) => {
+app.get("/sendMultiSignContract", (req, res) => {
     if (!req.query.url) {
         return res.send({
             code: PARAM_ERR,
@@ -189,7 +182,23 @@ app.get("/fundCrowdFundContract", (req, res) => {
         });
     }
 
-    const data = rlp.encode([toBuffer(COMMAND_FUND)]).toString("hex");
+    if (!req.query.contractTo) {
+        return res.send({
+            code: PARAM_ERR,
+            msg: "param error, need contractTo"
+        });
+    }
+
+    if (!req.query.contractValue) {
+        return res.send({
+            code: PARAM_ERR,
+            msg: "param error, need contractValue"
+        });
+    }
+    const data = rlp.encode([
+        toBuffer(COMMAND_SEND), 
+        Buffer.from(req.query.contractTo, "hex"), 
+        Buffer.from(req.query.contractValue, "hex")]).toString("hex");
 
     sendTransaction(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(transactionHash => {
         res.send({
@@ -206,7 +215,7 @@ app.get("/fundCrowdFundContract", (req, res) => {
     })
 });
 
-app.get("/reFundCrowdFundContract", (req, res) => {
+app.get("/agreeMultiSignContract", (req, res) => {
     if (!req.query.url) {
         return res.send({
             code: PARAM_ERR,
@@ -228,7 +237,14 @@ app.get("/reFundCrowdFundContract", (req, res) => {
         });
     }
 
-    const data = rlp.encode([toBuffer(COMMAND_REFUND)]).toString("hex");
+    if (!req.query.timestamp) {
+        return res.send({
+            code: PARAM_ERR,
+            msg: "param error, need timestamp"
+        });
+    }
+
+    const data = rlp.encode([toBuffer(COMMAND_AGREE), Buffer.from(req.query.timestamp, "hex")]).toString("hex");
 
     sendTransaction(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(transactionHash => {
         res.send({
@@ -245,7 +261,7 @@ app.get("/reFundCrowdFundContract", (req, res) => {
     })
 });
 
-app.get("/receiveCrowdFundContract", (req, res) => {
+app.get("/rejectMultiSignContract", (req, res) => {
     if (!req.query.url) {
         return res.send({
             code: PARAM_ERR,
@@ -267,7 +283,14 @@ app.get("/receiveCrowdFundContract", (req, res) => {
         });
     }
 
-    const data = rlp.encode([toBuffer(COMMAND_RECEIVE)]).toString("hex");
+    if (!req.query.timestamp) {
+        return res.send({
+            code: PARAM_ERR,
+            msg: "param error, need timestamp"
+        });
+    }
+
+    const data = rlp.encode([toBuffer(COMMAND_REJECT), Buffer.from(req.query.timestamp, "hex")]).toString("hex");
 
     sendTransaction(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(transactionHash => {
         res.send({
