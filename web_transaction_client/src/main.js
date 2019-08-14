@@ -4,39 +4,14 @@ import router from './router'
 import store from './store'
 import './registerServiceWorker'
 import '~/../../web_depends/assets/css/theme-green/index.css'
-
-import { FormItem, Form, TableColumn, Table, DatePicker, Dialog, Card, Button, Select, Input, Notification, Menu, Submenu, MenuItemGroup, MenuItem } from 'element-ui';
-
-Vue.use(FormItem);
-Vue.use(Form);
-Vue.use(TableColumn);
-Vue.use(Table);
-Vue.use(DatePicker);
-Vue.use(Dialog);
-Vue.use(Card);
-Vue.use(Button);
-Vue.use(Select);
-Vue.use(Input);
-Vue.use(Menu);
-Vue.use(Submenu);
-Vue.use(MenuItemGroup);
-Vue.use(MenuItem);
+import "~/../../web_depends/assets/css/main.css";
+import "~/../../web_depends/assets/css/color-green.css";
+import ElementUI from 'element-ui';
 
 Vue.config.productionTip = false
-
-Vue.prototype.$notify = {
-	success: opts => {
-		Notification.success(opts);
-	},
-
-	error: opts => {
-		Notification.error(opts);
-	},
-
-	warn: opts => {
-		Notification.warning(opts);
-	}
-}
+Vue.use(ElementUI, {
+	size: 'medium'
+});
 
 new Vue({
   router,
