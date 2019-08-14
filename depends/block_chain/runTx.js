@@ -3,8 +3,8 @@ const Transaction = require('../transaction');
 const assert = require("assert");
 const Buffer = utils.Buffer;
 const BN = utils.BN;
-const constractsManager = require("../../consensus_contracts");
-const { ACCOUNT_TYPE_NORMAL, ACCOUNT_TYPE_CONSTRACT, TX_TYPE_TRANSACTION, TX_TYPE_CREATE_CONSTRACT, TX_TYPE_UPDATE_CONSTRACT } = require("../../consensus_contracts/constant");
+const constractsManager = require("../../consensus_constracts");
+const { ACCOUNT_TYPE_NORMAL, ACCOUNT_TYPE_CONSTRACT, TX_TYPE_TRANSACTION, TX_TYPE_CREATE_CONSTRACT, TX_TYPE_UPDATE_CONSTRACT } = require("../../consensus_constracts/constant");
 
 /**
  * Process a transaction.
@@ -32,7 +32,7 @@ module.exports = async function(opts)
   });
   if(accountType === ACCOUNT_TYPE_CONSTRACT)
   {
-    await Promise.reject(`runTx ${tx.hash(true).toString("hex")}, address: ${tx.from.toString("hex")}} is an contract account, not support directly transform`)
+    await Promise.reject(`runTx ${tx.hash(true).toString("hex")}, address: ${tx.from.toString("hex")}} is an constract account, not support directly transform`)
   }
 
   // check balance
@@ -67,7 +67,7 @@ module.exports = async function(opts)
     tx: tx
   });
 
-  // run contract
+  // run constract
   if (txType === TX_TYPE_CREATE_CONSTRACT || txType === TX_TYPE_UPDATE_CONSTRACT)
   {
     if (txType === TX_TYPE_CREATE_CONSTRACT && !toAccount.isEmpty()) 
@@ -95,7 +95,7 @@ module.exports = async function(opts)
       });
     }
     catch (e) {
-      await Promise.reject(`runTx, run contract throw exception, ${e}`);
+      await Promise.reject(`runTx, run constract throw exception, ${e}`);
     }
   }
   else

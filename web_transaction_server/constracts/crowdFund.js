@@ -2,10 +2,10 @@ const utils = require("../../depends/utils");
 const { sendTransaction } = require("../local");
 const assert = require("assert");
 const { SUCCESS, OTH_ERR, PARAM_ERR } = require("../../constant");
-const CrowdFundConstract = require("../../consensus_contracts/crowdFundConstract");
+const CrowdFundConstract = require("../../consensus_constracts/crowdFundConstract");
 const { getAccountInfo } = require("../remote")
-const crowdFundConstractId = require("../../consensus_contracts/crowdFundConstract").id;
-const { COMMAND_CREATE } = require("../../consensus_contracts/constant");
+const crowdFundConstractId = require("../../consensus_constracts/crowdFundConstract").id;
+const { COMMAND_CREATE } = require("../../consensus_constracts/constant");
 
 const app = process[Symbol.for("app")];
 const printErrorStack = process[Symbol.for("printErrorStack")];
@@ -23,7 +23,7 @@ const COMMAND_FUND = 100;
 const COMMAND_REFUND = 101;
 const COMMAND_RECEIVE = 102;
 
-app.get("/createCrowdFundContract", (req, res) => {
+app.get("/createCrowdFundConstract", (req, res) => {
   if (!req.query.url) {
     return res.send({
       code: PARAM_ERR,
@@ -108,7 +108,7 @@ app.get("/createCrowdFundContract", (req, res) => {
   })
 });
 
-app.get("/getCrowdFundContract", (req, res) => {
+app.get("/getCrowdFundConstract", (req, res) => {
   if (!req.query.url) {
     return res.send({
       code: PARAM_ERR,
@@ -128,16 +128,16 @@ app.get("/getCrowdFundContract", (req, res) => {
     {
       return res.json({
         code: OTH_ERR,
-        msg: "contract not exist"
+        msg: "constract not exist"
       })
     }
 
-    const contractId = rlp.decode(account.data)[0].toString("hex");
-    if (contractId !== CrowdFundConstract.id)
+    const constractId = rlp.decode(account.data)[0].toString("hex");
+    if (constractId !== CrowdFundConstract.id)
     {
       return res.json({
         code: OTH_ERR,
-        msg: "contract exist, but is not CrowdFundConstract"
+        msg: "constract exist, but is not CrowdFundConstract"
       })
     }
 
@@ -167,12 +167,12 @@ app.get("/getCrowdFundContract", (req, res) => {
   }).catch(e => {
     res.json({
       code: OTH_ERR,
-      msg: `getCrowdFundContract throw exception, ${e}`
+      msg: `getCrowdFundConstract throw exception, ${e}`
     })
   })
 })
 
-app.get("/fundCrowdFundContract", (req, res) => {
+app.get("/fundCrowdFundConstract", (req, res) => {
   if (!req.query.url) {
     return res.send({
       code: PARAM_ERR,
@@ -211,7 +211,7 @@ app.get("/fundCrowdFundContract", (req, res) => {
   })
 });
 
-app.get("/reFundCrowdFundContract", (req, res) => {
+app.get("/reFundCrowdFundConstract", (req, res) => {
   if (!req.query.url) {
     return res.send({
       code: PARAM_ERR,
@@ -250,7 +250,7 @@ app.get("/reFundCrowdFundContract", (req, res) => {
   })
 });
 
-app.get("/receiveCrowdFundContract", (req, res) => {
+app.get("/receiveCrowdFundConstract", (req, res) => {
   if (!req.query.url) {
     return res.send({
       code: PARAM_ERR,

@@ -2,6 +2,7 @@
   <div class="container">
     <div style="margin:20px 0px 20px 0px;">
         <crowd-fund></crowd-fund>
+        <multi-sign></multi-sign>
     </div>
   </div>
 </template>
@@ -9,10 +10,11 @@
 <script>
 import axios from "../net/axios.js";
 import CrowdFund from "../constracts/CrowdFund.vue";
+import MultiSign from "../constracts/MultiSign.vue";
 
 export default {
   name: "Constracts",
-    components: { CrowdFund },
+    components: { CrowdFund, MultiSign },
   data() {
     return {};
   },

@@ -1,18 +1,18 @@
 <template>
   <div class="container">
     <div class="border" style="margin:20px 20px 20px 0px;width: 200px;height: 420px;">
-      <strong>众筹合约</strong>
+      <strong>多重签名合约</strong>
       <el-button style="width:100px;margin:10px;" type="primary" @click="searchVisible = true;">查找</el-button>
       <el-button style="width:100px;margin:10px;" type="primary" @click="createVisible = true;">创建</el-button>
-      <el-button style="width:100px;margin:10px;" type="primary" @click="fundVisible = true;">投资</el-button>
-      <el-button style="width:100px;margin:10px;" type="primary" @click="refundVisible = true;">赎回</el-button>
+      <el-button style="width:100px;margin:10px;" type="primary" @click="sendVisible = true;">发送</el-button>
+      <el-button style="width:100px;margin:10px;" type="primary" @click="agreeVisible = true;">同意</el-button>
       <el-button
         style="width:100px;margin:10px;"
         type="primary"
-        @click="receiveVisible = true;"
-      >众筹提取</el-button>
+        @click="rejectVisible = true;"
+      >拒绝</el-button>
     </div>
-    <div class="border" style="margin:20px 0px 20px 0px;width: 600px;height: 420px;overflow:scroll;" v-if="searchConstractDetail.state">
+    <div class="border" style="margin:20px 0px 20px 0px;width: 600px;overflow:scroll;" v-if="searchConstractDetail.state">
       <div style="display:flex;width:100%;margin-bottom:10px;">
         <span>地址</span>
         <strong style="margin-left:10px;">{{constractAddress}}</strong>
@@ -26,28 +26,36 @@
         <strong style="margin-left:10px;">{{searchConstractDetail.state}}</strong>
       </div>
       <div style="display:flex;width:100%;margin-bottom:10px;">
-        <span>众筹接受账户</span>
-        <strong style="margin-left:10px;">{{searchConstractDetail.receiveAddress}}</strong>
+        <span>时间戳</span>
+        <strong style="margin-left:10px;">{{new Date(searchConstractDetail.timestamp).toString()}}</strong>
       </div>
       <div style="display:flex;width:100%;margin-bottom:10px;">
-        <span>开始时间</span>
-        <strong style="margin-left:10px;">{{new Date(searchConstractDetail.beginTime).toString()}}</strong>
+        <span>超时时长</span>
+        <strong style="margin-left:10px;">{{searchConstractDetail.expireInverval}}</strong>
       </div>
       <div style="display:flex;width:100%;margin-bottom:10px;">
-        <span>结束时间</span>
-        <strong style="margin-left:10px;">{{new Date(searchConstractDetail.endTime).toString()}}</strong>
+        <span>接受人</span>
+        <strong style="margin-left:10px;">{{searchConstractDetail.to}}</strong>
       </div>
       <div style="display:flex;width:100%;margin-bottom:10px;">
-        <span>目标额度</span>
-        <strong style="margin-left:10px;">{{searchConstractDetail.target}}</strong>
+        <span>额度</span>
+        <strong style="margin-left:10px;">{{searchConstractDetail.value}}</strong>
       </div>
       <div style="display:flex;width:100%;margin-bottom:10px;">
-        <span>最低投资额</span>
-        <strong style="margin-left:10px;">{{searchConstractDetail.limit}}</strong>
+        <span>阀值</span>
+        <strong style="margin-left:10px;">{{searchConstractDetail.threshold}}%</strong>
       </div>
-      <div style="display:flex;width:100%;margin-bottom:10px;" v-for="(value, index) in searchConstractDetail.fundInfo" :key= "index">
-        <span>{{value[0]}}</span>
-        <strong style="margin-left:10px;">{{value[1]}}</strong>
+      <div style="display:flex;flex-direction:column;width:100%;margin-bottom:10px;">
+        <span>授权地址</span>
+        <strong style="margin-left:10px;" v-for="(value, index) in searchConstractDetail.authorityAddresses" :key= "index">{{value}}</strong>
+      </div>
+      <div style="display:flex;flex-direction:column;width:100%;margin-bottom:10px;">
+        <span>同意地址</span>
+        <strong style="margin-left:10px;" v-for="(value, index) in searchConstractDetail.agreeAddresses" :key= "index">{{value}}</strong>
+      </div>
+      <div style="display:flex;flex-direction:column;width:100%;margin-bottom:10px;">
+        <span>拒绝地址</span>
+        <strong style="margin-left:10px;" v-for="(value, index) in searchConstractDetail.rejectAddresses" :key= "index">{{value}}</strong>
       </div>
     </div>
     <el-dialog title="查找" :visible.sync="searchVisible" width="80%">
@@ -61,41 +69,21 @@
         <el-button type="primary" @click="search">确 定</el-button>
       </span>
     </el-dialog>
-    <el-dialog title="新增" :visible.sync="createVisible" width="80%">
+    <el-dialog title="创建" :visible.sync="createVisible" width="80%">
       <el-form :model="createConstractDetail" label-width="90px">
         <el-form-item label="私钥">
           <el-input v-model="privateKey"></el-input>
         </el-form-item>
-        <div style="display:flex;align-items:center;">
-          <el-form-item label="开始时间">
-            <el-date-picker
-              style="width: 100%;margin: 20px;"
-              v-model="createConstractDetail.beginTime"
-              align="right"
-              type="datetime"
-              placeholder="选择日期"
-              value-format='timestamp'>
-            </el-date-picker>
-          </el-form-item>
-          <el-form-item label="结束时间">
-            <el-date-picker
-              style="width: 100%;margin: 20px;"
-              v-model="createConstractDetail.endTime"
-              align="right"
-              type="datetime"
-              placeholder="选择日期"
-              value-format='timestamp'>
-            </el-date-picker>
-          </el-form-item>
-        </div>
-        <el-form-item label="接受账户">
-          <el-input v-model="createConstractDetail.receiveAddress"></el-input>
+        <el-form-item label="超时时长">
+          <el-input v-model="createConstractDetail.expireInverval"></el-input>
         </el-form-item>
-        <el-form-item label="目标额度">
-          <el-input v-model="createConstractDetail.target"></el-input>
+        <el-form-item label="阀值">
+          <el-input v-model="createConstractDetail.threshold"></el-input>
         </el-form-item>
-        <el-form-item label="最低投资额">
-          <el-input v-model="createConstractDetail.limit"></el-input>
+        <el-form-item label="授权账号">
+          <strong v-for="(value, index) in createConstractDetail.authorityAddresses" :key="index">{{value}}</strong>
+          <el-input v-model="authorityAddress"></el-input>
+          <el-button type="primary" @click="addNewAuthorityAddress"></el-button>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -103,7 +91,7 @@
         <el-button type="primary" @click="create">确 定</el-button>
       </span>
     </el-dialog>
-    <el-dialog title="投资" :visible.sync="fundVisible" width="80%">
+    <el-dialog title="发送" :visible.sync="sendVisible" width="80%">
       <el-form label-width="90px">
         <el-form-item label="私钥">
           <el-input v-model="privateKey"></el-input>
@@ -111,16 +99,19 @@
         <el-form-item label="合约地址">
           <el-input v-model="constractAddress"></el-input>
         </el-form-item>
-        <el-form-item label="投资额">
-          <el-input v-model="fundValue"></el-input>
+        <el-form-item label="接受人">
+          <el-input v-model="sendTo"></el-input>
+        </el-form-item>
+        <el-form-item label="金额">
+          <el-input v-model="sendValue"></el-input>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
-        <el-button @click="fundVisible = false">取 消</el-button>
-        <el-button type="primary" @click="fund">确 定</el-button>
+        <el-button @click="sendVisible = false">取 消</el-button>
+        <el-button type="primary" @click="send">确 定</el-button>
       </span>
     </el-dialog>
-    <el-dialog title="赎回" :visible.sync="refundVisible" width="80%">
+    <el-dialog title="同意" :visible.sync="agreeVisible" width="80%">
       <el-form label-width="90px">
         <el-form-item label="私钥">
           <el-input v-model="privateKey"></el-input>
@@ -130,11 +121,11 @@
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
-        <el-button @click="refundVisible = false">取 消</el-button>
-        <el-button type="primary" @click="refund">确 定</el-button>
+        <el-button @click="agreeVisible = false">取 消</el-button>
+        <el-button type="primary" @click="agree">确 定</el-button>
       </span>
     </el-dialog>
-    <el-dialog title="众筹提取" :visible.sync="receiveVisible" width="80%">
+    <el-dialog title="拒绝" :visible.sync="rejectVisible" width="80%">
       <el-form label-width="90px">
         <el-form-item label="私钥">
           <el-input v-model="privateKey"></el-input>
@@ -144,8 +135,8 @@
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
-        <el-button @click="receiveVisible = false">取 消</el-button>
-        <el-button type="primary" @click="receive">确 定</el-button>
+        <el-button @click="rejectVisible = false">取 消</el-button>
+        <el-button type="primary" @click="reject">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -155,51 +146,62 @@
 import axios from "../net/axios.js";
 
 export default {
-  name: "CrowdFund",
+  name: "MultiSign",
   data() {
     return {
       searchVisible: false,
       createVisible: false,
-      fundVisible: false,
-      refundVisible: false,
-      receiveVisible: false,
+      sendVisible: false,
+      agreeVisible: false,
+      rejectVisible: false,
       createConstractDetail: {
-        beginTime: "",
-        endTime: "",
-        receiveAddress: "",
-        target: "",
-        limit: ""
+        expireInverval: "",
+        threshold: "",
+        authorityAddresses: []
       },
       searchConstractDetail: {
         balance: "",
         state: "",
-        receiveAddress: "",
-        beginTime: "",
-        endTime: "",
-        receiveAddress: "",
-        target: "",
-        limit: "",
-        fundInfo: {}
+        timestamp: "",
+        expireInverval: "",
+        to: "",
+        value: "",
+        threshold: "",
+        authorityAddresses: [],
+        agreeAddresses: [],
+        rejectAddresses: []
       },
       constractAddress: "",
       privateKey: "",
-      fundValue: ""
+      sendTo: "",
+      sendValue: "",
+      authorityAddress: ""
     };
   },
 
   created() {},
 
   methods: {
+    addNewAuthorityAddress: function() {
+      if(createConstractDetail.authorityAddresses.find(el => {
+        el === authorityAddress;
+      }))
+      {
+        return this.$notify.error(`repeat authorityAddress ${authorityAddress}`);
+      }
+
+      createConstractDetail.authorityAddresses.push(authorityAddress);
+    },
     search: function() {
-      axios.get("getCrowdFundConstract", {
+      axios.get("getMultiSignConstract", {
         url: this.currentNode.url,
         address: this.constractAddress
       }).then(({ code, data, msg }) => {
         if(code === 0)
         {
           this.$notify.success({
-            title: 'getCrowdFundConstract',
-            message: `getCrowdFundConstract success`
+            title: 'getMultiSignConstract',
+            message: `getMultiSignConstract success`
           });
 
           this.searchConstractDetail = data;
@@ -207,8 +209,8 @@ export default {
         else
         {
           this.$notify.error({
-            title: 'getCrowdFundConstract',
-            message: `getCrowdFundConstract failed, ${msg}`
+            title: 'getMultiSignConstract',
+            message: `getMultiSignConstract failed, ${msg}`
           });
         }
       }).finally(() => {
@@ -216,7 +218,7 @@ export default {
       });
     },
     create: function() {
-      axios.get("createCrowdFundConstract", Object.assign({
+      axios.get("createMultiSignConstract", Object.assign({
         url: this.currentNode.url,
         privateKey: this.privateKey,
         value: 10,
@@ -224,8 +226,8 @@ export default {
         if(code === 0)
         {
           this.$notify.success({
-            title: 'createCrowdFundConstract',
-            message: `createCrowdFundConstract success`
+            title: 'createMultiSignConstract',
+            message: `createMultiSignConstract success`
           });
 
           this.constractAddress = data.ctAddress;
@@ -237,36 +239,38 @@ export default {
         else
         {
           this.$notify.error({
-            title: 'createCrowdFundConstract',
-            message: `createCrowdFundConstract failed, ${msg}`
+            title: 'createMultiSignConstract',
+            message: `createMultiSignConstract failed, ${msg}`
           });
         }
       }).finally(() => {
         this.createVisible = false;
       });
     },
-    fund: function() {
+    send: function() {
       const now = Date.now();
 
-      if(now > this.searchConstractDetail.endTime || now < this.searchConstractDetail.beginTime)
+      if(now < this.searchConstractDetail.timestamp + this.searchConstractDetail.expireInverval)
       {
         return this.$notify.error({
-          title: 'fundCrowdFundConstract',
-          message: `fundCrowdFundConstract contract has expired`
+          title: 'sendMultiSignConstract',
+          message: `sendMultiSignConstract send request has not expired`
         });
       }
 
-      axios.get("fundCrowdFundConstract", {
+      axios.get("sendMultiSignConstract", {
         url: this.currentNode.url,
         to: this.constractAddress,
+        value: 10,
         privateKey: this.privateKey,
-        value: this.fundValue
+        constractTo: this.sendTo,
+        constractValue: this.sendValue
       }).then(({ code, data, msg }) => {
         if(code === 0)
         {
           this.$notify.success({
-            title: 'fundCrowdFundConstract',
-            message: `fundCrowdFundConstract success`
+            title: 'sendMultiSignConstract',
+            message: `sendMultiSignConstract success`
           });
 
           setTimeout(() => {
@@ -276,37 +280,38 @@ export default {
         else
         {
           this.$notify.error({
-            title: 'fundCrowdFundConstract',
-            message: `fundCrowdFundConstract failed, ${msg}`
+            title: 'sendMultiSignConstract',
+            message: `sendMultiSignConstract failed, ${msg}`
           });
         }
       }).finally(() => {
-        this.fundVisible = false;
+        this.sendVisible = false;
       });
       
     },
-    refund: function() {
+    agree: function() {
       const now = Date.now();
 
-      if(now < this.searchConstractDetail.endTime)
+      if(now > this.searchConstractDetail.timestamp + this.searchConstractDetail.expireInverval)
       {
         return this.$notify.error({
-          title: 'reFundCrowdFundConstract',
-          message: `reFundCrowdFundConstract contract has not ended`
+          title: 'agreeMultiSignConstract',
+          message: `agreeMultiSignConstract send request has expired`
         });
       }
       
-      axios.get("reFundCrowdFundConstract", {
+      axios.get("agreeMultiSignConstract", {
         url: this.currentNode.url,
         to: this.constractAddress,
         privateKey: this.privateKey,
-        value: 10
+        value: 10,
+        timestamp: this.searchConstractDetail.timestamp
       }).then(({ code, data, msg }) => {
         if(code === 0)
         {
           this.$notify.success({
-            title: 'reFundCrowdFundConstract',
-            message: `reFundCrowdFundConstract success`
+            title: 'agreeMultiSignConstract',
+            message: `agreeMultiSignConstract success`
           });
 
           setTimeout(() => {
@@ -316,36 +321,37 @@ export default {
         else
         {
           this.$notify.error({
-            title: 'reFundCrowdFundConstract',
-            message: `reFundCrowdFundConstract failed, ${msg}`
+            title: 'agreeMultiSignConstract',
+            message: `agreeMultiSignConstract failed, ${msg}`
           });
         }
       }).finally(() => {
-        this.refundVisible = false;
+        this.agreeVisible = false;
       });
     },
-    receive: function() {
+    reject: function() {
       const now = Date.now();
 
-      if(now < this.searchConstractDetail.endTime)
+      if(now > this.searchConstractDetail.timestamp + this.searchConstractDetail.expireInverval)
       {
         return this.$notify.error({
-          title: 'receiveCrowdFundConstract',
-          message: `receiveCrowdFundConstract contract has not ended`
+          title: 'rejectMultiSignConstract',
+          message: `rejectMultiSignConstract send request has expired`
         });
       }
 
-      axios.get("receiveCrowdFundConstract", {
+      axios.get("rejectMultiSignConstract", {
         url: this.currentNode.url,
         to: this.constractAddress,
         privateKey: this.privateKey,
-        value: 10
+        value: 10,
+        timestamp: this.searchConstractDetail.timestamp
       }).then(({ code, data, msg }) => {
         if(code === 0)
         {
           this.$notify.success({
-            title: 'receiveCrowdFundConstract',
-            message: `receiveCrowdFundConstract success`
+            title: 'rejectMultiSignConstract',
+            message: `rejectMultiSignConstract success`
           });
 
           setTimeout(() => {
@@ -355,12 +361,12 @@ export default {
         else
         {
           this.$notify.error({
-            title: 'receiveCrowdFundConstract',
-            message: `receiveCrowdFundConstract failed, ${msg}`
+            title: 'rejectMultiSignConstract',
+            message: `rejectMultiSignConstract failed, ${msg}`
           });
         }
       }).finally(() => {
-        this.receiveVisible = false;
+        this.rejectVisible = false;
       });
     }
   },

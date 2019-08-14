@@ -2,10 +2,10 @@ const utils = require("../../depends/utils");
 const { sendTransaction } = require("../local");
 const assert = require("assert");
 const { SUCCESS, OTH_ERR, PARAM_ERR } = require("../../constant");
-const MultiSignConstract = require("../../consensus_contracts/multiSignConstract");
+const MultiSignConstract = require("../../consensus_constracts/multiSignConstract");
 const { getAccountInfo } = require("../remote")
-const multiSignConstractId = require("../../consensus_contracts/multiSignConstract").id;
-const { COMMAND_CREATE } = require("../../consensus_contracts/constant");
+const multiSignConstractId = require("../../consensus_constracts/multiSignConstract").id;
+const { COMMAND_CREATE } = require("../../consensus_constracts/constant");
 
 const app = process[Symbol.for("app")];
 const printErrorStack = process[Symbol.for("printErrorStack")];
@@ -121,15 +121,15 @@ app.get("/getMultiSignConstract", (req, res) => {
         if (new BN(account.balance).eqn(0) && new BN(account.nonce).eqn(0) && account.data.length <= 0) {
             return res.json({
                 code: OTH_ERR,
-                msg: "contract not exist"
+                msg: "constract not exist"
             })
         }
 
-        const contractId = rlp.decode(account.data)[0].toString("hex");
-        if (contractId !== MultiSignConstract.id) {
+        const constractId = rlp.decode(account.data)[0].toString("hex");
+        if (constractId !== MultiSignConstract.id) {
             return res.json({
                 code: OTH_ERR,
-                msg: "contract exist, but is not MultiSignConstract"
+                msg: "constract exist, but is not MultiSignConstract"
             })
         }
 
@@ -183,23 +183,23 @@ app.get("/sendMultiSignConstract", (req, res) => {
         });
     }
 
-    if (!req.query.contractTo) {
+    if (!req.query.constractTo) {
         return res.send({
             code: PARAM_ERR,
-            msg: "param error, need contractTo"
+            msg: "param error, need constractTo"
         });
     }
 
-    if (!req.query.contractValue) {
+    if (!req.query.constractValue) {
         return res.send({
             code: PARAM_ERR,
-            msg: "param error, need contractValue"
+            msg: "param error, need constractValue"
         });
     }
     const data = rlp.encode([
         toBuffer(COMMAND_SEND), 
-        Buffer.from(req.query.contractTo, "hex"), 
-        Buffer.from(req.query.contractValue, "hex")]).toString("hex");
+        Buffer.from(req.query.constractTo, "hex"), 
+        Buffer.from(req.query.constractValue, "hex")]).toString("hex");
 
     sendTransaction(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(transactionHash => {
         res.send({
@@ -245,7 +245,7 @@ app.get("/agreeMultiSignConstract", (req, res) => {
         });
     }
 
-    const data = rlp.encode([toBuffer(COMMAND_AGREE), toBuffer(req.query.timestamp)]).toString("hex");
+    const data = rlp.encode([toBuffer(COMMAND_AGREE), toBuffer(parseInt(req.query.timestamp))]).toString("hex");
 
     sendTransaction(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(transactionHash => {
         res.send({
@@ -291,7 +291,7 @@ app.get("/rejectMultiSignConstract", (req, res) => {
         });
     }
 
-    const data = rlp.encode([toBuffer(COMMAND_REJECT), toBuffer(req.query.timestamp)]).toString("hex");
+    const data = rlp.encode([toBuffer(COMMAND_REJECT), toBuffer(parseInt(req.query.timestamp))]).toString("hex");
 
     sendTransaction(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(transactionHash => {
         res.send({

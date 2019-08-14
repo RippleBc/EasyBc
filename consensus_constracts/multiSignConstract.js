@@ -175,8 +175,8 @@ class MultiSignConstract extends Constract {
                     this.timestamp = timestamp;
 
                     //
-                    this.agreeAddressesArray.push(tx.from)
-                    this.agreeAddresses = this.encodeArray(this.agreeAddressesArray)
+                    this.agreeAddresses = this.encodeArray([tx.from]);
+                    this.rejectAddresses = Buffer.alloc(0);
                 }
                 break;
 
@@ -219,7 +219,7 @@ class MultiSignConstract extends Constract {
                         throw new Error(`MultiSignConstract commandHandler reject, constract's send request has expired`)
                     }
 
-                    this.reject(tx.from, command[1]);
+                    this.reject(tx.from, commands[1]);
                 }
                 break;
             default:
@@ -267,10 +267,13 @@ class MultiSignConstract extends Constract {
         if (this.agreeAddressesArray.find(el => el.toString("hex") === from.toString("hex"))) {
             throw new Error(`MultiSignConstract agree, repeat agree, address ${from.toString("hex")}`);
         }
-    
+        if (this.rejectAddressesArray.find(el => el.toString("hex") === from.toString("hex"))) {
+            throw new Error(`MultiSignConstract agree, repeat reject, address ${from.toString("hex")}`);
+        }
+
         this.agreeAddressesArray.push(from);
         
-        if (this.agreeAddressesArray.length / authorityAddressesArray.length >= parseInt(this.threshold) / 100)
+        if (this.agreeAddressesArray.length / this.authorityAddressesArray.length >= bufferToInt(this.threshold) / 100)
         {
             // get to account
             const toAccount = await stateManager.cache.getOrLoad(this.to);
@@ -292,11 +295,11 @@ class MultiSignConstract extends Constract {
     }
 
     /**
-     * @param {stateManager} stateManager
+     * @param {Buffer} from
      * @param {Buffer} timestamp
      */
-    async reject(stateManager, timestamp) {
-        assert(stateManager instanceof StageManager, `MultiSignConstract reject, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
+    reject(from, timestamp) {
+        assert(Buffer.isBuffer(from), `MultiSignConstract reject, from should be an Buffer, now is ${typeof from}`);
         assert(Buffer.isBuffer(timestamp), `MultiSignConstract reject, timestamp should be an Buffer, now is ${typeof timestamp}`);
 
         // check timetamp
@@ -306,11 +309,16 @@ class MultiSignConstract extends Constract {
         }
 
         // check repeat
+        if (this.agreeAddressesArray.find(el => el.toString("hex") === from.toString("hex"))) {
+            throw new Error(`MultiSignConstract reject, repeat agree, address ${from.toString("hex")}`);
+        }
         if (this.rejectAddressesArray.find(el => el.toString("hex") === from.toString("hex"))) {
             throw new Error(`MultiSignConstract reject, repeat reject, address ${from.toString("hex")}`);
         }
 
-        if (this.rejectAddressesArray.length / authorityAddressesArray.length >= parseInt(this.threshold) / 100) {
+        this.rejectAddressesArray.push(from);
+
+        if (this.rejectAddressesArray.length / this.authorityAddressesArray.length >= bufferToInt(this.threshold) / 100) {
             this.reset();
         }
         else {
@@ -322,6 +330,7 @@ class MultiSignConstract extends Constract {
     {
         this.to = Buffer.alloc(0);
         this.value = Buffer.alloc(0);
+        this.timestamp = Buffer.alloc(0);
         this.agreeAddresses = Buffer.alloc(0);
         this.rejectAddresses = Buffer.alloc(0);
     }
