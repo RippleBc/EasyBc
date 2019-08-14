@@ -12,7 +12,7 @@
         @click="receiveVisible = true;"
       >众筹提取</el-button>
     </div>
-    <div class="border" style="margin:20px 0px 20px 0px;width: 600px;height: 420px;overflow:scroll;" v-if="searchConstractDetail.state">
+    <div class="border" style="margin:20px 0px 20px 0px;width: 600px;overflow:scroll;" v-if="searchConstractDetail.state">
       <div style="display:flex;width:100%;margin-bottom:10px;">
         <span>地址</span>
         <strong style="margin-left:10px;">{{constractAddress}}</strong>
@@ -377,8 +377,8 @@ export default {
 .container {
   display: flex;
   flex-direction: row;
-  justify-content: flex-start;
-  align-items: flex-start;
+  justify-content: center;
+  align-items: center;
 }
 
 .border {

@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <div style="margin:20px 0px 20px 0px;">
+    <div style="display:flex;flex-direction:column;align-items:center;margin:20px 0px 20px 0px;">
         <crowd-fund></crowd-fund>
         <multi-sign></multi-sign>
     </div>
@@ -35,10 +35,11 @@ export default {
 .container {
   display: flex;
   flex-direction: row;
-  justify-content: flex-start;
-  align-items: flex-start;
+  justify-content: center;
+  align-items: center;
   width: 100%;
   line-height: 50px;
+  border-bottom: 1px solid #ddd;
 }
 
 div {
