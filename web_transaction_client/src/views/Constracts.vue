@@ -36,7 +36,7 @@ export default {
   display: flex;
   flex-direction: row;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   width: 100%;
   line-height: 50px;
   border-bottom: 1px solid #ddd;
