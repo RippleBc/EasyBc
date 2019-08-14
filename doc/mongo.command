@@ -62,13 +62,10 @@ sudo service mongod restart
 /********************************************* 清除节点信息 *********************************************/
 
 # login
-mongo --port 4406 -u "root" -p "root" --authenticationDatabase "admin"
+mongo --port 4406 -u "blockChain" -p "blockChain" --authenticationDatabase "admin"
 
 #
 use blockChain
-
-#
-db.auth("root", "root")
 
 #
 db.blocks.remove({})

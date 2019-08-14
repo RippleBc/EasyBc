@@ -106,7 +106,7 @@ show events;
 mysql -uroot -proot
 
 #
-DROP DATABASE consensus
+DROP DATABASE consensus;
 
 #
-CREATE DATABASE consensus
+CREATE DATABASE consensus;
