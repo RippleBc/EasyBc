@@ -318,7 +318,7 @@ class MultiSignConstract extends Constract {
 
         this.rejectAddressesArray.push(from);
 
-        if (this.rejectAddressesArray.length / this.authorityAddressesArray.length >= bufferToInt(this.threshold) / 100) {
+        if (this.rejectAddressesArray.length / this.authorityAddressesArray.length > (1 - bufferToInt(this.threshold) / 100)) {
             this.reset();
         }
         else {

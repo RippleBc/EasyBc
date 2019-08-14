@@ -81,9 +81,31 @@
           <el-input v-model="createConstractDetail.threshold"></el-input>
         </el-form-item>
         <el-form-item label="授权账号">
-          <strong v-for="(value, index) in createConstractDetail.authorityAddresses" :key="index">{{value}}</strong>
-          <el-input v-model="authorityAddress"></el-input>
-          <el-button type="primary" @click="addNewAuthorityAddress"></el-button>
+          <div style="display:flex;justify-content:flex-end;align-items:center;">
+            <el-input v-model="authorityAddress"></el-input>
+            <el-button style="margin:10px;" type="primary" @click="addNewAuthorityAddress">添加授权账号</el-button>
+          </div>
+          <el-table 
+            :data="createConstractDetail.authorityAddresses"
+            style="width: 100%:"
+            :border="true">
+            <el-table-column label="类型">
+              <template slot-scope="scope">
+                <strong>{{createConstractDetail.authorityAddresses[scope.$index]}}</strong>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作菜单">
+              <template slot-scope="scope">
+                <div style="display:flex;width:600px;">
+                  <el-button
+                    style="margin-right:10px;"
+                    type="primary"
+                    @click="createConstractDetail.authorityAddresses.splice(scope.$index, 1)"
+                  >删除</el-button>
+                </div>
+              </template>
+            </el-table-column>
+          </el-table>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -155,7 +177,7 @@ export default {
       agreeVisible: false,
       rejectVisible: false,
       createConstractDetail: {
-        expireInverval: "",
+        expireInverval: 360000,
         threshold: "",
         authorityAddresses: []
       },
@@ -183,14 +205,19 @@ export default {
 
   methods: {
     addNewAuthorityAddress: function() {
-      if(createConstractDetail.authorityAddresses.find(el => {
-        el === authorityAddress;
+      if(this.createConstractDetail.authorityAddresses.find(el => {
+        return el === this.authorityAddress;
       }))
       {
-        return this.$notify.error(`repeat authorityAddress ${authorityAddress}`);
+        return this.$notify.error(`repeat authorityAddress ${this.authorityAddress}`);
       }
 
-      createConstractDetail.authorityAddresses.push(authorityAddress);
+      if(this.authorityAddress === "")
+      {
+        return this.$notify.error("authorityAddress can not be empty");
+      }
+
+      this.createConstractDetail.authorityAddresses.push(this.authorityAddress);
     },
     search: function() {
       axios.get("getMultiSignConstract", {

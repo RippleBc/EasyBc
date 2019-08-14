@@ -60,7 +60,11 @@ app.get("/createMultiSignConstract", (req, res) => {
     }
     
     // check address
-    req.query.authorityAddresses = JSON.parse(req.query.authorityAddresses)
+    if (!Array.isArray(req.query.authorityAddresses))
+    {
+        req.query.authorityAddresses = JSON.parse(req.query.authorityAddresses)
+    }
+    
     for (let authorityAddress of req.query.authorityAddresses)
     {
         if (authorityAddress.length !== 40)
