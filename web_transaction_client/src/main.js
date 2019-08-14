@@ -4,8 +4,7 @@ import router from './router'
 import store from './store'
 import './registerServiceWorker'
 import '~/../../web_depends/assets/css/theme-green/index.css'
-import "~/../../web_depends/assets/css/main.css";
-import "~/../../web_depends/assets/css/color-green.css";
+
 import ElementUI from 'element-ui';
 
 Vue.config.productionTip = false
