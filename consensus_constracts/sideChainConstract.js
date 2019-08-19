@@ -211,8 +211,11 @@ class SideChainConstract extends Constract {
           this.timestamp = timestamp;
 
           //
-          this.agreeAddresses = this.encodeArray([tx.from]);
+          this._agreeAddressesArray = [];
+          this._rejectAddressesArray = [];
           this.rejectAddresses = Buffer.alloc(0);
+
+          await this.agree(stateManager, tx.from, toAccount, timestamp);
         }
         break;
 
@@ -305,6 +308,8 @@ class SideChainConstract extends Constract {
             this.authorityAddressesArray.push(newAuthorityAddress);
           }
         }
+
+        this.authorityAddresses = this.encodeArray(this.authorityAddressesArray)
       }
       else
       {
@@ -319,10 +324,8 @@ class SideChainConstract extends Constract {
           }
         }
 
-        this.authorityAddressesArray = addresses;
+        this.authorityAddresses = this.encodeArray(addresses);
       }
-      
-      this.authorityAddresses = this.encodeArray(this.authorityAddressesArray)
 
       this.reset();
     }

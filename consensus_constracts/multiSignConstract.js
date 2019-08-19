@@ -175,8 +175,11 @@ class MultiSignConstract extends Constract {
                     this.timestamp = timestamp;
 
                     //
-                    this.agreeAddresses = this.encodeArray([tx.from]);
+                    this._agreeAddressesArray = [];
+                    this._rejectAddressesArray = [];
                     this.rejectAddresses = Buffer.alloc(0);
+
+                    await this.agree(stateManager, tx.from, toAccount, timestamp);
                 }
                 break;
 

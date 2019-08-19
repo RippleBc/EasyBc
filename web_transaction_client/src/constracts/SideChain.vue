@@ -115,7 +115,7 @@
       </span>
     </el-dialog>
     <el-dialog title="新增授权账号" :visible.sync="newAuthorityAddressesVisible" width="80%">
-      <el-form label-width="90px">
+      <el-form label-width="120px">
         <el-form-item label="私钥">
           <el-input v-model="privateKey"></el-input>
         </el-form-item>
@@ -156,14 +156,14 @@
       </span>
     </el-dialog>
     <el-dialog title="删除授权账号" :visible.sync="delAuthorityAddressesVisible" width="80%">
-      <el-form label-width="90px">
+      <el-form label-width="120px">
         <el-form-item label="私钥">
           <el-input v-model="privateKey"></el-input>
         </el-form-item>
         <el-form-item label="合约地址">
           <el-input v-model="constractAddress"></el-input>
         </el-form-item>
-        <el-form-item label="新增授权账号">
+        <el-form-item label="删除授权账号">
           <div style="display:flex;justify-content:flex-end;align-items:center;">
             <el-input v-model="authorityAddress"></el-input>
             <el-button style="margin:10px;" type="primary" @click="delAuthorityAddress">添加授权账号</el-button>
@@ -448,7 +448,7 @@ export default {
           });
         }
       }).finally(() => {
-        this.newAuthorityAddressesVisible = false;
+        this.delAuthorityAddressesVisible = false;
       });
       
     },

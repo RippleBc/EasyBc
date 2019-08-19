@@ -19,9 +19,10 @@ const privateToPublic = utils.privateToPublic;
 const publicToAddress = utils.publicToAddress;
 const bufferToInt = utils.bufferToInt;
 
-const COMMAND_SEND = 100;
-const COMMAND_AGREE = 101;
-const COMMAND_REJECT = 102;
+const COMMAND_NEW_AUTHORITY_ADDRESSES = 100;
+const COMMAND_DEL_AUTHORITY_ADDRESSES = 101;
+const COMMAND_AGREE = 102;
+const COMMAND_REJECT = 103;
 
 app.get("/createSideChainConstract", (req, res) => {
   if (!req.query.url) {
@@ -207,7 +208,7 @@ app.get("/newSideChainConstract", (req, res) => {
   const newAuthorityAddressesBuffer = rlp.encode(req.query.newAuthorityAddresses.map(el => Buffer.from(el, "hex")))
 
   const data = rlp.encode([
-    toBuffer(COMMAND_SEND),
+    toBuffer(COMMAND_NEW_AUTHORITY_ADDRESSES),
     newAuthorityAddressesBuffer]).toString("hex");
 
   sendTransaction(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(transactionHash => {
@@ -270,7 +271,7 @@ app.get("/delSideChainConstract", (req, res) => {
   const delAuthorityAddressesBuffer = rlp.encode(req.query.delAuthorityAddresses.map(el => Buffer.from(el, "hex")))
 
   const data = rlp.encode([
-    toBuffer(COMMAND_SEND),
+    toBuffer(COMMAND_DEL_AUTHORITY_ADDRESSES),
     delAuthorityAddressesBuffer]).toString("hex");
 
   sendTransaction(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(transactionHash => {
