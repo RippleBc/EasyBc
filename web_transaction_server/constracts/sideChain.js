@@ -39,6 +39,13 @@ app.get("/createSideChainConstract", (req, res) => {
     });
   }
 
+  if (!req.query.code) {
+    return res.send({
+      code: PARAM_ERR,
+      msg: "param error, need code"
+    });
+  }
+
   if (!req.query.expireInterval) {
     return res.send({
       code: PARAM_ERR,
@@ -82,6 +89,7 @@ app.get("/createSideChainConstract", (req, res) => {
   const data = rlp.encode([
     toBuffer(COMMAND_CREATE),
     Buffer.from(SideChainConstractId, "hex"),
+    Buffer.from(req.query.code, "hex"),
     toBuffer(parseInt(req.query.expireInterval)),
     toBuffer(parseInt(req.query.threshold)),
     authorityAddressesBuffer]).toString("hex");
@@ -145,6 +153,7 @@ app.get("/getSideChainConstract", (req, res) => {
         balance: `0x${account.balance.toString("hex")}`,
         id: `0x${sideChainConstract.id.toString("hex")}`,
         state: bufferToInt(sideChainConstract.state),
+        code: `0x${sideChainConstract.code.toString("hex")}`,
         timestamp: bufferToInt(sideChainConstract.timestamp),
         expireInterval: bufferToInt(sideChainConstract.expireInterval),
         newAuthorityAddresses: sideChainConstract.newAuthorityAddresses.length > 0 ? rlp.decode(sideChainConstract.newAuthorityAddresses).map(el => `0x${el.toString("hex")}`) : [],

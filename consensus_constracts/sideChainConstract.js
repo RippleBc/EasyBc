@@ -14,6 +14,7 @@ const COMMAND_NEW_AUTHORITY_ADDRESSES = 100;
 const COMMAND_DEL_AUTHORITY_ADDRESSES = 101;
 const COMMAND_AGREE = 102;
 const COMMAND_REJECT = 103;
+const COMMAND_CROSS_PAY = 104;
 
 class SideChainConstract extends Constract {
   constructor(data) {
@@ -29,6 +30,11 @@ class SideChainConstract extends Constract {
     }, {
       length: 32,
       name: "state",
+      allowLess: true,
+      default: Buffer.alloc(1)
+    }, {
+      length: 32,
+      name: "code",
       allowLess: true,
       default: Buffer.alloc(1)
     }, {
@@ -255,15 +261,18 @@ class SideChainConstract extends Constract {
   }
 
   /**
+   * @param {Buffer} code  
    * @param {Buffer} expireInterval
    * @param {Buffer} threshold
    * @param {Buffer} authorityAddresses
    */
-  create(expireInterval, threshold, authorityAddresses) {
+  create(code, expireInterval, threshold, authorityAddresses) {
+    assert(Buffer.isBuffer(code), `SideChainConstract create, code should be an Buffer, now is ${typeof code}`);
     assert(Buffer.isBuffer(expireInterval), `SideChainConstract create, expireInterval should be an Buffer, now is ${typeof expireInterval}`);
     assert(Buffer.isBuffer(threshold), `SideChainConstract create, threshold should be an Buffer, now is ${typeof threshold}`);
     assert(Buffer.isBuffer(authorityAddresses), `SideChainConstract create, authorityAddresses should be an Buffer, now is ${typeof authorityAddresses}`);
 
+    this.code = code;
     this.expireInterval = expireInterval;
     this.threshold = threshold;
     this.authorityAddresses = authorityAddresses;

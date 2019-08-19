@@ -23,6 +23,10 @@
         <strong style="margin-left:10px;">{{searchConstractDetail.balance}}</strong>
       </div>
       <div style="display:flex;width:100%;margin-bottom:10px;">
+        <span>侧链代码</span>
+        <strong style="margin-left:10px;">{{new Date(searchConstractDetail.code).toString()}}</strong>
+      </div>
+      <div style="display:flex;width:100%;margin-bottom:10px;">
         <span>状态</span>
         <strong style="margin-left:10px;">{{searchConstractDetail.state}}</strong>
       </div>
@@ -74,6 +78,9 @@
       <el-form :model="createConstractDetail" label-width="90px">
         <el-form-item label="私钥">
           <el-input v-model="privateKey"></el-input>
+        </el-form-item>
+        <el-form-item label="侧链代码">
+          <el-input v-model="createConstractDetail.code"></el-input>
         </el-form-item>
         <el-form-item label="超时时长">
           <el-input v-model="createConstractDetail.expireInterval"></el-input>
@@ -241,11 +248,13 @@ export default {
       agreeVisible: false,
       rejectVisible: false,
       createConstractDetail: {
+        code: "",
         expireInterval: 360000,
         threshold: "",
         authorityAddresses: []
       },
       searchConstractDetail: {
+        code: "",
         balance: "",
         state: "",
         timestamp: "",

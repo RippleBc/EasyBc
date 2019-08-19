@@ -3,11 +3,13 @@ const Transaction = require("../../depends/transaction");
 const utils = require("../../depends/utils");
 const assert = require("assert");
 const transactionModelConfig = require('./transaction');
+const sendedSpvModelConfig = require('./sendedSpv');
+const sideChainConfig = require('./sideChain');
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 const log4js= require("../logConfig");
 
-const logger = log4js.getLogger("logParse");
+const logger = log4js.getLogger();
 
 const Buffer = utils.Buffer;
 
@@ -32,6 +34,8 @@ class Mysql
   async init()
   {
     this.Transaction = this.sequelize.define(...transactionModelConfig);
+    this.SendedSpv = this.sequelize.define(...sendedSpvModelConfig);
+    this.SideChain = this.sequelize.define(...sideChainConfig);
 
     await this.sequelize.authenticate();
     await this.sequelize.sync();
@@ -60,7 +64,7 @@ class Mysql
     }
     catch(e)
     {
-      logger.error(`saveTransaction, throw exception ${e}`)
+      logger.error(`Mysql saveTransaction, throw exception ${e}`)
     }
   }
 
@@ -77,6 +81,44 @@ class Mysql
     {
       await this.saveTransaction(number, transactions[i]);
     }
+  }
+
+  /**
+   * @param {Buffer} number
+   * @param {Transaction} transaction
+   * @param {String} chainCode
+   */
+  async saveSendedSpv(number, transaction, chainCode)
+  {
+    assert(Buffer.isBuffer(number), `Mysql saveSpv, number should be an Buffer, now is ${typeof number}`);
+    assert(transaction instanceof Transaction, `Mysql saveSpv, transaction should be an Transaction Object, now is ${typeof transaction}`);
+    assert(typeof chainCode === 'string', `Mysql saveSpv, chainCode should be an Buffer, now is ${typeof chainCode}`);
+
+    try {
+      await this.SendedSpv.create({
+        hash: transaction.hash().toString('hex'),
+        number: number.toString('hex'),
+        chainCode: chainCode
+      });
+    }
+    catch (e) {
+      logger.error(`Mysql saveSpv, throw exception ${e}`)
+    }
+  }
+
+  /**
+   * @param {String} code
+   */
+  async getSideChain(code)
+  {
+    assert(typeof code === 'string', `Mysql getSideChain, code should be a String, now is ${typeof code}`);
+
+    return await this.SideChain.findAll({
+      attributes: ['url'],
+      where: {
+        code: code
+      }
+    });
   }
 }
 

@@ -5,10 +5,12 @@ const log4js= require("./logConfig");
 const assert = require("assert");
 const mongoConfig = require("./config").mongo;
 const utils = require("../depends/utils");
+const Trie = require("../depends/merkle_patricia_tree");
+const broadCastSpv = require("./cross_chain");
 
 const BN = utils.BN;
 
-const logger = log4js.getLogger("logParse");
+const logger = log4js.getLogger();
 
 const mysql = new Mysql();
 
@@ -22,12 +24,20 @@ process.on("uncaughtException", function(err) {
 (async () => {
 	// init mysql
 	await mysql.init();
+	process[Symbol.for("mysql")] = mysql;
 
 	// init mongo
   const mongo = require("../depends/mpt_db_wrapper");
   await mongo.initBaseDb(mongoConfig.host, mongoConfig.port, mongoConfig.user, mongoConfig.password, mongoConfig.dbName);
 
-	await run(mongo.generateBlockDb())
+	// init accountTrie
+	const trieDb = mongo.generateMptDb()
+	process[Symbol.for("accountTrie")] = new Trie(trieDb);
+
+	// init blockDb
+	const blockDb = mongo.generateBlockDb();
+
+	await run(blockDb);
 })()
 
 /**
@@ -55,6 +65,9 @@ const run = async blockDb =>
 			// save transactions
 			const transactions = block.transactions;
 			await mysql.saveTransactions(blockNumber, transactions);
+
+			//
+			await broadCastSpv(blockNumber, transactions);
 
 			// update block number
 			blockNumber = new BN(blockNumber).addn(1).toBuffer();
