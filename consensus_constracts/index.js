@@ -1,5 +1,6 @@
 const CrowdFundConstract = require("./crowdFundConstract");
 const MultiSignConstract = require("./multiSignConstract");
+const SideChainConstract = require("./sideChainConstract");
 const utils = require("../depends/utils");
 const assert = require("assert");
 const StageManager = require("../depends/block_chain/stateManager");
@@ -18,6 +19,7 @@ class ContractsManager
 
     this.contractsMap.set(CrowdFundConstract.id, CrowdFundConstract);
     this.contractsMap.set(MultiSignConstract.id, MultiSignConstract);
+    this.contractsMap.set(SideChainConstract.id, SideChainConstract);
   }
 
   /**

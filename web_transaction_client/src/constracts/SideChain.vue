@@ -1,10 +1,11 @@
 <template>
   <div class="container">
     <div class="border" style="margin:20px 20px 20px 0px;width: 200px;height: 420px;">
-      <strong>多重签名合约</strong>
+      <strong>侧链合约</strong>
       <el-button style="width:100px;margin:10px;" type="primary" @click="searchVisible = true;">查找</el-button>
       <el-button style="width:100px;margin:10px;" type="primary" @click="createVisible = true;">创建</el-button>
-      <el-button style="width:100px;margin:10px;" type="primary" @click="sendVisible = true;">发送</el-button>
+      <el-button style="width:150px;margin:10px;" type="primary" @click="newAuthorityAddressesVisible = true;">新增授权账户</el-button>
+      <el-button style="width:150px;margin:10px;" type="primary" @click="delAuthorityAddressesVisible = true;">删除授权账户</el-button>
       <el-button style="width:100px;margin:10px;" type="primary" @click="agreeVisible = true;">同意</el-button>
       <el-button
         style="width:100px;margin:10px;"
@@ -33,13 +34,13 @@
         <span>超时时长</span>
         <strong style="margin-left:10px;">{{searchConstractDetail.expireInterval}}</strong>
       </div>
-      <div style="display:flex;width:100%;margin-bottom:10px;">
-        <span>接受人</span>
-        <strong style="margin-left:10px;">{{searchConstractDetail.to}}</strong>
+      <div style="display:flex;flex-direction:column;width:100%;margin-bottom:10px;">
+        <span>新增授权地址请求</span>
+        <strong style="margin-left:10px;" v-for="(value, index) in searchConstractDetail.newAuthorityAddresses" :key= "index">{{value}}</strong>
       </div>
-      <div style="display:flex;width:100%;margin-bottom:10px;">
-        <span>额度</span>
-        <strong style="margin-left:10px;">{{searchConstractDetail.value}}</strong>
+      <div style="display:flex;flex-direction:column;width:100%;margin-bottom:10px;">
+        <span>删除授权地址请求</span>
+        <strong style="margin-left:10px;" v-for="(value, index) in searchConstractDetail.delAuthorityAddresses" :key= "index">{{value}}</strong>
       </div>
       <div style="display:flex;width:100%;margin-bottom:10px;">
         <span>阀值</span>
@@ -113,7 +114,7 @@
         <el-button type="primary" @click="create">确 定</el-button>
       </span>
     </el-dialog>
-    <el-dialog title="发送" :visible.sync="sendVisible" width="80%">
+    <el-dialog title="新增授权账号" :visible.sync="newAuthorityAddressesVisible" width="80%">
       <el-form label-width="90px">
         <el-form-item label="私钥">
           <el-input v-model="privateKey"></el-input>
@@ -121,16 +122,78 @@
         <el-form-item label="合约地址">
           <el-input v-model="constractAddress"></el-input>
         </el-form-item>
-        <el-form-item label="接受人">
-          <el-input v-model="sendTo"></el-input>
-        </el-form-item>
-        <el-form-item label="金额">
-          <el-input v-model="sendValue"></el-input>
+        <el-form-item label="新增授权账号">
+          <div style="display:flex;justify-content:flex-end;align-items:center;">
+            <el-input v-model="authorityAddress"></el-input>
+            <el-button style="margin:10px;" type="primary" @click="newAuthorityAddress">添加授权账号</el-button>
+          </div>
+          <el-table 
+            :data="newAuthorityAddresses"
+            style="width: 100%:"
+            :border="true">
+            <el-table-column label="类型">
+              <template slot-scope="scope">
+                <strong>{{newAuthorityAddresses[scope.$index]}}</strong>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作菜单">
+              <template slot-scope="scope">
+                <div style="display:flex;width:600px;">
+                  <el-button
+                    style="margin-right:10px;"
+                    type="primary"
+                    @click="newAuthorityAddresses.splice(scope.$index, 1)"
+                  >删除</el-button>
+                </div>
+              </template>
+            </el-table-column>
+          </el-table>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
-        <el-button @click="sendVisible = false">取 消</el-button>
-        <el-button type="primary" @click="send">确 定</el-button>
+        <el-button @click="newAuthorityAddressesVisible = false">取 消</el-button>
+        <el-button type="primary" @click="commitNewAuthorityAddress">确 定</el-button>
+      </span>
+    </el-dialog>
+    <el-dialog title="删除授权账号" :visible.sync="delAuthorityAddressesVisible" width="80%">
+      <el-form label-width="90px">
+        <el-form-item label="私钥">
+          <el-input v-model="privateKey"></el-input>
+        </el-form-item>
+        <el-form-item label="合约地址">
+          <el-input v-model="constractAddress"></el-input>
+        </el-form-item>
+        <el-form-item label="新增授权账号">
+          <div style="display:flex;justify-content:flex-end;align-items:center;">
+            <el-input v-model="authorityAddress"></el-input>
+            <el-button style="margin:10px;" type="primary" @click="delAuthorityAddress">添加授权账号</el-button>
+          </div>
+          <el-table 
+            :data="delAuthorityAddresses"
+            style="width: 100%:"
+            :border="true">
+            <el-table-column label="类型">
+              <template slot-scope="scope">
+                <strong>{{delAuthorityAddresses[scope.$index]}}</strong>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作菜单">
+              <template slot-scope="scope">
+                <div style="display:flex;width:600px;">
+                  <el-button
+                    style="margin-right:10px;"
+                    type="primary"
+                    @click="delAuthorityAddresses.splice(scope.$index, 1)"
+                  >删除</el-button>
+                </div>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="delAuthorityAddressesVisible = false">取 消</el-button>
+        <el-button type="primary" @click="commitDelAuthorityAddress">确 定</el-button>
       </span>
     </el-dialog>
     <el-dialog title="同意" :visible.sync="agreeVisible" width="80%">
@@ -168,12 +231,13 @@
 import axios from "../net/axios.js";
 
 export default {
-  name: "MultiSign",
+  name: "SideChain",
   data() {
     return {
       searchVisible: false,
       createVisible: false,
-      sendVisible: false,
+      newAuthorityAddressesVisible: false,
+      delAuthorityAddressesVisible: false,
       agreeVisible: false,
       rejectVisible: false,
       createConstractDetail: {
@@ -195,8 +259,8 @@ export default {
       },
       constractAddress: "",
       privateKey: "",
-      sendTo: "",
-      sendValue: "",
+      newAuthorityAddresses: [],
+      delAuthorityAddresses: [],
       authorityAddress: ""
     };
   },
@@ -219,16 +283,46 @@ export default {
 
       this.createConstractDetail.authorityAddresses.push(this.authorityAddress);
     },
+    newAuthorityAddress: function() {
+      if(this.newAuthorityAddresses.find(el => {
+        return el === this.authorityAddress;
+      }))
+      {
+        return this.$notify.error(`repeat authorityAddress ${this.authorityAddress}`);
+      }
+
+      if(this.authorityAddress === "")
+      {
+        return this.$notify.error("authorityAddress can not be empty");
+      }
+
+      this.newAuthorityAddresses.push(this.authorityAddress);
+    },
+    delAuthorityAddress: function() {
+      if(this.delAuthorityAddresses.find(el => {
+        return el === this.authorityAddress;
+      }))
+      {
+        return this.$notify.error(`repeat authorityAddress ${this.authorityAddress}`);
+      }
+
+      if(this.authorityAddress === "")
+      {
+        return this.$notify.error("authorityAddress can not be empty");
+      }
+
+      this.delAuthorityAddresses.push(this.authorityAddress);
+    },
     search: function() {
-      axios.get("getMultiSignConstract", {
+      axios.get("getSideChainConstract", {
         url: this.currentNode.url,
         address: this.constractAddress
       }).then(({ code, data, msg }) => {
         if(code === 0)
         {
           this.$notify.success({
-            title: 'getMultiSignConstract',
-            message: `getMultiSignConstract success`
+            title: 'getSideChainConstract',
+            message: `getSideChainConstract success`
           });
 
           this.searchConstractDetail = data;
@@ -236,8 +330,8 @@ export default {
         else
         {
           this.$notify.error({
-            title: 'getMultiSignConstract',
-            message: `getMultiSignConstract failed, ${msg}`
+            title: 'getSideChainConstract',
+            message: `getSideChainConstract failed, ${msg}`
           });
         }
       }).finally(() => {
@@ -245,7 +339,7 @@ export default {
       });
     },
     create: function() {
-      axios.get("createMultiSignConstract", Object.assign({
+      axios.get("createSideChainConstract", Object.assign({
         url: this.currentNode.url,
         privateKey: this.privateKey,
         value: 10,
@@ -253,8 +347,8 @@ export default {
         if(code === 0)
         {
           this.$notify.success({
-            title: 'createMultiSignConstract',
-            message: `createMultiSignConstract success`
+            title: 'createSideChainConstract',
+            message: `createSideChainConstract success`
           });
 
           this.constractAddress = data.ctAddress;
@@ -266,38 +360,38 @@ export default {
         else
         {
           this.$notify.error({
-            title: 'createMultiSignConstract',
-            message: `createMultiSignConstract failed, ${msg}`
+            title: 'createSideChainConstract',
+            message: `createSideChainConstract failed, ${msg}`
           });
         }
       }).finally(() => {
         this.createVisible = false;
       });
     },
-    send: function() {
+
+    commitNewAuthorityAddress: function() {
       const now = Date.now();
 
       if(now < this.searchConstractDetail.timestamp + this.searchConstractDetail.expireInterval)
       {
         return this.$notify.error({
-          title: 'sendMultiSignConstract',
-          message: `sendMultiSignConstract send request has not expired`
+          title: 'newSideChainConstract',
+          message: `newSideChainConstract authority addresses modify request has not expired`
         });
       }
 
-      axios.get("sendMultiSignConstract", {
+      axios.get("newSideChainConstract", {
         url: this.currentNode.url,
         to: this.constractAddress,
         value: 10,
         privateKey: this.privateKey,
-        constractTo: this.sendTo,
-        constractValue: this.sendValue
+        newAuthorityAddresses: this.newAuthorityAddresses
       }).then(({ code, data, msg }) => {
         if(code === 0)
         {
           this.$notify.success({
-            title: 'sendMultiSignConstract',
-            message: `sendMultiSignConstract success`
+            title: 'newSideChainConstract',
+            message: `newSideChainConstract success`
           });
 
           setTimeout(() => {
@@ -307,27 +401,70 @@ export default {
         else
         {
           this.$notify.error({
-            title: 'sendMultiSignConstract',
-            message: `sendMultiSignConstract failed, ${msg}`
+            title: 'newSideChainConstract',
+            message: `newSideChainConstract failed, ${msg}`
           });
         }
       }).finally(() => {
-        this.sendVisible = false;
+        this.newAuthorityAddressesVisible = false;
       });
       
     },
+
+    commitDelAuthorityAddress: function() {
+      const now = Date.now();
+
+      if(now < this.searchConstractDetail.timestamp + this.searchConstractDetail.expireInterval)
+      {
+        return this.$notify.error({
+          title: 'delSideChainConstract',
+          message: `delSideChainConstract authority addresses modify request has not expired`
+        });
+      }
+
+      axios.get("delSideChainConstract", {
+        url: this.currentNode.url,
+        to: this.constractAddress,
+        value: 10,
+        privateKey: this.privateKey,
+        delAuthorityAddresses: this.delAuthorityAddresses
+      }).then(({ code, data, msg }) => {
+        if(code === 0)
+        {
+          this.$notify.success({
+            title: 'delSideChainConstract',
+            message: `delSideChainConstract success`
+          });
+
+          setTimeout(() => {
+            this.search();
+          }, 1000);
+        }
+        else
+        {
+          this.$notify.error({
+            title: 'delSideChainConstract',
+            message: `delSideChainConstract failed, ${msg}`
+          });
+        }
+      }).finally(() => {
+        this.newAuthorityAddressesVisible = false;
+      });
+      
+    },
+
     agree: function() {
       const now = Date.now();
 
       if(now > this.searchConstractDetail.timestamp + this.searchConstractDetail.expireInterval)
       {
         return this.$notify.error({
-          title: 'agreeMultiSignConstract',
-          message: `agreeMultiSignConstract send request has expired`
+          title: 'agreeSideChainConstract',
+          message: `agreeSideChainConstract send request has expired`
         });
       }
       
-      axios.get("agreeMultiSignConstract", {
+      axios.get("agreeSideChainConstract", {
         url: this.currentNode.url,
         to: this.constractAddress,
         privateKey: this.privateKey,
@@ -337,8 +474,8 @@ export default {
         if(code === 0)
         {
           this.$notify.success({
-            title: 'agreeMultiSignConstract',
-            message: `agreeMultiSignConstract success`
+            title: 'agreeSideChainConstract',
+            message: `agreeSideChainConstract success`
           });
 
           setTimeout(() => {
@@ -348,8 +485,8 @@ export default {
         else
         {
           this.$notify.error({
-            title: 'agreeMultiSignConstract',
-            message: `agreeMultiSignConstract failed, ${msg}`
+            title: 'agreeSideChainConstract',
+            message: `agreeSideChainConstract failed, ${msg}`
           });
         }
       }).finally(() => {
@@ -362,12 +499,12 @@ export default {
       if(now > this.searchConstractDetail.timestamp + this.searchConstractDetail.expireInterval)
       {
         return this.$notify.error({
-          title: 'rejectMultiSignConstract',
-          message: `rejectMultiSignConstract send request has expired`
+          title: 'rejectSideChainConstract',
+          message: `rejectSideChainConstract send request has expired`
         });
       }
 
-      axios.get("rejectMultiSignConstract", {
+      axios.get("rejectSideChainConstract", {
         url: this.currentNode.url,
         to: this.constractAddress,
         privateKey: this.privateKey,
@@ -377,8 +514,8 @@ export default {
         if(code === 0)
         {
           this.$notify.success({
-            title: 'rejectMultiSignConstract',
-            message: `rejectMultiSignConstract success`
+            title: 'rejectSideChainConstract',
+            message: `rejectSideChainConstract success`
           });
 
           setTimeout(() => {
@@ -388,8 +525,8 @@ export default {
         else
         {
           this.$notify.error({
-            title: 'rejectMultiSignConstract',
-            message: `rejectMultiSignConstract failed, ${msg}`
+            title: 'rejectSideChainConstract',
+            message: `rejectSideChainConstract failed, ${msg}`
           });
         }
       }).finally(() => {

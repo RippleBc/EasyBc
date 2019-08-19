@@ -38,7 +38,7 @@ class MultiSignConstract extends Constract {
             default: Buffer.alloc(0)
         }, {
             length: 32,
-            name: "expireInverval",
+            name: "expireInterval",
             allowLess: true,
             default: Buffer.alloc(1)
         }, {
@@ -158,7 +158,7 @@ class MultiSignConstract extends Constract {
                     }
 
                     // check send state
-                    if(constractTimestampBn.add(new BN(this.expireInverval)).gt(timestampNowBn))
+                    if(constractTimestampBn.add(new BN(this.expireInterval)).gt(timestampNowBn))
                     {
                         throw new Error(`MultiSignConstract commandHandler send, constract's send request has not expired`)
                     }
@@ -194,7 +194,7 @@ class MultiSignConstract extends Constract {
                     {
                         throw new Error(`MultiSignConstract commandHandler agree, constract's send request is not exist`)
                     }
-                    if (constractTimestampBn.add(new BN(this.expireInverval)).lt(timestampNowBn)) {
+                    if (constractTimestampBn.add(new BN(this.expireInterval)).lt(timestampNowBn)) {
                         throw new Error(`MultiSignConstract commandHandler agree, constract's send request has expired`)
                     }
 
@@ -215,7 +215,7 @@ class MultiSignConstract extends Constract {
                     if (this.to.length <= 0 || this.value.length <= 0) {
                         throw new Error(`MultiSignConstract commandHandler reject, constract's send request is not exist`)
                     }
-                    if (constractTimestampBn.add(new BN(this.expireInverval)).lt(timestampNowBn)) {
+                    if (constractTimestampBn.add(new BN(this.expireInterval)).lt(timestampNowBn)) {
                         throw new Error(`MultiSignConstract commandHandler reject, constract's send request has expired`)
                     }
 
@@ -230,18 +230,16 @@ class MultiSignConstract extends Constract {
     }
 
     /**
-     * @param {Buffer} beginTime
-     * @param {Buffer} endTime
-     * @param {Buffer} receiveAddress
-     * @param {Buffer} target
-     * @param {Buffer} limit
+     * @param {Buffer} expireInterval
+     * @param {Buffer} threshold
+     * @param {Buffer} authorityAddresses
      */
-    create(expireInverval, threshold, authorityAddresses) {
-        assert(Buffer.isBuffer(expireInverval), `MultiSignConstract create, expireInverval should be an Buffer, now is ${typeof expireInverval}`);
+    create(expireInterval, threshold, authorityAddresses) {
+        assert(Buffer.isBuffer(expireInterval), `MultiSignConstract create, expireInterval should be an Buffer, now is ${typeof expireInterval}`);
         assert(Buffer.isBuffer(threshold), `MultiSignConstract create, threshold should be an Buffer, now is ${typeof threshold}`);
         assert(Buffer.isBuffer(authorityAddresses), `MultiSignConstract create, authorityAddresses should be an Buffer, now is ${typeof authorityAddresses}`);
 
-        this.expireInverval = expireInverval;
+        this.expireInterval = expireInterval;
         this.threshold = threshold;
         this.authorityAddresses = authorityAddresses;
     }
@@ -249,7 +247,7 @@ class MultiSignConstract extends Constract {
     /**
      * @param {stateManager} stateManager
      * @param {Buffer} from
-     * @param {Account} toAccount
+     * @param {Account} constractAccount
      * @param {Buffer} timestamp
      */
     async agree(stateManager, from, constractAccount, timestamp) {
