@@ -3,11 +3,12 @@ const Transaction = require("../../depends/transaction");
 const utils = require("../../depends/utils");
 const assert = require("assert");
 const transactionModelConfig = require('./transaction');
+const spvModelConfig = require('./spv');
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 const log4js= require("../logConfig");
 
-const logger = log4js.getLogger("logParse");
+const logger = log4js.getLogger();
 
 const Buffer = utils.Buffer;
 
@@ -32,6 +33,7 @@ class Mysql
   async init()
   {
     this.Transaction = this.sequelize.define(...transactionModelConfig);
+    this.Spv = this.sequelize.define(...spvModelConfig);
 
     await this.sequelize.authenticate();
     await this.sequelize.sync();
@@ -60,7 +62,7 @@ class Mysql
     }
     catch(e)
     {
-      logger.error(`saveTransaction, throw exception ${e}`)
+      logger.error(`Mysql saveTransaction, throw exception ${e}`)
     }
   }
 
@@ -76,6 +78,29 @@ class Mysql
     for(let i = 0; i < transactions.length; i++)
     {
       await this.saveTransaction(number, transactions[i]);
+    }
+  }
+
+  /**
+   * @param {Buffer} number
+   * @param {Transaction} transaction
+   * @param {Buffer} code
+   */
+  async saveSpv(number, transaction, code)
+  {
+    assert(Buffer.isBuffer(number), `Mysql saveSpv, number should be an Buffer, now is ${typeof number}`);
+    assert(transaction instanceof Transaction, `Mysql saveSpv, transaction should be an Transaction Object, now is ${typeof transaction}`);
+    assert(Buffer.isBuffer(code), `Mysql saveSpv, code should be an Buffer, now is ${typeof code}`);
+
+    try {
+      await this.Spv.create({
+        hash: transaction.hash().toString('hex'),
+        number: number.toString('hex'),
+        code: code.toString('hex')
+      });
+    }
+    catch (e) {
+      logger.error(`Mysql saveSpv, throw exception ${e}`)
     }
   }
 }

@@ -6,11 +6,11 @@ const assert = require("assert");
 const mongoConfig = require("./config").mongo;
 const utils = require("../depends/utils");
 const Trie = require("../depends/merkle_patricia_tree");
-const { broadCastSpv } = require("./consensus_cross_chain");
+const broadCastSpv = require("./cross_chain");
 
 const BN = utils.BN;
 
-const logger = log4js.getLogger("logParse");
+const logger = log4js.getLogger();
 
 const mysql = new Mysql();
 
@@ -24,6 +24,7 @@ process.on("uncaughtException", function(err) {
 (async () => {
 	// init mysql
 	await mysql.init();
+	process[Symbol.for("mysql")] = mysql;
 
 	// init mongo
   const mongo = require("../depends/mpt_db_wrapper");
