@@ -1,4 +1,6 @@
 {
-  "mode": "mainChain",
-  "code": "00"
+  "blockChain": {
+    "mode": "mainChain",
+    "code": "00"
+  }
 }

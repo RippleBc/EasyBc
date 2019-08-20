@@ -7,6 +7,10 @@ const rawTransactionModelConfig = require('./rawTransaction');
 const logModelConfig = require('./log');
 const timeConsumeModelConfig = require('./timeConsume');
 const abnormalNodeModelConfig = require('./abnormalNode');
+const sideChainModelConfig = require('./sideChain');
+const receivedSpvModelConfig = require('./receivedSpv');
+const sideChainConstractModelConfig = require('./sideChainConstract');
+
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 
@@ -37,7 +41,10 @@ class Mysql
     this.RawTransaction = this.sequelize.define(...rawTransactionModelConfig);
     this.TimeConsume = this.sequelize.define(...timeConsumeModelConfig);
     this.AbnormalNode = this.sequelize.define(...abnormalNodeModelConfig);
-
+    this.SideChain = this.sequelize.define(...sideChainModelConfig)
+    this.ReceivedSpv = this.sequelize.define(...receivedSpvModelConfig);
+    this.SideChainConstract = this.sequelize.define(...sideChainConstractModelConfig);
+    
     await this.sequelize.authenticate();
     await this.sequelize.sync();
   }
@@ -293,6 +300,80 @@ class Mysql
       limit: limit,
       offset: offset
     });
+  }
+
+  /**
+   * @param {Buffer} code
+   */
+  async getSideChain(code) {
+    assert(typeof code === 'string', `Mysql getSideChain, code should be a String, now is ${typeof code}`);
+
+    return await this.SideChain.findAndCountAll({
+      attributes: ['url'],
+      where: {
+        code: code.toString("hex")
+      }
+    });
+  }
+  /**
+   * @param {String} code
+   * @param {String} url
+   */
+  async saveSideChain(code, url)
+  {
+    assert(typeof code === 'string', `Mysql saveSideChain, code should be a String, now is ${typeof code}`);
+    assert(typeof url === 'string', `Mysql saveSideChain, code should be a String, now is ${typeof code}`);
+
+    await this.SideChain.create({
+      code: code,
+      url: url
+    })
+  }
+
+  /**
+   * @param {String} hash
+   * @param {String} number
+   * @param {String} chainCode
+   * @return {Array} [receivedSpv, created]
+   */
+  async saveReceivedSpv(hash, number, chainCode) {
+    assert(typeof hash === 'string', `Mysql saveSpv, hash should be a String, now is ${typeof hash}`);
+    assert(typeof number === 'string', `Mysql saveSpv, number should be a String, now is ${typeof number}`);
+    assert(typeof chainCode === 'string', `Mysql saveSpv, chainCode should be a String, now is ${typeof chainCode}`);
+    
+    try {
+      return await this.ReceivedSpv.findOrCreate({
+        where: {
+          hash: hash,
+          number: number,
+          chainCode: chainCode
+        },
+        defaults: {
+
+        }
+      });
+    }
+    catch (e) {
+      logger.error(`Mysql saveSpv, throw exception ${e}`)
+    }
+  }
+
+  /**
+   * @param {String} chainCode
+   * @return {Buffer} address
+   */
+  async getSideChainConstract(chainCode)
+  {
+    assert(typeof chainCode === 'string', `Mysql getSideChainConstract, chainCode should be a String, now is ${typeof chainCode}`);
+
+    const sideChainConstract = await this.SideChainConstract.findOne({
+      attributes: ['address'],
+      where: {
+        chainCode: chainCode
+      }
+    });
+
+    return sideChainConstract.address;
   }
 }
 

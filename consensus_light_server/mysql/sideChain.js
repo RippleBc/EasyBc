@@ -1,22 +1,18 @@
 const Sequelize = require('sequelize');
 
-module.exports = ['spv', {
-  hash: {
-    type: Sequelize.STRING,
-    allowNull: false
-  },
-  number: {
-    type: Sequelize.STRING,
-    allowNull: false
-  },
+module.exports = ['sideChain', {
   code: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+  url: {
     type: Sequelize.STRING,
     allowNull: false
   }
 }, {
     indexes: [{
       unique: true,
-      fields: ['hash']
+      fields: ['code', 'url']
     }],
     scopes: {
 

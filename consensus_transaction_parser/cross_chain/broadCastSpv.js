@@ -4,6 +4,12 @@ const { ACCOUNT_TYPE_CONSTRACT, TX_TYPE_TRANSACTION } = require("../../consensus
 const sideChainConstractId = require("../../consensus_constracts/sideChainConstract").id;
 const assert = require("assert");
 const utils = require("../../depends/utils");
+const Transaction = require("../../depends/transaction");
+const log4js = require("../logConfig");
+const blockChainCode = require("../../globalConfig.json").blockChain.code;
+const rp = require("request-promise");
+
+const logger = log4js.getLogger();
 
 const rlp = utils.rlp;
 const Buffer = utils.Buffer;
@@ -59,7 +65,7 @@ module.exports = async (blockNumber, transactions) =>
     try {
       const decodedConstractDataArray = rlp.decode(account.data);
       constractId = decodedConstractDataArray[0].toString("hex");
-      chainCode = decodedConstractDataArray[2];
+      chainCode = decodedConstractDataArray[2].toString("hex");
     }
     catch (e) {
       continue;
@@ -71,6 +77,45 @@ module.exports = async (blockNumber, transactions) =>
     }
 
     // save spv request
-    mysql.saveSpv(blockNumber, tx, chainCode)
+    await mysql.saveSendedSpv(blockNumber, tx, chainCode)
+
+    // send spv request
+    const sideChains = await mysql.getSideChain(chainCode);
+    for (let sideChain of sideChains)
+    {
+      broadCastSpv(sideChain.url, blockNumber, tx).catch(e => {
+        logger.error(`broadCastSpv throw exception, ${e}`);
+      });
+    }
   }
+}
+
+const broadCastSpv = (url, blockNumber, tx) => {
+  assert(typeof url === "string", `broadCastSpv, url should be a String, now is ${typeof url}`);
+  assert(Buffer.isBuffer(blockNumber), `broadCastSpv, blockNumber should be an Buffer, now is ${typeof blockNumber}`)
+  assert(tx instanceof Transaction, `broadCastSpv, tx should be an instance of Transaction, now is ${typeof tx}`)
+
+  const options = {
+    method: "POST",
+    uri: `${url}/newSpv`,
+    body: {
+      hash: tx.hash().toString('hex'),
+      number: blockNumber.toString('hex'),
+      chainCode: blockChainCode
+    },
+    json: true // Automatically stringifies the body to JSON
+  };
+
+  const promise = new Promise((resolve, reject) => {
+    rp(options).then(response => {
+      if (response.code !== SUCCESS) {
+        reject(response.msg);
+      }
+      resolve(response.data);
+    }).catch(e => {
+      reject(e.toString());
+    });
+  });
+
+  return promise;
 }
