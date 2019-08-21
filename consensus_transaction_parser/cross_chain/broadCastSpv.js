@@ -3,7 +3,7 @@ const assert = require("assert");
 const utils = require("../../depends/utils");
 const Transaction = require("../../depends/transaction");
 const log4js = require("../logConfig");
-const blockChainCode = require("../../globalConfig.json").blockChain.code;
+const selfChainCode = require("../../globalConfig.json").blockChain.code;
 const rp = require("request-promise");
 const constractManager = require("../../consensus_constracts/index.js");
 const sideChainConstractId = require("../../consensus_constracts/sideChainConstract").id;
@@ -105,7 +105,7 @@ const broadCastSpv = (url, blockNumber, tx) => {
     body: {
       hash: tx.hash().toString('hex'),
       number: blockNumber.toString('hex'),
-      chainCode: blockChainCode
+      chainCode: selfChainCode
     },
     json: true // Automatically stringifies the body to JSON
   };

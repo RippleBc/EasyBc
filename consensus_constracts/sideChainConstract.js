@@ -256,7 +256,7 @@ class SideChainConstract extends Constract {
         break;
       default:
         {
-          throw new Error(`SideChainConstract commandHandler, invalid commnd ${bufferToInt(commands[0])}`)
+          
         }
     }
   }

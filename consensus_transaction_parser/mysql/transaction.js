@@ -28,6 +28,10 @@ module.exports = ['transaction', {
   data: {
     type: Sequelize.STRING,
     allowNull: false
+  },
+  rawData: {
+    type: Sequelize.STRING,
+    allowNull: false
   }
 }, {
   indexes: [{

@@ -58,7 +58,7 @@ class Mysql
     assert(typeof hash === "string", `Mysql getTransaction, hash should be a String, now is ${typeof hash}`);
 
     const transaction = await this.Transaction.findOne({
-      attributes: ['data'],
+      attributes: ['rawData'],
       where: {
         hash: hash
       }
@@ -66,7 +66,7 @@ class Mysql
     
     if(transaction)
     {
-      return new Transaction(Buffer.from(transaction.data, 'hex'))
+      return new Transaction(Buffer.from(transaction.rawData, "hex"))
     }
   }
   

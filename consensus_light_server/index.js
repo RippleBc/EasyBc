@@ -81,6 +81,7 @@ process.on('uncaughtException', err => {
   require('./unl');
   require('./block_chain');
   require('./consensus_state');
+  require('./cross_chain');
 
   // begin to listen
   const server = app.listen(port, host, function() {

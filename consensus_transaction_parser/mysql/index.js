@@ -59,7 +59,8 @@ class Mysql
         from: transaction.from.toString('hex'),
         to: transaction.to.toString('hex'),
         value: transaction.value.toString('hex'),
-        data: transaction.data.toString('hex')
+        data: transaction.data.toString('hex'),
+        rawData: transaction.serialize().toString('hex')
       })
     }
     catch(e)
