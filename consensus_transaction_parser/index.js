@@ -6,7 +6,6 @@ const assert = require("assert");
 const mongoConfig = require("./config").mongo;
 const utils = require("../depends/utils");
 const Trie = require("../depends/merkle_patricia_tree");
-const broadCastSpv = require("./cross_chain");
 
 const BN = utils.BN;
 
@@ -16,7 +15,7 @@ const mysql = new Mysql();
 
 //
 process.on("uncaughtException", function(err) {
-    logger.fatal(`log parser, throw exception, ${err.stack}`);
+    logger.fatal(`transactions parser, throw exception, ${err.stack}`);
     
     process.exit(1);
 });
@@ -35,7 +34,7 @@ process.on("uncaughtException", function(err) {
 	process[Symbol.for("accountTrie")] = new Trie(trieDb);
 
 	// init blockDb
-	const blockDb = mongo.generateBlockDb();
+	const blockDb = process[Symbol.for("blockDb")] = mongo.generateBlockDb();
 
 	await run(blockDb);
 })()
@@ -45,6 +44,8 @@ process.on("uncaughtException", function(err) {
  */
 const run = async blockDb =>
 {
+	const broadCastSpv = require("./cross_chain");
+
 	let blockNumber;
 
 	// get block number which is need to be process

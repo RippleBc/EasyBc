@@ -298,6 +298,10 @@ class SideChainConstract extends Constract {
     if (sideChainConstractAccount.isEmpty()) {
       await mysql.updateSideChainConstract(code, tx.to);
     }
+    else
+    {
+      throw new Error(`SideChainConstract create, repeated sideChainConstract`);
+    }
   }
 
   /**

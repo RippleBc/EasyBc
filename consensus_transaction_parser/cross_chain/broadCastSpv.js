@@ -1,4 +1,3 @@
-const accountTrie = process[Symbol.for("accountTrie")];
 const { ACCOUNT_TYPE_CONSTRACT, TX_TYPE_TRANSACTION } = require("../../consensus_constracts/constant");
 const assert = require("assert");
 const utils = require("../../depends/utils");
@@ -8,6 +7,7 @@ const blockChainCode = require("../../globalConfig.json").blockChain.code;
 const rp = require("request-promise");
 const constractManager = require("../../consensus_constracts/index.js");
 const sideChainConstractId = require("../../consensus_constracts/sideChainConstract").id;
+const Account = require("../../depends/account");
 
 const logger = log4js.getLogger();
 
@@ -15,6 +15,8 @@ const rlp = utils.rlp;
 const Buffer = utils.Buffer;
 
 const mysql = process[Symbol.for("mysql")];
+const blockDb = process[Symbol.for("blockDb")];
+const accountTrie = process[Symbol.for("accountTrie")];
 
 /**
  * @param {Buffer} blockNumber
@@ -29,14 +31,14 @@ module.exports = async (blockNumber, transactions) =>
   const stateRoot = block.header.stateRoot.toString("hex");
 
   // init account tire
-  this.trie = accountTrie.copy();
+  const trie = accountTrie.copy();
   trie.root = Buffer.from(stateRoot, "hex");
 
   // init get account function
   const getAccount = async address => {
     assert(Buffer.isBuffer(address), `broadCastSpv, address should be an Buffer, now is ${typeof address}`)
 
-    await new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       trie.get(address, (err, result) => {
         if (!!err) {
           reject(err);
@@ -50,20 +52,22 @@ module.exports = async (blockNumber, transactions) =>
   // broadCast spv
   for (let tx of transactions) {
     // check if an normal tx
-    if (constractManager.checkTxType(tx) !== TX_TYPE_TRANSACTION) {
+    if (constractManager.checkTxType({tx}) !== TX_TYPE_TRANSACTION) {
       continue;
     }
 
     // check if to address is an constract
-    const account = await getAccount(tx.to);
-    if (constractManager.checkAccountType(account) !== ACCOUNT_TYPE_CONSTRACT) {
+    const toAccount = await getAccount(tx.to);
+    if (constractManager.checkAccountType({
+      account: toAccount
+    }) !== ACCOUNT_TYPE_CONSTRACT) {
       continue;
     }
 
     let constractId;
     let chainCode;
     try {
-      const decodedConstractDataArray = rlp.decode(account.data);
+      const decodedConstractDataArray = rlp.decode(toAccount.data);
       constractId = decodedConstractDataArray[0].toString("hex");
       chainCode = decodedConstractDataArray[2].toString("hex");
     }
