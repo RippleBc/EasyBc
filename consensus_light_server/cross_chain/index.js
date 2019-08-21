@@ -3,8 +3,11 @@ const rp = require("request-promise");
 const Transaction = require("../../depends/transaction");
 const Account = require("../../depends/account");
 const utils = require("../../depends/utils");
+const privateKey = require("../../globalConfig.json").blockChain.privateKey;
 
 const Buffer = utils.Buffer;
+const BN = utils.BN;
+const rlp = utils.rlp;
 
 const app = process[Symbol.for('app')];
 const mysql = process[Symbol.for("mysql")];
@@ -12,7 +15,12 @@ const accountTrie = process[Symbol.for("accountTrie")];
 const blockDb = process[Symbol.for("blockDb")];
 const printErrorStack = process[Symbol.for("printErrorStack")]
 
+const publicKey = utils.privateToPublic(Buffer.from(privateKey, "hex"));
+const address = utils.publicToAddress(publicKey);
+
 const SPV_SUCCESS_THRESHOLD = 0.8;
+
+const COMMAND_CROSS_PAY = 104;
 
 app.post('/newSpv', (req, res) => {
   if (undefined === req.body.hash) {
@@ -103,7 +111,7 @@ app.post('/newSpv', (req, res) => {
   const trie = accountTrie.copy();
   trie.root = Buffer.from(stateRoot, "hex");
   const getAccountRaw = new Promise((resolve, reject) => {
-    trie.get(Buffer.from(###########################, "hex"), (err, result) => {
+    trie.get(address, (err, result) => {
       if (!!err) {
         reject(err);
       }
@@ -122,9 +130,19 @@ app.post('/newSpv', (req, res) => {
   // send tx 
   const account = new Account(accountRaw)
   const sideChainConstractAddress = await mysql.getSideChainConstract(req.body.chainCode);
+  const data = rlp.encode([
+    toBuffer(COMMAND_CROSS_PAY),
+    Buffer.from(req.body.hash, "hex"),
+    Buffer.from(req.body.number, "hex")]).toString("hex");
+    
   const tx = new Transaction({
+    nonce: BN(account.nonce).addn(1).toBuffer(),
+    timestamp: Date.now(),
     to: Buffer.from(sideChainConstractAddress, "hex"),
     value: 1,
-    data
-  })
+    data: data
+  });
+
+  // record
+  await mysql.saveRawTransaction(tx.hash().toString('hex'), tx.serialize().toString('hex'));
 })

@@ -14,6 +14,7 @@ const COMMAND_NEW_AUTHORITY_ADDRESSES = 100;
 const COMMAND_DEL_AUTHORITY_ADDRESSES = 101;
 const COMMAND_AGREE = 102;
 const COMMAND_REJECT = 103;
+const COMMAND_CROSS_PAY = 104;
 
 class SideChainConstract extends Constract {
   constructor(data) {
