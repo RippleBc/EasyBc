@@ -237,7 +237,7 @@ class MultiSignConstract extends Constract {
      * @param {Buffer} threshold
      * @param {Buffer} authorityAddresses
      */
-    create(expireInterval, threshold, authorityAddresses) {
+    async create(expireInterval, threshold, authorityAddresses) {
         assert(Buffer.isBuffer(expireInterval), `MultiSignConstract create, expireInterval should be an Buffer, now is ${typeof expireInterval}`);
         assert(Buffer.isBuffer(threshold), `MultiSignConstract create, threshold should be an Buffer, now is ${typeof threshold}`);
         assert(Buffer.isBuffer(authorityAddresses), `MultiSignConstract create, authorityAddresses should be an Buffer, now is ${typeof authorityAddresses}`);

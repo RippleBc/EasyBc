@@ -21,8 +21,9 @@ class Constract
    * @param {Transaction} tx
    * @param {Account} fromAccount
    * @param {Account} toAccount
+   * @param {Mysql} mysql
    */
-  async run(timestamp, stateManager, tx, fromAccount, toAccount) {
+  async run(timestamp, stateManager, tx, fromAccount, toAccount, mysql) {
     assert(Buffer.isBuffer(timestamp), `Constract run, timestamp should be an Buffer, now is ${typeof timestamp}`);
     assert(stateManager instanceof StageManager, `Constract run, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
     assert(tx instanceof Transaction, `Constract run, tx should be an instance of Transaction, now is ${typeof tx}`);
@@ -35,7 +36,8 @@ class Constract
     {
       this.id = Buffer.from(this.contractId, "hex");
       this.state = STATE_LIVE;
-      this.create(...commands.slice(2));
+      
+      await this.create(...commands.slice(2), timestamp, stateManager, tx, fromAccount, toAccount, mysql);
     }
     else
     {
@@ -44,11 +46,11 @@ class Constract
         throw new Error(`Constract, contract has destroyed`)
       }
 
-      await this.commandHandler(timestamp, stateManager, tx, fromAccount, toAccount);
+      await this.commandHandler(timestamp, stateManager, tx, fromAccount, toAccount, mysql);
     }
   }
 
-  create() {
+  async create() {
     throw new Error(`Constract please inplement create`)
   }
 

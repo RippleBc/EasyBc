@@ -9,6 +9,7 @@ const Constract = require("./constract");
 const rlp = utils.rlp;
 const BN = utils.BN;
 const bufferToInt = utils.bufferToInt;
+const Buffer = utils.Buffer;
 
 const COMMAND_NEW_AUTHORITY_ADDRESSES = 100;
 const COMMAND_DEL_AUTHORITY_ADDRESSES = 101;
@@ -265,17 +266,38 @@ class SideChainConstract extends Constract {
    * @param {Buffer} expireInterval
    * @param {Buffer} threshold
    * @param {Buffer} authorityAddresses
+   * @param {Buffer} timestamp
+   * @param {StageManager} stateManager
+   * @param {Transaction} tx
+   * @param {Account} fromAccount
+   * @param {Account} toAccount
+   * @param {Mysql} mysql
    */
-  create(code, expireInterval, threshold, authorityAddresses) {
+  async create(code, expireInterval, threshold, authorityAddresses, timestamp, stateManager, tx, fromAccount, toAccount, mysql) {
     assert(Buffer.isBuffer(code), `SideChainConstract create, code should be an Buffer, now is ${typeof code}`);
     assert(Buffer.isBuffer(expireInterval), `SideChainConstract create, expireInterval should be an Buffer, now is ${typeof expireInterval}`);
     assert(Buffer.isBuffer(threshold), `SideChainConstract create, threshold should be an Buffer, now is ${typeof threshold}`);
     assert(Buffer.isBuffer(authorityAddresses), `SideChainConstract create, authorityAddresses should be an Buffer, now is ${typeof authorityAddresses}`);
+    assert(Buffer.isBuffer(timestamp), `SideChainConstract create, timestamp should be an Buffer, now is ${typeof timestamp}`);
+    assert(stateManager instanceof StageManager, `SideChainConstract create, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
+    assert(tx instanceof Transaction, `SideChainConstract create, tx should be an instance of Transaction, now is ${typeof tx}`);
+    assert(fromAccount instanceof Account, `SideChainConstract create, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
+    assert(toAccount instanceof Account, `SideChainConstract create, toAccount should be an instance of Account, now is ${typeof toAccount}`);
 
     this.code = code;
     this.expireInterval = expireInterval;
     this.threshold = threshold;
     this.authorityAddresses = authorityAddresses;
+
+    const [sideChainConstract, created] = await mysql.saveSideChainConstract(code, tx.to);
+    if (created) {
+      return;
+    }
+
+    const sideChainConstractAccount = await stateManager.cache.getOrLoad(Buffer.from(sideChainConstract.address, "hex"));
+    if (sideChainConstractAccount.isEmpty()) {
+      await mysql.updateSideChainConstract(code, tx.to);
+    }
   }
 
   /**

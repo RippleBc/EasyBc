@@ -1,13 +1,13 @@
 const accountTrie = process[Symbol.for("accountTrie")];
-const { checkTxType, checkAccountType } = require("../../consensus_constracts/index.js");
 const { ACCOUNT_TYPE_CONSTRACT, TX_TYPE_TRANSACTION } = require("../../consensus_constracts/constant");
-const sideChainConstractId = require("../../consensus_constracts/sideChainConstract").id;
 const assert = require("assert");
 const utils = require("../../depends/utils");
 const Transaction = require("../../depends/transaction");
 const log4js = require("../logConfig");
 const blockChainCode = require("../../globalConfig.json").blockChain.code;
 const rp = require("request-promise");
+const constractManager = require("../../consensus_constracts/index.js");
+const sideChainConstractId = require("../../consensus_constracts/sideChainConstract").id;
 
 const logger = log4js.getLogger();
 
@@ -50,13 +50,13 @@ module.exports = async (blockNumber, transactions) =>
   // broadCast spv
   for (let tx of transactions) {
     // check if an normal tx
-    if (checkTxType(tx) !== TX_TYPE_TRANSACTION) {
+    if (constractManager.checkTxType(tx) !== TX_TYPE_TRANSACTION) {
       continue;
     }
 
     // check if to address is an constract
     const account = await getAccount(tx.to);
-    if (checkAccountType(account) !== ACCOUNT_TYPE_CONSTRACT) {
+    if (constractManager.checkAccountType(account) !== ACCOUNT_TYPE_CONSTRACT) {
       continue;
     }
 

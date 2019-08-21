@@ -5,6 +5,7 @@ const rawTransactionModelConfig = require('./rawTransaction');
 const timeConsumeModelConfig = require('./timeConsume');
 const abnormalNodeModelConfig = require('./abnormalNode');
 const perishHashModelConfig = require('./perishHash');
+const sideChainConstractModelConfig = require('./sideChainConstract');
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 
@@ -39,6 +40,7 @@ class Mysql
     this.TimeConsume = this.sequelize.define(...timeConsumeModelConfig);
     this.AbnormalNode = this.sequelize.define(...abnormalNodeModelConfig);
     this.PerishHash = this.sequelize.define(...perishHashModelConfig);
+    this.SideChainConstract = this.sequelize.define(...sideChainConstractModelConfig);
 
     await this.sequelize.authenticate();
     await this.sequelize.sync();
@@ -182,6 +184,42 @@ class Mysql
     }
     
     return true;
+  }
+
+  /**
+   * @param {Buffer} chainCode 
+   * @param {Buffer} address 
+   * @return {Array} [sideChainConstract, created]
+   */
+  async saveSideChainConstract(chainCode, address)
+  {
+    assert(Buffer.isBuffer(chainCode), `Mysql saveSideChainConstract, chainCode should be an Buffer, now is ${typeof chainCode}`);
+    assert(Buffer.isBuffer(address), `Mysql saveSideChainConstract, address should be an Buffer, now is ${typeof address}`);
+
+    return await this.SideChainConstract.findOrCreate({
+      where: {
+        chainCode: chainCode.toString('hex')
+      },
+      defaults: {
+        address: address.toString('hex')
+      }
+    });
+  }
+
+  /**
+   * @param {Buffer} chainCode 
+   * @param {Buffer} address 
+   */
+  async updateSideChainConstract(chainCode, address)
+  {
+    assert(Buffer.isBuffer(chainCode), `Mysql updateSideChainConstract, chainCode should be an Buffer, now is ${typeof chainCode}`);
+    assert(Buffer.isBuffer(address), `Mysql updateSideChainConstract, address should be an Buffer, now is ${typeof address}`);
+
+    await this.SideChainConstract.update({
+      chainCode: chainCode.toString('hex')
+    }, {
+      address: address.toString('hex')
+    })
   }
 }
 

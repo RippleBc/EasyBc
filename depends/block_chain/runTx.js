@@ -91,7 +91,8 @@ module.exports = async function(opts)
         stateManager: this.stateManager, 
         tx: tx,
         fromAccount: fromAccount,
-        toAccount: toAccount
+        toAccount: toAccount,
+        mysql: process[Symbol.for("mysql")]
       });
     }
     catch (e) {

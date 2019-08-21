@@ -28,8 +28,9 @@ class ContractsManager
    * @param {Transaction} tx
    * @param {Account} fromAccount
    * @param {Account} toAccount
+   * @param {Mysql} mysql
    */
-  async run({ timestamp, stateManager, tx, fromAccount, toAccount }) {
+  async run({ timestamp, stateManager, tx, fromAccount, toAccount, mysql }) {
     assert(Buffer.isBuffer(timestamp), `ContractsManager run, timestamp should be an Buffer, now is ${typeof timestamp}`);
     assert(stateManager instanceof StageManager, `ContractsManager run, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
     assert(tx instanceof Transaction, `ContractsManager run, tx should be an instance of Transaction, now is ${typeof tx}`);
@@ -61,7 +62,7 @@ class ContractsManager
     const constractInstacne = new Constract(toAccount.data.length > 0 ? toAccount.data : undefined);
 
     // run contract
-    await constractInstacne.run(timestamp, stateManager, tx, fromAccount, toAccount);
+    await constractInstacne.run(timestamp, stateManager, tx, fromAccount, toAccount, mysql);
 
     // update contract
     toAccount.data = constractInstacne.serialize();

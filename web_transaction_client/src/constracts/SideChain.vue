@@ -24,7 +24,7 @@
       </div>
       <div style="display:flex;width:100%;margin-bottom:10px;">
         <span>侧链代码</span>
-        <strong style="margin-left:10px;">{{new Date(searchConstractDetail.code).toString()}}</strong>
+        <strong style="margin-left:10px;">{{searchConstractDetail.code}}</strong>
       </div>
       <div style="display:flex;width:100%;margin-bottom:10px;">
         <span>状态</span>

@@ -152,7 +152,7 @@ class CrowdFundConstract extends Constract
    * @param {Buffer} target
    * @param {Buffer} limit
    */
-  create(beginTime, endTime, receiveAddress, target, limit)
+  async create(beginTime, endTime, receiveAddress, target, limit)
   {
     assert(Buffer.isBuffer(beginTime), `CrowdFundConstract create, beginTime should be an Buffer, now is ${typeof beginTime}`);
     assert(Buffer.isBuffer(endTime), `CrowdFundConstract create, endTime should be an Buffer, now is ${typeof endTime}`);
