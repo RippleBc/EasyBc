@@ -12,6 +12,7 @@ const Buffer = util.Buffer;
  * @param {Object} opts
  * @prop {Block} opts.block - the block we are processing
  * @prop {Buffer} opts.root - the parent block stateRoot
+ * @prop {Buffer} opts.receiptRoot - the parent block receiptRoot
  * @prop {Boolean} opts.generate - whether to generate the stateRoot
  * @prop {Boolean} opts.skipNonce - if ignore transaction nonce check
  * @prop {Boolean} opts.skipBalance - if ignore transaction balance check
@@ -35,6 +36,10 @@ module.exports = async function(opts) {
     await this.stateManager.resetTrieRoot(opts.root);
   }
 
+  if (opts.receiptRoot) {
+    await this.receiptManager.resetTrieRoot(opts.receiptRoot);
+  }
+
   // populate cache
   let addresses = [];
   for(let i = 0; i < block.transactions.length; i++)
@@ -54,7 +59,10 @@ module.exports = async function(opts) {
 
   // delete same ele
   addresses = [...new Set(addresses)];
+
   await this.stateManager.warmCache(addresses);
+
+  await this.receiptManager.checkpoint();
 
   // process transactions
   for(let i = 0; i < block.transactions.length; i++)
@@ -85,7 +93,7 @@ module.exports = async function(opts) {
     };
   }
 
-  // flush state to db
+  // 
   this.stateManager.checkpoint();
 
   const modifiedAccounts = await this.stateManager.flushCache();
@@ -93,15 +101,24 @@ module.exports = async function(opts) {
   if(ifGenerateTrie)
   {
     block.header.stateRoot = this.stateManager.getTrieRoot();
-  }     
+    block.header.receiptRoot = this.receiptManager.getTrieRoot();
+  }
+
   // check state trie
   if(validateTrie && this.stateManager.getTrieRoot().toString("hex") !== block.header.stateRoot.toString("hex"))
   {
     await Promise.reject(`runBlock, stateRoot should be ${this.stateManager.getTrieRoot().toString("hex")}, now is ${block.header.stateRoot.toString("hex")}`);
   }
 
+  // check receipt state trie
+  if (validateTrie && this.receiptManager.getTrieRoot().toString("hex") !== block.header.receiptRoot.toString("hex")) {
+    await Promise.reject(`runBlock, receiptStateRoot should be ${this.receiptManager.getTrieRoot().toString("hex")}, now is ${block.header.receiptRoot.toString("hex")}`);
+  }
+
   await this.stateManager.commit();
   
+  await this.receiptManager.commit();
+
   this.stateManager.clearCache();
 
   return {

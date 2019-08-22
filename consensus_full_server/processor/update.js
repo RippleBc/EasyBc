@@ -49,6 +49,7 @@ class Update
 	async init()
 	{
 		const blockChain = new BlockChain({
+			receiptMptDb: mongo.generateReceiptMptDb(),
 			mptDb: mongo.generateMptDb(),
 			blockDb: mongo.generateBlockDb()
 		});
@@ -59,6 +60,7 @@ class Update
 			this.blockChainHeight = Buffer.alloc(0);
 
 			this.blockChain = new BlockChain({
+				receiptMptDb: mongo.generateReceiptMptDb(),
 				mptDb: mongo.generateMptDb(),
 				blockDb: mongo.generateBlockDb()
 			});
@@ -108,9 +110,11 @@ class Update
 		}
 
 		this.blockChain = new BlockChain({
+			receiptMptDb: mongo.generateReceiptMptDb(),
 			mptDb: mongo.generateMptDb(),
 			blockDb: mongo.generateBlockDb(),
-			root: lastestBlock.header.stateRoot
+			root: lastestBlock.header.stateRoot,
+			receiptRoot: lastestBlock.header.receiptRoot
 		});
 	}
 

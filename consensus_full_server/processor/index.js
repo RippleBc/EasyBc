@@ -24,6 +24,7 @@ class Processor
 		const self = this;
 
 		this.blockChain = new BlockChain({
+			receiptMptDb: mongo.generateReceiptMptDb(),
 			mptDb: mongo.generateMptDb(),
 			blockDb: mongo.generateBlockDb()
 		});

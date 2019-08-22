@@ -2,12 +2,12 @@ const Trie = require("../merkle_patricia_tree");
 const async = require("async");
 const Account = require("../account");
 const Cache = require("./cache.js");
-const util = require("../utils");
+const utils = require("../utils");
 const assert = require("assert");
 
-const BN = util.BN;
-const rlp = util.rlp;
-const Buffer = util.Buffer;
+const BN = utils.BN;
+const rlp = utils.rlp;
+const Buffer = utils.Buffer;
 
 class StateManager
 {
@@ -82,6 +82,12 @@ class StateManager
   {
     assert(Buffer.isBuffer(root), `StateManager resetTrieRoot, root should be an Buffer, now is ${typeof root}`);
 
+    if (root.toString("hex") === utils.SHA3_RLP.toString('hex')) {
+      this.trie.root = root;
+
+      return;
+    }
+    
     const promise = new Promise((resolve, reject) => {
       this.trie.checkRoot(root, (e, ifRootExist) => {
         if(!!e)
