@@ -2,6 +2,7 @@ const assert = require("assert");
 const Account = require("../depends/account");
 const utils = require("../depends/utils");
 const StageManager = require("../depends/block_chain/stateManager");
+const ReceiptManager = require("../depends/block_chain/receiptManager");
 const Transaction = require("../depends/transaction");
 const { STATE_DESTROYED } = require("./constant");
 const Constract = require("./constract");
@@ -171,16 +172,18 @@ class SideChainConstract extends Constract {
   /**
    * @param {Buffer} timestamp
    * @param {StageManager} stateManager
+   * @param {ReceiptManager} receiptManager
    * @param {Transaction} tx
    * @param {Account} fromAccount
    * @param {Account} toAccount
    */
-  async commandHandler({timestamp, stateManager, tx, fromAccount, toAccount}) {
-    assert(Buffer.isBuffer(timestamp), `SideChainConstract run, timestamp should be an Buffer, now is ${typeof timestamp}`);
-    assert(stateManager instanceof StageManager, `SideChainConstract run, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
-    assert(tx instanceof Transaction, `SideChainConstract run, tx should be an instance of Transaction, now is ${typeof tx}`);
-    assert(fromAccount instanceof Account, `SideChainConstract run, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
-    assert(toAccount instanceof Account, `SideChainConstract run, toAccount should be an instance of Account, now is ${typeof toAccount}`);
+  async commandHandler({ timestamp, stateManager, receiptManager, tx, fromAccount, toAccount}) {
+    assert(Buffer.isBuffer(timestamp), `SideChainConstract commandHandler, timestamp should be an Buffer, now is ${typeof timestamp}`);
+    assert(stateManager instanceof StageManager, `SideChainConstract commandHandler, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
+    assert(receiptManager instanceof ReceiptManager, `SideChainConstract commandHandler, receiptManager should be an instance of ReceiptManager, now is ${typeof receiptManager}`);
+    assert(tx instanceof Transaction, `SideChainConstract commandHandler, tx should be an instance of Transaction, now is ${typeof tx}`);
+    assert(fromAccount instanceof Account, `SideChainConstract commandHandler, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
+    assert(toAccount instanceof Account, `SideChainConstract commandHandler, toAccount should be an instance of Account, now is ${typeof toAccount}`);
 
     const commands = rlp.decode(tx.data);
 
@@ -268,18 +271,20 @@ class SideChainConstract extends Constract {
    * @param {Buffer} authorityAddresses
    * @param {Buffer} timestamp
    * @param {StageManager} stateManager
+   * @param {ReceiptManager} receiptManager
    * @param {Mysql} mysql
    * @param {Transaction} tx
    * @param {Account} fromAccount
    * @param {Account} toAccount
    */
-  async create(code, expireInterval, threshold, authorityAddresses, { timestamp, stateManager, mysql, tx, fromAccount, toAccount}) {
+  async create(code, expireInterval, threshold, authorityAddresses, { timestamp, stateManager, receiptManager, mysql, tx, fromAccount, toAccount}) {
     assert(Buffer.isBuffer(code), `SideChainConstract create, code should be an Buffer, now is ${typeof code}`);
     assert(Buffer.isBuffer(expireInterval), `SideChainConstract create, expireInterval should be an Buffer, now is ${typeof expireInterval}`);
     assert(Buffer.isBuffer(threshold), `SideChainConstract create, threshold should be an Buffer, now is ${typeof threshold}`);
     assert(Buffer.isBuffer(authorityAddresses), `SideChainConstract create, authorityAddresses should be an Buffer, now is ${typeof authorityAddresses}`);
     assert(Buffer.isBuffer(timestamp), `SideChainConstract create, timestamp should be an Buffer, now is ${typeof timestamp}`);
     assert(stateManager instanceof StageManager, `SideChainConstract create, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
+    assert(receiptManager instanceof ReceiptManager, `SideChainConstract create, receiptManager should be an instance of ReceiptManager, now is ${typeof receiptManager}`);
     assert(tx instanceof Transaction, `SideChainConstract create, tx should be an instance of Transaction, now is ${typeof tx}`);
     assert(fromAccount instanceof Account, `SideChainConstract create, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
     assert(toAccount instanceof Account, `SideChainConstract create, toAccount should be an instance of Account, now is ${typeof toAccount}`);
