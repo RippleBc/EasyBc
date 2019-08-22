@@ -27,29 +27,13 @@ module.exports = async (blockNumber, transactions) =>
   assert(Buffer.isBuffer(blockNumber), `broadCastSpv, blockNumber should be an Buffer, now is ${typeof blockNumber}`)
   assert(Array.isArray(transactions), `broadCastSpv, transactions should be an Array, now is ${typeof transactions}`)
 
+  // get block
   const block = await blockDb.getBlockByNumber(blockNumber);
-  const stateRoot = block.header.stateRoot.toString("hex");
 
   // init account tire
   const trie = accountTrie.copy();
-  trie.root = Buffer.from(stateRoot, "hex");
+  trie.root = block.header.stateRoot;
 
-  // init get account function
-  const getAccount = async address => {
-    assert(Buffer.isBuffer(address), `broadCastSpv, address should be an Buffer, now is ${typeof address}`)
-
-    return await new Promise((resolve, reject) => {
-      trie.get(address, (err, result) => {
-        if (!!err) {
-          reject(err);
-        }
-
-        resolve(new Account(result));
-      })
-    });
-  }
-
-  // broadCast spv
   for (let tx of transactions) {
     // check if an normal tx
     if (constractManager.checkTxType({tx}) !== TX_TYPE_TRANSACTION) {
@@ -57,13 +41,22 @@ module.exports = async (blockNumber, transactions) =>
     }
 
     // check if to address is an constract
-    const toAccount = await getAccount(tx.to);
+    const toAccount = await new Promise((resolve, reject) => {
+      trie.get(tx.to, (err, result) => {
+        if (!!err) {
+          reject(err);
+        }
+
+        resolve(new Account(result));
+      })
+    });
     if (constractManager.checkAccountType({
       account: toAccount
     }) !== ACCOUNT_TYPE_CONSTRACT) {
       continue;
     }
 
+    // get constract info
     let constractId;
     let chainCode;
     try {
@@ -87,19 +80,19 @@ module.exports = async (blockNumber, transactions) =>
     const sideChains = await mysql.getSideChain(chainCode);
     for (let sideChain of sideChains)
     {
-      broadCastSpv(sideChain.url, blockNumber, tx).catch(e => {
-        logger.error(`broadCastSpv throw exception, ${e}`);
+      send(sideChain.url, blockNumber, tx).catch(e => {
+        logger.error(`send throw exception, ${e}`);
       });
     }
   }
 }
 
-const broadCastSpv = (url, blockNumber, tx) => {
-  assert(typeof url === "string", `broadCastSpv, url should be a String, now is ${typeof url}`);
-  assert(Buffer.isBuffer(blockNumber), `broadCastSpv, blockNumber should be an Buffer, now is ${typeof blockNumber}`)
-  assert(tx instanceof Transaction, `broadCastSpv, tx should be an instance of Transaction, now is ${typeof tx}`)
+const send = async (url, blockNumber, tx) => {
+  assert(typeof url === "string", `send, url should be a String, now is ${typeof url}`);
+  assert(Buffer.isBuffer(blockNumber), `send, blockNumber should be an Buffer, now is ${typeof blockNumber}`)
+  assert(tx instanceof Transaction, `send, tx should be an instance of Transaction, now is ${typeof tx}`)
 
-  const options = {
+  const response = await rp({
     method: "POST",
     uri: `${url}/newSpv`,
     body: {
@@ -108,18 +101,9 @@ const broadCastSpv = (url, blockNumber, tx) => {
       chainCode: selfChainCode
     },
     json: true // Automatically stringifies the body to JSON
-  };
-
-  const promise = new Promise((resolve, reject) => {
-    rp(options).then(response => {
-      if (response.code !== SUCCESS) {
-        reject(response.msg);
-      }
-      resolve(response.data);
-    }).catch(e => {
-      reject(e.toString());
-    });
   });
-
-  return promise;
+   
+  if (response.code !== SUCCESS) {
+    await Promise.reject(response.msg);
+  }
 }

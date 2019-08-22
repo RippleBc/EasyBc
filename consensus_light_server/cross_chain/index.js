@@ -19,7 +19,7 @@ const app = process[Symbol.for('app')];
 const mysql = process[Symbol.for("mysql")];
 const accountTrie = process[Symbol.for("accountTrie")];
 const blockDb = process[Symbol.for("blockDb")];
-const printErrorStack = process[Symbol.for("printErrorStack")]
+const logger = process[Symbol.for("errLogger")];
 
 const publicKey = utils.privateToPublic(Buffer.from(privateKey, "hex"));
 const address = utils.publicToAddress(publicKey);
@@ -53,28 +53,13 @@ app.post('/getSpvState', (req, res) => {
     });
   }
 
-  // check to account
   (async () => {
+    // get block
     const block = await blockDb.getBlockByNumber(Buffer.from(req.body.number, "hex"));
 
-    // init account tire
+    // init account trie
     const trie = accountTrie.copy();
     trie.root = block.header.stateRoot;
-
-    // init get account function
-    const getAccount = async address => {
-      assert(Buffer.isBuffer(address), `getSpvState, address should be an Buffer, now is ${typeof address}`)
-
-      return await new Promise((resolve, reject) => {
-        trie.get(address, (err, result) => {
-          if (!!err) {
-            reject(err);
-          }
-
-          resolve(new Account(result));
-        })
-      });
-    }
 
     // get tx
     const tx = await mysql.getTransaction(req.body.hash);
@@ -93,8 +78,18 @@ app.post('/getSpvState', (req, res) => {
       });
     }
 
+    // get to account
+    const toAccount = await new Promise((resolve, reject) => {
+      trie.get(tx.to, (err, result) => {
+        if (!!err) {
+          reject(err);
+        }
+
+        resolve(new Account(result));
+      })
+    });
+
     // check if to address is an constract
-    const toAccount = await getAccount(tx.to);
     if (constractManager.checkAccountType({
       account: toAccount
     }) !== ACCOUNT_TYPE_CONSTRACT) {
@@ -104,6 +99,7 @@ app.post('/getSpvState', (req, res) => {
       });
     }
 
+    // get constract info
     let constractId;
     let chainCode;
     try {
@@ -118,7 +114,7 @@ app.post('/getSpvState', (req, res) => {
       });
     }
 
-    // check if is a sideChainConstract
+    // check if is an sideChainConstract
     if (constractId !== sideChainConstractId) {
       return res.json({
         code: SUCCESS,
@@ -126,6 +122,7 @@ app.post('/getSpvState', (req, res) => {
       });
     }
 
+    // check the sideChainConstract's code is corresponded
     if (chainCode === req.body.chainCode)
     {
       return res.json({
@@ -169,53 +166,56 @@ app.post('/newSpv', (req, res) => {
   }
 
   (async () => {
-    // check spv
+    /****************************** check spv ******************************/
+    // get side chain info
     const { count, rows: sideChains } = await mysql.getSideChain(req.body.chainCode);
     let processedTxCount = 0;
     for (let sideChain of sideChains) {
-      const options = {
-        method: "POST",
-        uri: `${sideChain.url}/getSpvState`,
-        body: {
-          hash: req.body.hash,
-          number: req.body.number,
-          chainCode: selfChainCode
-        },
-        json: true // Automatically stringifies the body to JSON
-      };
-
-      const state = await new Promise((resolve, reject) => {
-        rp(options).then(response => {
-          if (response.code !== SUCCESS) {
-            reject(response.msg);
-          }
-          resolve(response.data);
-        }).catch(e => {
-          reject(e.toString());
+      // check if tx to self chain constract is valid
+      let response;
+      try {
+        response = await rp({
+          method: "POST",
+          uri: `${sideChain.url}/getSpvState`,
+          body: {
+            hash: req.body.hash,
+            number: req.body.number,
+            chainCode: selfChainCode
+          },
+          json: true // Automatically stringifies the body to JSON
         });
-      });
+      } catch (e) {
+        logger.error(`newSpv, ${sideChain.url}/getSpvState, throw exception ${e}`);
 
-      if (state === SPV_STATE_VALID) {
+        continue;
+      }
+      
+
+      if (response.code !== SUCCESS) {
+        continue
+      }
+
+      if (response.data === SPV_STATE_VALID) {
         processedTxCount++;
       }
     }
     if (processedTxCount / count < SPV_SUCCESS_THRESHOLD) {
       return res.json({
         code: OTH_ERR,
-        msg: "newSpv, invalid spv because of there is no reach threshold"
+        msg: "newSpv, invalid spv because of not reach threshold"
       });;
     }
 
-    // save
-    // const [, created] = await mysql.saveReceivedSpv(req.body.hash, req.body.number, req.body.chainCode);
-    // if (!created) {
-    //   return res.json({
-    //     code: OTH_ERR,
-    //     msg: "newSpv, repeated spv"
-    //   });;
-    // }
+    /****************************** save spv ******************************/
+    const [, created] = await mysql.saveReceivedSpv(req.body.hash, req.body.number, req.body.chainCode);
+    if (!created) {
+      return res.json({
+        code: OTH_ERR,
+        msg: "newSpv, repeated spv"
+      });;
+    }
 
-    // getAccountInfo
+    /****************************** getAccountInfo ******************************/
     const blockChainHeight = await blockDb.getBlockChainHeight();
     if (blockChainHeight === undefined) {
       return res.json({
@@ -223,11 +223,16 @@ app.post('/newSpv', (req, res) => {
         msg: "newSpv, invalid blockChainHeight"
       });;
     }
+
+    // get block
     const block = await blockDb.getBlockByNumber(blockChainHeight);
-    const stateRoot = block.header.stateRoot.toString("hex");
+
+    // init account trie
     const trie = accountTrie.copy();
-    trie.root = Buffer.from(stateRoot, "hex");
-    const getAccountRaw = new Promise((resolve, reject) => {
+    trie.root = block.header.stateRoot;
+
+    // get account info
+    const accountRaw = await new Promise((resolve, reject) => {
       trie.get(address, (err, result) => {
         if (!!err) {
           reject(err);
@@ -236,22 +241,25 @@ app.post('/newSpv', (req, res) => {
         resolve(result);
       })
     });
-    const accountRaw = await getAccountRaw;
     if (!accountRaw) {
       return res.json({
         code: OTH_ERR,
         msg: "newSpv, invalid account"
       });
     }
-
-    // send tx 
     const account = new Account(accountRaw)
+
+    /****************************** send tx ******************************/
+    // get side chain constract
     const sideChainConstractAddress = await mysql.getSideChainConstract(req.body.chainCode);
+
+    // init tx data
     const data = rlp.encode([
       toBuffer(COMMAND_CROSS_PAY),
       Buffer.from(req.body.hash, "hex"),
       Buffer.from(req.body.number, "hex")])
 
+    // init tx
     const tx = new Transaction({
       nonce: new BN(account.nonce).addn(1).toBuffer(),
       timestamp: Date.now(),
