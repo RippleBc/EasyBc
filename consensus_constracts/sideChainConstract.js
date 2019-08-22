@@ -175,7 +175,7 @@ class SideChainConstract extends Constract {
    * @param {Account} fromAccount
    * @param {Account} toAccount
    */
-  async commandHandler(timestamp, stateManager, tx, fromAccount, toAccount) {
+  async commandHandler({timestamp, stateManager, tx, fromAccount, toAccount}) {
     assert(Buffer.isBuffer(timestamp), `SideChainConstract run, timestamp should be an Buffer, now is ${typeof timestamp}`);
     assert(stateManager instanceof StageManager, `SideChainConstract run, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
     assert(tx instanceof Transaction, `SideChainConstract run, tx should be an instance of Transaction, now is ${typeof tx}`);
@@ -268,12 +268,12 @@ class SideChainConstract extends Constract {
    * @param {Buffer} authorityAddresses
    * @param {Buffer} timestamp
    * @param {StageManager} stateManager
+   * @param {Mysql} mysql
    * @param {Transaction} tx
    * @param {Account} fromAccount
    * @param {Account} toAccount
-   * @param {Mysql} mysql
    */
-  async create(code, expireInterval, threshold, authorityAddresses, timestamp, stateManager, tx, fromAccount, toAccount, mysql) {
+  async create(code, expireInterval, threshold, authorityAddresses, { timestamp, stateManager, mysql, tx, fromAccount, toAccount}) {
     assert(Buffer.isBuffer(code), `SideChainConstract create, code should be an Buffer, now is ${typeof code}`);
     assert(Buffer.isBuffer(expireInterval), `SideChainConstract create, expireInterval should be an Buffer, now is ${typeof expireInterval}`);
     assert(Buffer.isBuffer(threshold), `SideChainConstract create, threshold should be an Buffer, now is ${typeof threshold}`);

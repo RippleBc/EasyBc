@@ -135,7 +135,7 @@ class MultiSignConstract extends Constract {
      * @param {Account} fromAccount
      * @param {Account} toAccount
      */
-    async commandHandler(timestamp, stateManager, tx, fromAccount, toAccount) {
+    async commandHandler({timestamp, stateManager, tx, fromAccount, toAccount}) {
         assert(Buffer.isBuffer(timestamp), `MultiSignConstract run, timestamp should be an Buffer, now is ${typeof timestamp}`);
         assert(stateManager instanceof StageManager, `MultiSignConstract run, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
         assert(tx instanceof Transaction, `MultiSignConstract run, tx should be an instance of Transaction, now is ${typeof tx}`);

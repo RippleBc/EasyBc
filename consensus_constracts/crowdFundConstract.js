@@ -94,7 +94,7 @@ class CrowdFundConstract extends Constract
    * @param {Account} fromAccount
    * @param {Account} toAccount
    */
-  async commandHandler(timestamp, stateManager, tx, fromAccount, toAccount)
+  async commandHandler({timestamp, stateManager, tx, fromAccount, toAccount})
   {
     assert(Buffer.isBuffer(timestamp), `CrowdFundConstract run, timestamp should be an Buffer, now is ${typeof timestamp}`);
     assert(stateManager instanceof StageManager, `CrowdFundConstract run, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
