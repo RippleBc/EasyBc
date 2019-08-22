@@ -99,6 +99,8 @@ const send = async (url, blockNumber, tx) => {
     body: {
       hash: tx.hash().toString('hex'),
       number: blockNumber.toString('hex'),
+      to: tx.from.toString('hex'),
+      value: tx.value.toString("hex"),
       chainCode: selfChainCode
     },
     json: true // Automatically stringifies the body to JSON

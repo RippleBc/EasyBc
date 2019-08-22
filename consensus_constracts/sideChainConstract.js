@@ -68,10 +68,8 @@ class SideChainConstract extends Constract {
       allowLess: true,
       default: Buffer.alloc(1)
     }, {
-      length: 8000,
       name: "crossPayRequests",
       allowZero: true,
-      allowLess: true,
       default: Buffer.alloc(0)
     }, {
       length: 200,
@@ -126,6 +124,22 @@ class SideChainConstract extends Constract {
       }
     });
     
+    /**
+     * @property {Buffer} crossPayRequestsArray (read only).
+     * @memberof Transaction
+     */
+    Object.defineProperty(this, "crossPayRequestsArray", {
+      enumerable: false,
+      configurable: true,
+      get: function () {
+        if (!this._crossPayRequestsArray) {
+          this._crossPayRequestsArray = this.crossPayRequests.length <= 0 ? [] : rlp.decode(this.crossPayRequests);
+        }
+
+        return this._crossPayRequestsArray;
+      }
+    });
+
     /**
      * @property {Buffer} authorityAddressesArray (read only).
      * @memberof Transaction
@@ -262,6 +276,18 @@ class SideChainConstract extends Constract {
             this.reject(tx.from, commands[1]);
           }
         }
+        break;
+      case COMMAND_CROSS_PAY:
+      {
+          // check privilege
+          if (undefined === this.authorityAddressesArray.find(el => {
+            return el.toString("hex") === tx.from.toString("hex")
+          })) {
+            throw new Error(`SideChainConstract commandHandler agree or reject, address ${tx.from.toString("hex")} has not privilege`)
+          }
+
+          await this.crossPay(stateManager, receiptManager, tx.from, toAccount, commands[1])
+      }
         break;
       default:
         {
@@ -409,6 +435,84 @@ class SideChainConstract extends Constract {
     else {
       this.rejectAddresses = this.encodeArray(this.rejectAddressesArray);
     }
+  }
+
+  async crossPay(stateManager, receiptManager, spvSponsor, constractAccount, newCrossPayRequests)
+  {
+    for (let i = 0; i < newCrossPayRequests.length; i += 4)
+    {
+      const spvTxHash = newCrossPayRequests[i];
+      const spvTxTo = newCrossPayRequests[i + 2];
+      const spvTxValue = newCrossPayRequests[i + 3];
+
+      // find correspond tx hash
+      const index = this.crossPayRequestsArray.findIndex(el => {
+        if (Buffer.isBuffer(el) && el.toString("hex") === spvTxHash.toString('hex')) {
+          return true;
+        }
+        return false;
+      });
+      
+      if (index >= 0)
+      {
+        // sponsor of spv request
+        const spvSponsors = this.crossPayRequestsArray[index + 3];
+
+        // check if spv sponsor is repeated
+        if (undefined === spvSponsors.find(el => {
+          return el.toString('hex') === spvSponsor.toString('hex')
+        }))
+        {
+          // add sponsor
+          spvSponsors.push(spvSponsor);
+        }
+      }
+      else
+      {
+        this.crossPayRequestsArray.push(spvTxHash);
+        this.crossPayRequestsArray.push(spvTxTo);
+        this.crossPayRequestsArray.push(spvTxValue);
+        this.crossPayRequestsArray.push([spvSponsor])
+      }
+    }
+
+    // check reached threshold spv
+    let tmpCrossPayRequestsArray = [];
+    for (let i = 0; i < this.crossPayRequestsArray.length; i += 4)
+    {
+      const to = this.crossPayRequestsArray[i + 1];
+      const value = this.crossPayRequestsArray[i + 2];
+      const sponsors = this.crossPayRequestsArray[i + 3];
+      if(sponsors.length / this.authorityAddressesArray.length >= bufferToInt(this.threshold) / 100)
+      {
+        // check balance
+        if (new BN(constractAccount.balance).lt(new BN(value)))
+        {
+          // receiptManager.putReceipt()
+
+          break;
+        }
+
+        // get to account
+        const toAccount = await stateManager.cache.getOrLoad(to);
+
+        // update toAccount balance
+        toAccount.balance = new BN(toAccount.balance).add(new BN(value)).toBuffer();
+
+        // update constract balance
+        constractAccount.balance = new BN(constractAccount.balance).sub(new BN(value)).toBuffer();
+
+        await stateManager.putAccount(to, toAccount.serialize());
+
+        // record
+      }
+      else
+      {
+        tmpCrossPayRequestsArray.push(this.crossPayRequestsArray[i], this.crossPayRequestsArray[i + 1], this.crossPayRequestsArray[i + 2], this.crossPayRequestsArray[i + 3])
+      }
+    }
+
+    this.crossPayRequests = this.encodeArray(tmpCrossPayRequestsArray);
   }
 
   reset() {

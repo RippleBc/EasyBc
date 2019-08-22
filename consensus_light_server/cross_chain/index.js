@@ -46,6 +46,20 @@ app.post('/getSpvState', (req, res) => {
     });
   }
 
+  if (undefined === req.body.to) {
+    return res.json({
+      code: PARAM_ERR,
+      msg: "param error, need to"
+    });
+  }
+
+  if (undefined === req.body.value) {
+    return res.json({
+      code: PARAM_ERR,
+      msg: "param error, need value"
+    });
+  }
+
   if (undefined === req.body.chainCode) {
     return res.json({
       code: PARAM_ERR,
@@ -67,6 +81,23 @@ app.post('/getSpvState', (req, res) => {
       return res.json({
         code: OTH_ERR,
         msg: "getSpvState, spv invalid becase of tx not exist"
+      });
+    }
+
+    // check to
+    if(tx.from.toString('hex') !== req.body.to)
+    {
+      return res.json({
+        code: OTH_ERR,
+        msg: "getSpvState, spv invalid tx from"
+      });
+    }
+
+    // check value
+    if (tx.value.toString('hex') !== req.body.value) {
+      return res.json({
+        code: OTH_ERR,
+        msg: "getSpvState, spv invalid tx value"
       });
     }
 
@@ -158,6 +189,20 @@ app.post('/newSpv', (req, res) => {
     });
   }
 
+  if (undefined === req.body.to) {
+    return res.json({
+      code: PARAM_ERR,
+      msg: "param error, need to"
+    });
+  }
+
+  if (undefined === req.body.value) {
+    return res.json({
+      code: PARAM_ERR,
+      msg: "param error, need value"
+    });
+  }
+
   if (undefined === req.body.chainCode) {
     return res.json({
       code: PARAM_ERR,
@@ -180,6 +225,8 @@ app.post('/newSpv', (req, res) => {
           body: {
             hash: req.body.hash,
             number: req.body.number,
+            to: req.body.to,
+            value: req.body.value,
             chainCode: selfChainCode
           },
           json: true // Automatically stringifies the body to JSON
@@ -256,8 +303,10 @@ app.post('/newSpv', (req, res) => {
     // init tx data
     const data = rlp.encode([
       toBuffer(COMMAND_CROSS_PAY),
-      Buffer.from(req.body.hash, "hex"),
-      Buffer.from(req.body.number, "hex")])
+      [Buffer.from(req.body.hash, "hex"),
+        Buffer.from(req.body.number, "hex"),
+        Buffer.from(req.body.to, 'hex'),
+        Buffer.from(req.body.value, 'hex')]])
 
     // init tx
     const tx = new Transaction({
