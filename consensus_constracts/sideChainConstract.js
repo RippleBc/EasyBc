@@ -68,6 +68,12 @@ class SideChainConstract extends Constract {
       allowLess: true,
       default: Buffer.alloc(1)
     }, {
+      length: 8000,
+      name: "crossPayRequests",
+      allowZero: true,
+      allowLess: true,
+      default: Buffer.alloc(0)
+    }, {
       length: 200,
       name: "authorityAddresses",
       allowLess: true,
