@@ -1,4 +1,5 @@
 const { ACCOUNT_TYPE_CONSTRACT, TX_TYPE_TRANSACTION } = require("../../consensus_constracts/constant");
+const { SUCCESS } = require("../../constant");
 const assert = require("assert");
 const utils = require("../../depends/utils");
 const Transaction = require("../../depends/transaction");
