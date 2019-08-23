@@ -250,7 +250,7 @@ app.post('/newSpv', (req, res) => {
       return res.json({
         code: OTH_ERR,
         msg: "newSpv, invalid spv because of not reach threshold"
-      });;
+      });
     }
 
     /****************************** save spv ******************************/
@@ -259,7 +259,7 @@ app.post('/newSpv', (req, res) => {
       return res.json({
         code: OTH_ERR,
         msg: "newSpv, repeated spv"
-      });;
+      });
     }
 
     /****************************** getAccountInfo ******************************/
@@ -268,7 +268,7 @@ app.post('/newSpv', (req, res) => {
       return res.json({
         code: OTH_ERR,
         msg: "newSpv, invalid blockChainHeight"
-      });;
+      });
     }
 
     // get block

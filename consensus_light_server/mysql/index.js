@@ -341,21 +341,16 @@ class Mysql
     assert(typeof number === 'string', `Mysql saveSpv, number should be a String, now is ${typeof number}`);
     assert(typeof chainCode === 'string', `Mysql saveSpv, chainCode should be a String, now is ${typeof chainCode}`);
     
-    try {
-      return await this.ReceivedSpv.findOrCreate({
-        where: {
-          hash: hash,
-          number: number,
-          chainCode: chainCode
-        },
-        defaults: {
+    return await this.ReceivedSpv.findOrCreate({
+      where: {
+        hash: hash,
+        number: number,
+        chainCode: chainCode
+      },
+      defaults: {
 
-        }
-      });
-    }
-    catch (e) {
-      logger.error(`Mysql saveSpv, throw exception ${e}`)
-    }
+      }
+    });
   }
 
   /**

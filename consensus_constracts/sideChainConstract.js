@@ -332,8 +332,10 @@ class SideChainConstract extends Constract {
       return;
     }
 
+    // check if correspond side chain constract is exist
     const sideChainConstractAccount = await stateManager.cache.getOrLoad(Buffer.from(sideChainConstract.address, "hex"));
     if (sideChainConstractAccount.isEmpty()) {
+      // not exist, update sideChainConstract
       await mysql.updateSideChainConstract(code, tx.to);
     }
     else

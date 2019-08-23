@@ -100,16 +100,17 @@ class Mysql
     assert(transaction instanceof Transaction, `Mysql saveSpv, transaction should be an Transaction Object, now is ${typeof transaction}`);
     assert(typeof chainCode === 'string', `Mysql saveSpv, chainCode should be an Buffer, now is ${typeof chainCode}`);
 
-    try {
-      await this.SendedSpv.create({
+    
+    return await this.SendedSpv.findOrCreate({
+      where: {
         hash: transaction.hash().toString('hex'),
+      },
+
+      defaults: {
         number: number.toString('hex'),
         chainCode: chainCode
-      });
-    }
-    catch (e) {
-      logger.error(`Mysql saveSpv, throw exception ${e}`)
-    }
+      }
+    });
   }
 
   /**
@@ -146,15 +147,19 @@ class Mysql
     assert(Buffer.isBuffer(value), `Mysql saveCrossPayRequest, value should be an Buffer, now is ${typeof value}`);
     assert(Buffer.isBuffer(sponsor), `Mysql saveCrossPayRequest, sponsor should be an Buffer, now is ${typeof sponsor}`);
 
-    await this.CrossPayRequest.create({
-      code: code.toString('hex'),
-      timestamp: timestamp.toString('hex'),
-      txHash: txHash.toString('hex'),
-      number: number.toString('hex'),
-      to: to.toString('hex'),
-      value: value.toString('hex'),
-      sponsor: sponsor.toString('hex')
-    });
+    try {
+      await this.CrossPayRequest.create({
+        code: code.toString('hex'),
+        timestamp: timestamp.toString('hex'),
+        txHash: txHash.toString('hex'),
+        number: number.toString('hex'),
+        to: to.toString('hex'),
+        value: value.toString('hex'),
+        sponsor: sponsor.toString('hex')
+      });
+    } catch (e) {
+      logger.error(`Mysql saveCrossPayRequest, throw exception, ${e}`)
+    }
   }
 
   /**
@@ -172,13 +177,20 @@ class Mysql
     assert(Buffer.isBuffer(to), `Mysql saveCrossPay, to should be an Buffer, now is ${typeof to}`);
     assert(Buffer.isBuffer(value), `Mysql saveCrossPay, value should be an Buffer, now is ${typeof value}`);
 
-    await this.CrossPay.create({
-      code: code.toString('hex'),
-      timestamp: timestamp.toString('hex'),
-      txHash: txHash.toString('hex'),
-      to: to.toString('hex'),
-      value: value.toString('hex'),
-    });
+    try
+    {
+      await this.CrossPay.create({
+        code: code.toString('hex'),
+        timestamp: timestamp.toString('hex'),
+        txHash: txHash.toString('hex'),
+        to: to.toString('hex'),
+        value: value.toString('hex'),
+      });
+    }
+    catch(e)
+    {
+      logger.error(`Mysql saveCrossPay, throw exception, ${e}`)
+    }
   }
 }
 

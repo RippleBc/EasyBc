@@ -75,7 +75,11 @@ module.exports = async (blockNumber, transactions) =>
     }
 
     // save spv request
-    await mysql.saveSendedSpv(blockNumber, tx, chainCode)
+    const [, created] = await mysql.saveSendedSpv(blockNumber, tx, chainCode)
+    if (!created)
+    {
+      continue;
+    }
 
     // send spv request
     const sideChains = await mysql.getSideChain(chainCode);
