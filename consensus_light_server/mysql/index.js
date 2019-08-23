@@ -10,11 +10,16 @@ const abnormalNodeModelConfig = require('./abnormalNode');
 const sideChainModelConfig = require('./sideChain');
 const receivedSpvModelConfig = require('./receivedSpv');
 const sideChainConstractModelConfig = require('./sideChainConstract');
+const waitingCrossPayModelConfig = require('./waitingCrossPay');
 
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 
 const Buffer = utils.Buffer;
+
+const WAITING_CROSS_PAY_FLUSH_COUNT_LIMIT = 50;
+const WAITING_CROSS_PAY_FLUSH_SECONDS_INTERVAL_THRESHOLD = 5;
+var waitingCrossPayLastFlushTime = 0;
 
 class Mysql
 {
@@ -44,6 +49,7 @@ class Mysql
     this.SideChain = this.sequelize.define(...sideChainModelConfig)
     this.ReceivedSpv = this.sequelize.define(...receivedSpvModelConfig);
     this.SideChainConstract = this.sequelize.define(...sideChainConstractModelConfig);
+    this.WaitingCrossPay = this.sequelize.define(...waitingCrossPayModelConfig);
     
     await this.sequelize.authenticate();
     await this.sequelize.sync();
@@ -369,6 +375,51 @@ class Mysql
     });
 
     return sideChainConstract.address;
+  }
+
+  /**
+   * @param {String} hash
+   * @param {String} number
+   * @param {String} chainCode
+   * @param {String} to
+   * @param {String} value
+   * @return {Array} [receivedSpv, created]
+   */
+  async saveWaitingCrossPay(hash, number, chainCode, to, value) {
+    assert(typeof hash === 'string', `Mysql saveWaitingCrossPay, hash should be a String, now is ${typeof hash}`);
+    assert(typeof number === 'string', `Mysql saveWaitingCrossPay, number should be a String, now is ${typeof number}`);
+    assert(typeof chainCode === 'string', `Mysql saveWaitingCrossPay, chainCode should be a String, now is ${typeof chainCode}`);
+    assert(typeof to === 'string', `Mysql saveWaitingCrossPay, to should be a String, now is ${typeof to}`);
+    assert(typeof value === 'string', `Mysql saveWaitingCrossPay, value should be a String, now is ${typeof value}`);
+
+    return await this.WaitingCrossPay.findOrCreate({
+      where: {
+        hash: hash,
+        number: number,
+        chainCode: chainCode
+      },
+      defaults: {
+        to: to,
+        value: value
+      }
+    });
+  }
+
+  async getWaitingCrossPay() {
+    // check interval
+    const now = Date.now();
+    if (now - waitingCrossPayLastFlushTime < WAITING_CROSS_PAY_FLUSH_SECONDS_INTERVAL_THRESHOLD * 1000) {
+      return [];
+    }
+    waitingCrossPayLastFlushTime = now;
+
+    // fetch data
+    const rows = await this.WaitingCrossPay.findAll({
+      limit: WAITING_CROSS_PAY_FLUSH_COUNT_LIMIT,
+      order: [['id', 'ASC']]
+    });
+
+    return rows;
   }
 }
 

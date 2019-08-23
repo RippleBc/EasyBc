@@ -254,13 +254,51 @@ app.post('/newSpv', (req, res) => {
     }
 
     /****************************** save spv ******************************/
-    const [, created] = await mysql.saveReceivedSpv(req.body.hash, req.body.number, req.body.chainCode);
-    if (!created) {
+    const [, receivedSpvCreated] = await mysql.saveReceivedSpv(req.body.hash, req.body.number, req.body.chainCode);
+    if (!receivedSpvCreated) {
       return res.json({
         code: OTH_ERR,
         msg: "newSpv, repeated spv"
       });
     }
+
+    /****************************** save waiting cross pay ******************************/
+    const [, waitingCrossPayCreated] = await mysql.saveWaitingCrossPay(req.body.hash, req.body.number, req.body.chainCode, req.body.to, req.body.value)
+    if (!waitingCrossPayCreated) {
+      return res.json({
+        code: OTH_ERR,
+        msg: "newSpv, repeated wating cross pay"
+      });
+    }
+
+    /****************************** get waiting cross pay ******************************/
+    const waitingCrossPayMap = new Map()
+    const waitingCrossPays = await mysql.getWaitingCrossPay();
+    if (waitingCrossPays.length <= 0)
+    {
+      logger.info(`newSpv, not reach cross pay process threshold`);
+
+      return res.json({
+        code: SUCCESS
+      });
+    }
+    for (let waitingCrossPay of waitingCrossPays)
+    {
+      if (waitingCrossPayMap.has(waitingCrossPay.chainCode))
+      {
+        let value = waitingCrossPayMap.get(waitingCrossPay.chainCode)
+        value.push(waitingCrossPay);
+
+        waitingCrossPayMap.set(waitingCrossPay.chainCode, value);
+      }
+      else
+      {
+        waitingCrossPayMap.set(waitingCrossPay.chainCode, [waitingCrossPay])
+      }
+
+      await waitingCrossPay.destroy();
+    }
+
 
     /****************************** getAccountInfo ******************************/
     const blockChainHeight = await blockDb.getBlockChainHeight();
@@ -297,30 +335,36 @@ app.post('/newSpv', (req, res) => {
     const account = new Account(accountRaw)
 
     /****************************** send tx ******************************/
-    // get side chain constract
-    const sideChainConstractAddress = await mysql.getSideChainConstract(req.body.chainCode);
 
-    // init tx data
-    const data = rlp.encode([
-      toBuffer(COMMAND_CROSS_PAY),
-      [Buffer.from(req.body.hash, "hex"),
-        Buffer.from(req.body.number, "hex"),
-        Buffer.from(req.body.to, 'hex'),
-        Buffer.from(req.body.value, 'hex')]])
+    for (let [chainCode, crossPayArray] of waitingCrossPayMap.entries())
+    {
+      // get side chain constract
+      const sideChainConstractAddress = await mysql.getSideChainConstract(chainCode);
 
-    // init tx
-    const tx = new Transaction({
-      nonce: new BN(account.nonce).addn(1).toBuffer(),
-      timestamp: Date.now(),
-      to: Buffer.from(sideChainConstractAddress, "hex"),
-      value: 1,
-      data: data
-    });
-    tx.sign(Buffer.from(privateKey, "hex"));
+      // init tx data
+      let data = [toBuffer(COMMAND_CROSS_PAY), []];
+      for(let crossPay of crossPayArray)
+      {
+        data[1].push(Buffer.from(crossPay.hash, "hex"));
+        data[1].push(Buffer.from(crossPay.number, "hex"));
+        data[1].push(Buffer.from(crossPay.to, 'hex'));
+        data[1].push(Buffer.from(crossPay.value, 'hex'));
+      }
+      data = rlp.encode(data);
 
-    // record
-    await mysql.saveRawTransaction(tx.hash().toString('hex'), tx.serialize().toString('hex'));
-  
+      // init tx
+      const tx = new Transaction({
+        nonce: new BN(account.nonce).addn(1).toBuffer(),
+        timestamp: Date.now(),
+        to: Buffer.from(sideChainConstractAddress, "hex"),
+        value: 1,
+        data: data
+      });
+      tx.sign(Buffer.from(privateKey, "hex"));
+
+      // record
+      await mysql.saveRawTransaction(tx.hash().toString('hex'), tx.serialize().toString('hex'));
+    }
     res.json({
       code: SUCCESS
     });
