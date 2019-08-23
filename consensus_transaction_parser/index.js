@@ -30,8 +30,12 @@ process.on("uncaughtException", function(err) {
   await mongo.initBaseDb(mongoConfig.host, mongoConfig.port, mongoConfig.user, mongoConfig.password, mongoConfig.dbName);
 
 	// init accountTrie
-	const trieDb = mongo.generateMptDb()
-	process[Symbol.for("accountTrie")] = new Trie(trieDb);
+	const accountDb = mongo.generateMptDb()
+	process[Symbol.for("accountTrie")] = new Trie(accountDb);
+
+	// init receiptTrie
+	const receiptDb = mongo.generateReceiptMptDb()
+	process[Symbol.for("receiptTrie")] = new Trie(receiptDb);
 
 	// init blockDb
 	const blockDb = process[Symbol.for("blockDb")] = mongo.generateBlockDb();
@@ -44,8 +48,9 @@ process.on("uncaughtException", function(err) {
  */
 const run = async blockDb =>
 {
-	const broadCastSpv = require("./cross_chain");
-
+	const broadCastSpv = require("./constracts/broadCastSpv");
+	const parseReceipt = require("./constracts/parseReceipt");
+	
 	let blockNumber;
 
 	// get block number which is need to be process
@@ -66,6 +71,9 @@ const run = async blockDb =>
 			// save transactions
 			const transactions = block.transactions;
 			await mysql.saveTransactions(blockNumber, transactions);
+
+			// parse spv
+			await parseReceipt(block);
 
 			//
 			await broadCastSpv(blockNumber, transactions);

@@ -17,7 +17,7 @@ class BlockChain
       trie: new Trie(opts.mptDb, opts.root)
     });
     this.receiptManager = new ReceiptManager({
-      trie: new Trie(opts.receiptMptDb, opts.receiptRoot)
+      trie: new Trie(opts.receiptMptDb)
     })
     this.blockDb = opts.blockDb;
 

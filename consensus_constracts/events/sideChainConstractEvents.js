@@ -23,6 +23,11 @@ class CorssPayRequestEvent extends ConstractEvent
       default: Buffer.alloc(1)
     }, {
       length: 32,
+      name: "name",
+      allowLess: true,
+      default: Buffer.alloc(1)
+    }, {
+      length: 32,
       name: "timestamp",
       allowLess: true,
       default: Buffer.alloc(1)
@@ -37,7 +42,7 @@ class CorssPayRequestEvent extends ConstractEvent
       allowLess: true,
       default: Buffer.alloc(1)
     }, {
-      length: 32,
+      length: 20,
       name: "to",
       allowLess: true,
       default: Buffer.alloc(1)
@@ -47,13 +52,15 @@ class CorssPayRequestEvent extends ConstractEvent
       allowLess: true,
       default: Buffer.alloc(1)
     }, {
-      length: 32,
+      length: 20,
       name: "sponsor",
       allowLess: true,
       default: Buffer.alloc(1)
     }];
 
     utils.defineProperties(this, fields, data);
+
+    this.name = 'CorssPayRequestEvent';
   }
 }
 
@@ -75,6 +82,11 @@ class CorssPayEvent extends ConstractEvent {
       default: Buffer.alloc(1)
     }, {
       length: 32,
+      name: "name",
+      allowLess: true,
+      default: Buffer.alloc(1)
+    }, {
+      length: 32,
       name: "timestamp",
       allowLess: true,
       default: Buffer.alloc(1)
@@ -84,7 +96,7 @@ class CorssPayEvent extends ConstractEvent {
       allowLess: true,
       default: Buffer.alloc(1)
     }, {
-      length: 32,
+      length: 20,
       name: "to",
       allowLess: true,
       default: Buffer.alloc(1)
@@ -96,6 +108,8 @@ class CorssPayEvent extends ConstractEvent {
     }];
 
     utils.defineProperties(this, fields, data);
+
+    this.name = 'CorssPayEvent';
   }
 }
 

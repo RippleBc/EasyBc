@@ -113,8 +113,7 @@ class Update
 			receiptMptDb: mongo.generateReceiptMptDb(),
 			mptDb: mongo.generateMptDb(),
 			blockDb: mongo.generateBlockDb(),
-			root: lastestBlock.header.stateRoot,
-			receiptRoot: lastestBlock.header.receiptRoot
+			root: lastestBlock.header.stateRoot
 		});
 	}
 

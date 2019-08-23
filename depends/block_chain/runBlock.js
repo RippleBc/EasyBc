@@ -1,18 +1,17 @@
-const util = require("../utils");
+const utils = require("../utils");
 const async = require("async");
 const assert = require('assert')
 const Block = require('../block')
 
-const rlp = util.rlp;
-const BN = util.BN;
-const Buffer = util.Buffer;
+const rlp = utils.rlp;
+const BN = utils.BN;
+const Buffer = utils.Buffer;
 
 /**
  * Process the transactions in an block
  * @param {Object} opts
  * @prop {Block} opts.block - the block we are processing
  * @prop {Buffer} opts.root - the parent block stateRoot
- * @prop {Buffer} opts.receiptRoot - the parent block receiptRoot
  * @prop {Boolean} opts.generate - whether to generate the stateRoot
  * @prop {Boolean} opts.skipNonce - if ignore transaction nonce check
  * @prop {Boolean} opts.skipBalance - if ignore transaction balance check
@@ -36,9 +35,8 @@ module.exports = async function(opts) {
     await this.stateManager.resetTrieRoot(opts.root);
   }
 
-  if (opts.receiptRoot) {
-    await this.receiptManager.resetTrieRoot(opts.receiptRoot);
-  }
+  // reset receiptManager
+  await this.receiptManager.resetTrieRoot(utils.SHA3_RLP);
 
   // populate cache
   let addresses = [];

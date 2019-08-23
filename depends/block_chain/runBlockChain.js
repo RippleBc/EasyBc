@@ -42,7 +42,6 @@ module.exports = async function(opts)
   result = await this.runBlock({
     block: block,
     root: parentBlock ? parentBlock.header.stateRoot : undefined,
-    receiptRoot: parentBlock ? parentBlock.header.receiptRoot : undefined,
     generate: opts.generate,
     skipNonce: opts.skipNonce,
     skipBalance: opts.skipBalance
