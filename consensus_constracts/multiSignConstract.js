@@ -1,7 +1,7 @@
 const assert = require("assert");
 const Account = require("../depends/account");
 const utils = require("../depends/utils");
-const StageManager = require("../depends/block_chain/stateManager");
+const StateManager = require("../depends/block_chain/stateManager");
 const Transaction = require("../depends/transaction");
 const { STATE_DESTROYED } = require("./constant");
 const Constract = require("./constract");
@@ -130,14 +130,14 @@ class MultiSignConstract extends Constract {
 
     /**
      * @param {Buffer} timestamp
-     * @param {StageManager} stateManager
+     * @param {StateManager} stateManager
      * @param {Transaction} tx
      * @param {Account} fromAccount
      * @param {Account} toAccount
      */
     async commandHandler({timestamp, stateManager, tx, fromAccount, toAccount}) {
         assert(Buffer.isBuffer(timestamp), `MultiSignConstract run, timestamp should be an Buffer, now is ${typeof timestamp}`);
-        assert(stateManager instanceof StageManager, `MultiSignConstract run, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
+        assert(stateManager instanceof StateManager, `MultiSignConstract run, stateManager should be an instance of StateManager, now is ${typeof stateManager}`);
         assert(tx instanceof Transaction, `MultiSignConstract run, tx should be an instance of Transaction, now is ${typeof tx}`);
         assert(fromAccount instanceof Account, `MultiSignConstract run, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
         assert(toAccount instanceof Account, `MultiSignConstract run, toAccount should be an instance of Account, now is ${typeof toAccount}`);
@@ -254,7 +254,7 @@ class MultiSignConstract extends Constract {
      * @param {Buffer} timestamp
      */
     async agree(stateManager, from, constractAccount, timestamp) {
-        assert(stateManager instanceof StageManager, `MultiSignConstract agree, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
+        assert(stateManager instanceof StateManager, `MultiSignConstract agree, stateManager should be an instance of StateManager, now is ${typeof stateManager}`);
         assert(Buffer.isBuffer(from), `MultiSignConstract agree, from should be an Buffer, now is ${typeof from}`);
         assert(constractAccount instanceof Account, `MultiSignConstract agree, constractAccount should be an instance of Account, now is ${typeof constractAccount}`);
         assert(Buffer.isBuffer(timestamp), `MultiSignConstract agree, timestamp should be an Buffer, now is ${typeof timestamp}`);

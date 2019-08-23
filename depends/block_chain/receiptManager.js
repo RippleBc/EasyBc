@@ -12,13 +12,13 @@ class ReceiptManager {
   }
 
   /**
-   * @param {Buffer} address
+   * @param {Buffer} hash
    */
-  async getReceipt(address) {
-    assert(Buffer.isBuffer(address), `ReceiptManager getReceipt, address should be an Buffer, now is ${typeof address}`);
+  async getReceipt(hash) {
+    assert(Buffer.isBuffer(hash), `ReceiptManager getReceipt, hash should be an Buffer, now is ${typeof hash}`);
 
     const receipt = await new Promise((resolve, reject) => {
-      this.trie.get(address, (err, result) => {
+      this.trie.get(hash, (err, result) => {
         if (!!err) {
           reject(err)
         }
@@ -30,15 +30,15 @@ class ReceiptManager {
   }
 
   /**
-   * @param {Buffer} address
+   * @param {Buffer} hash
    * @param {Buffer} receipt
    */
-  async putReceipt(address, receipt) {
-    assert(Buffer.isBuffer(address), `ReceiptManager putReceipt, address should be an Buffer, now is ${typeof address}`);
+  async putReceipt(hash, receipt) {
+    assert(Buffer.isBuffer(hash), `ReceiptManager putReceipt, hash should be an Buffer, now is ${typeof hash}`);
     assert(Buffer.isBuffer(receipt), `ReceiptManager putReceipt, receipt should be an Buffer, now is ${typeof receipt}`);
 
     await new Promise((resolve, reject) => {
-      this.trie.put(address, receipt, err => {
+      this.trie.put(hash, receipt, err => {
         if (!!err) {
           reject(err)
         }
@@ -48,13 +48,13 @@ class ReceiptManager {
   }
 
   /**
-   * @param {Buffer} address
+   * @param {Buffer} hash
    */
-  async delReceipt(address) {
-    assert(Buffer.isBuffer(address), `ReceiptManager delReceipt, address should be an Buffer, now is ${typeof address}`);
+  async delReceipt(hash) {
+    assert(Buffer.isBuffer(hash), `ReceiptManager delReceipt, hash should be an Buffer, now is ${typeof hash}`);
 
     await new Promise((resolve, reject) => {
-      this.trie.del(address, err => {
+      this.trie.del(hash, err => {
         if (!!err) {
           reject(err)
         }

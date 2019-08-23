@@ -1,11 +1,12 @@
 const assert = require("assert");
 const Account = require("../depends/account");
 const utils = require("../depends/utils");
-const StageManager = require("../depends/block_chain/stateManager");
+const StateManager = require("../depends/block_chain/stateManager");
 const ReceiptManager = require("../depends/block_chain/receiptManager");
 const Transaction = require("../depends/transaction");
 const { STATE_DESTROYED } = require("./constant");
 const Constract = require("./constract");
+const { CorssPayRequestEvent, CorssPayEvent } = require("./events/sideChainConstractEvents");
 
 const rlp = utils.rlp;
 const BN = utils.BN;
@@ -191,7 +192,7 @@ class SideChainConstract extends Constract {
 
   /**
    * @param {Buffer} timestamp
-   * @param {StageManager} stateManager
+   * @param {StateManager} stateManager
    * @param {ReceiptManager} receiptManager
    * @param {Transaction} tx
    * @param {Account} fromAccount
@@ -199,7 +200,7 @@ class SideChainConstract extends Constract {
    */
   async commandHandler({ timestamp, stateManager, receiptManager, tx, fromAccount, toAccount}) {
     assert(Buffer.isBuffer(timestamp), `SideChainConstract commandHandler, timestamp should be an Buffer, now is ${typeof timestamp}`);
-    assert(stateManager instanceof StageManager, `SideChainConstract commandHandler, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
+    assert(stateManager instanceof StateManager, `SideChainConstract commandHandler, stateManager should be an instance of StateManager, now is ${typeof stateManager}`);
     assert(receiptManager instanceof ReceiptManager, `SideChainConstract commandHandler, receiptManager should be an instance of ReceiptManager, now is ${typeof receiptManager}`);
     assert(tx instanceof Transaction, `SideChainConstract commandHandler, tx should be an instance of Transaction, now is ${typeof tx}`);
     assert(fromAccount instanceof Account, `SideChainConstract commandHandler, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
@@ -302,7 +303,7 @@ class SideChainConstract extends Constract {
    * @param {Buffer} threshold
    * @param {Buffer} authorityAddresses
    * @param {Buffer} timestamp
-   * @param {StageManager} stateManager
+   * @param {StateManager} stateManager
    * @param {ReceiptManager} receiptManager
    * @param {Mysql} mysql
    * @param {Transaction} tx
@@ -315,7 +316,7 @@ class SideChainConstract extends Constract {
     assert(Buffer.isBuffer(threshold), `SideChainConstract create, threshold should be an Buffer, now is ${typeof threshold}`);
     assert(Buffer.isBuffer(authorityAddresses), `SideChainConstract create, authorityAddresses should be an Buffer, now is ${typeof authorityAddresses}`);
     assert(Buffer.isBuffer(timestamp), `SideChainConstract create, timestamp should be an Buffer, now is ${typeof timestamp}`);
-    assert(stateManager instanceof StageManager, `SideChainConstract create, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
+    assert(stateManager instanceof StateManager, `SideChainConstract create, stateManager should be an instance of StateManager, now is ${typeof stateManager}`);
     assert(receiptManager instanceof ReceiptManager, `SideChainConstract create, receiptManager should be an instance of ReceiptManager, now is ${typeof receiptManager}`);
     assert(tx instanceof Transaction, `SideChainConstract create, tx should be an instance of Transaction, now is ${typeof tx}`);
     assert(fromAccount instanceof Account, `SideChainConstract create, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
@@ -348,7 +349,7 @@ class SideChainConstract extends Constract {
    * @param {Buffer} timestamp
    */
   async agree(stateManager, from, constractAccount, timestamp) {
-    assert(stateManager instanceof StageManager, `SideChainConstract agree, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
+    assert(stateManager instanceof StateManager, `SideChainConstract agree, stateManager should be an instance of StateManager, now is ${typeof stateManager}`);
     assert(Buffer.isBuffer(from), `SideChainConstract agree, from should be an Buffer, now is ${typeof from}`);
     assert(constractAccount instanceof Account, `SideChainConstract agree, constractAccount should be an instance of Account, now is ${typeof constractAccount}`);
     assert(Buffer.isBuffer(timestamp), `SideChainConstract agree, timestamp should be an Buffer, now is ${typeof timestamp}`);
@@ -437,11 +438,27 @@ class SideChainConstract extends Constract {
     }
   }
 
+  /**
+   * 
+   * @param {StateManager} stateManager
+   * @param {ReceiptManager} receiptManager
+   * @param {Buffer} spvSponsor
+   * @param {Account} constractAccount
+   * @param {Array} newCrossPayRequests
+   */
   async crossPay(stateManager, receiptManager, spvSponsor, constractAccount, newCrossPayRequests)
   {
+    assert(stateManager instanceof StateManager, `SideChainConstract crossPay, stateManager should be an instance of StateManager, now is ${typeof stateManager}`);
+    assert(receiptManager instanceof ReceiptManager, `SideChainConstract crossPay, receiptManager should be an instance of ReceiptManager, now is ${typeof receiptManager}`);
+    assert(Buffer.isBuffer(spvSponsor), `SideChainConstract crossPay, spvSponsor should be an Buffer, now is ${typeof spvSponsor}`);
+    assert(constractAccount instanceof Account, `SideChainConstract crossPay, constractAccount should be an instance of Account, now is ${typeof constractAccount}`);
+    assert(Array.isArray(newCrossPayRequests), `SideChainConstract crossPay, newCrossPayRequests should be an Array, now is ${typeof newCrossPayRequests}`);
+
+
     for (let i = 0; i < newCrossPayRequests.length; i += 4)
     {
       const spvTxHash = newCrossPayRequests[i];
+      const spvTxNumber = newCrossPayRequests[i + 1];
       const spvTxTo = newCrossPayRequests[i + 2];
       const spvTxValue = newCrossPayRequests[i + 3];
 
@@ -465,6 +482,19 @@ class SideChainConstract extends Constract {
         {
           // add sponsor
           spvSponsors.push(spvSponsor);
+
+          // record event
+          const corssPayRequestEvent = new CorssPayRequestEvent({
+            id: this.id,
+            code: this.code,
+            timestamp: Date.now(),
+            txHash: spvTxHash,
+            number: spvTxNumber,
+            to: spvTxTo,
+            value: spvTxValue,
+            sponsor: spvSponsor
+          });
+          await receiptManager.putReceipt(corssPayRequestEvent.hash(), corssPayRequestEvent.serialize())
         }
       }
       else
@@ -472,7 +502,20 @@ class SideChainConstract extends Constract {
         this.crossPayRequestsArray.push(spvTxHash);
         this.crossPayRequestsArray.push(spvTxTo);
         this.crossPayRequestsArray.push(spvTxValue);
-        this.crossPayRequestsArray.push([spvSponsor])
+        this.crossPayRequestsArray.push([spvSponsor]);
+
+        // record event
+        const corssPayRequestEvent = new CorssPayRequestEvent({
+          id: this.id,
+          code: this.code,
+          timestamp: Date.now(),
+          txHash: spvTxHash,
+          number: spvTxNumber,
+          to: spvTxTo,
+          value: spvTxValue,
+          sponsor: spvSponsor
+        });
+        await receiptManager.putReceipt(corssPayRequestEvent.hash(), corssPayRequestEvent.serialize())
       }
     }
 
@@ -480,6 +523,7 @@ class SideChainConstract extends Constract {
     let tmpCrossPayRequestsArray = [];
     for (let i = 0; i < this.crossPayRequestsArray.length; i += 4)
     {
+      const hash = this.crossPayRequestsArray[i];
       const to = this.crossPayRequestsArray[i + 1];
       const value = this.crossPayRequestsArray[i + 2];
       const sponsors = this.crossPayRequestsArray[i + 3];
@@ -488,8 +532,6 @@ class SideChainConstract extends Constract {
         // check balance
         if (new BN(constractAccount.balance).lt(new BN(value)))
         {
-          // receiptManager.putReceipt()
-
           break;
         }
 
@@ -504,7 +546,16 @@ class SideChainConstract extends Constract {
 
         await stateManager.putAccount(to, toAccount.serialize());
 
-        // record
+        // record event
+        const corssPayEvent = new CorssPayEvent({
+          id: this.id,
+          code: this.code,
+          timestamp: Date.now(),
+          txHash: hash,
+          to: to,
+          value: value
+        });
+        await receiptManager.putReceipt(corssPayEvent.hash(), corssPayEvent.serialize())
       }
       else
       {
