@@ -1,4 +1,4 @@
-const mongoDBWraper = require("../../depends/mpt_db_wrapper");
+const mongoDBWraper = require("../../depends/mongo_wrapper");
 const Trie = require("../../depends/merkle_patricia_tree");
 const utils = require("../../depends/utils");
 const Account = require("../../depends/account");

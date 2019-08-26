@@ -1,4 +1,4 @@
-const { SUCCESS, PARAM_ERR, OTH_ERR } = require("../../constant");
+const { QUERY_MAX_LIMIT, SUCCESS, PARAM_ERR, OTH_ERR } = require("../../constant");
 const rp = require("request-promise");
 const Transaction = require("../../depends/transaction");
 const Account = require("../../depends/account");
@@ -9,6 +9,7 @@ const constractManager = require("../../consensus_constracts/index.js");
 const sideChainConstractId = require("../../consensus_constracts/sideChainConstract").id;
 const { ACCOUNT_TYPE_CONSTRACT, TX_TYPE_TRANSACTION } = require("../../consensus_constracts/constant");
 const assert = require("assert");
+const printErrorStack = process[Symbol.for("printErrorStack")]
 
 const Buffer = utils.Buffer;
 const BN = utils.BN;
@@ -167,6 +168,8 @@ app.post('/getSpvState', (req, res) => {
       data: SPV_STATE_MALICIOUS
     })
   })().catch(e => {
+    printErrorStack(e);
+
     res.json({
       code: OTH_ERR,
       msg: `getSpvState, throw exception, ${e}`
@@ -369,9 +372,91 @@ app.post('/newSpv', (req, res) => {
       code: SUCCESS
     });
   })().catch(e => {
+    printErrorStack(e);
+
     res.json({
       code: OTH_ERR,
       msg: `newSpv, throw exception, ${e}`
     });
   })
+})
+
+app.post("/getCrossPayRequest", (req, res) => {
+  if (undefined === req.body.offset) {
+    return res.json({
+      code: PARAM_ERR,
+      msg: "param error, need offset"
+    });
+  }
+
+  if (undefined === req.body.limit) {
+    return res.json({
+      code: PARAM_ERR,
+      msg: "param error, need limit"
+    });
+  }
+
+  if (req.body.limit >= QUERY_MAX_LIMIT) {
+    return res.json({
+      code: PARAM_ERR,
+      msg: `param error, limit must little than ${QUERY_MAX_LIMIT}`
+    })
+  }
+
+  mysql.getCrossPayRequest(req.body).then(({ count, rows }) => {
+    res.json({
+      code: SUCCESS,
+      data: {
+        count: count,
+        crossPayRequests: rows
+      }
+    })
+  }).catch(e => {
+    printErrorStack(e);
+
+    res.json({
+      code: OTH_ERR,
+      msg: e.toString()
+    });
+  });;
+})
+
+app.post("/getCrossPay", (req, res) => {
+  if (undefined === req.body.offset) {
+    return res.json({
+      code: PARAM_ERR,
+      msg: "param error, need offset"
+    });
+  }
+
+  if (undefined === req.body.limit) {
+    return res.json({
+      code: PARAM_ERR,
+      msg: "param error, need limit"
+    });
+  }
+
+  if (req.body.limit >= QUERY_MAX_LIMIT) {
+    return res.json({
+      code: PARAM_ERR,
+      msg: `param error, limit must little than ${QUERY_MAX_LIMIT}`
+    })
+  }
+
+  mysql.getCrossPay(req.body).then(({count, rows}) => {
+    res.json({
+      code: SUCCESS,
+      data: {
+        count: count,
+        crossPays: rows
+      }
+    })
+  }).catch(e => {
+    printErrorStack(e);
+    
+    res.json({
+      code: OTH_ERR,
+      msg: e.toString()
+    });
+  });;
 })

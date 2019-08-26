@@ -55,7 +55,7 @@ process.on('uncaughtException', err => {
   process[Symbol.for("mysql")].init()
 
   // init mongo
-  const mongo = require("../depends/mpt_db_wrapper");
+  const mongo = require("../depends/mongo_wrapper");
   await mongo.initBaseDb(mongoConfig.host, mongoConfig.port, mongoConfig.user, mongoConfig.password, mongoConfig.dbName);
   const trieDb = mongo.generateMptDb()
 

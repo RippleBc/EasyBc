@@ -26,7 +26,7 @@ process.on("uncaughtException", function(err) {
 	process[Symbol.for("mysql")] = mysql;
 
 	// init mongo
-  const mongo = require("../depends/mpt_db_wrapper");
+  const mongo = require("../depends/mongo_wrapper");
   await mongo.initBaseDb(mongoConfig.host, mongoConfig.port, mongoConfig.user, mongoConfig.password, mongoConfig.dbName);
 
 	// init accountTrie

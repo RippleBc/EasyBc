@@ -1,6 +1,6 @@
 const mysqlConfig = require("../config.json").mysql;
 const assert = require("assert");
-const logModelConfig = require('./log');
+const logModelConfig = require('../../depends/mysql_model/log');
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 

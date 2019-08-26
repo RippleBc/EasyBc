@@ -1,11 +1,11 @@
 const mysqlConfig = require("../config.json").mysql;
 const utils = require("../../depends/utils");
 const assert = require("assert");
-const rawTransactionModelConfig = require('./rawTransaction');
-const timeConsumeModelConfig = require('./timeConsume');
-const abnormalNodeModelConfig = require('./abnormalNode');
-const perishHashModelConfig = require('./perishHash');
-const sideChainConstractModelConfig = require('./sideChainConstract');
+const rawTransactionModelConfig = require('../../depends/mysql_model/rawTransaction');
+const timeConsumeModelConfig = require('../../depends/mysql_model/timeConsume');
+const abnormalNodeModelConfig = require('../../depends/mysql_model/abnormalNode');
+const perishHashModelConfig = require('../../depends/mysql_model/perishHash');
+const sideChainConstractModelConfig = require('../../depends/mysql_model/sideChainConstract');
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 
