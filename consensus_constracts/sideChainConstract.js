@@ -12,12 +12,15 @@ const rlp = utils.rlp;
 const BN = utils.BN;
 const bufferToInt = utils.bufferToInt;
 const Buffer = utils.Buffer;
+const toBuffer = utils.toBuffer;
 
 const COMMAND_NEW_AUTHORITY_ADDRESSES = 100;
 const COMMAND_DEL_AUTHORITY_ADDRESSES = 101;
 const COMMAND_AGREE = 102;
 const COMMAND_REJECT = 103;
 const COMMAND_CROSS_PAY = 104;
+
+const SIDE_CHAIN_PAY_MAX_INTERVAL = 5 * 60 * 1000;
 
 class SideChainConstract extends Constract {
   constructor(data) {
@@ -287,7 +290,7 @@ class SideChainConstract extends Constract {
             throw new Error(`SideChainConstract commandHandler agree or reject, address ${tx.from.toString("hex")} has not privilege`)
           }
 
-          await this.crossPay(stateManager, receiptManager, tx.from, toAccount, commands[1])
+          await this.crossPay(stateManager, receiptManager, tx, toAccount, commands[1])
       }
         break;
       default:
@@ -444,15 +447,15 @@ class SideChainConstract extends Constract {
    * 
    * @param {StateManager} stateManager
    * @param {ReceiptManager} receiptManager
-   * @param {Buffer} spvSponsor
+   * @param {Transaction} tx
    * @param {Account} constractAccount
    * @param {Array} newCrossPayRequests
    */
-  async crossPay(stateManager, receiptManager, spvSponsor, constractAccount, newCrossPayRequests)
+  async crossPay(stateManager, receiptManager, tx, constractAccount, newCrossPayRequests)
   {
     assert(stateManager instanceof StateManager, `SideChainConstract crossPay, stateManager should be an instance of StateManager, now is ${typeof stateManager}`);
     assert(receiptManager instanceof ReceiptManager, `SideChainConstract crossPay, receiptManager should be an instance of ReceiptManager, now is ${typeof receiptManager}`);
-    assert(Buffer.isBuffer(spvSponsor), `SideChainConstract crossPay, spvSponsor should be an Buffer, now is ${typeof spvSponsor}`);
+    assert(tx instanceof Transaction, `SideChainConstract crossPay, tx should be an instance of Transaction, now is ${typeof tx}`);
     assert(constractAccount instanceof Account, `SideChainConstract crossPay, constractAccount should be an instance of Account, now is ${typeof constractAccount}`);
     assert(Array.isArray(newCrossPayRequests), `SideChainConstract crossPay, newCrossPayRequests should be an Array, now is ${typeof newCrossPayRequests}`);
 
@@ -475,15 +478,15 @@ class SideChainConstract extends Constract {
       if (index >= 0)
       {
         // sponsor of spv request
-        const spvSponsors = this.crossPayRequestsArray[index + 3];
+        const spvSponsors = this.crossPayRequestsArray[index + 4];
 
         // check if spv sponsor is repeated
         if (undefined === spvSponsors.find(el => {
-          return el.toString('hex') === spvSponsor.toString('hex')
+          return el.toString('hex') === tx.from.toString('hex')
         }))
         {
           // add sponsor
-          spvSponsors.push(spvSponsor);
+          spvSponsors.push(tx.from);
 
           // record event
           const corssPayRequestEvent = new CorssPayRequestEvent({
@@ -494,7 +497,7 @@ class SideChainConstract extends Constract {
             number: spvTxNumber,
             to: spvTxTo,
             value: spvTxValue,
-            sponsor: spvSponsor
+            sponsor: tx.from
           });
           await receiptManager.putReceipt(corssPayRequestEvent.hash(), corssPayRequestEvent.serialize())
         }
@@ -502,9 +505,10 @@ class SideChainConstract extends Constract {
       else
       {
         this.crossPayRequestsArray.push(spvTxHash);
+        this.crossPayRequestsArray.push(tx.timestamp)
         this.crossPayRequestsArray.push(spvTxTo);
         this.crossPayRequestsArray.push(spvTxValue);
-        this.crossPayRequestsArray.push([spvSponsor]);
+        this.crossPayRequestsArray.push([tx.from]);
 
         // record event
         const corssPayRequestEvent = new CorssPayRequestEvent({
@@ -515,20 +519,22 @@ class SideChainConstract extends Constract {
           number: spvTxNumber,
           to: spvTxTo,
           value: spvTxValue,
-          sponsor: spvSponsor
+          sponsor: tx.from
         });
         await receiptManager.putReceipt(corssPayRequestEvent.hash(), corssPayRequestEvent.serialize())
       }
     }
 
-    // check reached threshold spv
+    // check reached threshold spv and timestamp
+    const nowBN = new BN(toBuffer(Date.now()))
     let tmpCrossPayRequestsArray = [];
-    for (let i = 0; i < this.crossPayRequestsArray.length; i += 4)
+    for (let i = 0; i < this.crossPayRequestsArray.length; i += 5)
     {
       const hash = this.crossPayRequestsArray[i];
-      const to = this.crossPayRequestsArray[i + 1];
-      const value = this.crossPayRequestsArray[i + 2];
-      const sponsors = this.crossPayRequestsArray[i + 3];
+      const timestamp = this.crossPayRequestsArray[i + 1];
+      const to = this.crossPayRequestsArray[i + 2];
+      const value = this.crossPayRequestsArray[i + 3];
+      const sponsors = this.crossPayRequestsArray[i + 4];
       if(sponsors.length / this.authorityAddressesArray.length >= bufferToInt(this.threshold) / 100)
       {
         // check balance
@@ -558,6 +564,11 @@ class SideChainConstract extends Constract {
           value: value
         });
         await receiptManager.putReceipt(corssPayEvent.hash(), corssPayEvent.serialize())
+      }
+      else if (new BN(timestamp).addn(SIDE_CHAIN_PAY_MAX_INTERVAL).lt(nowBN))
+      {
+        // cross chain pay request has expired
+        continue;
       }
       else
       {

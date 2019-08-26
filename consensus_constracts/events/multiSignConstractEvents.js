@@ -4,8 +4,7 @@ const ConstractEvent = require("./constractEvent");
 
 const Buffer = utils.Buffer;
 
-class CorssPayRequestEvent extends ConstractEvent 
-{
+class MultiSignPayRequestEvent extends ConstractEvent {
   constructor(data) {
     super();
 
@@ -17,10 +16,13 @@ class CorssPayRequestEvent extends ConstractEvent
       allowLess: true,
       default: Buffer.alloc(1)
     }, {
+      length: 20,
+      name: "address",
+      default: Buffer.alloc(20)
+    }, {
       length: 32,
-      name: "code",
-      allowLess: true,
-      default: Buffer.alloc(1)
+      name: "txHash",
+      default: Buffer.alloc(32)
     }, {
       length: 32,
       name: "name",
@@ -28,16 +30,12 @@ class CorssPayRequestEvent extends ConstractEvent
       default: Buffer.alloc(1)
     }, {
       length: 32,
-      name: "timestamp",
+      name: "action",
       allowLess: true,
       default: Buffer.alloc(1)
     }, {
       length: 32,
-      name: "txHash",
-      default: Buffer.alloc(32)
-    }, {
-      length: 32,
-      name: "number",
+      name: "timestamp",
       allowLess: true,
       default: Buffer.alloc(1)
     }, {
@@ -57,11 +55,11 @@ class CorssPayRequestEvent extends ConstractEvent
 
     utils.defineProperties(this, fields, data);
 
-    this.name = 'CorssPayRequestEvent';
+    this.name = 'MultiSignPayRequestEvent';
   }
 }
 
-class CorssPayEvent extends ConstractEvent {
+class MultiSignPayEvent extends ConstractEvent {
   constructor(data) {
     super();
 
@@ -73,10 +71,13 @@ class CorssPayEvent extends ConstractEvent {
       allowLess: true,
       default: Buffer.alloc(1)
     }, {
+      length: 20,
+      name: "address",
+      default: Buffer.alloc(20)
+    }, {
       length: 32,
-      name: "code",
-      allowLess: true,
-      default: Buffer.alloc(1)
+      name: "txHash",
+      default: Buffer.alloc(32)
     }, {
       length: 32,
       name: "name",
@@ -87,10 +88,6 @@ class CorssPayEvent extends ConstractEvent {
       name: "timestamp",
       allowLess: true,
       default: Buffer.alloc(1)
-    }, {
-      length: 32,
-      name: "txHash",
-      default: Buffer.alloc(32)
     }, {
       length: 20,
       name: "to",
@@ -104,8 +101,8 @@ class CorssPayEvent extends ConstractEvent {
 
     utils.defineProperties(this, fields, data);
 
-    this.name = 'CorssPayEvent';
+    this.name = 'MultiSignPayEvent';
   }
 }
 
-module.exports = { CorssPayRequestEvent, CorssPayEvent };
+module.exports = { MultiSignPayRequestEvent, MultiSignPayEvent };
