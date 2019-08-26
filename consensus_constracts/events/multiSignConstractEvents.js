@@ -16,6 +16,11 @@ class MultiSignPayRequestEvent extends ConstractEvent {
       allowLess: true,
       default: Buffer.alloc(1)
     }, {
+      length: 32,
+      name: "name",
+      allowLess: true,
+      default: Buffer.alloc(1)
+    }, {
       length: 20,
       name: "address",
       default: Buffer.alloc(20)
@@ -23,11 +28,6 @@ class MultiSignPayRequestEvent extends ConstractEvent {
       length: 32,
       name: "txHash",
       default: Buffer.alloc(32)
-    }, {
-      length: 32,
-      name: "name",
-      allowLess: true,
-      default: Buffer.alloc(1)
     }, {
       length: 32,
       name: "action",
@@ -71,6 +71,11 @@ class MultiSignPayEvent extends ConstractEvent {
       allowLess: true,
       default: Buffer.alloc(1)
     }, {
+      length: 32,
+      name: "name",
+      allowLess: true,
+      default: Buffer.alloc(1)
+    }, {
       length: 20,
       name: "address",
       default: Buffer.alloc(20)
@@ -78,11 +83,6 @@ class MultiSignPayEvent extends ConstractEvent {
       length: 32,
       name: "txHash",
       default: Buffer.alloc(32)
-    }, {
-      length: 32,
-      name: "name",
-      allowLess: true,
-      default: Buffer.alloc(1)
     }, {
       length: 32,
       name: "timestamp",

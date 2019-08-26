@@ -7,6 +7,8 @@ const sendedSpvModelConfig = require('./sendedSpv');
 const sideChainModelConfig = require('./sideChain');
 const crossPayModelConfig = require('./crossPay');
 const crossPayRequestModelConfig = require('./crossPayRequest');
+const multiSignPayModelConfig = require('./multiSignPay');
+const multiSignPayRequestModelConfig = require('./multiSignPayRequest');
 
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
@@ -41,6 +43,8 @@ class Mysql
     this.SideChain = this.sequelize.define(...sideChainModelConfig);
     this.CrossPay = this.sequelize.define(...crossPayModelConfig);
     this.CrossPayRequest = this.sequelize.define(...crossPayRequestModelConfig);
+    this.MultiSignPay = this.sequelize.define(...multiSignPayModelConfig);
+    this.MultiSignPayRequest = this.sequelize.define(...multiSignPayRequestModelConfig);
 
     await this.sequelize.authenticate();
     await this.sequelize.sync();
@@ -189,6 +193,70 @@ class Mysql
     }
     catch(e)
     {
+      logger.error(`Mysql saveCrossPay, throw exception, ${e}`)
+    }
+  }
+
+  /**
+   * @param {Buffer} address
+   * @param {Buffer} txHash
+   * @param {Buffer} action
+   * @param {Buffer} timestamp
+   * @param {Buffer} to
+   * @param {Buffer} value
+   * @param {Buffer} sponsor
+   */
+  async saveMultiSignPayRequest(address, txHash, action, timestamp, to, value, sponsor)
+  {
+    assert(Buffer.isBuffer(address), `Mysql saveMultiSignPayRequest, address should be an Buffer, now is ${typeof address}`);
+    assert(Buffer.isBuffer(txHash), `Mysql saveMultiSignPayRequest, txHash should be an Buffer, now is ${typeof txHash}`);
+    assert(Buffer.isBuffer(action), `Mysql saveMultiSignPayRequest, action should be an Buffer, now is ${typeof action}`);
+    assert(Buffer.isBuffer(timestamp), `Mysql saveMultiSignPayRequest, timestamp should be an Buffer, now is ${typeof timestamp}`);
+    assert(Buffer.isBuffer(to), `Mysql saveMultiSignPayRequest, to should be an Buffer, now is ${typeof to}`);
+    assert(Buffer.isBuffer(value), `Mysql saveMultiSignPayRequest, value should be an Buffer, now is ${typeof value}`);
+    assert(Buffer.isBuffer(sponsor), `Mysql saveMultiSignPayRequest, sponsor should be an Buffer, now is ${typeof sponsor}`);
+
+    try {
+      await this.MultiSignPayRequest.create({
+        address: address.toString('hex'),
+        txHash: txHash.toString('hex'),
+        action: action.toString('hex'),
+        timestamp: timestamp.toString('hex'),
+        to: to.toString('hex'),
+        value: value.toString('hex'),
+        sponsor: sponsor.toString('hex')
+      });
+    }
+    catch (e) {
+      logger.error(`Mysql saveCrossPay, throw exception, ${e}`)
+    }
+  }
+
+  /**
+   * @param {Buffer} address
+   * @param {Buffer} txHash
+   * @param {Buffer} timestamp
+   * @param {Buffer} to
+   * @param {Buffer} value
+   */
+  async saveMultiSignPay(address, txHash, timestamp, to, value)
+  {
+    assert(Buffer.isBuffer(address), `Mysql saveMultiSignPay, address should be an Buffer, now is ${typeof address}`);
+    assert(Buffer.isBuffer(txHash), `Mysql saveMultiSignPay, txHash should be an Buffer, now is ${typeof txHash}`);
+    assert(Buffer.isBuffer(timestamp), `Mysql saveMultiSignPay, timestamp should be an Buffer, now is ${typeof timestamp}`);
+    assert(Buffer.isBuffer(to), `Mysql saveMultiSignPay, to should be an Buffer, now is ${typeof to}`);
+    assert(Buffer.isBuffer(value), `Mysql saveMultiSignPay, value should be an Buffer, now is ${typeof value}`);
+    
+    try {
+      await this.MultiSignPay.create({
+        address: address.toString('hex'),
+        txHash: txHash.toString('hex'),
+        timestamp: timestamp.toString('hex'),
+        to: to.toString('hex'),
+        value: value.toString('hex'),
+      });
+    }
+    catch (e) {
       logger.error(`Mysql saveCrossPay, throw exception, ${e}`)
     }
   }

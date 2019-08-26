@@ -2,6 +2,7 @@ const Block = require("../../depends/block")
 const receiptTrie = process[Symbol.for('receiptTrie')];
 const utils = require("../../depends/utils");
 const sideChainConstractId = require("../../consensus_constracts/sideChainConstract").id
+const multiSignConstractId = require("../../consensus_constracts/multiSignConstract").id;
 
 const rlp = utils.rlp;
 
@@ -43,18 +44,30 @@ const parseReceipt = async (block) => {
  */
 const parse = async event => {
   const rawDataArray = rlp.decode(event);
-  const [id, , name] = rawDataArray;
-
+  const [id, name] = rawDataArray;
+  rawDataArray.splice(0, 2);
+  
   if (id.toString('hex') === sideChainConstractId)
   {
-    rawDataArray.splice(0, 1);
-    rawDataArray.splice(1, 1);
+   
 
     if (name.toString() === 'CorssPayRequestEvent') {
       await mysql.saveCrossPayRequest(...rawDataArray);
     }
     else if (name.toString() === 'CorssPayEvent') {
       await mysql.saveCrossPay(...rawDataArray);
+    }
+  }
+
+  if (id.toString('hex') === multiSignConstractId)
+  {
+    if (name.toString() === 'MultiSignPayRequestEvent')
+    {
+      await mysql.saveMultiSignPayRequest(...rawDataArray);
+    }
+    else if (name.toString() === 'MultiSignPayEvent')
+    {
+      await mysql.saveMultiSignPay(...rawDataArray);
     }
   }
 }

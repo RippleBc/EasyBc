@@ -18,12 +18,12 @@ class CorssPayRequestEvent extends ConstractEvent
       default: Buffer.alloc(1)
     }, {
       length: 32,
-      name: "code",
+      name: "name",
       allowLess: true,
       default: Buffer.alloc(1)
     }, {
       length: 32,
-      name: "name",
+      name: "code",
       allowLess: true,
       default: Buffer.alloc(1)
     }, {
@@ -74,12 +74,12 @@ class CorssPayEvent extends ConstractEvent {
       default: Buffer.alloc(1)
     }, {
       length: 32,
-      name: "code",
+      name: "name",
       allowLess: true,
       default: Buffer.alloc(1)
     }, {
       length: 32,
-      name: "name",
+      name: "code",
       allowLess: true,
       default: Buffer.alloc(1)
     }, {
