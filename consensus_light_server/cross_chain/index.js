@@ -11,6 +11,9 @@ const { ACCOUNT_TYPE_CONSTRACT, TX_TYPE_TRANSACTION } = require("../../consensus
 const { getCrossPayRequest, getCrossPay, getSideChain, saveSideChain, saveReceivedSpv, getSideChainConstract, saveWaitingCrossPay, getWaitingCrossPay } = require("./db");
 const { getTransaction, saveRawTransaction } = require("../block_chain/db");
 
+const log4js = require("../logConfig");
+const logger = log4js.getLogger();
+
 const Buffer = utils.Buffer;
 const BN = utils.BN;
 const rlp = utils.rlp;
@@ -19,7 +22,6 @@ const toBuffer = utils.toBuffer;
 const app = process[Symbol.for('app')];
 const accountTrie = process[Symbol.for("accountTrie")];
 const blockDb = process[Symbol.for("blockDb")];
-const logger = process[Symbol.for("errLogger")];
 const printErrorStack = process[Symbol.for("printErrorStack")]
 
 const publicKey = utils.privateToPublic(Buffer.from(privateKey, "hex"));

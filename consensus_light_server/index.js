@@ -3,18 +3,15 @@ const bodyParser = require("body-parser");
 const cors = require('cors');
 const { host, port } = require("./config.json");
 const Mysql = require("./mysql");
-const log4js= require("./logConfig");
 const Trie = require("../depends/merkle_patricia_tree");
 const { mongo: mongoConfig } = require("./config");
 
+const log4js = require("./logConfig");
 const logger = log4js.getLogger();
 
-process[Symbol.for("errLogger")] = log4js.getLogger("err");
 process[Symbol.for("mysql")] = new Mysql();
 
 const printErrorStack = process[Symbol.for("printErrorStack")] = e => {
-	const errLogger = process[Symbol.for('errLogger')];
-
   let err;
 
   if(e)
@@ -35,11 +32,11 @@ const printErrorStack = process[Symbol.for("printErrorStack")] = e => {
   
   if(e.stack)
   {
-    errLogger.error(err.stack);
+    logger.error(err.stack);
   }
   else
   {
-    errLogger.error(e.toString());
+    logger.error(e.toString());
   }
 }
 
