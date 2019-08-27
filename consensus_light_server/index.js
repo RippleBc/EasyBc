@@ -82,7 +82,8 @@ process.on('uncaughtException', err => {
   require('./block_chain');
   require('./consensus_state');
   require('./cross_chain');
-
+  require('./multi_sign');
+  
   // begin to listen
   const server = app.listen(port, host, function() {
       logger.info(`clientParse server listening at http://${host}:${port}`);

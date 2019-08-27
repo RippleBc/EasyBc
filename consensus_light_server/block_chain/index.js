@@ -1,16 +1,13 @@
 const { QUERY_MAX_LIMIT, SUCCESS, PARAM_ERR, OTH_ERR, TRANSACTION_STATE_IN_CACHE, TRANSACTION_STATE_PROCESSING, TRANSACTION_STATE_PACKED } = require("../../constant");
 const { MAX_TX_TIMESTAMP_LEFT_GAP, MAX_TX_TIMESTAMP_RIGHT_GAP } = require("../constant");
 const Transaction = require("../../depends/transaction");
-const Block = require("../../depends/block");
-const Account = require("../../depends/account");
 const utils = require("../../depends/utils");
 const accountTrie = process[Symbol.for("accountTrie")];
 const blockDb = process[Symbol.for("blockDb")];
-
+const { getTransaction, getTransactions, getRawTransaction, saveRawTransaction } = require("./db")
 const bufferToInt = utils.bufferToInt;
 
 const app = process[Symbol.for('app')];
-const mysql = process[Symbol.for("mysql")];
 const printErrorStack = process[Symbol.for("printErrorStack")]
 
 app.post("/sendTransaction", function(req, res) {
@@ -52,7 +49,7 @@ app.post("/sendTransaction", function(req, res) {
         }
 
         // record
-        await mysql.saveRawTransaction(transaction.hash().toString('hex'), req.body.tx);
+        await saveRawTransaction(transaction.hash().toString('hex'), req.body.tx);
     })().then(() => {
         res.json({
             code: SUCCESS,
@@ -145,7 +142,7 @@ app.post("/getTransactionState", function(req, res) {
     }
 
     (async () => {
-        const rawTransaction = await mysql.getRawTransaction(req.body.hash)
+        const rawTransaction = await getRawTransaction(req.body.hash)
         if(rawTransaction)
         {
             return res.json({
@@ -155,7 +152,7 @@ app.post("/getTransactionState", function(req, res) {
             }); 
         }
 
-        const transaction = await mysql.getTransaction(req.body.hash);
+        const transaction = await getTransaction(req.body.hash);
         if(transaction)
         {
             return res.json({
@@ -205,7 +202,7 @@ app.post("/getTransactions", function(req, res) {
         })
     }
 
-    mysql.getTransactions({
+    getTransactions({
         offset: req.body.offset,
         limit: req.body.limit,
         hash: req.body.hash, 

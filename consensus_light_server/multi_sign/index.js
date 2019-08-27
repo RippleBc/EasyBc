@@ -1,7 +1,7 @@
 const { QUERY_MAX_LIMIT, SUCCESS, PARAM_ERR, OTH_ERR } = require("../../constant");
+const { getMultiSignPayRequest, getMultiSignPay } = require("./db");
 
 const app = process[Symbol.for('app')];
-const mysql = process[Symbol.for("mysql")];
 const printErrorStack = process[Symbol.for("printErrorStack")]
 
 app.post("/getMultiSignPayRequest", (req, res) => {
@@ -26,7 +26,19 @@ app.post("/getMultiSignPayRequest", (req, res) => {
     })
   }
 
-  mysql.getMultiSignPayRequest(req.body).then(({ count, rows }) => {
+  getMultiSignPayRequest({
+    offset: req.body.offset,
+    limit: req.body.limit,
+    address: req.body.address,
+    txHash: req.body.txHash,
+    action: req.body.action,
+    timestamp: req.body.timestamp,
+    to: req.body.to,
+    value: req.body.value,
+    sponsor: req.body.sponsor,
+    beginTime: req.body.beginTime,
+    endTime: req.body.endTime
+  }).then(({ count, rows }) => {
     res.json({
       code: SUCCESS,
       data: {
@@ -66,7 +78,17 @@ app.post("/getMultiSignPay", (req, res) => {
     })
   }
 
-  mysql.getMultiSignPay(req.body).then(({ count, rows }) => {
+  getMultiSignPay({
+    offset: req.body.offset,
+    limit: req.body.limit,
+    address: req.body.address,
+    txHash: req.body.txHash,
+    timestamp: req.body.timestamp,
+    to: req.body.to,
+    value: req.body.value,
+    beginTime: req.body.beginTime,
+    endTime: req.body.endTime
+  }).then(({ count, rows }) => {
     res.json({
       code: SUCCESS,
       data: {

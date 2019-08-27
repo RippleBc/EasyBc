@@ -8,8 +8,8 @@ const selfChainCode = require("../../globalConfig.json").blockChain.code;
 const constractManager = require("../../consensus_constracts/index.js");
 const sideChainConstractId = require("../../consensus_constracts/sideChainConstract").id;
 const { ACCOUNT_TYPE_CONSTRACT, TX_TYPE_TRANSACTION } = require("../../consensus_constracts/constant");
-const assert = require("assert");
-const printErrorStack = process[Symbol.for("printErrorStack")]
+const { getCrossPayRequest, getCrossPay, getSideChain, saveSideChain, saveReceivedSpv, getSideChainConstract, saveWaitingCrossPay, getWaitingCrossPay } = require("./db");
+const { getTransaction, saveRawTransaction } = require("../block_chain/db");
 
 const Buffer = utils.Buffer;
 const BN = utils.BN;
@@ -17,10 +17,10 @@ const rlp = utils.rlp;
 const toBuffer = utils.toBuffer;
 
 const app = process[Symbol.for('app')];
-const mysql = process[Symbol.for("mysql")];
 const accountTrie = process[Symbol.for("accountTrie")];
 const blockDb = process[Symbol.for("blockDb")];
 const logger = process[Symbol.for("errLogger")];
+const printErrorStack = process[Symbol.for("printErrorStack")]
 
 const publicKey = utils.privateToPublic(Buffer.from(privateKey, "hex"));
 const address = utils.publicToAddress(publicKey);
@@ -77,7 +77,7 @@ app.post('/getSpvState', (req, res) => {
     trie.root = block.header.stateRoot;
 
     // get tx
-    const tx = await mysql.getTransaction(req.body.hash);
+    const tx = await getTransaction(req.body.hash);
     if (!tx) {
       return res.json({
         code: OTH_ERR,
@@ -216,7 +216,7 @@ app.post('/newSpv', (req, res) => {
   (async () => {
     /****************************** check spv ******************************/
     // get side chain info
-    const { count, rows: sideChains } = await mysql.getSideChain(req.body.chainCode);
+    const { count, rows: sideChains } = await getSideChain(req.body.chainCode);
     let processedTxCount = 0;
     for (let sideChain of sideChains) {
       // check if tx to self chain constract is valid
@@ -257,7 +257,7 @@ app.post('/newSpv', (req, res) => {
     }
 
     /****************************** save spv ******************************/
-    const [, receivedSpvCreated] = await mysql.saveReceivedSpv(req.body.hash, req.body.number, req.body.chainCode);
+    const [, receivedSpvCreated] = await saveReceivedSpv(req.body.hash, req.body.number, req.body.chainCode);
     if (!receivedSpvCreated) {
       return res.json({
         code: OTH_ERR,
@@ -266,7 +266,7 @@ app.post('/newSpv', (req, res) => {
     }
 
     /****************************** save waiting cross pay ******************************/
-    const [, waitingCrossPayCreated] = await mysql.saveWaitingCrossPay(req.body.hash, req.body.number, req.body.chainCode, req.body.to, req.body.value)
+    const [, waitingCrossPayCreated] = await saveWaitingCrossPay(req.body.hash, req.body.number, req.body.chainCode, req.body.to, req.body.value)
     if (!waitingCrossPayCreated) {
       return res.json({
         code: OTH_ERR,
@@ -276,7 +276,7 @@ app.post('/newSpv', (req, res) => {
 
     /****************************** get waiting cross pay ******************************/
     const waitingCrossPayMap = new Map()
-    const waitingCrossPays = await mysql.getWaitingCrossPay();
+    const waitingCrossPays = await getWaitingCrossPay();
     if (waitingCrossPays.length <= 0)
     {
       logger.info(`newSpv, not reach cross pay process threshold`);
@@ -342,7 +342,7 @@ app.post('/newSpv', (req, res) => {
     for (let [chainCode, crossPayArray] of waitingCrossPayMap.entries())
     {
       // get side chain constract
-      const sideChainConstractAddress = await mysql.getSideChainConstract(chainCode);
+      const sideChainConstractAddress = await getSideChainConstract(chainCode);
 
       // init tx data
       let data = [toBuffer(COMMAND_CROSS_PAY), []];
@@ -366,7 +366,7 @@ app.post('/newSpv', (req, res) => {
       tx.sign(Buffer.from(privateKey, "hex"));
 
       // record
-      await mysql.saveRawTransaction(tx.hash().toString('hex'), tx.serialize().toString('hex'));
+      await saveRawTransaction(tx.hash().toString('hex'), tx.serialize().toString('hex'));
     }
     res.json({
       code: SUCCESS
@@ -403,7 +403,19 @@ app.post("/getCrossPayRequest", (req, res) => {
     })
   }
 
-  mysql.getCrossPayRequest(req.body).then(({ count, rows }) => {
+  getCrossPayRequest({
+    offset: req.body.offset, 
+    limit: req.body.limit, 
+    code: req.body.code, 
+    timestamp: req.body.timestamp, 
+    txHash: req.body.txHash, 
+    number: req.body.number, 
+    to: req.body.to, 
+    value: req.body.value, 
+    sponsor: req.body.sponsor, 
+    beginTime: req.body.beginTime, 
+    endTime: req.body.endTime
+  }).then(({ count, rows }) => {
     res.json({
       code: SUCCESS,
       data: {
@@ -443,7 +455,17 @@ app.post("/getCrossPay", (req, res) => {
     })
   }
 
-  mysql.getCrossPay(req.body).then(({count, rows}) => {
+  getCrossPay({
+    offset: req.body.offset, 
+    limit: req.body.limit, 
+    code: req.body.code, 
+    timestamp: req.body.timestamp, 
+    txHash: req.body.txHash, 
+    to: req.body.to, 
+    value: req.body.value, 
+    beginTime: req.body.beginTime, 
+    endTime: req.body.endTime
+  }).then(({count, rows}) => {
     res.json({
       code: SUCCESS,
       data: {
