@@ -1,14 +1,13 @@
 const process = require('process');
 const Mysql = require("./mysql");
 const { getBlockNumber, saveBlockNumber } = require('./db');
-const log4js= require("./logConfig");
-const assert = require("assert");
 const mongoConfig = require("./config").mongo;
 const utils = require("../depends/utils");
 const Trie = require("../depends/merkle_patricia_tree");
 
 const BN = utils.BN;
 
+const log4js = require("./logConfig");
 const logger = log4js.getLogger();
 
 const mysql = new Mysql();
@@ -48,8 +47,9 @@ process.on("uncaughtException", function(err) {
  */
 const run = async blockDb =>
 {
-	const broadCastSpv = require("./constracts/broadCastSpv");
-	const parseReceipt = require("./constracts/parseReceipt");
+	const parseTransactions = require("./txs");
+	const broadCastSpv = require("./spvs");
+	const parseReceipt = require("./constracts");
 	
 	let blockNumber;
 
@@ -68,9 +68,10 @@ const run = async blockDb =>
 
 		if(block)
 		{
-			// save transactions
 			const transactions = block.transactions;
-			await mysql.saveTransactions(blockNumber, transactions);
+
+			// parse transactions
+			await parseTransactions(blockNumber, transactions);
 
 			// parse spv
 			await parseReceipt(block);
