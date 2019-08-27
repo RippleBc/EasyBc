@@ -1,6 +1,5 @@
 const process = require('process');
 const Mysql = require("./mysql");
-const { getBlockNumber, saveBlockNumber } = require('./db');
 const mongoConfig = require("./config").mongo;
 const utils = require("../depends/utils");
 const Trie = require("../depends/merkle_patricia_tree");
@@ -40,7 +39,9 @@ process.on("uncaughtException", function(err) {
 	const blockDb = process[Symbol.for("blockDb")] = mongo.generateBlockDb();
 
 	await run(blockDb);
-})()
+})().catch(e => {
+	logger.error(`transaction parser throw exception, ${e}`);
+})
 
 /**
  * @param {BlockDb} blockDb
@@ -54,7 +55,7 @@ const run = async blockDb =>
 	let blockNumber;
 
 	// get block number which is need to be process
-	blockNumber = await getBlockNumber();
+	blockNumber = await mysql.getBlockNumber();
 
 	if(!blockNumber)
 	{
@@ -81,7 +82,7 @@ const run = async blockDb =>
 
 			// update block number
 			blockNumber = new BN(blockNumber).addn(1).toBuffer();
-			await saveBlockNumber(blockNumber)
+			await mysql.saveBlockNumber(blockNumber)
 		}
 		else
 		{
