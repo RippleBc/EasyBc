@@ -2,7 +2,8 @@ const app = process[Symbol.for('app')];
 const unlDb = process[Symbol.for("unlDb")];
 const rp = require("request-promise");
 const utils = require("../../depends/utils");
-const { privateKey, fullConsensus: { host, port } } = require("../config");
+const { privateKey } = require("../../globalConfig.json").blockChain;
+const { fullConsensus: { host, port } } = require("../config");
 const { SUCCESS, OTH_ERR, PARAM_ERR } = require("../../constant")
 
 const Buffer = utils.Buffer;

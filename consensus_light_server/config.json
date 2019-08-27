@@ -20,6 +20,5 @@
 		"port": 8080
 	},
 	"host": "0.0.0.0",
-	"port": 8081,
-	"privateKey": "bfd549bfbbb41498b290bfdbefc1810aacf83463ba949569975220b3ceaaa1e0"
+	"port": 8081
 }

@@ -75,7 +75,7 @@ process.on("uncaughtException", function(err) {
     process[Symbol.for("unlManager")] = unlManager;
     
     // init private key
-    const { privateKey } = require("./config.json")
+    const { privateKey } = require("../globalConfig.json").blockChain
     process[Symbol.for("privateKey")] = Buffer.from(privateKey, "hex");
     const publicKey = utils.privateToPublic(process[Symbol.for("privateKey")]);
     process[Symbol.for("address")] = utils.publicToAddress(publicKey).toString("hex");
