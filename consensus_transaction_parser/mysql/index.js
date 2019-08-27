@@ -9,6 +9,7 @@ const multiSignPayRequestModelConfig = require('../../depends/mysql_model/multiS
 const transactionParserStateModelConfig = require('../../depends/mysql_model/transactionParserState');
 const Sequelize = require('sequelize');
 const utils = require("../../depends/utils");
+const assert = require("assert");
 
 const Buffer = utils.Buffer;
 
@@ -39,7 +40,7 @@ class Mysql
     this.CrossPayRequest = this.sequelize.define(...crossPayRequestModelConfig);
     this.MultiSignPay = this.sequelize.define(...multiSignPayModelConfig);
     this.MultiSignPayRequest = this.sequelize.define(...multiSignPayRequestModelConfig);
-    this.RransactionParserState = this.sequelize.define(...transactionParserStateModelConfig);
+    this.TransactionParserState = this.sequelize.define(...transactionParserStateModelConfig);
     
     await this.sequelize.authenticate();
     await this.sequelize.sync();
@@ -50,7 +51,7 @@ class Mysql
    * @return {Buffer}
    */
   async getBlockNumber () {
-    const [{ blockNumber } = {}]  = await this.RransactionParserState.findAll({
+    const [{ blockNumber } = {}]  = await this.TransactionParserState.findAll({
       limit: 1
     });
 
@@ -68,11 +69,25 @@ class Mysql
   async saveBlockNumber (number) {
     assert(Buffer.isBuffer(number), `Mysql saveBlockNumber, number should be an Buffer, now is ${typeof number}`)
 
-    await this.RransactionParserState.update({
+    const [, created] = await this.TransactionParserState.findOrCreate({
+      where: { 
+        id: 1
+      },
+      defaults: {
+        blockNumber: number.toString('hex')
+      }
+    });
+    
+    if (created)
+    {
+      return;
+    }
+
+    await this.TransactionParserState.update({
       blockNumber: number.toString('hex')
     }, {
       where: {
-        
+        id: 1
       }
     })
   }
