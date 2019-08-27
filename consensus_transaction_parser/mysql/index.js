@@ -51,7 +51,7 @@ class Mysql
    * @return {Buffer}
    */
   async getBlockNumber () {
-    const [{ blockNumber } = {}]  = await this.TransactionParserState.findAll({
+    let [{ blockNumber } = {}]  = await this.TransactionParserState.findAll({
       limit: 1
     });
 
