@@ -69,9 +69,11 @@ class Mysql
     assert(Buffer.isBuffer(number), `Mysql saveBlockNumber, number should be an Buffer, now is ${typeof number}`)
 
     await this.RransactionParserState.update({
-
-    }, {
       blockNumber: number.toString('hex')
+    }, {
+      where: {
+        
+      }
     })
   }
 }

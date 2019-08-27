@@ -216,9 +216,11 @@ class Mysql
     assert(Buffer.isBuffer(address), `Mysql updateSideChainConstract, address should be an Buffer, now is ${typeof address}`);
 
     await this.SideChainConstract.update({
-      chainCode: chainCode.toString('hex')
-    }, {
       address: address.toString('hex')
+    }, {
+      where: {
+        chainCode: chainCode.toString('hex')
+      }
     })
   }
 }

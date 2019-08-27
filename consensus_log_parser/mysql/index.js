@@ -79,9 +79,11 @@ class Mysql
     assert(typeof logFile === 'string', `Mysql saveLogFile, logFile should be an String, now is ${typeof logFile}`);
 
     await this.LogParserState.update({
-      dir: dir
-    }, {
       logFile: logFile
+    }, {
+      where: {
+        dir: dir
+      }
     })
   }
 
@@ -94,9 +96,11 @@ class Mysql
     assert(typeof offset === 'number', `Mysql saveOffset, offset should be an Number, now is ${typeof offset}`);
 
     await this.LogParserState.update({
-      dir: dir
-    }, {
       offset: offset
+    }, {
+      where: {
+        dir: dir
+      }
     })
   }
 }
