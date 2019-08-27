@@ -290,7 +290,7 @@ class SideChainConstract extends Constract {
             throw new Error(`SideChainConstract commandHandler agree or reject, address ${tx.from.toString("hex")} has not privilege`)
           }
 
-          await this.crossPay(stateManager, receiptManager, tx, toAccount, commands[1])
+          await this.crossPay(stateManager, receiptManager, tx, timestamp, toAccount, commands[1])
       }
         break;
       default:
@@ -448,14 +448,16 @@ class SideChainConstract extends Constract {
    * @param {StateManager} stateManager
    * @param {ReceiptManager} receiptManager
    * @param {Transaction} tx
+   * @param {Buffer} timestamp
    * @param {Account} constractAccount
    * @param {Array} newCrossPayRequests
    */
-  async crossPay(stateManager, receiptManager, tx, constractAccount, newCrossPayRequests)
+  async crossPay(stateManager, receiptManager, tx, timestamp, constractAccount, newCrossPayRequests)
   {
     assert(stateManager instanceof StateManager, `SideChainConstract crossPay, stateManager should be an instance of StateManager, now is ${typeof stateManager}`);
     assert(receiptManager instanceof ReceiptManager, `SideChainConstract crossPay, receiptManager should be an instance of ReceiptManager, now is ${typeof receiptManager}`);
     assert(tx instanceof Transaction, `SideChainConstract crossPay, tx should be an instance of Transaction, now is ${typeof tx}`);
+    assert(Buffer.isBuffer(timestamp), `SideChainConstract crossPay, timestamp should an Buffer, now is ${typeof timestamp}`);
     assert(constractAccount instanceof Account, `SideChainConstract crossPay, constractAccount should be an instance of Account, now is ${typeof constractAccount}`);
     assert(Array.isArray(newCrossPayRequests), `SideChainConstract crossPay, newCrossPayRequests should be an Array, now is ${typeof newCrossPayRequests}`);
 
@@ -492,7 +494,7 @@ class SideChainConstract extends Constract {
           const corssPayRequestEvent = new CorssPayRequestEvent({
             id: this.id,
             code: this.code,
-            timestamp: Date.now(),
+            timestamp: timestamp,
             txHash: spvTxHash,
             number: spvTxNumber,
             to: spvTxTo,
@@ -505,7 +507,7 @@ class SideChainConstract extends Constract {
       else
       {
         this.crossPayRequestsArray.push(spvTxHash);
-        this.crossPayRequestsArray.push(tx.timestamp)
+        this.crossPayRequestsArray.push(timestamp)
         this.crossPayRequestsArray.push(spvTxTo);
         this.crossPayRequestsArray.push(spvTxValue);
         this.crossPayRequestsArray.push([tx.from]);
@@ -514,7 +516,7 @@ class SideChainConstract extends Constract {
         const corssPayRequestEvent = new CorssPayRequestEvent({
           id: this.id,
           code: this.code,
-          timestamp: Date.now(),
+          timestamp: timestamp,
           txHash: spvTxHash,
           number: spvTxNumber,
           to: spvTxTo,
@@ -526,12 +528,12 @@ class SideChainConstract extends Constract {
     }
 
     // check reached threshold spv and timestamp
-    const nowBN = new BN(toBuffer(Date.now()))
+    const nowBN = new BN(timestamp)
     let tmpCrossPayRequestsArray = [];
     for (let i = 0; i < this.crossPayRequestsArray.length; i += 5)
     {
       const hash = this.crossPayRequestsArray[i];
-      const timestamp = this.crossPayRequestsArray[i + 1];
+      const payRequestTimestamp = this.crossPayRequestsArray[i + 1];
       const to = this.crossPayRequestsArray[i + 2];
       const value = this.crossPayRequestsArray[i + 3];
       const sponsors = this.crossPayRequestsArray[i + 4];
@@ -558,14 +560,14 @@ class SideChainConstract extends Constract {
         const corssPayEvent = new CorssPayEvent({
           id: this.id,
           code: this.code,
-          timestamp: Date.now(),
+          timestamp: timestamp,
           txHash: hash,
           to: to,
           value: value
         });
         await receiptManager.putReceipt(corssPayEvent.hash(), corssPayEvent.serialize())
       }
-      else if (new BN(timestamp).addn(SIDE_CHAIN_PAY_MAX_INTERVAL).lt(nowBN))
+      else if (new BN(payRequestTimestamp).addn(SIDE_CHAIN_PAY_MAX_INTERVAL).lt(nowBN))
       {
         // cross chain pay request has expired
         continue;
