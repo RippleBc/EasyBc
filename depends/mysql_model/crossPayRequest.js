@@ -32,7 +32,7 @@ module.exports = ['crossPayRequest', {
 }, {
     indexes: [{
       unique: true,
-      fields: ['txHash', 'number']
+      fields: ['txHash', 'number', 'sponsor']
     }],
     scopes: {
 
