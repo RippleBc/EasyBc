@@ -97,7 +97,7 @@ module.exports = async function(opts)
       });
     }
     catch (e) {
-      await Promise.reject(`runTx, run constract throw exception, ${e}`);
+      await Promise.reject(`runTx, run constract throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
     }
   }
   else
