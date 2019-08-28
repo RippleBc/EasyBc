@@ -9,7 +9,7 @@ const createPrivateKey = utils.createPrivateKey;
 const publicToAddress = utils.publicToAddress;
 const privateToPublic = utils.privateToPublic;
 
-const generateKeyPiar = function (options, keyPiarWriteStream) {
+const generateKeyPiar = function (keyPiarWriteStream) {
   const privateKey = createPrivateKey();
 
   keyPiarWriteStream.write(`\t\t"privateKey": "${privateKey.toString("hex")}",\n`);
@@ -17,8 +17,7 @@ const generateKeyPiar = function (options, keyPiarWriteStream) {
   const publicKey = privateToPublic(privateKey);
   const address = publicToAddress(publicKey);
 
-  keyPiarWriteStream.write(`\t\t"publicKey": "${publicKey.toString("hex")}",\n`);
-  keyPiarWriteStream.write(`\t\t"address": "${address.toString("hex")}",\n`);
+  keyPiarWriteStream.write(`\t\t"address": "${address.toString("hex")}"\n`);
 }
 
 program
@@ -37,7 +36,7 @@ program
       process.exit(1);
     });
 
-    keyPiarWriteStream.write("{\n");
+    keyPiarWriteStream.write("[\n");
 
     (async () => {
       let i = 0;
@@ -54,7 +53,7 @@ program
 
         keyPiarWriteStream.write("\t{\n")
 
-        generateKeyPiar(options, keyPiarWriteStream);
+        generateKeyPiar(keyPiarWriteStream);
 
         if (i === options.number - 1)
         {
@@ -74,7 +73,7 @@ program
         i++;
       }
 
-      keyPiarWriteStream.write("}")
+      keyPiarWriteStream.write("]")
     })().catch(e => {
       console.fatal(e);
       process.exit(1);
