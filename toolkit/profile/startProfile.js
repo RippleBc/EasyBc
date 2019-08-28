@@ -26,7 +26,7 @@ const SEND_VALUE_HEX = "01";
  *   @prop {Buffer} balance
  *   @prop {Buffer} nonce
  */
-const getAccountInfo = async (url, address) => {
+const getAccountInfo = (url, address) => {
   assert(typeof address === "string", `getAccountInfo, address should be a String, now is ${typeof address}`);
   assert(typeof url === "string", `getAccountInfo, url should be a String, now is ${typeof url}`);
 
@@ -70,9 +70,10 @@ const getAccountInfo = async (url, address) => {
 }
 
 /**
+ * @param {String} url
  * @param {String} hash 
  */
-const checkIfTransactionPacked = async (hash) => {
+const checkIfTransactionPacked = (url, hash) => {
   assert(typeof hash === 'string', `checkIfTransactionPacked, hash should be a String, now is ${typeof hash}`);
 
   const curl = spawn("curl", ["-H", "Content-Type:application/json", "-X", "POST", "--data", `{"hash": "${hash}"}`, `${url}/getTransactionState`]);
@@ -110,7 +111,7 @@ const checkIfTransactionPacked = async (hash) => {
  * @param {String} url
  * @param {String} tx
  */
-const sendTransaction = async (url, tx) => {
+const sendTransaction = (url, tx) => {
   assert(typeof url === "string", `sendTransaction, url should be a String, now is ${typeof url}`);
   assert(typeof tx === "string", `sendTransaction, tx should be a String, now is ${typeof tx}`);
 
@@ -136,7 +137,7 @@ const sendTransaction = async (url, tx) => {
       let code, data, msg;
 
       try {
-        ({ code, data, msg }) = JSON.parse(Buffer.concat(sucDataArray).toString());
+        ({ code, data, msg } = JSON.parse(Buffer.concat(sucDataArray).toString()));
 
         if (code !== SUCCESS) {
           reject(`sendTransaction, throw exception, ${url}, ${msg}`)
@@ -146,7 +147,7 @@ const sendTransaction = async (url, tx) => {
         reject(`sendTransaction, throw exception, ${url}, ${e}`)
       }
 
-      resolve(data);
+      resolve();
     });
   })
 
@@ -158,7 +159,9 @@ const sendTransaction = async (url, tx) => {
  * @param {String} nonce
  * @param {String} to
  * @param {String} value
- * @return {String} transaction raw data
+ * @return {Object}
+ *  - prop {String} tx
+ *  - prop {String} hash
  */
 const generateTx = (privateKey, nonce, to, value) => {
   assert(`generateTx, privateKey should be a Hex String, now is ${typeof privateKey}`);
@@ -176,7 +179,10 @@ const generateTx = (privateKey, nonce, to, value) => {
   // sign
   transaction.sign(Buffer.from(privateKey, "hex"));
 
-  return transaction.serialize().toString("hex");
+  return { 
+    hash: transaction.hash().toString('hex'),
+    txRaw: transaction.serialize().toString("hex")
+  };
 }
 
 /**
@@ -275,27 +281,28 @@ async function runProfile(urls, selfKeyPairs, targetKeyPairs)
 
   // send tx
   const sendTxPromises = [];
+  let txhashes = [];
   for (let [index, account] of g_accounts.entries()) {
     if (new BN(account.balance).lt(Buffer.from(SEND_VALUE_HEX, 'hex'))) {
       continue;
     }
 
-    const tx = generateTx(selfKeyPairs[index], new BN(account.nonce).addn(1).toBuffer.toString('hex'), toAddressHex, SEND_VALUE_HEX)
-    sendTxPromises.push(sendTransaction(url, tx))
+    const {txRaw, hash} = generateTx(selfKeyPairs[index].privateKey, new BN(account.nonce).addn(1).toBuffer().toString('hex'), toAddressHex, SEND_VALUE_HEX)
+    sendTxPromises.push(sendTransaction(url, txRaw));
+    txhashes.push(hash);
   }
-  let txhashes = await Promise.all(sendTxPromises)
-
+  
   // validate
   let i = 0;
   while (i < 10 && txhashes.length > 0) {
     const checkIfTxPackedPromises = []
     for (let txHash of txhashes) {
-      checkIfTxPackedPromises.push(checkIfTransactionPacked(txHash));
-    } TRANSACTION_STATE_PACKED
+      checkIfTxPackedPromises.push(checkIfTransactionPacked(url, txHash));
+    }
     const checkResults = await Promise.all(checkIfTxPackedPromises);
 
     const tmpTxHashes = []
-    for (let [index, ifTxPacked] of checkResults) {
+    for (let [index, ifTxPacked] of checkResults.entries()) {
       if (ifTxPacked !== TRANSACTION_STATE_PACKED) {
         tmpTxHashes.push(txhashes[index]);
       }
@@ -328,13 +335,13 @@ process.on('message', ({ urls, selfKeyPairs, targetKeyPairs}) => {
 
   (async () => {
     while (true) {
-      await runProfile(urls, selfKeyPairs, targetKeyPairs)
+      await runProfile(urls, selfKeyPairs, targetKeyPairs);
     }
-  }).catch(e => {
-    console.fatal(e);
+  })().catch(e => {
+    console.error(e.stack ? e.stack : e);
 
     process.send({ 
-      err: e
+      err: e.stack ? e.stack : e
     })
 
     process.exit(1);
