@@ -154,7 +154,7 @@ const sendTransaction = async (url, tx) => {
 
       try
       {
-        const { code, data, msg } = JSON.parse(Buffer.concat(sucDataArray).toString());
+        const { code, msg } = JSON.parse(Buffer.concat(sucDataArray).toString());
 
         if(code !== SUCCESS)
         {

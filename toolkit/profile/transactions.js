@@ -1,9 +1,8 @@
-const { assert, expect, should } = require("chai"); 
-const utils = require("../depends/utils")
-const Block = require("../depends/block")
-const Transaction = require("../depends/transaction")
-const Candidate = require("../consensus_full_server/ripple/data/candidate");
-const RippleBlock = require("../consensus_full_server/ripple/data/rippleBlock");
+const utils = require("../../depends/utils")
+const Block = require("../../depends/block")
+const Transaction = require("../../depends/transaction")
+const Candidate = require("../../consensus_full_server/ripple/data/candidate");
+const RippleBlock = require("../../consensus_full_server/ripple/data/rippleBlock");
 const _ = require("underscore");
 
 const Buffer = utils.Buffer;
@@ -210,12 +209,7 @@ describe("test transactions speed", () => {
 			
 			block.header.number = (new BN(height).addn(1)).toArrayLike(Buffer);
 			const parentHash = Buffer.from("96f7e6cd9b09ccf3c6c8acf520fec5839a8f480bdce81f4bfe157a9f58689f16", "hex")
-
-			// init txTrie
-			console.time("check send block, block genTxTrie")
 			block.header.parentHash = parentHash;
-			block.header.transactionsTrie = await block.genTxTrie();
-			console.timeEnd("check send block, block genTxTrie");
 
 			console.time("check send block, init rippleBlock");
 			const rippleBlock = new RippleBlock({
@@ -227,7 +221,9 @@ describe("test transactions speed", () => {
 			rippleBlock.sign(PRIVATE_KEY);
 			console.timeEnd("check send block, rippleBlock sign");
 
+			console.time("check send block, rippleBlock serialize");
 			const rippleBlockRaw = rippleBlock.serialize();
+			console.timeEnd("check send block, rippleBlock serialize");
 
 			console.groupEnd();
 			console.timeEnd("check send block, total");
