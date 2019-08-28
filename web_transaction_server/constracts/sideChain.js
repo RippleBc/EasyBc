@@ -161,7 +161,17 @@ app.get("/getSideChainConstract", (req, res) => {
         threshold: bufferToInt(sideChainConstract.threshold),
         authorityAddresses: sideChainConstract.authorityAddresses.length > 0 ? rlp.decode(sideChainConstract.authorityAddresses).map(el => `0x${el.toString("hex")}`) : [],
         agreeAddresses: sideChainConstract.agreeAddresses.length > 0 ? rlp.decode(sideChainConstract.agreeAddresses).map(el => `0x${el.toString("hex")}`) : [],
-        rejectAddresses: sideChainConstract.rejectAddresses.length > 0 ? rlp.decode(sideChainConstract.rejectAddresses).map(el => `0x${el.toString("hex")}`) : []
+        rejectAddresses: sideChainConstract.rejectAddresses.length > 0 ? rlp.decode(sideChainConstract.rejectAddresses).map(el => `0x${el.toString("hex")}`) : [],
+        crossPayRequests: sideChainConstract.crossPayRequests.length > 0 ? rlp.decode(sideChainConstract.crossPayRequests).map(el => {
+          if (Buffer.isBuffer(el))
+          {
+            return `0x${el.toString("hex")}`;
+          }
+          else if(Array.isArray(el))
+          {
+            return el.map(sponsor => `0x${sponsor.toString("hex")}`);
+          }
+        }) : []
       }
     })
   }).catch(e => {

@@ -14,55 +14,83 @@
       >拒绝</el-button>
     </div>
     <div class="border" style="margin:20px 0px 20px 0px;width: 600px;overflow:scroll;" v-if="searchConstractDetail.state">
-      <div style="display:flex;width:100%;margin-bottom:10px;">
+      <div style="display:flex;width:100%;margin-bottom:10px;border-bottom: solid 1px #45a613">
         <span>地址</span>
         <strong style="margin-left:10px;">{{constractAddress}}</strong>
       </div>
-      <div style="display:flex;width:100%;margin-bottom:10px;">
+      <div style="display:flex;width:100%;margin-bottom:10px;border-bottom: solid 1px #45a613">
         <span>余额</span>
         <strong style="margin-left:10px;">{{searchConstractDetail.balance}}</strong>
       </div>
-      <div style="display:flex;width:100%;margin-bottom:10px;">
+      <div style="display:flex;width:100%;margin-bottom:10px;border-bottom: solid 1px #45a613">
         <span>侧链代码</span>
         <strong style="margin-left:10px;">{{searchConstractDetail.code}}</strong>
       </div>
-      <div style="display:flex;width:100%;margin-bottom:10px;">
+      <div style="display:flex;width:100%;margin-bottom:10px;border-bottom: solid 1px #45a613">
         <span>状态</span>
         <strong style="margin-left:10px;">{{searchConstractDetail.state}}</strong>
       </div>
-      <div style="display:flex;width:100%;margin-bottom:10px;">
+      <div style="display:flex;width:100%;margin-bottom:10px;border-bottom: solid 1px #45a613">
         <span>时间戳</span>
         <strong style="margin-left:10px;">{{new Date(searchConstractDetail.timestamp).toString()}}</strong>
       </div>
-      <div style="display:flex;width:100%;margin-bottom:10px;">
+      <div style="display:flex;width:100%;margin-bottom:10px;border-bottom: solid 1px #45a613">
         <span>超时时长</span>
         <strong style="margin-left:10px;">{{searchConstractDetail.expireInterval}}</strong>
       </div>
-      <div style="display:flex;flex-direction:column;width:100%;margin-bottom:10px;">
+      <div style="display:flex;flex-direction:column;width:100%;margin-bottom:10px;border-bottom: solid 1px #45a613;align-items:flex-start;">
         <span>新增授权地址请求</span>
         <strong style="margin-left:10px;" v-for="(value, index) in searchConstractDetail.newAuthorityAddresses" :key= "index">{{value}}</strong>
       </div>
-      <div style="display:flex;flex-direction:column;width:100%;margin-bottom:10px;">
+      <div style="display:flex;flex-direction:column;width:100%;margin-bottom:10px;border-bottom: solid 1px #45a613;align-items:flex-start;">
         <span>删除授权地址请求</span>
         <strong style="margin-left:10px;" v-for="(value, index) in searchConstractDetail.delAuthorityAddresses" :key= "index">{{value}}</strong>
       </div>
-      <div style="display:flex;width:100%;margin-bottom:10px;">
+      <div style="display:flex;width:100%;margin-bottom:10px;border-bottom: solid 1px #45a613">
         <span>阀值</span>
         <strong style="margin-left:10px;">{{searchConstractDetail.threshold}}%</strong>
       </div>
-      <div style="display:flex;flex-direction:column;width:100%;margin-bottom:10px;">
+      <div style="display:flex;flex-direction:column;width:100%;margin-bottom:10px;border-bottom: solid 1px #45a613;align-items:flex-start;">
         <span>授权地址</span>
         <strong style="margin-left:10px;" v-for="(value, index) in searchConstractDetail.authorityAddresses" :key= "index">{{value}}</strong>
       </div>
-      <div style="display:flex;flex-direction:column;width:100%;margin-bottom:10px;">
+      <div style="display:flex;flex-direction:column;width:100%;margin-bottom:10px;border-bottom: solid 1px #45a613;align-items:flex-start;">
         <span>同意地址</span>
         <strong style="margin-left:10px;" v-for="(value, index) in searchConstractDetail.agreeAddresses" :key= "index">{{value}}</strong>
       </div>
-      <div style="display:flex;flex-direction:column;width:100%;margin-bottom:10px;">
+      <div style="display:flex;flex-direction:column;width:100%;margin-bottom:10px;border-bottom: solid 1px #45a613;align-items:flex-start;">
         <span>拒绝地址</span>
         <strong style="margin-left:10px;" v-for="(value, index) in searchConstractDetail.rejectAddresses" :key= "index">{{value}}</strong>
       </div>
+      <div style="display:flex;flex-direction:column;width:100%;margin-bottom:10px;;align-items:flex-start;">
+        <span>转账请求</span>
+        <template style="margin-left:10px;" v-for="(payRequest, index) in searchConstractDetail.crossPayRequests">
+          <div style="display:flex;flex-direction:column;border-bottom: solid 1px #45a613;align-items:flex-start;" :key= "index">
+            <div style="display:flex;">
+              <span style="width:100px;text-align:left;">交易哈西</span>
+              <strong style="margin-left:10px;">{{payRequest.txHash}}</strong>
+            </div>
+            <div style="display:flex;">
+              <span style="width:100px;text-align:left;">时间戳</span>
+              <strong style="margin-left:10px;">{{payRequest.timestamp}}</strong>
+            </div>
+            <div style="display:flex;">
+              <span style="width:100px;text-align:left;">接受人</span>
+              <strong style="margin-left:10px;">{{payRequest.to}}</strong>
+            </div>
+            <div style="display:flex;">
+              <span style="width:100px;text-align:left;">金额</span>
+              <strong style="margin-left:10px;">{{payRequest.value}}</strong>
+            </div>
+            <div style="display:flex;">
+              <span style="width:100px;text-align:left;">发起人</span>
+              <strong v-for="(sponsor, index) in payRequest.sponsors" :key="index">{{sponsor}}</strong>
+            </div>
+          </div>
+        </template>
+      </div>
     </div>
+
     <el-dialog title="查找" :visible.sync="searchVisible" width="80%">
       <el-form label-width="90px">
         <el-form-item label="合约地址">
@@ -264,7 +292,8 @@ export default {
         threshold: "",
         authorityAddresses: [],
         agreeAddresses: [],
-        rejectAddresses: []
+        rejectAddresses: [],
+        crossPayRequests: []
       },
       constractAddress: "",
       privateKey: "",
@@ -335,6 +364,20 @@ export default {
           });
 
           this.searchConstractDetail = data;
+
+          // parse crossPayRequests
+          const formattedCrossPayRequests = []
+          for(let i = 0; i < this.searchConstractDetail.crossPayRequests.length; i += 5)
+          {
+            formattedCrossPayRequests.push({
+              txHash: this.searchConstractDetail.crossPayRequests[0],
+              timestamp: this.searchConstractDetail.crossPayRequests[1],
+              to: this.searchConstractDetail.crossPayRequests[2],
+              value: this.searchConstractDetail.crossPayRequests[3],
+              sponsors: this.searchConstractDetail.crossPayRequests[4]
+            })
+          }
+          this.searchConstractDetail.crossPayRequests = formattedCrossPayRequests;
         }
         else
         {

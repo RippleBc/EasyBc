@@ -574,7 +574,11 @@ class SideChainConstract extends Constract {
       }
       else
       {
-        tmpCrossPayRequestsArray.push(this.crossPayRequestsArray[i], this.crossPayRequestsArray[i + 1], this.crossPayRequestsArray[i + 2], this.crossPayRequestsArray[i + 3])
+        tmpCrossPayRequestsArray.push(this.crossPayRequestsArray[i], 
+          this.crossPayRequestsArray[i + 1], 
+          this.crossPayRequestsArray[i + 2], 
+          this.crossPayRequestsArray[i + 3], 
+          this.crossPayRequestsArray[i + 4]);
       }
     }
 
