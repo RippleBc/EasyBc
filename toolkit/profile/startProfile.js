@@ -1,12 +1,11 @@
-const keyPiar = require("./keyPiar.json");
 const assert = require("assert");
 const Account = require("../../depends/account");
 const Transaction = require("../../depends/transaction");
 const utils = require("../../depends/utils");
-const { spawn } = require("child_process");
 const { SUCCESS } = require("../../constant");
 const { randomBytes } = require("crypto");
 const { TRANSACTION_STATE_PACKED } = require("../../constant");
+const rp = require("request-promise");
 
 const BN = utils.BN;
 const bufferToInt = utils.bufferToInt;
@@ -22,136 +21,85 @@ const SEND_VALUE_HEX = "01";
 /*
  * @param {String} url
  * @param {String} address
- * @return {Object} 
- *   @prop {Buffer} balance
- *   @prop {Buffer} nonce
+ * @return {Account} 
  */
-const getAccountInfo = (url, address) => {
+const getAccountInfo = async (url, address) => {
   assert(typeof address === "string", `getAccountInfo, address should be a String, now is ${typeof address}`);
   assert(typeof url === "string", `getAccountInfo, url should be a String, now is ${typeof url}`);
 
-  const curl = spawn("curl", ["-H", "Content-Type:application/json", "-X", "POST", "--data", `{"address": "${address}"}`, `${url}/getAccountInfo`]);
+  const options = {
+    method: "POST",
+    uri: `${url}/getAccountInfo`,
+    body: {
+      address: address
+    },
+    json: true
+  };
 
-  const returnDataArray = []
-  const errDataArray = []
+  const { code, data, msg } = await rp(options);
 
-  curl.stdout.on('data', data => {
-    returnDataArray.push(data);
-  });
+  if (code !== SUCCESS) {
+    await Promise.reject(`getAccountInfo, throw exception, ${msg}`)
+  }
 
-  curl.stderr.on('data', data => {
-    errDataArray.push(data);
-  });
+  let account;
+  if (data) {
+    account = new Account(Buffer.from(data, "hex"));
+  }
+  else {
+    account = new Account();
+  }
 
-  const promise = new Promise((resolve, reject) => {
-    curl.on('close', exitCode => {
-      if (exitCode !== 0) {
-        reject(`getAccountInfo close abnormally, ${exitCode}`);
-      }
-
-      const { code, data, msg } = JSON.parse(Buffer.concat(returnDataArray).toString());
-      if (code !== SUCCESS) {
-        reject(`getAccountInfo, throw exception, ${msg}`)
-      }
-
-      let account;
-      if (data) {
-        account = new Account(Buffer.from(data, "hex"));
-      }
-      else {
-        account = new Account();
-      }
-
-      resolve({ nonce: account.nonce, balance: account.balance });
-    });
-  })
-
-  return promise;
+  return account;
 }
 
 /**
  * @param {String} url
  * @param {String} hash 
  */
-const checkIfTransactionPacked = (url, hash) => {
+const checkIfTransactionPacked = async (url, hash) => {
   assert(typeof hash === 'string', `checkIfTransactionPacked, hash should be a String, now is ${typeof hash}`);
 
-  const curl = spawn("curl", ["-H", "Content-Type:application/json", "-X", "POST", "--data", `{"hash": "${hash}"}`, `${url}/getTransactionState`]);
+  const options = {
+    method: "POST",
+    uri: `${url}/getTransactionState`,
+    body: {
+      hash: hash
+    },
+    json: true
+  };
 
-  const returnDataArray = []
-  const errDataArray = []
+  const { code, data, msg } = await rp(options);
 
-  curl.stdout.on('data', data => {
-    returnDataArray.push(data);
-  });
+  if (code !== SUCCESS) {
+    await Promise.reject(`checkIfTransactionPacked, throw exception, ${msg}`)
+  }
 
-  curl.stderr.on('data', data => {
-    errDataArray.push(data);
-  });
-
-  const promise = new Promise((resolve, reject) => {
-    curl.on('close', exitCode => {
-      if (exitCode !== 0) {
-        reject(`checkIfTransactionPacked close abnormally, ${exitCode}`);
-      }
-
-      const { code, data, msg } = JSON.parse(Buffer.concat(returnDataArray).toString());
-      if (code !== SUCCESS) {
-        reject(`checkIfTransactionPacked, throw exception, ${msg}`)
-      }
-
-      resolve(data);
-    });
-  })
-
-  return promise;
+  return data;
 }
 
 /**
  * @param {String} url
  * @param {String} tx
  */
-const sendTransaction = (url, tx) => {
+const sendTransaction = async (url, tx) => {
   assert(typeof url === "string", `sendTransaction, url should be a String, now is ${typeof url}`);
   assert(typeof tx === "string", `sendTransaction, tx should be a String, now is ${typeof tx}`);
 
-  const curl = spawn("curl", ["-H", "Content-Type:application/json", "-X", "POST", "--data", `{"tx": "${tx}"}`, `${url}/sendTransaction`]);
+  const options = {
+    method: "POST",
+    uri: `${url}/sendTransaction`,
+    body: {
+      tx: tx
+    },
+    json: true
+  };
 
-  const sucDataArray = [];
-  const errDataArray = [];
+  const { code, msg } = await rp(options);
 
-  curl.stdout.on('data', data => {
-    sucDataArray.push(data);
-  });
-
-  curl.stderr.on('data', data => {
-    errDataArray.push(data);
-  });
-
-  const promise = new Promise((resolve, reject) => {
-    curl.on('close', exitCode => {
-      if (exitCode !== 0) {
-        reject(`sendTransaction close abnormally, ${exitCode}`);
-      }
-
-      let code, data, msg;
-
-      try {
-        ({ code, data, msg } = JSON.parse(Buffer.concat(sucDataArray).toString()));
-
-        if (code !== SUCCESS) {
-          reject(`sendTransaction, throw exception, ${url}, ${msg}`)
-        }
-      }
-      catch (e) {
-        reject(`sendTransaction, throw exception, ${url}, ${e}`)
-      }
-
-      resolve();
-    });
-  })
-
-  return promise;
+  if (code !== SUCCESS) {
+    await Promise.reject(`sendTransaction, throw exception, ${url}, ${msg}`)
+  }
 }
 
 /**
@@ -276,7 +224,7 @@ async function runProfile(urls, selfKeyPairs, targetKeyPairs)
   // send random tx
   for (let i = 0; i < 8; i++) {
     const randomTx = generateRandomTx();
-    sendTransaction(url, randomTx);
+    await sendTransaction(url, randomTx);
   }
 
   // send tx
@@ -287,11 +235,14 @@ async function runProfile(urls, selfKeyPairs, targetKeyPairs)
       continue;
     }
 
+    console.info(`sendTransaction privateKey: ${selfKeyPairs[index].privateKey}, nonce: ${new BN(account.nonce).addn(1).toBuffer().toString('hex')}, to: ${toAddressHex}, value: ${SEND_VALUE_HEX}`)
+
     const {txRaw, hash} = generateTx(selfKeyPairs[index].privateKey, new BN(account.nonce).addn(1).toBuffer().toString('hex'), toAddressHex, SEND_VALUE_HEX)
     sendTxPromises.push(sendTransaction(url, txRaw));
     txhashes.push(hash);
   }
-  
+  await Promise.all(sendTxPromises);
+
   // validate
   let i = 0;
   while (i < 10 && txhashes.length > 0) {
