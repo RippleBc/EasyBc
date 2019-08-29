@@ -245,10 +245,6 @@ async function runProfile(url)
 
   let processedTxNum = 0;
 
-  // init to address
-  let toAddressIndex = getRandomIndex(g_targetKeyPairs.length);
-  let toAddressHex = g_targetKeyPairs[toAddressIndex].address;
-
   // send random tx
   const sendRandomTxPromises = []
   for (let i = 0; i < 2; i++) {
@@ -266,7 +262,11 @@ async function runProfile(url)
     }
 
     processedTxNum ++;
-  
+    
+    // init to address
+    const toAddressIndex = getRandomIndex(g_targetKeyPairs.length);
+    const toAddressHex = g_targetKeyPairs[toAddressIndex].address;
+
     // send tx
     const {txRaw, hash} = generateTx(g_selfKeyPairs[index].privateKey, new BN(account.nonce).addn(1).toBuffer().toString('hex'), toAddressHex, g_value)
     sendTxPromises.push(sendTransaction(url, txRaw));
