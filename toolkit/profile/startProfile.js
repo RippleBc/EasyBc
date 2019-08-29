@@ -16,7 +16,10 @@ const padToEven = utils.padToEven;
 
 var g_accounts = [];
 
-const SEND_VALUE_HEX = "01";
+var g_urls;
+var g_selfKeyPairs;
+var g_targetKeyPairs;
+var g_value;
 
 /*
  * @param {String} url
@@ -106,23 +109,23 @@ const sendTransaction = async (url, tx) => {
  * @param {String} privateKey
  * @param {String} nonce
  * @param {String} to
- * @param {String} value
+ * @param {Buffer} value
  * @return {Object}
  *  - prop {String} tx
  *  - prop {String} hash
  */
 const generateTx = (privateKey, nonce, to, value) => {
-  assert(`generateTx, privateKey should be a Hex String, now is ${typeof privateKey}`);
-  assert(`generateTx, nonce should be a Hex String, now is ${typeof nonce}`);
-  assert(`generateTx, to should be a Hex String, now is ${typeof to}`);
-  assert(`generateTx, value should be a Hex String, now is ${typeof value}`);
+  assert(typeof privateKey === 'string', `generateTx, privateKey should be a Hex String, now is ${typeof privateKey}`);
+  assert(typeof nonce === 'string', `generateTx, nonce should be a Hex String, now is ${typeof nonce}`);
+  assert(typeof to === 'string', `generateTx, to should be a Hex String, now is ${typeof to}`);
+  assert(Buffer.isBuffer(value), `generateTx, value should be an Buffer, now is ${typeof value}`);
 
   // init tx
   const transaction = new Transaction({
     timestamp: Date.now(),
     nonce: Buffer.from(padToEven(nonce), "hex"),
     to: Buffer.from(to, "hex"),
-    value: Buffer.from(value, "hex")
+    value: value
   })
   // sign
   transaction.sign(Buffer.from(privateKey, "hex"));
@@ -191,61 +194,95 @@ function getRandomIndex(range)
   return bufferToInt(random) % range;
 }
 
+var g_lastInitAccountTime = 0;
+var g_initAccountsInterval = 0;
 async function initAccounts(url, keyPairs)
 {
-  g_accounts = [];
+  assert(typeof url === 'string', `initAccounts, url should be a String, now is ${typeof url}`);
+  assert(Array.isArray(keyPairs), `initAccounts, keyPairs should be an Array, now is ${typeof keyPairs}`);
 
-  for (let { address } of keyPairs) {
-    g_accounts.push(await getAccountInfo(url, address))
+  const now = Date.now();
+  const canSendTxAccountNum = g_accounts.filter(el => {
+    return new BN(el.balance).gt(new BN(g_value));
+  }).length;
+
+  // 
+  if (now < g_lastInitAccountTime + g_initAccountsInterval 
+    && canSendTxAccountNum > Math.round(g_accounts.length / 2)) {
+    return;
   }
+
+  //
+  if (g_initAccountsInterval < 10000) {
+    g_initAccountsInterval += 10;
+  }
+  g_lastInitAccountTime = now;
+
+  // update accounts
+  const getAccountInfoPromises = [];
+  for (let [index, { address }] of keyPairs.entries()) {
+    if (g_accounts[index] && new BN(g_accounts[index].balance).gt(new BN(g_value).muln(4)))
+    {
+      getAccountInfoPromises.push(new Promise(resolve => {
+        resolve(g_accounts[index]);
+      }))
+    }
+    else
+    {
+      getAccountInfoPromises.push(getAccountInfo(url, address));
+    }
+  }
+
+  g_accounts = await Promise.all(getAccountInfoPromises)
 }
 
 /**
- * @param {Array} urls
- * @param {Array} selfKeyPairs
- * @param {Array} targetKeyPairs
+ * @param {String} url 
  */
-async function runProfile(urls, selfKeyPairs, targetKeyPairs)
+async function runProfile(url)
 {
-  assert(Array.isArray(urls), `runProfile, urls should be an Array, now is ${typeof urls}`);
-  assert(Array.isArray(selfKeyPairs), `runProfile, selfKeyPairs should be an Array, now is ${typeof selfKeyPairs}`);
-  assert(Array.isArray(targetKeyPairs), `runProfile, targetKeyPairs should be an Array, now is ${typeof targetKeyPairs}`);
+  assert(typeof url === 'string', `runProfile, url should be an String, now is ${typeof url}`);
+
+  let processedTxNum = 0;
 
   // init to address
-  let toAddressIndex = getRandomIndex(targetKeyPairs.length);
-  let toAddressHex = targetKeyPairs[toAddressIndex].address;
-
-  // init url
-  const url = urls[getRandomIndex(urls.length)]
-
-  // init account
-  await initAccounts(url, selfKeyPairs);
+  let toAddressIndex = getRandomIndex(g_targetKeyPairs.length);
+  let toAddressHex = g_targetKeyPairs[toAddressIndex].address;
 
   // send random tx
-  for (let i = 0; i < 8; i++) {
-    const randomTx = generateRandomTx();
-    await sendTransaction(url, randomTx);
+  const sendRandomTxPromises = []
+  for (let i = 0; i < 2; i++) {
+    const randomTxRaw = generateRandomTx();
+    sendRandomTxPromises.push(sendTransaction(url, randomTxRaw));
   }
+  await Promise.all(sendRandomTxPromises)
 
   // send tx
   const sendTxPromises = [];
   let txhashes = [];
   for (let [index, account] of g_accounts.entries()) {
-    if (new BN(account.balance).lt(new BN(Buffer.from(SEND_VALUE_HEX, 'hex')))) {
+    if (new BN(account.balance).lt(new BN(g_value))) {
       continue;
     }
 
-    console.info(`sendTransaction, privateKey: ${selfKeyPairs[index].privateKey}, nonce: ${new BN(account.nonce).addn(1).toBuffer().toString('hex')}, to: ${toAddressHex}, value: ${SEND_VALUE_HEX}`)
-
-    const {txRaw, hash} = generateTx(selfKeyPairs[index].privateKey, new BN(account.nonce).addn(1).toBuffer().toString('hex'), toAddressHex, SEND_VALUE_HEX)
+    processedTxNum ++;
+  
+    // send tx
+    const {txRaw, hash} = generateTx(g_selfKeyPairs[index].privateKey, new BN(account.nonce).addn(1).toBuffer().toString('hex'), toAddressHex, g_value)
     sendTxPromises.push(sendTransaction(url, txRaw));
+
+    // record tx hash
     txhashes.push(hash);
+
+    // update account nonce and balance
+    account.nonce = new BN(account.nonce).addn(1).toBuffer();
+    account.balance = new BN(account.balance).sub(new BN(g_value)).toBuffer();
   }
   await Promise.all(sendTxPromises);
 
   // validate
   let i = 0;
-  while (i < 10 && txhashes.length > 0) {
+  while (txhashes.length > 0 && i < 10) {
     const checkIfTxPackedPromises = []
     for (let txHash of txhashes) {
       checkIfTxPackedPromises.push(checkIfTransactionPacked(url, txHash));
@@ -269,24 +306,46 @@ async function runProfile(urls, selfKeyPairs, targetKeyPairs)
     i++;
   }
 
-  if (i >= 10) {
+  if (txhashes.length > 0) {
     await Promise.reject(`some tx has not packed, ${txhashes}`);
   }
+
+  return processedTxNum;
 }
 
 /**
  * @param {Array} urls
  * @param {Array} selfKeyPairs
  * @param {Array} targetKeyPairs
+ * @param {Number} value
  */
-process.on('message', ({ urls, selfKeyPairs, targetKeyPairs}) => {
+process.on('message', ({ urls, selfKeyPairs, targetKeyPairs, value }) => {
   assert(Array.isArray(urls), `startProfile, urls should be an Array, now is ${typeof urls}`);
   assert(Array.isArray(selfKeyPairs), `startProfile, selfKeyPairs should be an Array, now is ${typeof selfKeyPairs}`);
   assert(Array.isArray(targetKeyPairs), `startProfile, targetKeyPairs should be an Array, now is ${typeof targetKeyPairs}`);
+  assert(typeof value === 'string', `startProfile, value should be an String, now is ${typeof value}`)
+  
+  g_urls = urls;
+  g_selfKeyPairs = selfKeyPairs;
+  g_targetKeyPairs = targetKeyPairs;
+  g_value = Buffer.from(value, 'hex');
 
+  
   (async () => {
     while (true) {
-      await runProfile(urls, selfKeyPairs, targetKeyPairs);
+      // init url
+      const url = g_urls[getRandomIndex(g_urls.length)]
+
+      await initAccounts(url, g_selfKeyPairs);
+
+      const processedTxNum = await runProfile(url);
+
+      if (processedTxNum > 0)
+      {
+        process.send({
+          processedTxNum: processedTxNum
+        });
+      }
     }
   })().catch(e => {
     process.send({ 
