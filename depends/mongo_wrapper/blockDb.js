@@ -58,7 +58,7 @@ class BlockDb
       {
         lean: true,
         sort: {
-          number: -1
+          _id: -1
         },
         limit: 1
       },

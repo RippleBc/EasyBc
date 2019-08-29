@@ -231,11 +231,11 @@ async function runProfile(urls, selfKeyPairs, targetKeyPairs)
   const sendTxPromises = [];
   let txhashes = [];
   for (let [index, account] of g_accounts.entries()) {
-    if (new BN(account.balance).lt(Buffer.from(SEND_VALUE_HEX, 'hex'))) {
+    if (new BN(account.balance).lt(new BN(Buffer.from(SEND_VALUE_HEX, 'hex')))) {
       continue;
     }
 
-    console.info(`sendTransaction privateKey: ${selfKeyPairs[index].privateKey}, nonce: ${new BN(account.nonce).addn(1).toBuffer().toString('hex')}, to: ${toAddressHex}, value: ${SEND_VALUE_HEX}`)
+    console.info(`sendTransaction, privateKey: ${selfKeyPairs[index].privateKey}, nonce: ${new BN(account.nonce).addn(1).toBuffer().toString('hex')}, to: ${toAddressHex}, value: ${SEND_VALUE_HEX}`)
 
     const {txRaw, hash} = generateTx(selfKeyPairs[index].privateKey, new BN(account.nonce).addn(1).toBuffer().toString('hex'), toAddressHex, SEND_VALUE_HEX)
     sendTxPromises.push(sendTransaction(url, txRaw));
@@ -270,7 +270,7 @@ async function runProfile(urls, selfKeyPairs, targetKeyPairs)
   }
 
   if (i >= 10) {
-    await Promise.reject(`some tx has not packet, ${txhashes}`);
+    await Promise.reject(`some tx has not packed, ${txhashes}`);
   }
 }
 
@@ -289,8 +289,6 @@ process.on('message', ({ urls, selfKeyPairs, targetKeyPairs}) => {
       await runProfile(urls, selfKeyPairs, targetKeyPairs);
     }
   })().catch(e => {
-    console.error(e.stack ? e.stack : e);
-
     process.send({ 
       err: e.stack ? e.stack : e
     })
