@@ -1,7 +1,7 @@
 {
   "blockChain": {
     "privateKey": "bfd549bfbbb41498b290bfdbefc1810aacf83463ba949569975220b3ceaaa1e0",
-    "mode": "mainChain",
-    "code": "00"
+    "code": "00",
+    "mainChainCode": "00"
   }
 }

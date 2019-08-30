@@ -6,7 +6,8 @@ const ReceiptManager = require("../depends/block_chain/receiptManager");
 const Transaction = require("../depends/transaction");
 const { STATE_DESTROYED } = require("./constant");
 const Constract = require("./constract");
-const { CorssPayRequestEvent, CorssPayEvent } = require("./events/sideChainConstractEvents");
+const { CorssPayRequestEvent, CorssPayEvent, AppendGuaranteeEvent } = require("./events/sideChainConstractEvents");
+const { code: selfChainCode, mainChainCode } = require("../globalConfig").blockChain;
 
 const rlp = utils.rlp;
 const BN = utils.BN;
@@ -19,6 +20,7 @@ const COMMAND_DEL_AUTHORITY_ADDRESSES = 101;
 const COMMAND_AGREE = 102;
 const COMMAND_REJECT = 103;
 const COMMAND_CROSS_PAY = 104;
+const COMMAND_APPEND_GUARANTEE = 105;
 
 const SIDE_CHAIN_PAY_MAX_INTERVAL = 5 * 60 * 1000;
 
@@ -287,12 +289,16 @@ class SideChainConstract extends Constract {
           if (undefined === this.authorityAddressesArray.find(el => {
             return el.toString("hex") === tx.from.toString("hex")
           })) {
-            throw new Error(`SideChainConstract commandHandler agree or reject, address ${tx.from.toString("hex")} has not privilege`)
+            throw new Error(`SideChainConstract commandHandler cross pay, address ${tx.from.toString("hex")} has not privilege`)
           }
 
           await this.crossPay(stateManager, receiptManager, tx, timestamp, toAccount, commands[1])
       }
         break;
+      case COMMAND_APPEND_GUARANTEE:
+        {
+          await this.appendGuarantee(receiptManager, tx);
+        }
       default:
         {
           
@@ -324,6 +330,12 @@ class SideChainConstract extends Constract {
     assert(tx instanceof Transaction, `SideChainConstract create, tx should be an instance of Transaction, now is ${typeof tx}`);
     assert(fromAccount instanceof Account, `SideChainConstract create, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
     assert(toAccount instanceof Account, `SideChainConstract create, toAccount should be an instance of Account, now is ${typeof toAccount}`);
+
+    // check code
+    if (this.code.toString('hex') === selfChainCode)
+    {
+      throw new Error(`SideChainConstract create, sideChainConstract's code should not be ${selfChainCode}, because of self chain code is ${selfChainCode}`)
+    }
 
     this.code = code;
     this.expireInterval = expireInterval;
@@ -539,8 +551,8 @@ class SideChainConstract extends Constract {
       const sponsors = this.crossPayRequestsArray[i + 4];
       if(sponsors.length / this.authorityAddressesArray.length >= bufferToInt(this.threshold) / 100)
       {
-        // check balance
-        if (new BN(constractAccount.balance).lt(new BN(value)))
+        // check balance, transfer token to main block do not need sub guarantee
+        if (this.code.toString("hex") !== mainChainCode && new BN(constractAccount.balance).lt(new BN(value)))
         {
           break;
         }
@@ -551,8 +563,11 @@ class SideChainConstract extends Constract {
         // update toAccount balance
         toAccount.balance = new BN(toAccount.balance).add(new BN(value)).toBuffer();
 
-        // update constract balance
-        constractAccount.balance = new BN(constractAccount.balance).sub(new BN(value)).toBuffer();
+        // update constract balance (transfer token to main block do not need sub guarantee token)
+        if (this.code.toString("hex") !== mainChainCode)
+        {
+          constractAccount.balance = new BN(constractAccount.balance).sub(new BN(value)).toBuffer();
+        }
 
         await stateManager.putAccount(to, toAccount.serialize());
 
@@ -583,6 +598,24 @@ class SideChainConstract extends Constract {
     }
 
     this.crossPayRequests = this.encodeArray(tmpCrossPayRequestsArray);
+  }
+
+  /**
+   * @param {ReceiptManager} receiptManager
+   * @param {Transaction} tx
+   */
+  async appendGuarantee(receiptManager, tx)
+  {
+    assert(receiptManager instanceof ReceiptManager, `SideChainConstract appendGuarantee, receiptManager should be an instance of ReceiptManager, now is ${typeof receiptManager}`);
+    assert(tx instanceof Transaction, `SideChainConstract appendGuarantee, tx should be an instance of Transaction, now is ${typeof tx}`);
+
+    const appendGuaranteeEvent = new AppendGuaranteeEvent({
+      id: this.id,
+      code: this.code,
+      txHash: tx.hash()
+    })
+
+    await receiptManager.putReceipt(appendGuaranteeEvent.hash(), appendGuaranteeEvent.serialize())
   }
 
   reset() {

@@ -1,7 +1,7 @@
 const assert = require("assert");
 const utils = require("../../../depends/utils");
 const sideChainConstractId = require("../../../consensus_constracts/sideChainConstract").id
-const { saveCrossPayRequest, saveCrossPay } = require("./db");
+const { saveCrossPayRequest, saveCrossPay, saveSideChainAppendGuarantee } = require("./db");
 
 const Buffer = utils.Buffer;
 
@@ -24,6 +24,10 @@ const parse = async function (id, name, dataArray) {
   }
   else if (name.toString() === 'CorssPayEvent') {
     await saveCrossPay(...dataArray);
+  }
+  else if (name.toString() === 'AppendGuaranteeEvent')
+  {
+    await saveSideChainAppendGuarantee(...dataArray)
   }
 }
 

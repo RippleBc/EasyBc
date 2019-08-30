@@ -7,6 +7,8 @@ const crossPayRequestModelConfig = require('../../depends/mysql_model/crossPayRe
 const multiSignPayModelConfig = require('../../depends/mysql_model/multiSignPay');
 const multiSignPayRequestModelConfig = require('../../depends/mysql_model/multiSignPayRequest');
 const transactionParserStateModelConfig = require('../../depends/mysql_model/transactionParserState');
+const sideChainAppendGuaranteeModelConfig = require('../../depends/mysql_model/sideChainAppendGuarantee');
+
 const Sequelize = require('sequelize');
 const utils = require("../../depends/utils");
 const assert = require("assert");
@@ -41,6 +43,7 @@ class Mysql
     this.MultiSignPay = this.sequelize.define(...multiSignPayModelConfig);
     this.MultiSignPayRequest = this.sequelize.define(...multiSignPayRequestModelConfig);
     this.TransactionParserState = this.sequelize.define(...transactionParserStateModelConfig);
+    this.SideChainAppendGuarantee = this.sequelize.define(...sideChainAppendGuaranteeModelConfig);
     
     await this.sequelize.authenticate();
     await this.sequelize.sync();

@@ -71,7 +71,25 @@ const saveCrossPay = async function(code, timestamp, txHash, to, value)
   }
 }
 
+/**
+ * @param {Buffer} code
+ * @param {Buffer} txHash
+ */
+const saveSideChainAppendGuarantee = async function (code, txHash)
+{
+  try {
+    await mysql.SideChainAppendGuarantee.create({
+      code: code.toString('hex'),
+      txHash: txHash.toString('hex')
+    })
+  }
+  catch (e) {
+    logger.error(`SideChain saveSideChainAppendGuarantee, throw exception, ${e}`)
+  }
+}
+
 module.exports = {
   saveCrossPayRequest,
-  saveCrossPay
+  saveCrossPay,
+  saveSideChainAppendGuarantee
 }

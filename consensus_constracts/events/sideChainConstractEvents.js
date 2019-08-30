@@ -108,4 +108,37 @@ class CorssPayEvent extends ConstractEvent {
   }
 }
 
-module.exports = { CorssPayRequestEvent, CorssPayEvent };
+class AppendGuaranteeEvent extends ConstractEvent {
+  constructor(data) {
+    super();
+
+    data = data || {};
+
+    const fields = [{
+      length: 32,
+      name: "id",
+      allowLess: true,
+      default: Buffer.alloc(1)
+    }, {
+      length: 32,
+      name: "name",
+      allowLess: true,
+      default: Buffer.alloc(1)
+    }, {
+      length: 32,
+      name: "code",
+      allowLess: true,
+      default: Buffer.alloc(1)
+    }, {
+      length: 32,
+      name: "txHash",
+      default: Buffer.alloc(1)
+    }];
+
+    utils.defineProperties(this, fields, data);
+
+    this.name = 'AppendGuaranteeEvent';
+  }
+}
+
+module.exports = { CorssPayRequestEvent, CorssPayEvent, AppendGuaranteeEvent };
