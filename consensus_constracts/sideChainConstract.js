@@ -506,7 +506,7 @@ class SideChainConstract extends Constract {
           const corssPayRequestEvent = new CorssPayRequestEvent({
             id: this.id,
             code: this.code,
-            timestamp: timestamp,
+            timestamp: tx.timestamp,
             txHash: spvTxHash,
             number: spvTxNumber,
             to: spvTxTo,
@@ -528,7 +528,7 @@ class SideChainConstract extends Constract {
         const corssPayRequestEvent = new CorssPayRequestEvent({
           id: this.id,
           code: this.code,
-          timestamp: timestamp,
+          timestamp: tx.timestamp,
           txHash: spvTxHash,
           number: spvTxNumber,
           to: spvTxTo,
@@ -575,7 +575,7 @@ class SideChainConstract extends Constract {
         const corssPayEvent = new CorssPayEvent({
           id: this.id,
           code: this.code,
-          timestamp: timestamp,
+          timestamp: tx.timestamp,
           txHash: hash,
           to: to,
           value: value
