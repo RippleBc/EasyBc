@@ -132,11 +132,11 @@ class AppendGuaranteeEvent extends ConstractEvent {
     }, {
       length: 32,
       name: "txHash",
-      default: Buffer.alloc(1)
+      default: Buffer.alloc(32)
     }, {
       length: 20,
       name: "from",
-      default: Buffer.alloc(1)
+      default: Buffer.alloc(20)
     }, {
       length: 32,
       name: "value",
