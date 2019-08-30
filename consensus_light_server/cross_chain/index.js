@@ -74,6 +74,14 @@ app.post('/getSpvState', (req, res) => {
     // get block
     const block = await blockDb.getBlockByNumber(Buffer.from(req.body.number, "hex"));
 
+    if(!block)
+    {
+      return res.json({
+        code: OTH_ERR,
+        msg: "getSpvState, spv invalid becase of block not exist"
+      });
+    }
+
     // init account trie
     const trie = accountTrie.copy();
     trie.root = block.header.stateRoot;
@@ -254,7 +262,7 @@ app.post('/newSpv', (req, res) => {
     if (processedTxCount / count < SPV_SUCCESS_THRESHOLD) {
       return res.json({
         code: OTH_ERR,
-        msg: "newSpv, invalid spv because of not reach threshold"
+        msg: `newSpv, invalid spv because of not reach threshold, processedTxCount ${processedTxCount}, need ${Math.ceil(SPV_SUCCESS_THRESHOLD * count)}`
       });
     }
 
