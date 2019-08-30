@@ -23,6 +23,7 @@ const COMMAND_NEW_AUTHORITY_ADDRESSES = 100;
 const COMMAND_DEL_AUTHORITY_ADDRESSES = 101;
 const COMMAND_AGREE = 102;
 const COMMAND_REJECT = 103;
+const COMMAND_APPEND_GUARANTEE = 105;
 
 app.get("/createSideChainConstract", (req, res) => {
   if (!req.query.url) {
@@ -384,6 +385,45 @@ app.get("/rejectSideChainConstract", (req, res) => {
   }
 
   const data = rlp.encode([toBuffer(COMMAND_REJECT), toBuffer(parseInt(req.query.timestamp))]).toString("hex");
+
+  sendTransaction(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(transactionHash => {
+    res.send({
+      code: SUCCESS,
+      data: transactionHash
+    });
+  }).catch(e => {
+    printErrorStack(e);
+
+    res.send({
+      code: OTH_ERR,
+      msg: e.toString()
+    });
+  })
+});
+
+app.get("/appendGuaranteeSideChainConstract", (req, res) => {
+  if (!req.query.url) {
+    return res.send({
+      code: PARAM_ERR,
+      msg: "param error, need url"
+    });
+  }
+
+  if (!req.query.to) {
+    return res.send({
+      code: PARAM_ERR,
+      msg: "param error, need to"
+    });
+  }
+
+  if (!req.query.value) {
+    return res.send({
+      code: PARAM_ERR,
+      msg: "param error, need value"
+    });
+  }
+
+  const data = rlp.encode([toBuffer(COMMAND_APPEND_GUARANTEE)]).toString("hex");
 
   sendTransaction(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(transactionHash => {
     res.send({

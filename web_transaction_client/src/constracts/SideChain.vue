@@ -12,6 +12,11 @@
         type="primary"
         @click="rejectVisible = true;"
       >拒绝</el-button>
+      <el-button
+        style="width:100px;margin:10px;"
+        type="primary"
+        @click="appendGuaranteeVisible = true;"
+      >发送保证金</el-button>
     </div>
     <div class="border" style="margin:20px 0px 20px 0px;width: 600px;overflow:scroll;" v-if="searchConstractDetail.state">
       <div style="display:flex;width:100%;margin-bottom:10px;border-bottom: solid 1px #45a613">
@@ -259,6 +264,23 @@
         <el-button type="primary" @click="reject">确 定</el-button>
       </span>
     </el-dialog>
+    <el-dialog title="发送保证金" :visible.sync="appendGuaranteeVisible" width="80%">
+      <el-form label-width="90px">
+        <el-form-item label="私钥">
+          <el-input v-model="privateKey"></el-input>
+        </el-form-item>
+        <el-form-item label="地址">
+          <el-input v-model="constractAddress"></el-input>
+        </el-form-item>
+        <el-form-item label="金额">
+          <el-input v-model="appendGuaranteeValue"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="appendGuaranteeVisible = false">取 消</el-button>
+        <el-button type="primary" @click="appendGuarantee">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -299,7 +321,9 @@ export default {
       privateKey: "",
       newAuthorityAddresses: [],
       delAuthorityAddresses: [],
-      authorityAddress: ""
+      authorityAddress: "",
+      appendGuaranteeVisible: false,
+      appendGuaranteeValue: ""
     };
   },
 
@@ -583,6 +607,37 @@ export default {
         }
       }).finally(() => {
         this.rejectVisible = false;
+      });
+    },
+
+    appendGuarantee()
+    {
+      axios.get("appendGuaranteeSideChainConstract", {
+        url: this.currentNode.url,
+        to: this.constractAddress,
+        privateKey: this.privateKey,
+        value: this.appendGuaranteeValue
+      }).then(({ code, data, msg }) => {
+        if(code === 0)
+        {
+          this.$notify.success({
+            title: 'appendGuaranteeSideChainConstract',
+            message: `appendGuaranteeSideChainConstract success`
+          });
+
+          setTimeout(() => {
+            this.search();
+          }, 1000);
+        }
+        else
+        {
+          this.$notify.error({
+            title: 'appendGuaranteeSideChainConstract',
+            message: `appendGuaranteeSideChainConstract failed, ${msg}`
+          });
+        }
+      }).finally(() => {
+        this.appendGuaranteeVisible = false;
       });
     }
   },
