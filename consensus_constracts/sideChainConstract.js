@@ -332,7 +332,7 @@ class SideChainConstract extends Constract {
     assert(toAccount instanceof Account, `SideChainConstract create, toAccount should be an instance of Account, now is ${typeof toAccount}`);
 
     // check code
-    if (this.code.toString('hex') === selfChainCode)
+    if (code.toString('hex') === selfChainCode)
     {
       throw new Error(`SideChainConstract create, sideChainConstract's code should not be ${selfChainCode}, because of self chain code is ${selfChainCode}`)
     }
