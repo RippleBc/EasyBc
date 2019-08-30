@@ -7,7 +7,7 @@ const Transaction = require("../depends/transaction");
 const { STATE_DESTROYED } = require("./constant");
 const Constract = require("./constract");
 const { CorssPayRequestEvent, CorssPayEvent, AppendGuaranteeEvent } = require("./events/sideChainConstractEvents");
-const { code: selfChainCode, mainChainCode } = require("../globalConfig").blockChain;
+const { code: selfChainCode, mainChainCode } = require("../globalConfig.json").blockChain;
 
 const rlp = utils.rlp;
 const BN = utils.BN;
