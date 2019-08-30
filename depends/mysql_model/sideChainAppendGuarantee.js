@@ -8,6 +8,14 @@ module.exports = ['sideChainAppendGuarantee', {
   txHash: {
     type: Sequelize.STRING,
     allowNull: false
+  },
+  from: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+  value: {
+    type: Sequelize.STRING,
+    allowNull: false
   }
 }, {
     indexes: [{

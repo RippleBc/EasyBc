@@ -612,7 +612,9 @@ class SideChainConstract extends Constract {
     const appendGuaranteeEvent = new AppendGuaranteeEvent({
       id: this.id,
       code: this.code,
-      txHash: tx.hash()
+      txHash: tx.hash(),
+      from: tx.from,
+      value: tx.value
     })
 
     await receiptManager.putReceipt(appendGuaranteeEvent.hash(), appendGuaranteeEvent.serialize())

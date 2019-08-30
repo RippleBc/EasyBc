@@ -74,13 +74,17 @@ const saveCrossPay = async function(code, timestamp, txHash, to, value)
 /**
  * @param {Buffer} code
  * @param {Buffer} txHash
+ * @param {Buffer} from
+ * @param {Buffer} value
  */
-const saveSideChainAppendGuarantee = async function (code, txHash)
+const saveSideChainAppendGuarantee = async function (code, txHash, from, value)
 {
   try {
     await mysql.SideChainAppendGuarantee.create({
       code: code.toString('hex'),
-      txHash: txHash.toString('hex')
+      txHash: txHash.toString('hex'),
+      from: from.toString('hex'),
+      value: value.toString('hex')
     })
   }
   catch (e) {
