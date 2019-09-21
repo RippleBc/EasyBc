@@ -12,6 +12,9 @@ const printErrorStack = process[Symbol.for("printErrorStack")];
 
 app.use((req, res, next) => {
 	if (req.url.includes("getTransactionState")
+		|| req.url.includes("refreshTokenDistribution")
+		|| req.url.includes("getTotalTokenDistribution")
+		|| req.url.includes("getTokenDistribution")
 		|| req.url.includes("getTransactions")
 		|| req.url.includes("getAccountInfo")
 		|| req.url.includes("getLastestBlock")) {
