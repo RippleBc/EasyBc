@@ -266,6 +266,37 @@ app.post("/getBlockByNumber", function(req, res) {
     });;
 });
 
+app.post("/getBlockHeaderByNumber", function (req, res) {
+    if (undefined === req.body.number) {
+        return res.json({
+            code: PARAM_ERR,
+            msg: "getBlockHeaderByNumber, param error, need number"
+        });
+    }
+
+    blockDb.getBlockByNumber(Buffer.from(req.body.number, 'hex')).then(block => {
+        if (block) {
+            return res.json({
+                code: SUCCESS,
+                msg: "",
+                data: block.header.serialize().toString("hex")
+            });
+        }
+
+        res.json({
+            code: OTH_ERR,
+            msg: `getBlockHeaderByNumber, block header not exist, number ${req.body.number}`
+        });
+    }).catch(e => {
+        printErrorStack(e)
+
+        res.json({
+            code: OTH_ERR,
+            msg: e.toString()
+        });
+    });;
+});
+
 app.post("/getLastestBlock", function(req, res) {
     (async () => {
         const blockChainHeight = await blockDb.getBlockChainHeight();
