@@ -20,14 +20,6 @@ class BlockHeader
       length: 32,
       default: Buffer.alloc(32)
     }, {
-      name: "receiptRoot",
-      length: 32,
-      default: Buffer.alloc(32)
-    }, {
-      name: "txsHash",
-      length: 32,
-      default: Buffer.alloc(32)
-    }, {
       name: "number",
       length: 32,
       allowZero: true,
@@ -46,6 +38,14 @@ class BlockHeader
       allowZero: true,
       allowLess: true,
       default: Buffer.alloc(0)
+    }, {
+      name: "receiptRoot",
+      length: 32,
+      default: Buffer.alloc(32)
+    }, {
+      name: "txsHash",
+      length: 32,
+      default: Buffer.alloc(32)
     }];
 
     utils.defineProperties(this, fields, data);
