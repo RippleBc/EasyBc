@@ -6,6 +6,7 @@ const Block = require('../block')
 const rlp = utils.rlp;
 const BN = utils.BN;
 const Buffer = utils.Buffer;
+const sha256 = utils.sha256;
 
 /**
  * Process the transactions in an block
@@ -24,8 +25,9 @@ module.exports = async function(opts) {
   assert(opts.block instanceof Block, `runBlock, opts.block should be an Block, now is ${typeof opts.block}`);
 
   const block = opts.block;
-  const ifGenerateTrie = opts.generate || false;
+  const ifGenerateTrie = ifGenerateTxsHash = opts.generate || false;
   const validateTrie = !ifGenerateTrie;
+  const validateTxsHash = !ifGenerateTxsHash;
 
   let failedTransactions = [];
   let errors = [];
@@ -102,6 +104,18 @@ module.exports = async function(opts) {
     block.header.receiptRoot = this.receiptManager.getTrieRoot();
   }
 
+  // compute txsHash
+  const rawTransactionArray = [];
+  for (let tx of block.transactions) {
+    rawTransactionArray.push(tx.hash());
+  }
+  const txsHash = sha256(rlp.encode(rawTransactionArray))
+
+  if (ifGenerateTxsHash)
+  {
+    block.header.txsHash = txsHash;
+  }
+
   // check state trie
   if(validateTrie && this.stateManager.getTrieRoot().toString("hex") !== block.header.stateRoot.toString("hex"))
   {
@@ -111,6 +125,12 @@ module.exports = async function(opts) {
   // check receipt state trie
   if (validateTrie && this.receiptManager.getTrieRoot().toString("hex") !== block.header.receiptRoot.toString("hex")) {
     await Promise.reject(`runBlock, receiptStateRoot should be ${this.receiptManager.getTrieRoot().toString("hex")}, now is ${block.header.receiptRoot.toString("hex")}`);
+  }
+
+  // check txsHash
+  if (validateTxsHash && txsHash.toString("hex") !== block.header.txsHash.toString("hex"))
+  {
+    await Promise.reject(`runBlock, txsHash should be ${txsHash.toString("hex")}, now is ${block.header.txsHash.toString("hex")}`);
   }
 
   await this.stateManager.commit();
