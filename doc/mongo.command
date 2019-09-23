@@ -136,3 +136,10 @@ db.blocks.remove({})
 
 #
 db.trienodes.remove({})
+
+/********************************************* 备份mongo *********************************************/
+
+mongodump --port 4406 -u "blockChain" -p "blockChain" --authenticationDatabase "admin" -d blockChain -o mongoBackup/blockChain201909231632
+
+
+mongorestore --port 4406 -u "blockChain" -p "blockChain" --authenticationDatabase "admin" -d blockChain blockChain
