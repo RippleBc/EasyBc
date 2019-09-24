@@ -1,5 +1,4 @@
 {
-	"privateKey": "459705e79404b3604e4eef0aa1becedef1a227865a122826106f7f511682ea86",
 	"unl": 
 	[
 		{
@@ -48,7 +47,7 @@
 		{
 			"address": "21d21b68ded27ce2ef619651d382892c1f77baa4",
 			"privateKey": "ed09a7280c5a0d3c04839ca5603fe507b4d1d4572601e62aadafd923f55f7bf9",
-			"balance": "8888888888"
+			"balance": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
 		}
 	]
 }

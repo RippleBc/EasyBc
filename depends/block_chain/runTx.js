@@ -89,13 +89,15 @@ module.exports = async function(opts)
       await constractsManager.run({
         timestamp: timestamp,
         stateManager: this.stateManager, 
+        receiptManager: this.receiptManager,
+        mysql: process[Symbol.for("mysql")],
         tx: tx,
         fromAccount: fromAccount,
         toAccount: toAccount
       });
     }
     catch (e) {
-      await Promise.reject(`runTx, run constract throw exception, ${e}`);
+      await Promise.reject(`runTx, run constract throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
     }
   }
   else

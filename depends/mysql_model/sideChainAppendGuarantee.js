@@ -1,32 +1,28 @@
 const Sequelize = require('sequelize');
 
-module.exports = ['log', {
-  time: {
+module.exports = ['sideChainAppendGuarantee', {
+  code: {
     type: Sequelize.STRING,
     allowNull: false
   },
-  type: {
+  txHash: {
     type: Sequelize.STRING,
     allowNull: false
   },
-  title: {
+  from: {
     type: Sequelize.STRING,
     allowNull: false
   },
-  data: {
-    type: Sequelize.TEXT,
+  value: {
+    type: Sequelize.STRING,
     allowNull: false
   }
 }, {
+    indexes: [{
+      unique: true,
+      fields: ['txHash']
+    }],
+    scopes: {
 
-  indexes: [{
-    fields: ['time']
-  }, {
-    fields: ['type']
-  }, {
-    fields: ['title']
-  }],
-  scopes: {
-    
-  }
-}];
+    }
+  }];

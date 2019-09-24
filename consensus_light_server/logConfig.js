@@ -6,23 +6,16 @@ log4js.configure({
         stdout: {
             type: "stdout"
         },
-        common: {
+        light: {
             type: "dateFile",
             filename: "consensus_light_server/logs/",
-            pattern: "common-yyyy-MM-dd.log",
-            alwaysIncludePattern: true
-        },
-        err: {
-            type: "dateFile",
-            filename: "consensus_light_server/logs/",
-            pattern: "err-yyyy-MM-dd.log",
+            pattern: "light-yyyy-MM-dd.log",
             alwaysIncludePattern: true
         }
     },
     categories: {
-        default: { appenders: ["stdout", "common"], level: "info" },
-        common: { appenders: ["stdout", "common"], level: "info" },
-        err: { appenders: ["stdout", "err"], level: "info" }
+        default: { appenders: ["stdout", "light"], level: "info" },
+        light: { appenders: ["stdout", "light"], level: "info" }
     }
 })
  

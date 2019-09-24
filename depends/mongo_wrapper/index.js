@@ -7,6 +7,7 @@ const UnlDb = require("./unlDb")
 
 var mongooseInstance;
 var mptDb;
+var receiptMptDb;
 var blockDb;
 var unlDb;
 
@@ -35,6 +36,14 @@ module.exports = {
       mptDb = new MptDB(trieNodeDb)
     }
     return mptDb
+  },
+
+  generateReceiptMptDb: () => {
+    if (!receiptMptDb) {
+      let trieNodeDb = new TrieNodeDb(mongooseInstance);
+      receiptMptDb = new MptDB(trieNodeDb)
+    }
+    return receiptMptDb
   },
 
   generateBlockDb: () => {

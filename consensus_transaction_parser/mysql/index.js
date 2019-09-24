@@ -1,13 +1,17 @@
 const mysqlConfig = require("../config.json").mysql;
-const Transaction = require("../../depends/transaction");
+const transactionModelConfig = require('../../depends/mysql_model/transaction');
+const sendedSpvModelConfig = require('../../depends/mysql_model/sendedSpv');
+const sideChainModelConfig = require('../../depends/mysql_model/sideChain');
+const crossPayModelConfig = require('../../depends/mysql_model/crossPay');
+const crossPayRequestModelConfig = require('../../depends/mysql_model/crossPayRequest');
+const multiSignPayModelConfig = require('../../depends/mysql_model/multiSignPay');
+const multiSignPayRequestModelConfig = require('../../depends/mysql_model/multiSignPayRequest');
+const transactionParserStateModelConfig = require('../../depends/mysql_model/transactionParserState');
+const sideChainAppendGuaranteeModelConfig = require('../../depends/mysql_model/sideChainAppendGuarantee');
+
+const Sequelize = require('sequelize');
 const utils = require("../../depends/utils");
 const assert = require("assert");
-const transactionModelConfig = require('./transaction');
-const Sequelize = require('sequelize');
-const Op = Sequelize.Op;
-const log4js= require("../logConfig");
-
-const logger = log4js.getLogger("logParse");
 
 const Buffer = utils.Buffer;
 
@@ -32,51 +36,63 @@ class Mysql
   async init()
   {
     this.Transaction = this.sequelize.define(...transactionModelConfig);
-
+    this.SendedSpv = this.sequelize.define(...sendedSpvModelConfig);
+    this.SideChain = this.sequelize.define(...sideChainModelConfig);
+    this.CrossPay = this.sequelize.define(...crossPayModelConfig);
+    this.CrossPayRequest = this.sequelize.define(...crossPayRequestModelConfig);
+    this.MultiSignPay = this.sequelize.define(...multiSignPayModelConfig);
+    this.MultiSignPayRequest = this.sequelize.define(...multiSignPayRequestModelConfig);
+    this.TransactionParserState = this.sequelize.define(...transactionParserStateModelConfig);
+    this.SideChainAppendGuarantee = this.sequelize.define(...sideChainAppendGuaranteeModelConfig);
+    
     await this.sequelize.authenticate();
     await this.sequelize.sync();
   }
 
   /**
-   * @param {Buffer} number
-   * @param {Transaction} transaction
+   * @return {Buffer}
+   * @return {Buffer}
    */
-  async saveTransaction(number, transaction)
-  {
-    assert(Buffer.isBuffer(number), `Mysql saveTransaction, number should be an Buffer, now is ${typeof number}`);
-    assert(transaction instanceof Transaction, `Mysql saveTransaction, transaction should be an Transaction Object, now is ${typeof transaction}`);
+  async getBlockNumber () {
+    let [{ blockNumber } = {}]  = await this.TransactionParserState.findAll({
+      limit: 1
+    });
 
-    try
+    if(blockNumber)
     {
-      await this.Transaction.create({
-        hash: transaction.hash().toString('hex'),
-        number: number.toString('hex'),
-        nonce: transaction.nonce.toString('hex'),
-        from: transaction.from.toString('hex'),
-        to: transaction.to.toString('hex'),
-        value: transaction.value.toString('hex'),
-        data: transaction.data.toString('hex')
-      })
+      blockNumber = Buffer.from(blockNumber, 'hex')
     }
-    catch(e)
-    {
-      logger.error(`saveTransaction, throw exception ${e}`)
-    }
+
+    return blockNumber;
   }
 
   /**
    * @param {Buffer} number
-   * @param {Array/Transaction} transactions
    */
-  async saveTransactions(number, transactions)
-  {
-    assert(Buffer.isBuffer(number), `Mysql saveTransactions, number should be an Buffer, now is ${typeof number}`);
-    assert(Array.isArray(transactions), `Mysql saveTransactions, transactions should be an Array, now is ${typeof transactions}`);
+  async saveBlockNumber (number) {
+    assert(Buffer.isBuffer(number), `Mysql saveBlockNumber, number should be an Buffer, now is ${typeof number}`)
 
-    for(let i = 0; i < transactions.length; i++)
+    const [, created] = await this.TransactionParserState.findOrCreate({
+      where: { 
+        id: 1
+      },
+      defaults: {
+        blockNumber: number.toString('hex')
+      }
+    });
+    
+    if (created)
     {
-      await this.saveTransaction(number, transactions[i]);
+      return;
     }
+
+    await this.TransactionParserState.update({
+      blockNumber: number.toString('hex')
+    }, {
+      where: {
+        id: 1
+      }
+    })
   }
 }
 

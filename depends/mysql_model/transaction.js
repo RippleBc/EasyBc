@@ -26,7 +26,11 @@ module.exports = ['transaction', {
     allowNull: false
   },
   data: {
-    type: Sequelize.STRING,
+    type: Sequelize.TEXT,
+    allowNull: false
+  },
+  rawData: {
+    type: Sequelize.TEXT,
     allowNull: false
   }
 }, {

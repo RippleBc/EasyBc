@@ -3,7 +3,6 @@ const fs = require('fs');
 const path = require('path');
 const readLine = require('./readLine');
 const Mysql = require("./mysql");
-const { getLogFile, saveLogFile, getOffset, saveOffset } = require('./db');
 const log4js= require("./logConfig");
 const { logDir, logsBufferMaxSize } = require("./config.json");
 const assert = require("assert");
@@ -66,11 +65,8 @@ const run = async function(dir, logsBufferMaxSize)
 	assert(typeof dir === 'string', `logParser readDir, dir should be a String, now is ${typeof dir}`)
 	assert(typeof logsBufferMaxSize === 'number', `logParser readDir, logsBufferMaxSize should be a Number, now is ${typeof logsBufferMaxSize}`)
 
-	// fetch current log file
-	let logFile = await getLogFile(dir);
-
-	// fetch log file offset
-	let offset = await getOffset(dir);
+	// fetch current log file and offset
+	let { logFile, offset } = await mysql.getLogParserState(dir);
 
 	// 
 	let files = [];
@@ -85,8 +81,8 @@ const run = async function(dir, logsBufferMaxSize)
 			logFile = files[index];
 			offset = 0;
 
-			await saveLogFile(dir, logFile);
-			await saveOffset(dir, offset);
+			await mysql.saveLogFile(dir, logFile);
+			await mysql.saveOffset(dir, offset);
 		}
 
 		let logs = [];
@@ -108,7 +104,7 @@ const run = async function(dir, logsBufferMaxSize)
 			if(line === null)
 			{
 				await mysql.saveLogs(logs);
-				await saveOffset(dir, offset);
+				await mysql.saveOffset(dir, offset);
 
 				if(index === (files.length - 1) && Date.now() - new Date(files[index].match(/(?<=-)[\d- ]+/g)).valueOf() < (65 * 1000))
 				{
@@ -146,7 +142,7 @@ const run = async function(dir, logsBufferMaxSize)
 	  	if(logs.length >= logsBufferMaxSize)
 	  	{
 	  		await mysql.saveLogs(logs);
-				await saveOffset(dir, offset);
+				await mysql.saveOffset(dir, offset);
 	  		
 	  		logs = [];
 	  	}

@@ -3,6 +3,7 @@
     <div style="display:flex;flex-direction:column;align-items:center;margin:20px 0px 20px 0px;">
         <crowd-fund></crowd-fund>
         <multi-sign></multi-sign>
+        <side-chain></side-chain>
     </div>
   </div>
 </template>
@@ -11,10 +12,11 @@
 import axios from "../net/axios.js";
 import CrowdFund from "../constracts/CrowdFund.vue";
 import MultiSign from "../constracts/MultiSign.vue";
+import SideChain from "../constracts/SideChain.vue";
 
 export default {
   name: "Constracts",
-    components: { CrowdFund, MultiSign },
+    components: { CrowdFund, MultiSign, SideChain },
   data() {
     return {};
   },

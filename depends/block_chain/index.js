@@ -1,5 +1,6 @@
 const utils = require("../utils");
 const StateManager = require("./stateManager.js");
+const ReceiptManager = require("./receiptManager.js");
 const Block = require("../block");
 const assert = require("assert");
 const Trie = require("../merkle_patricia_tree");
@@ -15,7 +16,9 @@ class BlockChain
     this.stateManager = new StateManager({
       trie: new Trie(opts.mptDb, opts.root)
     });
-
+    this.receiptManager = new ReceiptManager({
+      trie: new Trie(opts.receiptMptDb)
+    })
     this.blockDb = opts.blockDb;
 
     this.runBlockChain = require("./runBlockChain.js");

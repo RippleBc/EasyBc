@@ -3,7 +3,7 @@ const { assert, expect, should } = require("chai");
 const rp = require("request-promise");
 const utils = require("../../depends/utils");
 const { TEST_URL } = require("../constant")
-const { privateKey: privateKeyHexString } = require("../config")
+const { privateKey: privateKeyHexString } = require("../../globalConfig.json").blockChain;
 
 const Buffer = utils.Buffer;
 const rlp = utils.rlp;

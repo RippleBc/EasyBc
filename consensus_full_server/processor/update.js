@@ -4,7 +4,7 @@ const Transaction = require("../../depends/transaction");
 const utils = require("../../depends/utils");
 const rp = require("request-promise");
 const { SUCCESS } = require("../../constant");
-const { genesis } = require("../config.json");
+const { genesis } = require("../../globalConfig.json").blockChain;
 const { TRANSACTIONS_CONSENSUS_THRESHOULD } = require('../constant');
 const _ = require("underscore");
 
@@ -49,6 +49,7 @@ class Update
 	async init()
 	{
 		const blockChain = new BlockChain({
+			receiptMptDb: mongo.generateReceiptMptDb(),
 			mptDb: mongo.generateMptDb(),
 			blockDb: mongo.generateBlockDb()
 		});
@@ -59,6 +60,7 @@ class Update
 			this.blockChainHeight = Buffer.alloc(0);
 
 			this.blockChain = new BlockChain({
+				receiptMptDb: mongo.generateReceiptMptDb(),
 				mptDb: mongo.generateMptDb(),
 				blockDb: mongo.generateBlockDb()
 			});
@@ -108,6 +110,7 @@ class Update
 		}
 
 		this.blockChain = new BlockChain({
+			receiptMptDb: mongo.generateReceiptMptDb(),
 			mptDb: mongo.generateMptDb(),
 			blockDb: mongo.generateBlockDb(),
 			root: lastestBlock.header.stateRoot

@@ -1,7 +1,7 @@
 const assert = require("assert");
 const Account = require("../depends/account");
 const utils = require("../depends/utils");
-const StageManager = require("../depends/block_chain/stateManager");
+const StateManager = require("../depends/block_chain/stateManager");
 const Transaction = require("../depends/transaction");
 const { STATE_DESTROYED } = require("./constant");
 const Constract = require("./constract");
@@ -89,15 +89,15 @@ class CrowdFundConstract extends Constract
 
   /**
    * @param {Buffer} timestamp
-   * @param {StageManager} stateManager
+   * @param {StateManager} stateManager
    * @param {Transaction} tx
    * @param {Account} fromAccount
    * @param {Account} toAccount
    */
-  async commandHandler(timestamp, stateManager, tx, fromAccount, toAccount)
+  async commandHandler({timestamp, stateManager, tx, fromAccount, toAccount})
   {
     assert(Buffer.isBuffer(timestamp), `CrowdFundConstract run, timestamp should be an Buffer, now is ${typeof timestamp}`);
-    assert(stateManager instanceof StageManager, `CrowdFundConstract run, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
+    assert(stateManager instanceof StateManager, `CrowdFundConstract run, stateManager should be an instance of StateManager, now is ${typeof stateManager}`);
     assert(tx instanceof Transaction, `CrowdFundConstract run, tx should be an instance of Transaction, now is ${typeof tx}`);
     assert(fromAccount instanceof Account, `CrowdFundConstract run, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
     assert(toAccount instanceof Account, `CrowdFundConstract run, toAccount should be an instance of Account, now is ${typeof toAccount}`);
@@ -152,7 +152,7 @@ class CrowdFundConstract extends Constract
    * @param {Buffer} target
    * @param {Buffer} limit
    */
-  create(beginTime, endTime, receiveAddress, target, limit)
+  async create(beginTime, endTime, receiveAddress, target, limit)
   {
     assert(Buffer.isBuffer(beginTime), `CrowdFundConstract create, beginTime should be an Buffer, now is ${typeof beginTime}`);
     assert(Buffer.isBuffer(endTime), `CrowdFundConstract create, endTime should be an Buffer, now is ${typeof endTime}`);
@@ -251,7 +251,7 @@ class CrowdFundConstract extends Constract
    */
   async receive(stateManager, toAccount)
   {
-    assert(stateManager instanceof StageManager, `CrowdFundConstract receive, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
+    assert(stateManager instanceof StateManager, `CrowdFundConstract receive, stateManager should be an instance of StateManager, now is ${typeof stateManager}`);
     assert(toAccount instanceof Account, `CrowdFundConstract receive, toAccount should be an instance of Account, now is ${typeof toAccount}`);
 
     if (new BN(toAccount.balance).lt(new BN(this.target))) {

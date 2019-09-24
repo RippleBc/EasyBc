@@ -4,6 +4,7 @@ const { getAccountInfo } = require("./remote");
 const assert = require("assert");
 const { Account: AccountModel, TransactionsHistory: TransactionsHistoryModel } = process[Symbol.for("models")];
 const { QUERY_MAX_LIMIT, SUCCESS, OTH_ERR, PARAM_ERR } = require("../constant");
+const { COMMAND_TX } = require("../consensus_constracts/constant");
 const rp = require("request-promise");
 
 const app = process[Symbol.for("app")];
@@ -11,6 +12,7 @@ const printErrorStack = process[Symbol.for("printErrorStack")];
 
 const Buffer = utils.Buffer;
 const BN = utils.BN;
+const toBuffer = utils.toBuffer;
 
 app.get("/importAccount", function (req, res) {
 	if (!req.query.privateKey) {
@@ -308,7 +310,7 @@ app.get("/sendTransaction", function (req, res) {
 	let data;
 	if(req.query.data)
 	{
-		data = utils.rlp([Buffer.from("00", "hex"), Buffer.from(req.query.data)]).toString("hex");
+		data = utils.rlp([toBuffer(COMMAND_TX), Buffer.from(req.query.data)]).toString("hex");
 	}
 
 	module.exports.sendTransaction(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(transactionHash => {

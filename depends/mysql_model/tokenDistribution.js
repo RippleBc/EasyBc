@@ -1,21 +1,20 @@
 const Sequelize = require('sequelize');
 
-module.exports = ['abnormalNode', {
+module.exports = ['tokenDistribution', {
   address: {
     type: Sequelize.STRING,
     allowNull: false
   },
-  type: {
-    type: Sequelize.INTEGER,
-    allowNull: false
-  },
-  reason: {
+  balance: {
     type: Sequelize.STRING,
     allowNull: false
   }
 }, {
-  indexes: [],
-  scopes: {
-    
-  }
-}];
+    indexes: [{
+      unique: true,
+      fields: ['address']
+    }],
+    scopes: {
+
+    }
+  }];

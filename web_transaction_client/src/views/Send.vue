@@ -278,17 +278,20 @@ const TRANSACTION_STATE_PACKED = 3;
         }).then(response => {
           if (response.code === 0) {
             if (response.data === TRANSACTION_STATE_PACKED) {
-              this.$notify.warn({
+              this.$notify({
+                type: 'warning',
                 title: 'getTransactionState',
                 message: 'transaction has packed'
               });
             } else if (response.data === TRANSACTION_STATE_PROCESSING) {
-              this.$notify.warn({
+              this.$notify({
+                type: 'warning',
                 title: 'getTransactionState',
                 message: 'transaction is processing'
               });
             } else if (response.data === TRANSACTION_STATE_IN_CACHE) {
-              this.$notify.warn({
+              this.$notify({
+                type: 'warning',
                 title: 'getTransactionState',
                 message: 'transaction is in cache, waiting to be process'
               });

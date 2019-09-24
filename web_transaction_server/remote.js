@@ -4,6 +4,7 @@ const rp = require("request-promise");
 const assert = require("assert");
 const Block = require("../depends/block")
 const utils = require("../depends/utils")
+const Header = require("../depends/block/header");
 
 const Buffer = utils.Buffer;
 
@@ -12,9 +13,13 @@ const printErrorStack = process[Symbol.for("printErrorStack")];
 
 app.use((req, res, next) => {
 	if (req.url.includes("getTransactionState")
+		|| req.url.includes("refreshTokenDistribution")
+		|| req.url.includes("getTotalTokenDistribution")
+		|| req.url.includes("getTokenDistribution")
 		|| req.url.includes("getTransactions")
 		|| req.url.includes("getAccountInfo")
-		|| req.url.includes("getLastestBlock")) {
+		|| req.url.includes("getLastestBlock")
+		|| req.url.includes("getBlockHeaderByNumber")) {
 		if (!req.query.url) {
 			res.send({
 				code: PARAM_ERR,
@@ -76,6 +81,13 @@ app.use((req, res, next) => {
 				return res.send({
 					code: response.code,
 					data: new Account(response.data ? `0x${response.data}` : undefined),
+					msg: response.msg
+				})
+			}
+			if (req.url.includes("getBlockHeaderByNumber")) {
+				return res.send({
+					code: response.code,
+					data: new Header(response.data ? `0x${response.data}` : undefined),
 					msg: response.msg
 				})
 			}

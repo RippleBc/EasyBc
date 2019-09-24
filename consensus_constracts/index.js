@@ -1,8 +1,10 @@
 const CrowdFundConstract = require("./crowdFundConstract");
 const MultiSignConstract = require("./multiSignConstract");
+const SideChainConstract = require("./sideChainConstract");
 const utils = require("../depends/utils");
 const assert = require("assert");
-const StageManager = require("../depends/block_chain/stateManager");
+const StateManager = require("../depends/block_chain/stateManager");
+const ReceiptManager = require("../depends/block_chain/receiptManager");
 const Account = require("../depends/account");
 const Transaction = require("../depends/transaction");
 const { ACCOUNT_TYPE_NORMAL, ACCOUNT_TYPE_CONSTRACT, COMMAND_TX, COMMAND_CREATE, TX_TYPE_TRANSACTION, TX_TYPE_CREATE_CONSTRACT, TX_TYPE_UPDATE_CONSTRACT } = require("./constant");
@@ -18,18 +20,22 @@ class ContractsManager
 
     this.contractsMap.set(CrowdFundConstract.id, CrowdFundConstract);
     this.contractsMap.set(MultiSignConstract.id, MultiSignConstract);
+    this.contractsMap.set(SideChainConstract.id, SideChainConstract);
   }
 
   /**
    * @param {Buffer} timestamp
-   * @param {StageManager} stateManager
+   * @param {StateManager} stateManager
+   * @param {ReceiptManager} receiptManager
+   * @param {Mysql} mysql
    * @param {Transaction} tx
    * @param {Account} fromAccount
    * @param {Account} toAccount
    */
-  async run({ timestamp, stateManager, tx, fromAccount, toAccount }) {
+  async run({ timestamp, stateManager, receiptManager, mysql, tx, fromAccount, toAccount}) {
     assert(Buffer.isBuffer(timestamp), `ContractsManager run, timestamp should be an Buffer, now is ${typeof timestamp}`);
-    assert(stateManager instanceof StageManager, `ContractsManager run, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
+    assert(stateManager instanceof StateManager, `ContractsManager run, stateManager should be an instance of StateManager, now is ${typeof stateManager}`);
+    assert(receiptManager instanceof ReceiptManager, `ContractsManager run, receiptManager should be an instance of StateManager, now is ${typeof receiptManager}`);
     assert(tx instanceof Transaction, `ContractsManager run, tx should be an instance of Transaction, now is ${typeof tx}`);
     assert(fromAccount instanceof Account, `ContractsManager run, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
     assert(toAccount instanceof Account, `ContractsManager run, toAccount should be an instance of Account, now is ${typeof toAccount}`);
@@ -59,7 +65,7 @@ class ContractsManager
     const constractInstacne = new Constract(toAccount.data.length > 0 ? toAccount.data : undefined);
 
     // run contract
-    await constractInstacne.run(timestamp, stateManager, tx, fromAccount, toAccount);
+    await constractInstacne.run({timestamp, stateManager, receiptManager, mysql, tx, fromAccount, toAccount});
 
     // update contract
     toAccount.data = constractInstacne.serialize();

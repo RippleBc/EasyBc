@@ -1,19 +1,19 @@
 const Sequelize = require('sequelize');
 
-module.exports = ['transaction', {
-  hash: {
+module.exports = ['crossPayRequest', {
+  code: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+  timestamp: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+  txHash: {
     type: Sequelize.STRING,
     allowNull: false
   },
   number: {
-    type: Sequelize.STRING,
-    allowNull: false
-  },
-  nonce: {
-    type: Sequelize.STRING,
-    allowNull: false
-  },
-  from: {
     type: Sequelize.STRING,
     allowNull: false
   },
@@ -25,20 +25,16 @@ module.exports = ['transaction', {
     type: Sequelize.STRING,
     allowNull: false
   },
-  data: {
+  sponsor: {
     type: Sequelize.STRING,
     allowNull: false
   }
 }, {
-  indexes: [{
-    unique: true,
-    fields: ['hash']
-  }, {
-    fields: ['from']
-  }, {
-    fields: ['to']
-  }],
-  scopes: {
-    
-  }
-}];
+    indexes: [{
+      unique: true,
+      fields: ['txHash', 'number', 'sponsor']
+    }],
+    scopes: {
+
+    }
+  }];

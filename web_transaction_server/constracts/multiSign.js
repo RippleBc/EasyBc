@@ -38,10 +38,10 @@ app.get("/createMultiSignConstract", (req, res) => {
         });
     }
 
-    if (!req.query.expireInverval) {
+    if (!req.query.expireInterval) {
         return res.send({
             code: PARAM_ERR,
-            msg: "param error, need expireInverval"
+            msg: "param error, need expireInterval"
         });
     }
 
@@ -84,7 +84,7 @@ app.get("/createMultiSignConstract", (req, res) => {
     const data = rlp.encode([
         toBuffer(COMMAND_CREATE), 
         Buffer.from(multiSignConstractId, "hex"), 
-        toBuffer(parseInt(req.query.expireInverval)), 
+        toBuffer(parseInt(req.query.expireInterval)), 
         toBuffer(parseInt(req.query.threshold)),
         authorityAddressesBuffer]).toString("hex");
 
@@ -148,7 +148,7 @@ app.get("/getMultiSignConstract", (req, res) => {
                 id: `0x${multiSignConstract.id.toString("hex")}`,
                 state: bufferToInt(multiSignConstract.state),
                 timestamp: bufferToInt(multiSignConstract.timestamp),
-                expireInverval: bufferToInt(multiSignConstract.expireInverval),
+                expireInterval: bufferToInt(multiSignConstract.expireInterval),
                 to: `0x${multiSignConstract.to.toString("hex")}`,
                 value: `0x${multiSignConstract.value.toString("hex")}`,
                 threshold: bufferToInt(multiSignConstract.threshold),

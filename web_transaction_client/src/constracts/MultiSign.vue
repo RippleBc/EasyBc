@@ -31,7 +31,7 @@
       </div>
       <div style="display:flex;width:100%;margin-bottom:10px;">
         <span>超时时长</span>
-        <strong style="margin-left:10px;">{{searchConstractDetail.expireInverval}}</strong>
+        <strong style="margin-left:10px;">{{searchConstractDetail.expireInterval}}</strong>
       </div>
       <div style="display:flex;width:100%;margin-bottom:10px;">
         <span>接受人</span>
@@ -75,7 +75,7 @@
           <el-input v-model="privateKey"></el-input>
         </el-form-item>
         <el-form-item label="超时时长">
-          <el-input v-model="createConstractDetail.expireInverval"></el-input>
+          <el-input v-model="createConstractDetail.expireInterval"></el-input>
         </el-form-item>
         <el-form-item label="阀值">
           <el-input v-model="createConstractDetail.threshold"></el-input>
@@ -177,7 +177,7 @@ export default {
       agreeVisible: false,
       rejectVisible: false,
       createConstractDetail: {
-        expireInverval: 360000,
+        expireInterval: 360000,
         threshold: "",
         authorityAddresses: []
       },
@@ -185,7 +185,7 @@ export default {
         balance: "",
         state: "",
         timestamp: "",
-        expireInverval: "",
+        expireInterval: "",
         to: "",
         value: "",
         threshold: "",
@@ -277,7 +277,7 @@ export default {
     send: function() {
       const now = Date.now();
 
-      if(now < this.searchConstractDetail.timestamp + this.searchConstractDetail.expireInverval)
+      if(now < this.searchConstractDetail.timestamp + this.searchConstractDetail.expireInterval)
       {
         return this.$notify.error({
           title: 'sendMultiSignConstract',
@@ -319,7 +319,7 @@ export default {
     agree: function() {
       const now = Date.now();
 
-      if(now > this.searchConstractDetail.timestamp + this.searchConstractDetail.expireInverval)
+      if(now > this.searchConstractDetail.timestamp + this.searchConstractDetail.expireInterval)
       {
         return this.$notify.error({
           title: 'agreeMultiSignConstract',
@@ -359,7 +359,7 @@ export default {
     reject: function() {
       const now = Date.now();
 
-      if(now > this.searchConstractDetail.timestamp + this.searchConstractDetail.expireInverval)
+      if(now > this.searchConstractDetail.timestamp + this.searchConstractDetail.expireInterval)
       {
         return this.$notify.error({
           title: 'rejectMultiSignConstract',

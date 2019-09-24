@@ -14,7 +14,7 @@ const utils = require("../depends/utils");
 const Mysql = require("./mysql");
 
 process[Symbol.for("mysql")] = new Mysql();
-process[Symbol.for("mongo")] = require("../depends/mpt_db_wrapper");
+process[Symbol.for("mongo")] = require("../depends/mongo_wrapper");
 process[Symbol.for("getStackInfo")] = function(e) {
 
     let err;
@@ -75,7 +75,7 @@ process.on("uncaughtException", function(err) {
     process[Symbol.for("unlManager")] = unlManager;
     
     // init private key
-    const { privateKey } = require("./config.json")
+    const { privateKey } = require("../globalConfig.json").blockChain
     process[Symbol.for("privateKey")] = Buffer.from(privateKey, "hex");
     const publicKey = utils.privateToPublic(process[Symbol.for("privateKey")]);
     process[Symbol.for("address")] = utils.publicToAddress(publicKey).toString("hex");

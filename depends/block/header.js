@@ -38,6 +38,12 @@ class BlockHeader
       allowZero: true,
       allowLess: true,
       default: Buffer.alloc(0)
+    }, {
+      name: "receiptRoot", // 如果存在这个字段那么必须是32个字节
+      length: 32
+    }, {
+      name: "txsHash", // 如果存在这个字段那么必须是32个字节
+      length: 32
     }];
 
     utils.defineProperties(this, fields, data);

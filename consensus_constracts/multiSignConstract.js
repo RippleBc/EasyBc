@@ -1,10 +1,12 @@
 const assert = require("assert");
 const Account = require("../depends/account");
 const utils = require("../depends/utils");
-const StageManager = require("../depends/block_chain/stateManager");
+const StateManager = require("../depends/block_chain/stateManager");
 const Transaction = require("../depends/transaction");
 const { STATE_DESTROYED } = require("./constant");
 const Constract = require("./constract");
+const { MultiSignPayRequestEvent, MultiSignPayEvent } = require("./events/multiSignConstractEvents");
+const ReceiptManager = require("../depends/block_chain/receiptManager");
 
 const rlp = utils.rlp;
 const BN = utils.BN;
@@ -38,7 +40,7 @@ class MultiSignConstract extends Constract {
             default: Buffer.alloc(0)
         }, {
             length: 32,
-            name: "expireInverval",
+            name: "expireInterval",
             allowLess: true,
             default: Buffer.alloc(1)
         }, {
@@ -130,14 +132,16 @@ class MultiSignConstract extends Constract {
 
     /**
      * @param {Buffer} timestamp
-     * @param {StageManager} stateManager
+     * @param {StateManager} stateManager
+     * @param {ReceiptManager} receiptManager
      * @param {Transaction} tx
      * @param {Account} fromAccount
      * @param {Account} toAccount
      */
-    async commandHandler(timestamp, stateManager, tx, fromAccount, toAccount) {
+    async commandHandler({ timestamp, stateManager, receiptManager, tx, fromAccount, toAccount}) {
         assert(Buffer.isBuffer(timestamp), `MultiSignConstract run, timestamp should be an Buffer, now is ${typeof timestamp}`);
-        assert(stateManager instanceof StageManager, `MultiSignConstract run, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
+        assert(stateManager instanceof StateManager, `MultiSignConstract run, stateManager should be an instance of StateManager, now is ${typeof stateManager}`);
+        assert(receiptManager instanceof ReceiptManager, `MultiSignConstract run, receiptManager should be an instance of StateManager, now is ${typeof receiptManager}`);
         assert(tx instanceof Transaction, `MultiSignConstract run, tx should be an instance of Transaction, now is ${typeof tx}`);
         assert(fromAccount instanceof Account, `MultiSignConstract run, fromAccount should be an instance of Account, now is ${typeof fromAccount}`);
         assert(toAccount instanceof Account, `MultiSignConstract run, toAccount should be an instance of Account, now is ${typeof toAccount}`);
@@ -158,7 +162,7 @@ class MultiSignConstract extends Constract {
                     }
 
                     // check send state
-                    if(constractTimestampBn.add(new BN(this.expireInverval)).gt(timestampNowBn))
+                    if(constractTimestampBn.add(new BN(this.expireInterval)).gt(timestampNowBn))
                     {
                         throw new Error(`MultiSignConstract commandHandler send, constract's send request has not expired`)
                     }
@@ -175,8 +179,11 @@ class MultiSignConstract extends Constract {
                     this.timestamp = timestamp;
 
                     //
-                    this.agreeAddresses = this.encodeArray([tx.from]);
+                    this._agreeAddressesArray = [];
+                    this._rejectAddressesArray = [];
                     this.rejectAddresses = Buffer.alloc(0);
+
+                    await this.agree(stateManager, receiptManager, tx, toAccount, timestamp);
                 }
                 break;
 
@@ -194,11 +201,11 @@ class MultiSignConstract extends Constract {
                     {
                         throw new Error(`MultiSignConstract commandHandler agree, constract's send request is not exist`)
                     }
-                    if (constractTimestampBn.add(new BN(this.expireInverval)).lt(timestampNowBn)) {
+                    if (constractTimestampBn.add(new BN(this.expireInterval)).lt(timestampNowBn)) {
                         throw new Error(`MultiSignConstract commandHandler agree, constract's send request has expired`)
                     }
 
-                    await this.agree(stateManager, tx.from, toAccount, commands[1]);
+                    await this.agree(stateManager, receiptManager, tx, toAccount, commands[1]);
                 }
                 break;
 
@@ -215,11 +222,11 @@ class MultiSignConstract extends Constract {
                     if (this.to.length <= 0 || this.value.length <= 0) {
                         throw new Error(`MultiSignConstract commandHandler reject, constract's send request is not exist`)
                     }
-                    if (constractTimestampBn.add(new BN(this.expireInverval)).lt(timestampNowBn)) {
+                    if (constractTimestampBn.add(new BN(this.expireInterval)).lt(timestampNowBn)) {
                         throw new Error(`MultiSignConstract commandHandler reject, constract's send request has expired`)
                     }
 
-                    this.reject(tx.from, commands[1]);
+                    await this.reject(receiptManager, tx, commands[1]);
                 }
                 break;
             default:
@@ -230,31 +237,31 @@ class MultiSignConstract extends Constract {
     }
 
     /**
-     * @param {Buffer} beginTime
-     * @param {Buffer} endTime
-     * @param {Buffer} receiveAddress
-     * @param {Buffer} target
-     * @param {Buffer} limit
+     * @param {Buffer} expireInterval
+     * @param {Buffer} threshold
+     * @param {Buffer} authorityAddresses
      */
-    create(expireInverval, threshold, authorityAddresses) {
-        assert(Buffer.isBuffer(expireInverval), `MultiSignConstract create, expireInverval should be an Buffer, now is ${typeof expireInverval}`);
+    async create(expireInterval, threshold, authorityAddresses) {
+        assert(Buffer.isBuffer(expireInterval), `MultiSignConstract create, expireInterval should be an Buffer, now is ${typeof expireInterval}`);
         assert(Buffer.isBuffer(threshold), `MultiSignConstract create, threshold should be an Buffer, now is ${typeof threshold}`);
         assert(Buffer.isBuffer(authorityAddresses), `MultiSignConstract create, authorityAddresses should be an Buffer, now is ${typeof authorityAddresses}`);
 
-        this.expireInverval = expireInverval;
+        this.expireInterval = expireInterval;
         this.threshold = threshold;
         this.authorityAddresses = authorityAddresses;
     }
 
     /**
      * @param {stateManager} stateManager
-     * @param {Buffer} from
-     * @param {Account} toAccount
+     * @param {ReceiptManager} receiptManager
+     * @param {Transaction} tx
+     * @param {Account} constractAccount
      * @param {Buffer} timestamp
      */
-    async agree(stateManager, from, constractAccount, timestamp) {
-        assert(stateManager instanceof StageManager, `MultiSignConstract agree, stateManager should be an instance of StageManager, now is ${typeof stateManager}`);
-        assert(Buffer.isBuffer(from), `MultiSignConstract agree, from should be an Buffer, now is ${typeof from}`);
+    async agree(stateManager, receiptManager, tx, constractAccount, timestamp) {
+        assert(stateManager instanceof StateManager, `MultiSignConstract agree, stateManager should be an instance of StateManager, now is ${typeof stateManager}`);
+        assert(receiptManager instanceof ReceiptManager, `MultiSignConstract agree, receiptManager should be an instance of ReceiptManager, now is ${typeof receiptManager}`);
+        assert(tx instanceof Transaction, `MultiSignConstract agree, tx should be an instance of Transaction, now is ${typeof tx}`);
         assert(constractAccount instanceof Account, `MultiSignConstract agree, constractAccount should be an instance of Account, now is ${typeof constractAccount}`);
         assert(Buffer.isBuffer(timestamp), `MultiSignConstract agree, timestamp should be an Buffer, now is ${typeof timestamp}`);
 
@@ -264,15 +271,28 @@ class MultiSignConstract extends Constract {
         }
 
         // check repeat
-        if (this.agreeAddressesArray.find(el => el.toString("hex") === from.toString("hex"))) {
-            throw new Error(`MultiSignConstract agree, repeat agree, address ${from.toString("hex")}`);
+        if (this.agreeAddressesArray.find(el => el.toString("hex") === tx.from.toString("hex"))) {
+            throw new Error(`MultiSignConstract agree, repeat agree, address ${tx.from.toString("hex")}`);
         }
-        if (this.rejectAddressesArray.find(el => el.toString("hex") === from.toString("hex"))) {
-            throw new Error(`MultiSignConstract agree, repeat reject, address ${from.toString("hex")}`);
+        if (this.rejectAddressesArray.find(el => el.toString("hex") === tx.from.toString("hex"))) {
+            throw new Error(`MultiSignConstract agree, repeat reject, address ${tx.from.toString("hex")}`);
         }
 
-        this.agreeAddressesArray.push(from);
+        this.agreeAddressesArray.push(tx.from);
         
+        // save receipt
+        const multiSignPayRequestEvent = new MultiSignPayRequestEvent({
+            id: this.id,
+            address: tx.to,
+            txHash: tx.hash(),
+            action: "agree",
+            timestamp: this.timestamp,
+            to: this.to,
+            value: this.value,
+            sponsor: tx.from
+        });
+        await receiptManager.putReceipt(multiSignPayRequestEvent.hash(), multiSignPayRequestEvent.serialize())
+
         if (this.agreeAddressesArray.length / this.authorityAddressesArray.length >= bufferToInt(this.threshold) / 100)
         {
             // get to account
@@ -286,6 +306,17 @@ class MultiSignConstract extends Constract {
             
             await stateManager.putAccount(this.to, toAccount.serialize());
 
+            // save receipt
+            const multiSignPayEvent = new MultiSignPayEvent({
+                id: this.id,
+                address: tx.to,
+                txHash: tx.hash(),
+                timestamp: this.timestamp,
+                to: this.to,
+                value: this.value
+            });
+            await receiptManager.putReceipt(multiSignPayEvent.hash(), multiSignPayEvent.serialize())
+
             this.reset();
         }
         else
@@ -295,11 +326,13 @@ class MultiSignConstract extends Constract {
     }
 
     /**
-     * @param {Buffer} from
+     * @param {ReceiptManager} receiptManager
+     * @param {Transaction} tx
      * @param {Buffer} timestamp
      */
-    reject(from, timestamp) {
-        assert(Buffer.isBuffer(from), `MultiSignConstract reject, from should be an Buffer, now is ${typeof from}`);
+    async reject(receiptManager, tx, timestamp) {
+        assert(receiptManager instanceof ReceiptManager, `MultiSignConstract reject, receiptManager should be an instance of ReceiptManager, now is ${typeof receiptManager}`);
+        assert(tx instanceof Transaction, `MultiSignConstract reject, tx should be an instance of Transaction, now is ${typeof tx}`);
         assert(Buffer.isBuffer(timestamp), `MultiSignConstract reject, timestamp should be an Buffer, now is ${typeof timestamp}`);
 
         // check timetamp
@@ -309,15 +342,28 @@ class MultiSignConstract extends Constract {
         }
 
         // check repeat
-        if (this.agreeAddressesArray.find(el => el.toString("hex") === from.toString("hex"))) {
-            throw new Error(`MultiSignConstract reject, repeat agree, address ${from.toString("hex")}`);
+        if (this.agreeAddressesArray.find(el => el.toString("hex") === tx.from.toString("hex"))) {
+            throw new Error(`MultiSignConstract reject, repeat agree, address ${tx.from.toString("hex")}`);
         }
-        if (this.rejectAddressesArray.find(el => el.toString("hex") === from.toString("hex"))) {
-            throw new Error(`MultiSignConstract reject, repeat reject, address ${from.toString("hex")}`);
+        if (this.rejectAddressesArray.find(el => el.toString("hex") === tx.from.toString("hex"))) {
+            throw new Error(`MultiSignConstract reject, repeat reject, address ${tx.from.toString("hex")}`);
         }
 
-        this.rejectAddressesArray.push(from);
+        this.rejectAddressesArray.push(tx.from);
 
+        // save reject receipt
+        const multiSignPayRequestEvent = new MultiSignPayRequestEvent({
+            id: this.id,
+            address: tx.to,
+            txHash: tx.hash(),
+            action: "reject",
+            timestamp: this.timestamp,
+            to: this.to,
+            value: this.value,
+            sponsor: tx.from
+        });
+        await receiptManager.putReceipt(multiSignPayRequestEvent.hash(), multiSignPayRequestEvent.serialize())
+        
         if (this.rejectAddressesArray.length / this.authorityAddressesArray.length > (1 - bufferToInt(this.threshold) / 100)) {
             this.reset();
         }

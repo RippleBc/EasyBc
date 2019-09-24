@@ -1,8 +1,8 @@
 const { QUERY_MAX_LIMIT, SUCCESS, PARAM_ERR, OTH_ERR } = require("../../constant");
+const { getLogs, getTimeConsume, getAbnormalNodes } = require("./db");
 
 const app =  process[Symbol.for('app')];
-const mysql = process[Symbol.for("mysql")];
-const printErrorStack = process[Symbol.for("printErrorStack")]
+const printErrorStack = process[Symbol.for("printErrorStack")];
 
 app.post('/logs', (req, res) => {
 	if(undefined === req.body.offset)
@@ -29,7 +29,7 @@ app.post('/logs', (req, res) => {
       })
   }
 
-	mysql.getLogs({
+	getLogs({
 		offset: req.body.offset,
 		limit: req.body.limit,
 		type: req.body.type, 
@@ -79,7 +79,7 @@ app.post("/timeConsume", (req, res) => {
       })
   }
 
-	mysql.getTimeConsume({ 
+	getTimeConsume({ 
 		offset: req.body.offset,
 		limit: req.body.limit,
 		type: req.body.type,
@@ -126,7 +126,7 @@ app.post("/abnormalNodes", (req, res) => {
       })
   }
 
-	mysql.getAbnormalNodes({ 
+	getAbnormalNodes({ 
 		offset: req.body.offset,
 		limit: req.body.limit,
 		type: req.body.type,
