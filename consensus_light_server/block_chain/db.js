@@ -59,7 +59,7 @@ const getTransactions = async function({ offset, limit, hash, from, to, beginTim
 
   const now = new Date()
   const where = {
-    createdAt: {
+    timestamp: {
       [Op.gt]: beginTime !== undefined ? new Date(beginTime) : new Date(now - 24 * 60 * 60 * 1000),
       [Op.lt]: endTime !== undefined ? new Date(endTime) : now,
     }

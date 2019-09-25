@@ -57,7 +57,7 @@
 	        width="180">
 	      </el-table-column>
 	      <el-table-column
-	        prop="createdAt"
+	        prop="timestamp"
 	        label="日期">
 	      </el-table-column>
 	      <el-table-column
@@ -80,11 +80,6 @@
 	        prop="value"
 	        label="金额"
 	        width="50">
-	      </el-table-column>
-	      <el-table-column
-	        prop="createdAt"
-	        label="创建时间"
-	        width="180">
 	      </el-table-column>
 	    </el-table>
     </div>

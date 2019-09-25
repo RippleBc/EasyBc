@@ -4,7 +4,7 @@ const RippleBlock = require("../data/rippleBlock");
 const utils = require("../../../depends/utils");
 const Stage = require("./stage");
 const assert = require("assert");
-const { RIPPLE_STAGE_COUNTER, RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS, RIPPLE_STAGE_PERISH, RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES, RIPPLE_STAGE_CANDIDATE_AGREEMENT, STAGE_STATE_EMPTY, BLOCK_AGREEMENT_TIMESTAMP_JUMP_LENGTH, BLOCK_AGREEMENT_TIMESTAMP_MAX_OFFSET, TRANSACTIONS_CONSENSUS_THRESHOULD, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_BLOCK_AGREEMENT, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_REQUEST, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE } = require("../../constant");
+const { RIPPLE_STAGE_COUNTER, RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS, RIPPLE_STAGE_PERISH, RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES, RIPPLE_STAGE_CANDIDATE_AGREEMENT, STAGE_STATE_EMPTY, BLOCK_AGREEMENT_TIMESTAMP_JUMP_LENGTH, TRANSACTIONS_CONSENSUS_THRESHOULD, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_BLOCK_AGREEMENT, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_REQUEST, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE } = require("../../constant");
 const _ = require("underscore");
 
 const Buffer = utils.Buffer;
@@ -206,11 +206,6 @@ class BlockAgreement extends Stage
 				timestamp = bufferToInt(transaction.timestamp)
 			}
 		}
-		const now = Date.now();
-		while(now - timestamp > BLOCK_AGREEMENT_TIMESTAMP_MAX_OFFSET)
-		{
-			timestamp += BLOCK_AGREEMENT_TIMESTAMP_MAX_OFFSET
-		}
 
 		// init oth property
 		(async () => {
@@ -230,7 +225,7 @@ class BlockAgreement extends Stage
 			// init parentHash
 			rippleBlock.parentHash = parentHash;
 
-			// init itemstamp, drag timestamp to make sure it is bigger than parent block's timestamp
+			// init timestamp, drag timestamp to make sure it is bigger than parent block's timestamp
 			const parentBlock = await this.ripple.processor.blockChain.getBlockByHash(parentHash);
 			while(timestamp <= bufferToInt(parentBlock.header.timestamp))
 			{
