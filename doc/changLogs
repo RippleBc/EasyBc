@@ -1,0 +1,23 @@
+2019年9月24日
+
+功能：
+1：增加对合约事件的支持。
+2：增加跨链交易。
+3：对区块的header结构进行了调整，末尾新增receiptRoot、txsHash字段。
+4：调整了Mysql modle的位置，现在所有的model文件统一放在一个文件夹
+5：新增了能贝发行量统计接口
+6：新增了能贝分布情况统计接口
+
+更新流程：
+1：首先关闭所有的服务
+  pm2 stop all
+
+2：清空Mysql中的consensus数据库 
+  drop database consensus
+  create database consensus
+
+3：启动服务器
+  pm2 start all
+
+4：检查服务是否正常
+  pm2 log
