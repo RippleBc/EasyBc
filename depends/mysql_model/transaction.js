@@ -13,6 +13,10 @@ module.exports = ['transaction', {
     type: Sequelize.STRING,
     allowNull: false
   },
+  timestamp: {
+    type: Sequelize.DATE,
+    allowNull: false
+  },
   from: {
     type: Sequelize.STRING,
     allowNull: false

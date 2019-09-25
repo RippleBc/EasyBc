@@ -3,6 +3,7 @@ const utils = require("../../depends/utils");
 const Transaction = require("../../depends/transaction");
 
 const Buffer = utils.Buffer;
+const bufferToInt = utils.bufferToInt;
 
 const mysql = process[Symbol.for("mysql")];
 
@@ -22,6 +23,7 @@ const saveTransaction = async function(number, transaction)
     await mysql.Transaction.create({
       hash: transaction.hash().toString('hex'),
       number: number.toString('hex'),
+      timestamp: new Date(bufferToInt(transaction.timestamp)),
       nonce: transaction.nonce.toString('hex'),
       from: transaction.from.toString('hex'),
       to: transaction.to.toString('hex'),

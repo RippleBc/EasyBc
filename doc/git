@@ -1,0 +1,7 @@
+使用http请求拉取代码时可能会出现RPC failed; curl 18 transfer closed with outstanding read data remaining的错误，读取的数据超出http的postBuffer限制导致的
+
+# 增加post缓冲区的大小
+git config --global http.postBuffer 524288000
+
+# 只拉取最近一次commit的内容
+git pull --depth=1
