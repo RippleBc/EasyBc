@@ -118,22 +118,6 @@ class Mysql
   }
 
   /**
-   * @param {Number} stage
-   * @param {Number} timeConsume
-   */
-  async saveStageSynchronizeTimeConsume(stage, timeConsume)
-  {
-    assert(typeof stage === 'number', `Mysql saveStageSynchronizeTimeConsume, stage should be a Number, now is ${typeof stage}`);
-    assert(typeof timeConsume === 'number', `Mysql saveStageSynchronizeTimeConsume, timeConsume should be a Number, now is ${typeof timeConsume}`);
-
-    await this.TimeConsume.create({ 
-      stage: stage, 
-      type: 2,
-      data: timeConsume 
-    });
-  }
-
-  /**
    * @param {String} address
    * @param {String} reason
    */

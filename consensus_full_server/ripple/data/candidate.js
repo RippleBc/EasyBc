@@ -11,21 +11,27 @@ class Candidate extends Base
 {
 	constructor(data)
 	{
-		super();
+		super({ name: 'candidate' });
 
 		data = data || {};
 
     const fields = [{
-      name: "transactions",
-      allowZero: true,
-      default: Buffer.alloc(0)
-    }, {
-      name: "timestamp",
+      name: "sequence",
       length: 32,
       allowZero: true,
       allowLess: true,
       default: Buffer.alloc(0)
-    },{
+    }, {
+      name: "view",
+      length: 32,
+      allowZero: true,
+      allowLess: true,
+      default: Buffer.alloc(0)
+    }, {
+      name: "transactions",
+      allowZero: true,
+      default: Buffer.alloc(0)
+    }, {
       name: "v",
       length: 1,
       allowZero: true,
@@ -55,21 +61,8 @@ class Candidate extends Base
    */
   validate()
   {
-    const errors = [];
-
-    // verify signature
-    if(!this.verifySignature())
+    if(!super.validate())
     {
-      logger.error("Candidate validate, invalid signature");
-
-      return false;
-    }
-
-    // check address
-    if(!this.checkAddress(this.from))
-    {
-      logger.error("Candidate validate, invalid address");
-
       return false;
     }
 
@@ -80,7 +73,7 @@ class Candidate extends Base
       for(let i = 0; i < transactionRawsArray.length; i++)
       {
         const transaction = new Transaction(transactionRawsArray[i]);
-        const { state, msg } = transaction.validate()
+        const { state, msg } = transaction.validate();
         if(!state)
         {
           logger.error(`Candidate validate, invalid transaction, ${msg}`);

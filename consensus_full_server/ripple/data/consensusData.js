@@ -1,37 +1,31 @@
 const Base = require("./base");
 const utils = require("../../../depends/utils");
 
-const rlp = utils.rlp;
 const Buffer = utils.Buffer;
 
-class RippleBlock extends Base
+class Prepare extends Base
 {
 	constructor(data)
 	{
-		super();
+		super({ name: 'prepare' });
 
 		data = data || {};
 
     const fields = [{
-      name: "parentHash",
+      name: "sequence",
       length: 32,
+      allowZero: true,
+      allowLess: true,
+      default: Buffer.alloc(0)
+    }, {
+      name: "view",
+      length: 32,
+      allowZero: true,
+      allowLess: true,
+      default: Buffer.alloc(0)
+    }, {
+      name: "digest",
       default: Buffer.alloc(32)
-    }, {
-      name: "number",
-      length: 32,
-      allowZero: true,
-      allowLess: true,
-      default: Buffer.alloc(0)
-    }, {
-      name: "transactions",
-      allowZero: true,
-      default: Buffer.alloc(0)
-    }, {
-      name: "timestamp",
-      length: 32,
-      allowZero: true,
-      allowLess: true,
-      default: Buffer.alloc(0)
     }, {
       name: "v",
       length: 1,
@@ -56,4 +50,4 @@ class RippleBlock extends Base
 	}
 }
 
-module.exports = RippleBlock;
+module.exports = Prepare;

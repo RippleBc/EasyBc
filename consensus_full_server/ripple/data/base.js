@@ -9,8 +9,10 @@ const unlManager = process[Symbol.for("unlManager")];
 
 class Base
 {
-	constructor()
+	constructor({ name })
 	{	
+    this.name = name;
+
     Object.defineProperty(this, "from", {
       enumerable: true,
       configurable: true,
@@ -33,7 +35,7 @@ class Base
    */
   hash(includeSignature = true)
   {
-    assert(typeof includeSignature === "boolean", `Base hash, includeSignature should be an Boolean, now is ${typeof includeSignature}`);
+    assert(typeof includeSignature === "boolean", `${this.name} Base hash, includeSignature should be an Boolean, now is ${typeof includeSignature}`);
 
     let items;
     if(includeSignature)
@@ -91,7 +93,7 @@ class Base
    */
   sign(privateKey)
   {
-    assert(Buffer.isBuffer(privateKey), `Base sign, privateKey should be an Buffer, now is ${typeof privateKey}`);
+    assert(Buffer.isBuffer(privateKey), `${this.name} Base sign, privateKey should be an Buffer, now is ${typeof privateKey}`);
 
     const msgHash = this.hash(false);
     const sig = utils.ecsign(msgHash, privateKey);
@@ -105,7 +107,7 @@ class Base
    */
   checkAddress(address)
   {
-    assert(Buffer.isBuffer(address), `Base checkAddress, address should be an Buffer, now is ${typeof address}`);
+    assert(Buffer.isBuffer(address), `${this.name} Base checkAddress, address should be an Buffer, now is ${typeof address}`);
 
     const fullUnl = unlManager.fullUnl;
 
@@ -135,7 +137,7 @@ class Base
     // verify
     if(!this.verifySignature())
     {
-      logger.error("Base validate, invalid signature");
+      logger.error(`${this.name} Base validate, invalid signature`);
 
       return false;
     }
@@ -143,7 +145,7 @@ class Base
     // check node address
     if(!this.checkAddress(this.from))
     {
-      logger.error(`Base validate, invalid address, address: ${this.from.toString("hex")}`);
+      logger.error(`${this.name} Base validate, invalid address, address: ${this.from.toString("hex")}`);
 
       return false;
     }

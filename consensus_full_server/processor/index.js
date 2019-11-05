@@ -29,7 +29,11 @@ class Processor
 			blockDb: mongo.generateBlockDb()
 		});
 
+		// 
 		this.consensus = new Consensus(self);
+
+		// 
+		this.msgBuffer = [];
 	}
 
 	run()
@@ -76,7 +80,13 @@ class Processor
 		const cmd = bufferToInt(message.cmd);
 		const data = message.data;
 
-		this.consensus.handleMessage(address, cmd, data);
+		//
+		this.msgBuffer.push({ address, cmd, data });
+	}
+
+	getMessage()
+	{
+		return this.msgBuffer.shift();
 	}
 
 	/**

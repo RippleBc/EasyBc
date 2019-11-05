@@ -1,10 +1,10 @@
 const Block = require("../../../depends/block");
 const Transaction = require("../../../depends/transaction");
-const RippleBlock = require("../data/rippleBlock");
+const Prepare = require("../data/prepare");
 const utils = require("../../../depends/utils");
 const Stage = require("./stage");
 const assert = require("assert");
-const { RIPPLE_STAGE_COUNTER, RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS, RIPPLE_STAGE_PERISH, RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES, RIPPLE_STAGE_CANDIDATE_AGREEMENT, STAGE_STATE_EMPTY, BLOCK_AGREEMENT_TIMESTAMP_JUMP_LENGTH, TRANSACTIONS_CONSENSUS_THRESHOULD, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, PROTOCOL_CMD_BLOCK_AGREEMENT, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_REQUEST, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE } = require("../../constant");
+const {STAGE_STATE_EMPTY, RIPPLE_STAGE_BLOCK_AGREEMENT, PROTOCOL_CMD_BLOCK_AGREEMENT, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_REQUEST, PROTOCOL_CMD_BLOCK_AGREEMENT_FINISH_STATE_RESPONSE } = require("../../constant");
 const _ = require("underscore");
 
 const Buffer = utils.Buffer;
@@ -16,6 +16,8 @@ const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
 const privateKey = process[Symbol.for("privateKey")];
 const unlManager = process[Symbol.for("unlManager")];
+
+const BLOCK_AGREEMENT_TIMESTAMP_JUMP_LENGTH = 100;
 
 class BlockAgreement extends Stage
 {
@@ -33,13 +35,6 @@ class BlockAgreement extends Stage
 
 	handler({ ifSuccess = true, ifCheckState = true } = { ifSuccess: true, ifCheckState: true })
 	{
-		if(ifCheckState && !this.checkIfDataExchangeIsFinish())
-		{
-			logger.fatal(`BlockAgreement handler, block agreement data exchange should finish, current state is ${this.state}, ${process[Symbol.for("getStackInfo")]()}`);
-			
-			process.exit(1)
-		}
-
 		if(ifSuccess)
 		{
 			logger.info("BlockAgreement handler success")
@@ -80,16 +75,14 @@ class BlockAgreement extends Stage
 
 		const fullUnl = unlManager.fullUnl;
 
-		if(sortedBlocks[0] && sortedBlocks[0][1].count / (fullUnl.length + 1) >= TRANSACTIONS_CONSENSUS_THRESHOULD)
+		if(sortedBlocks[0] && sortedBlocks[0][1].count / (fullUnl.length + 1) >= )
 		{
 			logger.info("BlockAgreement handler, block agreement success, begin to process block");
-
-			this.ripple.stage = RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK;
 
 			this.reset();
 			
 			// init block
-			const consensusRippleBlock = new RippleBlock(sortedBlocks[0][1].data);
+			const consensusRippleBlock = new Prepare(sortedBlocks[0][1].data);
 			const consensusBlock = new Block({
 				header: {
 					number: consensusRippleBlock.number,
@@ -102,49 +95,17 @@ class BlockAgreement extends Stage
 			// begin process block
 			(async () => {
 
-				// notice !!!!!! processor can only process one block at one time, or it will throw an exception.
 				await this.ripple.processor.processBlock({
 					block: consensusBlock
 				});
 
 				logger.info("BlockAgreement handler, block agreement success, process block is over");
 
-				// check if stage is invalid
-				if(this.ripple.stage === RIPPLE_STAGE_PERISH 
-					|| this.ripple.stage === RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES
-					|| this.ripple.stage === RIPPLE_STAGE_COUNTER
-					|| this.ripple.stage === RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS)
-					{
-						return this.ripple.amalgamateMessagesCacheBlockAgreement = [];
-					}
-
-				// fetch new transactions
-				const {
-					transactions: newTransactions,
-					deleteTransactions
-				} = await this.ripple.getNewTransactions();
-
-				// check if stage is invalid
-				if(this.ripple.stage === RIPPLE_STAGE_PERISH 
-					|| this.ripple.stage === RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES
-					|| this.ripple.stage === RIPPLE_STAGE_COUNTER
-					|| this.ripple.stage === RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS)
-					{
-						return this.ripple.amalgamateMessagesCacheBlockAgreement = [];
-					}
-
+				// begin new round
 				this.ripple.run({
 					fetchingNewTransaction: true,
 					transactions: newTransactions
 				});
-
-				for(let i = 0; i < this.ripple.amalgamateMessagesCacheBlockAgreement.length; i++)
-				{
-					let {address, cmd, data} = this.ripple.amalgamateMessagesCacheBlockAgreement[i];
-					this.ripple.amalgamate.handleMessage(address, cmd, data);
-				}
-
-				this.ripple.amalgamateMessagesCacheBlockAgreement = [];
 				
 				// delete transactions from db
 				await deleteTransactions()		
@@ -178,19 +139,11 @@ class BlockAgreement extends Stage
 			process.exit(1)
 		}
 
-		// check stage
-		if(this.ripple.stage !== RIPPLE_STAGE_CANDIDATE_AGREEMENT)
-		{
-			logger.fatal(`BlockAgreement run, ripple stage should be RIPPLE_STAGE_CANDIDATE_AGREEMENT, now is ${this.ripple.stage}, ${process[Symbol.for("getStackInfo")]()}`);
-			
-			process.exit(1)
-		}
-
  		this.ripple.stage = RIPPLE_STAGE_BLOCK_AGREEMENT;
  		this.start();
  		
- 		// init RippleBlock
-		const rippleBlock = new RippleBlock({
+ 		// init Prepare
+			const rippleBlock = new Prepare({
 			transactions: transactions
 		});
 
@@ -285,7 +238,7 @@ class BlockAgreement extends Stage
 		assert(Buffer.isBuffer(address), `BlockAgreement handleBlockAgreement, address should be an Buffer, now is ${typeof address}`);
 		assert(Buffer.isBuffer(data), `BlockAgreement handleBlockAgreement, data should be an Buffer, now is ${typeof data}`);
 
-		const rippleBlock = new RippleBlock(data);
+		const rippleBlock = new Prepare(data);
 
 		this.validateAndProcessExchangeData(rippleBlock, this.rippleBlocks, address.toString("hex"));
 	}

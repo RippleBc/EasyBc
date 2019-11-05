@@ -5,7 +5,6 @@ const utils = require("../../depends/utils");
 const rp = require("request-promise");
 const { SUCCESS } = require("../../constant");
 const { genesis } = require("../../globalConfig.json").blockChain;
-const { TRANSACTIONS_CONSENSUS_THRESHOULD } = require('../constant');
 const _ = require("underscore");
 
 const mongo = process[Symbol.for("mongo")];
@@ -180,7 +179,7 @@ class Update
 			if(sortedBlocks[0])
 			{
 				const [majorityBlock, count] = sortedBlocks[0];
-				if(fullUnl.length < FULL_BLOCK_CHAIN_UNL_SCALE_LIMIT || count / fullUnl.length >= TRANSACTIONS_CONSENSUS_THRESHOULD)
+				if(fullUnl.length < FULL_BLOCK_CHAIN_UNL_SCALE_LIMIT || count / fullUnl.length >= 1 / 2)
 				{
 					const result = await this.blockChain.runBlockChain({
 						block: new Block(Buffer.from(majorityBlock, 'hex'))

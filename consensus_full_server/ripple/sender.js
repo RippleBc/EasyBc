@@ -1,8 +1,5 @@
 const utils = require("../../depends/utils");
 const assert = require("assert");
-const { TIMEOUT_REASON_OFFLINE, TIMEOUT_REASON_DEFER } = require("../constant")
-
-const stripHexPrefix = utils.stripHexPrefix;
 
 const logger = process[Symbol.for("loggerConsensus")];
 const p2p = process[Symbol.for("p2p")];
@@ -14,18 +11,15 @@ const SENDER_STATE_FINISH = 3;
 
 class Sender
 {
-	constructor(handler, expiration)
+	constructor({handler, expiration, name})
 	{
 		this.handler = handler;
 		this.expiration = expiration;
-
-		this.consensusBeginTime = 0;
-		this.consensusTimeConsume = 0;
+		this.name = name;
 
 		this.state = SENDER_STATE_IDLE;
 
-		this.finishAddresses = new Set()
-		this.timeoutNodes = [];
+		this.finishAddresses = new Set();
 	}
 
 	/**
@@ -33,7 +27,7 @@ class Sender
 	 */
 	checkIfNodeIsFinished(address)
 	{
-		assert(typeof address === "string", `Sender checkIfNodeIsFinished, address should be a String, now is ${typeof address}`);
+		assert(typeof address === "string", `${name} Sender checkIfNodeIsFinished, address should be a String, now is ${typeof address}`);
 
 		return this.finishAddresses.has(address);
 	}
@@ -43,37 +37,36 @@ class Sender
 	 */
 	recordFinishNode(address)
 	{
-		assert(typeof address === "string", `Sender recordFinishNode, address should be a String, now is ${typeof address}`);
+		assert(typeof address === "string", `${name} Sender recordFinishNode, address should be a String, now is ${typeof address}`);
 
 		if(this.state !== SENDER_STATE_PROCESSING)
 		{
-			return;
+			logger.fatal(`${name} Sender recordFinishNode, state should be ${SENDER_STATE_PROCESSING}, now is ${this.state}`);
+
+			process.exit(1);
 		}
+
+		// check if repeated recieve
 		if(this.finishAddresses.has(address))
 		{
-			logger.error(`Sender recordFinishNode, address ${address} send the same consensus request`);
-			return;
+			logger.error(`${name} Sender recordFinishNode, repeated receive, address ${address}`);
+			
+			return false;
 		}
+
+		// add address
 		this.finishAddresses.add(address);
 
-		// check if all nodes is active
-		const unl = unlManager.unl;
-		let i;
-		for(i = 0; i < unl.length; i++)
+		// check if arrive address
+		if (this.finishAddresses.size >= this.unlManager.threshould)
 		{
-			if(!this.finishAddresses.has(stripHexPrefix(unl[i].address)))
-			{
-				break;
-			}
-		}
-
-		if(i === unl.length)
-		{
-			this.consensusTimeConsume = Date.now() - this.consensusBeginTime;
 			this.state = SENDER_STATE_FINISH;
 
+			//
 			clearTimeout(this.timeout);
-			this.handler(true);
+
+			//
+			this.handler();
 		}
 	}
 
@@ -81,12 +74,10 @@ class Sender
 	{
 		if(this.state !== SENDER_STATE_IDLE)
 		{
-			logger.fatal(`Sender start, before start please call reset, ${process[Symbol.for("getStackInfo")]()}`)
+			logger.fatal(`${name} Sender start, state should be ${SENDER_STATE_IDLE}, now is ${this.state}, ${process[Symbol.for("getStackInfo")]()}`)
 			
-			process.exit(1)
+			process.exit(1);
 		}
-
-		this.consensusBeginTime = Date.now();
 
 		this.state = SENDER_STATE_PROCESSING;
 
@@ -94,32 +85,11 @@ class Sender
 
 		this.timeout = setTimeout(() => {
 
-			// record timeout nodes
-			for(let i = 0; i < fullUnl.length; i++)
-			{
-				if(!this.finishAddresses.has(fullUnl[i].address))
-				{
-					if(p2p.checkIfConnectionIsOpen(Buffer.from(fullUnl[i].address, "hex")))
-					{
-						this.timeoutNodes.push({
-							address: fullUnl[i].address,
-							reason: TIMEOUT_REASON_DEFER
-						});
-					}
-					else
-					{
-						this.timeoutNodes.push({
-							address: fullUnl[i].address,
-							reason: TIMEOUT_REASON_OFFLINE
-						});
-					}
-				}
-			}
+			// send view-change
+			
 
-			this.consensusTimeConsume = Date.now() - this.consensusBeginTime;
 			this.state = SENDER_STATE_FINISH;
 
-			this.handler(false);
 		}, this.expiration);
 	}
 
@@ -128,9 +98,6 @@ class Sender
 		clearTimeout(this.timeout);
 
 		this.state = SENDER_STATE_IDLE;
-
-		this.consensusBeginTime = 0;
-		this.consensusTimeConsume = 0;
 
 		this.finishAddresses = new Set();
 		this.timeoutNodes = [];

@@ -25,6 +25,11 @@ class UnlManager
         return this._unl.filter(node => node.state === 0);
     }
 
+    get threshould()
+    {
+        parseInt(this.fullUnl.length) * 2 / 3;
+    }
+
     /**
      * @param {Array/String} addresses
      */
