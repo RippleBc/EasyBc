@@ -45,13 +45,13 @@ class Commit extends ConsensusStage {
     // consensus success
     if (this.ripple.consensusCandidateDigest)
     {
-
+      // process block
+      this.ripple.run();
     }
     else
     {
-      // process block
-      
-      this.ripple.run();
+      // begin view-change
+       
     }
   }
 
