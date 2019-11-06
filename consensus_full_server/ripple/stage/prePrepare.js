@@ -125,7 +125,11 @@ class PrePrepare extends LeaderStage {
             this.ripple.candiateDigest.sign(privateKey);
 
             //
-            this.ripple.prepare.run();
+            this.state = STAGE_STATE_FINISH;
+
+            process.nextTick(() => {
+              this.handler();
+            });
           }
 
           let candidate = new Candidate({

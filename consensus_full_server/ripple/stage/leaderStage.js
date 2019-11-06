@@ -17,7 +17,7 @@ class LeaderStage extends Stage {
 
         this.state = STAGE_STATE_FINISH;
 
-        this.handler()
+        this.handler();
       }, this.expiration)
 
       return;

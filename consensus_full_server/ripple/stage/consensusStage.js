@@ -18,7 +18,7 @@ class ConsensusStage extends Stage {
 
         this.state = STAGE_STATE_FINISH;
 
-        // begin view-change
+        this.handler();
 
       }, this.expiration)
 
