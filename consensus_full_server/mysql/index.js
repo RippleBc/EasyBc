@@ -79,7 +79,7 @@ class Mysql
 
     const result = rawTransactions.map(rawTransaction => {
       return Buffer.from(rawTransaction.data, 'hex');
-    })    
+    })
 
     return {
       transactions: result,

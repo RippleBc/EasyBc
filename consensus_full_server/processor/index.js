@@ -40,32 +40,13 @@ class Processor
 	{
 		update.run().then(() => {
 			loggerUpdate.info("update is success");
+
+			this.consensus.run();
 		}).catch(e => {
 			loggerUpdate.fatal(`update throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 
 			process.exit(1)
-		});
-
-		(async () => {
-			// fetch new transactions
-			const { 
-				transactions: newTransactions,
-				deleteTransactions
-			} = await this.consensus.getNewTransactions();
-
-			this.consensus.run({
-				fetchingNewTransaction: true,
-				transactions: newTransactions
-			});
-
-			// delete transactions from db
-			await deleteTransactions();
-		})().catch(e => {
-			loggerConsensus.fatal(`Processor run, getNewTransactions throw exception, ${process[Symbol.for("getStackInfo")](e)}`)
-
-			process.exit(1);
 		})
-		
 	}
 
 	/**

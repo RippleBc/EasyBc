@@ -1,6 +1,6 @@
 const Amalgamate = require("./stage/amalgamate");
 const CandidateAgreement = require("./stage/candidateAgreement");
-const BlockAgreement = require("./stage/blockAgreement");
+const BlockAgreement = require("./stage/prepare");
 const { STAGE_STATE_EMPTY, CHEAT_REASON_INVALID_PROTOCOL_CMD, RIPPLE_STAGE_EMPTY, MAX_PROCESS_TRANSACTIONS_SIZE } = require("../constant");
 const assert = require("assert");
 
@@ -17,27 +17,28 @@ class Ripple
 
 		this.stage = RIPPLE_STAGE_EMPTY;
 		
-		this.amalgamate = new Amalgamate(this);
-		this.candidateAgreement = new CandidateAgreement(this);
-		this.blockAgreement = new BlockAgreement(this);
+		// used for cache transactions
+		this.localTransactions = [];
 
-		// used for cache transactions that is consensusing
-		this.processingTransactions = [];
+		// 
+		this.amalgamatedTransactions = new Set();
+
+		// 
+		this.candidate = undefined;
+
+		//
+		this.candidateDigest = undefined;
+
+		//
+		this.consensusCandidateDigest = undefined;
 	}
 
 	/**
-	 * @param {Array} transactions 
+	 *
 	 */
-	run({fetchingNewTransaction = false, transactions} = {fetchingNewTransaction: false})
-	{
-		if(fetchingNewTransaction)
-		{
-			assert(Array.isArray(transactions), `Ripple run, transactions should be an Array, now is ${typeof transactions}`)
-
-			this.processingTransactions = transactions;
-		}
-		
-		this.amalgamate.run(this.processingTransactions);
+	run()
+	{	
+		this.amalgamate.run();
 	}
 
 	/*
@@ -48,28 +49,6 @@ class Ripple
 	async getNewTransactions()
 	{
 		return await mysql.getRawTransactions(MAX_PROCESS_TRANSACTIONS_SIZE);
-	}
-
-	/**
-	 * @param {Array}
-	 */
-	setProcessingTransactions(transactions)
-	{
-		assert(Array.isArray(transactions), `Ripple setProcessingTransactions, transactions should be an Array, now is ${typeof transactions}`);
-
-		this.processingTransactions = transactions;
-	}
-
-	/**
-	 * @param {String} sponsorNode
-	 * @param {String} perishNode
-	 */
-	async handlePerishNode(sponsorNode, perishNode)
-	{
-		assert(typeof sponsorNode === 'string', `Ripple handlePerishNode, sponsorNode should be an String, now is ${typeof sponsorNode}`);
-		assert(typeof perishNode === 'string', `Ripple handlePerishNode, perishNode should be an String, now is ${typeof perishNode}`);
-		
-		await unlManager.setNodesMalicious([sponsorNode, perishNode])
 	}
 
 	/**
@@ -85,22 +64,6 @@ class Ripple
 				
 				process.exit(1)
 			});
-		});
-	}
-
-	/**
-	 * @param {Array} timeoutNodes
-	 */
-	handleTimeoutNodes(timeoutNodes)
-	{
-		assert(Array.isArray(timeoutNodes), `Ripple handleTimeoutNodes, timeoutNodes should be an Array, now is ${typeof timeoutNodes}`);
-		
-		timeoutNodes.forEach(timeoutNode => {
-			mysql.saveTimeoutNode(timeoutNode.address, timeoutNode.reason).catch(e => {
-				logger.fatal(`Ripple handleTimeoutNodes, saveTimeoutNode throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
-				
-				process.exit(1)
-			})
 		});
 	}
 

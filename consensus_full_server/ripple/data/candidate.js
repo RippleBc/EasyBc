@@ -1,11 +1,11 @@
 const Base = require("./base");
-const util = require("../../../depends/utils");
+const utils = require("../../../depends/utils");
 const Transaction = require("../../../depends/transaction");
 
 const logger = process[Symbol.for("loggerConsensus")];
 
-const rlp = util.rlp;
-const Buffer = util.Buffer;
+const rlp = utils.rlp;
+const Buffer = utils.Buffer;
 
 class Candidate extends Base
 {
@@ -16,7 +16,13 @@ class Candidate extends Base
 		data = data || {};
 
     const fields = [{
-      name: "sequence",
+      name: "hash",
+      length: 32,
+      allowZero: true,
+      allowLess: true,
+      default: Buffer.alloc(0)
+    }, {
+      name: "number",
       length: 32,
       allowZero: true,
       allowLess: true,
@@ -51,7 +57,7 @@ class Candidate extends Base
       default: Buffer.alloc(0)
     }];
 
-    util.defineProperties(this, fields, data);
+    utils.defineProperties(this, fields, data);
 	}
 
   /**

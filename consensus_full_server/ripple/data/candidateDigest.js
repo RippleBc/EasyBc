@@ -3,16 +3,22 @@ const utils = require("../../../depends/utils");
 
 const Buffer = utils.Buffer;
 
-class Prepare extends Base
+class CandidateDigest extends Base
 {
 	constructor(data)
 	{
-		super({ name: 'prepare' });
+		super({ name: 'candidateDigest' });
 
 		data = data || {};
 
     const fields = [{
-      name: "sequence",
+      name: "hash",
+      length: 32,
+      allowZero: true,
+      allowLess: true,
+      default: Buffer.alloc(0)
+    }, {
+      name: "number",
       length: 32,
       allowZero: true,
       allowLess: true,
@@ -50,4 +56,4 @@ class Prepare extends Base
 	}
 }
 
-module.exports = Prepare;
+module.exports = CandidateDigest;
