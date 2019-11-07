@@ -5,7 +5,7 @@ const unlManager = process[Symbol.for("unlManager")];
 const privateKey = process[Symbol.for("privateKey")];
 
 class ConsensusStage extends Stage {
-  constructor({ name, expiration, threshould } = { threshould: unlManager.threshould}) {
+  constructor({ name, expiration, threshould } = { threshould: unlManager.threshould }) {
 
     super({ name, expiration, threshould});
 
@@ -28,8 +28,11 @@ class ConsensusStage extends Stage {
     }
     else
     {
-      candidateDetail.data = candidate;
-      candidateDetail.count = 1;
+      candidateDetail = {
+        data: candidate,
+        count: 1
+      }
+      
     }
     this.trimedCandidates.set(candidateHash, candidateDetail);
 

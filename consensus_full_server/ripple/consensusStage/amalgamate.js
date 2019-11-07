@@ -8,7 +8,7 @@ const { RIPPLE_STAGE_AMALGAMATE,
 	STAGE_STATE_PROCESSING, 
 	STAGE_STATE_FINISH,
 	STAGE_AMALGAMATE_TRANSACTIONS_EXPIRATION } = require("../../constant");
-const LeaderStage = require("./leaderStage");
+const LeaderStage = require("../stage/leaderStage");
 
 const rlp = utils.rlp;
 
@@ -41,7 +41,7 @@ class Amalgamate extends LeaderStage
 		this.ripple.stage = RIPPLE_STAGE_AMALGAMATE;
 
 		// node is leader
-		if (unlManager.checkPrimaryNode(process[Symbol.for("address")]))
+		if (this.ripple.checkPrimaryNode(process[Symbol.for("address")]))
 		{
 			// request candidates
 			p2p.sendAll(PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ);
@@ -54,7 +54,7 @@ class Amalgamate extends LeaderStage
 	handler()
 	{
 		// receiver is leader
-		if (unlManager.checkPrimaryNode(process[Symbol.for("address")])) {
+		if (this.ripple.checkPrimaryNode(process[Symbol.for("address")])) {
 
 			// 
 			for (let localCandidate of this.candidates)
@@ -99,7 +99,7 @@ class Amalgamate extends LeaderStage
 				let localCandidate;
 
 				// sender is leader
-				if (unlManager.checkPrimaryNode(address.toString('hex'))) {
+				if (this.ripple.checkPrimaryNode(address.toString('hex'))) {
 
 					//
 					localCandidate = new Candidate({
@@ -133,7 +133,7 @@ class Amalgamate extends LeaderStage
 			break;
 			case PROTOCOL_CMD_TRANSACTION_AMALGAMATE_RES:
 			{
-				if (unlManager.checkPrimaryNode(process[Symbol.for("address")])) {
+				if (this.ripple.checkPrimaryNode(process[Symbol.for("address")])) {
 					this.validateAndProcessExchangeData(new Candidate(data), address.toString('hex'));
 				}
 			}

@@ -1,6 +1,6 @@
 const CandidateDigest = require("../data/candidateDigest");
 const utils = require("../../../depends/utils");
-const ConsensusStage = require("./consensusStage");
+const ConsensusStage = require("../stage/consensusStage");
 const assert = require("assert");
 const { RIPPLE_STAGE_COMMIT,
   PROTOCOL_CMD_COMMIT,
@@ -45,7 +45,7 @@ class Commit extends ConsensusStage {
     //
     if (!this.ripple.consensusCandidateDigest)
     {
-      this.ripple.runViewChange();
+      this.ripple.viewChange.run();
 
       return;
     }
@@ -55,7 +55,7 @@ class Commit extends ConsensusStage {
       || this.ripple.number.toString('hex') !== this.ripple.consensusCandidateDigest.number.toString('hex')
       || this.ripple.view.toString('hex') !== this.ripple.consensusCandidateDigest.view.toString('hex'))
     {
-      this.ripple.runViewChange();
+      this.ripple.viewChange.run();
 
       return;
     }

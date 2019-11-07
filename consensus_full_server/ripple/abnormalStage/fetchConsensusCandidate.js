@@ -4,10 +4,10 @@ const { STAGE_STATE_EMPTY,
   PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ, 
   PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES,
   RIPPLE_STAGE_FETCH_CANDIDATE,
-  STAGE_FETCH_CANDIDATE_EXPIRATION } = require("../constant");
-const CandidateDigest = require("./data/candidateDigest");
-const Candidate = require("./data/candidate");
-const utils = require("../../depends/utils");
+  STAGE_FETCH_CANDIDATE_EXPIRATION } = require("../../constant");
+const CandidateDigest = require("../data/candidateDigest");
+const Candidate = require("../data/candidate");
+const utils = require("../../../depends/utils");
 
 const sha256 = utils.sha256;
 

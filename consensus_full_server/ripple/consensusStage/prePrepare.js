@@ -8,7 +8,7 @@ const { RIPPLE_STAGE_PRE_PREPARE,
   STAGE_STATE_EMPTY,
   STAGE_STATE_PROCESSING,
   STAGE_PRE_PREPARE_EXPIRATION } = require("../../constant");
-const LeaderStage = require("./leaderStage");
+const LeaderStage = require("../stage/leaderStage");
 
 const rlp = utils.rlp;
 const sha256 = utils.sha256;
@@ -41,7 +41,7 @@ class PrePrepare extends LeaderStage {
 
 
     // node is leader
-    if (unlManager.checkPrimaryNode(process[Symbol.for("address")])) {
+    if (this.ripple.checkPrimaryNode(process[Symbol.for("address")])) {
       const now = Date.now();
 
       //
@@ -97,7 +97,7 @@ class PrePrepare extends LeaderStage {
       case PROTOCOL_CMD_PRE_PREPARE_REQ:
         {
           // sender is leader
-          if (unlManager.checkPrimaryNode(address.toString('hex'))) {
+          if (this.ripple.checkPrimaryNode(address.toString('hex'))) {
 
             // init candidate
             this.ripple.candidate = new Candidate(date);
@@ -139,7 +139,7 @@ class PrePrepare extends LeaderStage {
         break;
       case PROTOCOL_CMD_PRE_PREPARE_RES:
         {
-          if (unlManager.checkPrimaryNode(process[Symbol.for("address")])) {
+          if (this.ripple.checkPrimaryNode(process[Symbol.for("address")])) {
             this.validateAndProcessExchangeData(new Candidate(data), address.toString('hex'));
           } 
         }

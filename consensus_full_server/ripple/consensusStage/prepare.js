@@ -1,6 +1,6 @@
 const CandidateDigest = require("../data/candidateDigest");
 const utils = require("../../../depends/utils");
-const ConsensusStage = require("./consensusStage");
+const ConsensusStage = require("../stage/consensusStage");
 const assert = require("assert");
 const { RIPPLE_STAGE_PREPARE,
 	PROTOCOL_CMD_PREPARE,

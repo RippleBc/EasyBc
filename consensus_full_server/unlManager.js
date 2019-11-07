@@ -31,14 +31,6 @@ class UnlManager
     }
 
     /**
-     * @param {String} address 
-     */
-    checkPrimaryNode(address)
-    {
-
-    }
-
-    /**
      * @param {Array/String} addresses
      */
     async setNodesOffline(addresses)

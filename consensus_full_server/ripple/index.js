@@ -3,7 +3,9 @@ const PrePrepare = require("./consensusStage/prePrepare");
 const Prepare = require("./consensusStage/prepare");
 const Commit = require("./consensusStage/commit");
 const FetchConsensusCandidate = require("./fetchConsensusCandidate");
-const ViewChange = require("./viewChange");
+const ViewChangeForConsensusFail = require("./abnormalStage/viewChangeForConsensusFail");
+const ViewChangeForTimeout = require("./abnormalStage/viewChangeForTimeout");
+const NewView = require("./abnormalStage/NewView");
 
 const { STAGE_STATE_EMPTY, CHEAT_REASON_INVALID_PROTOCOL_CMD, RIPPLE_STAGE_EMPTY, MAX_PROCESS_TRANSACTIONS_SIZE } = require("../constant");
 const assert = require("assert");
@@ -35,7 +37,9 @@ class Ripple
 		this.prepare = new Prepare(this);
 		this.commit = new Commit(this);
 		this.fetchConsensusCandidate = new FetchConsensusCandidate(this);
-		this.viewChange = new ViewChange(this);
+		this.viewChangeForConsensusFail = new ViewChangeForConsensusFail(this);
+		this.viewChangeForTimeout = new ViewChangeForTimeout(this);
+		this.newView = new NewView(this);
 	}
 
 	/**
@@ -214,7 +218,9 @@ class Ripple
 		this.prepare.reset();
 		this.commit.reset();
 		this.fetchConsensusCandidate.reset();
-		this.viewChange.reset();
+		this.viewChangeForConsensusFail.reset();
+		this.viewChangeForTimeout.reset();
+		this.newView.reset();
 	}
 }
 
