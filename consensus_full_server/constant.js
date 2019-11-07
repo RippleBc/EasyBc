@@ -10,20 +10,22 @@ module.exports.STAGE_VIEW_CHANGE_FOR_CONSENSUS_FAIL_EXPIRATION = 2000;
 module.exports.STAGE_VIEW_CHANGE_FOR_TIMEOUT_EXPIRATION = 2000;
 module.exports.STAGE_VIEW_CHANGE_NEW_VIEW_EXPIRATION = 2000;
 
+module.exports.STAGE_AMALGAMATE = 1;
+module.exports.STAGE_PRE_PREPARE = 2;
+module.exports.STAGE_PREPARE = 3;
+module.exports.STAGE_COMMIT = 4;
+module.exports.STAGE_FETCH_CANDIDATE = 5;
+
 module.exports.STAGE_STATE_EMPTY = 1;
 module.exports.STAGE_STATE_PROCESSING = 2;
 module.exports.STAGE_STATE_FINISH = 3;
 
 // ripple
-module.exports.RIPPLE_STAGE_EMPTY = 1;
-module.exports.RIPPLE_STAGE_AMALGAMATE = 2;
-module.exports.RIPPLE_STAGE_PRE_PREPARE = 3;
-module.exports.RIPPLE_STAGE_PREPARE = 4;
-module.exports.RIPPLE_STAGE_COMMIT = 5;
-module.exports.RIPPLE_STAGE_FETCH_CANDIDATE = 6;
-module.exports.RIPPLE_STAGE_VIEW_CHANGE_FOR_CONSENSUS_FAIL = 7;
-module.exports.RIPPLE_STAGE_VIEW_CHANGE_FOR_TIMEOUT = 8;
-module.exports.RIPPLE_STAGE_NEW_VIEW = 8;
+module.exports.RIPPLE_STATE_EMPTY = 1;
+module.exports.RIPPLE_STATE_CONSENSUS = 2;
+module.exports.RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL = 3;
+module.exports.RIPPLE_STATE_VIEW_CHANGE_FOR_TIMEOUT = 4;
+module.exports.RIPPLE_STATE_NEW_VIEW = 5;
 
 // amalgamate
 module.exports.PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ = 100;

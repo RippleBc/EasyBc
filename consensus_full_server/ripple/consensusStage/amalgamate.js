@@ -1,7 +1,7 @@
 const Candidate = require("../data/candidate");
 const utils = require("../../../depends/utils");
 const assert = require("assert");
-const { RIPPLE_STAGE_AMALGAMATE, 
+const { STAGE_AMALGAMATE, 
 	PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ, 
 	PROTOCOL_CMD_TRANSACTION_AMALGAMATE_RES, 
 	STAGE_STATE_EMPTY, 
@@ -38,7 +38,7 @@ class Amalgamate extends LeaderStage
 		this.state = STAGE_STATE_PROCESSING;
 
 		//
-		this.ripple.stage = RIPPLE_STAGE_AMALGAMATE;
+		this.ripple.stage = STAGE_AMALGAMATE;
 
 		// node is leader
 		if (this.ripple.checkPrimaryNode(process[Symbol.for("address")]))

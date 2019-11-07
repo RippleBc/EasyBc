@@ -3,7 +3,7 @@ const { STAGE_STATE_EMPTY,
   STAGE_STATE_FINISH,
   PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ, 
   PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES,
-  RIPPLE_STAGE_FETCH_CANDIDATE,
+  STAGE_FETCH_CANDIDATE,
   STAGE_FETCH_CANDIDATE_EXPIRATION } = require("../../constant");
 const CandidateDigest = require("../data/candidateDigest");
 const Candidate = require("../data/candidate");
@@ -39,7 +39,7 @@ class FetchConsensusCandidate
 
     this.state = STAGE_STATE_PROCESSING;
 
-    this.ripple.stage = RIPPLE_STAGE_FETCH_CANDIDATE;
+    this.ripple.stage = STAGE_FETCH_CANDIDATE;
 
     this.handler = handler;
 

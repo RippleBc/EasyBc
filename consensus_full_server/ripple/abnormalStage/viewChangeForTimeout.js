@@ -1,8 +1,8 @@
 const ViewChange = require("../data/viewChange");
 const utils = require("../../../depends/utils");
-const LeaderStage = require("../stage/leaderStage");
+const Stage = require("../stage/stage");
 const assert = require("assert");
-const { RIPPLE_STAGE_VIEW_CHANGE_FOR_TIMEOUT,
+const { RIPPLE_STATE_VIEW_CHANGE_FOR_TIMEOUT,
   PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT,
   STAGE_STATE_EMPTY,
   STAGE_STATE_PROCESSING,
@@ -15,7 +15,7 @@ const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
 const unlManager = process[Symbol.for("unlManager")];
 
-class ViewChangeForTimeout extends LeaderStage {
+class ViewChangeForTimeout extends Stage {
   constructor(ripple) {
     super({ name: 'viewChangeTimeout', expiraion: STAGE_VIEW_CHANGE_FOR_TIMEOUT_EXPIRATION, threshould: unlManager.threshould })
 
@@ -38,7 +38,7 @@ class ViewChangeForTimeout extends LeaderStage {
     this.state = STAGE_STATE_PROCESSING;
 
     //
-    this.ripple.stage = RIPPLE_STAGE_VIEW_CHANGE_FOR_TIMEOUT;
+    this.ripple.state = RIPPLE_STATE_VIEW_CHANGE_FOR_TIMEOUT;
 
     //
     const viewChange = new ViewChange({
@@ -48,11 +48,8 @@ class ViewChangeForTimeout extends LeaderStage {
     });
     viewChange.sign(privateKey);
 
-    // broadcast 
+    // send to new leader 
     p2p.send(PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT, todo)
-
-    // begin timer
-    this.startTimer()
   }
 
   /**

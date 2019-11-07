@@ -2,7 +2,7 @@ const NewView = require("../data/newView");
 const ViewChange = require("../data/viewChange");
 const utils = require("../../../depends/utils");
 const assert = require("assert");
-const { RIPPLE_STAGE_NEW_VIEW,
+const { RIPPLE_STATE_NEW_VIEW,
   PROTOCOL_CMD_NEW_VIEW_REQ,
   PROTOCOL_CMD_NEW_VIEW_RES,
   STAGE_STATE_EMPTY,
@@ -37,7 +37,7 @@ class NewView extends LeaderStage {
     this.state = STAGE_STATE_PROCESSING;
 
     //
-    this.ripple.stage = RIPPLE_STAGE_NEW_VIEW;
+    this.ripple.state = RIPPLE_STATE_NEW_VIEW;
 
     // node is leader
     if (this.ripple.checkPrimaryNode(process[Symbol.for("address")])) {

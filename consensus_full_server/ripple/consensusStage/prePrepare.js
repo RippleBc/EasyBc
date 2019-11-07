@@ -2,7 +2,7 @@ const Candidate = require("../data/candidate");
 const CandidateDigest = require("../data/candidateDigest");
 const utils = require("../../../depends/utils");
 const assert = require("assert");
-const { RIPPLE_STAGE_PRE_PREPARE,
+const { STAGE_PRE_PREPARE,
   PROTOCOL_CMD_PRE_PREPARE_REQ,
   PROTOCOL_CMD_PRE_PREPARE_RES,
   STAGE_STATE_EMPTY,
@@ -37,7 +37,7 @@ class PrePrepare extends LeaderStage {
     this.state = STAGE_STATE_PROCESSING;
 
     //
-    this.ripple.stage = RIPPLE_STAGE_PRE_PREPARE;
+    this.ripple.stage = STAGE_PRE_PREPARE;
 
 
     // node is leader

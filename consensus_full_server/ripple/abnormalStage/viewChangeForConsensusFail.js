@@ -2,7 +2,7 @@ const ViewChange = require("../data/viewChange");
 const utils = require("../../../depends/utils");
 const Stage = require("../stage/stage");
 const assert = require("assert");
-const { RIPPLE_STAGE_VIEW_CHANGE_FOR_CONSENSUS_FAIL,
+const { RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL,
   PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL,
   STAGE_STATE_EMPTY,
   STAGE_STATE_PROCESSING,
@@ -35,7 +35,7 @@ class ViewChangeForConsensusFail extends Stage {
     this.state = STAGE_STATE_PROCESSING;
 
     //
-    this.ripple.stage = RIPPLE_STAGE_VIEW_CHANGE_FOR_CONSENSUS_FAIL;
+    this.ripple.state = RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL;
 
     //
     const viewChange = new ViewChange({

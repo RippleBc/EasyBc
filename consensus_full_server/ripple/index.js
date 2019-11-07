@@ -7,7 +7,7 @@ const ViewChangeForConsensusFail = require("./abnormalStage/viewChangeForConsens
 const ViewChangeForTimeout = require("./abnormalStage/viewChangeForTimeout");
 const NewView = require("./abnormalStage/NewView");
 
-const { STAGE_STATE_EMPTY, CHEAT_REASON_INVALID_PROTOCOL_CMD, RIPPLE_STAGE_EMPTY, MAX_PROCESS_TRANSACTIONS_SIZE } = require("../constant");
+const { STAGE_STATE_EMPTY, CHEAT_REASON_INVALID_PROTOCOL_CMD, RIPPLE_STATE_EMPTY, MAX_PROCESS_TRANSACTIONS_SIZE } = require("../constant");
 const assert = require("assert");
 const Block = require("../../depends/block");
 
@@ -23,7 +23,7 @@ class Ripple
 	{
 		this.processor = processor;
 
-		this.stage = RIPPLE_STAGE_EMPTY;
+		this.state = RIPPLE_STATE_EMPTY;
 		
 		// 
 		this.localTransactions = [];
@@ -47,6 +47,8 @@ class Ripple
 	 */
 	run()
 	{	
+		this.state = RIPPLE_STATE_CONSENSUS;
+
 		this.amalgamate.run();
 	}
 
@@ -172,7 +174,7 @@ class Ripple
 		assert(typeof cmd === "number", `Ripple handleMessage, cmd should be a Number, now is ${typeof cmd}`);
 		assert(Buffer.isBuffer(data), `Ripple handleMessage, data should be an Buffer, now is ${typeof data}`);
 
-		if (this.stage === RIPPLE_STAGE_EMPTY)
+		if (this.state === RIPPLE_STATE_EMPTY)
 		{
 			logger.info(`Ripple handleMessage, ripple has not begin, do not process messages`);
 
@@ -204,7 +206,7 @@ class Ripple
 
 	reset()
 	{
-		this.stage = RIPPLE_STAGE_EMPTY;
+		this.state = RIPPLE_STATE_EMPTY;
 
 		// 
 		this.localTransactions = [];

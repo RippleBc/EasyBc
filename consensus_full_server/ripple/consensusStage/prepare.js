@@ -2,7 +2,7 @@ const CandidateDigest = require("../data/candidateDigest");
 const utils = require("../../../depends/utils");
 const ConsensusStage = require("../stage/consensusStage");
 const assert = require("assert");
-const { RIPPLE_STAGE_PREPARE,
+const { STAGE_PREPARE,
 	PROTOCOL_CMD_PREPARE,
 	STAGE_STATE_EMPTY,
 	STAGE_STATE_PROCESSING,
@@ -34,7 +34,7 @@ class Prepare extends ConsensusStage
 		this.state = STAGE_STATE_PROCESSING;
 
 		//
-		this.ripple.stage = RIPPLE_STAGE_PREPARE;
+		this.ripple.stage = STAGE_PREPARE;
 
 		// broadcast
 		p2p.sendAll(PROTOCOL_CMD_PREPARE, this.ripple.candidateDigest.serialize())

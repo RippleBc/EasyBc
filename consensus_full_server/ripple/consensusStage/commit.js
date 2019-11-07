@@ -2,7 +2,7 @@ const CandidateDigest = require("../data/candidateDigest");
 const utils = require("../../../depends/utils");
 const ConsensusStage = require("../stage/consensusStage");
 const assert = require("assert");
-const { RIPPLE_STAGE_COMMIT,
+const { STAGE_COMMIT,
   PROTOCOL_CMD_COMMIT,
   STAGE_STATE_EMPTY,
   STAGE_STATE_PROCESSING,
@@ -32,7 +32,7 @@ class Commit extends ConsensusStage {
     this.state = STAGE_STATE_PROCESSING;
 
     //
-    this.ripple.stage = RIPPLE_STAGE_COMMIT;
+    this.ripple.stage = STAGE_COMMIT;
 
     // broadcast
     p2p.sendAll(PROTOCOL_CMD_COMMIT, this.ripple.candidateDigest.serialize())
@@ -45,7 +45,7 @@ class Commit extends ConsensusStage {
     //
     if (!this.ripple.consensusCandidateDigest)
     {
-      this.ripple.viewChange.run();
+      this.ripple.viewChangeForConsensusFail.run();
 
       return;
     }
@@ -55,7 +55,7 @@ class Commit extends ConsensusStage {
       || this.ripple.number.toString('hex') !== this.ripple.consensusCandidateDigest.number.toString('hex')
       || this.ripple.view.toString('hex') !== this.ripple.consensusCandidateDigest.view.toString('hex'))
     {
-      this.ripple.viewChange.run();
+      this.ripple.viewChangeForConsensusFail.run();
 
       return;
     }
