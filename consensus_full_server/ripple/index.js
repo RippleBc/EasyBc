@@ -1,13 +1,19 @@
-const Amalgamate = require("./stage/amalgamate");
-const CandidateAgreement = require("./stage/candidateAgreement");
-const BlockAgreement = require("./stage/prepare");
+const Amalgamate = require("./consensusStage/amalgamate");
+const PrePrepare = require("./consensusStage/prePrepare");
+const Prepare = require("./consensusStage/prepare");
+const Commit = require("./consensusStage/commit");
+const FetchConsensusCandidate = require("./fetchConsensusCandidate");
+const ViewChange = require("./viewChange");
+
 const { STAGE_STATE_EMPTY, CHEAT_REASON_INVALID_PROTOCOL_CMD, RIPPLE_STAGE_EMPTY, MAX_PROCESS_TRANSACTIONS_SIZE } = require("../constant");
 const assert = require("assert");
+const Block = require("../../depends/block");
 
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
 const mysql = process[Symbol.for("mysql")];
 const unlManager = process[Symbol.for("unlManager")]
+const privateKey = process[Symbol.for("privateKey")];
 
 class Ripple
 {
@@ -17,20 +23,19 @@ class Ripple
 
 		this.stage = RIPPLE_STAGE_EMPTY;
 		
-		// used for cache transactions
+		// 
 		this.localTransactions = [];
-
-		// 
 		this.amalgamatedTransactions = new Set();
-
-		// 
 		this.candidate = undefined;
-
-		//
 		this.candidateDigest = undefined;
-
-		//
 		this.consensusCandidateDigest = undefined;
+
+		this.amalgamate = new Amalgamate(this);
+		this.prePrepare = new PrePrepare(this);
+		this.prepare = new Prepare(this);
+		this.commit = new Commit(this);
+		this.fetchConsensusCandidate = new FetchConsensusCandidate(this);
+		this.viewChange = new ViewChange(this);
 	}
 
 	/**
@@ -41,6 +46,26 @@ class Ripple
 		this.amalgamate.run();
 	}
 
+	/**
+	 * 
+	 */
+	processConsensusCandidate()
+	{
+		const consensusBlock = new Block({
+			header: {
+				number: this.candidate.number,
+				parentHash: this.candidate.parentHash,
+				timestamp: this.candidate.timestamp
+			},
+			transactions: this.candidate.transactions
+		});
+
+		this.processor.processBlock({
+			block: consensusBlock
+		}).then(() => {
+
+		});
+	}
 	/*
 	 * @return {Object} 
 	 *  - {Array} transactions
@@ -62,7 +87,7 @@ class Ripple
 			mysql.saveCheatedNode(cheatedNode.address, cheatedNode.reason).catch(e => {
 				logger.fatal(`Ripple handleCheatedNodes, saveCheatedNode throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 				
-				process.exit(1)
+				process.exit(1);
 			});
 		});
 	}
@@ -175,9 +200,21 @@ class Ripple
 
 	reset()
 	{
+		this.stage = RIPPLE_STAGE_EMPTY;
+
+		// 
+		this.localTransactions = [];
+		this.amalgamatedTransactions.clear();
+		this.candidate = undefined;
+		this.candidateDigest = undefined;
+		this.consensusCandidateDigest = undefined;
+
 		this.amalgamate.reset();
-		this.candidateAgreement.reset();
-		this.blockAgreement.reset();
+		this.prePrepare.reset();
+		this.prepare.reset();
+		this.commit.reset();
+		this.fetchConsensusCandidate.reset();
+		this.viewChange.reset();
 	}
 }
 

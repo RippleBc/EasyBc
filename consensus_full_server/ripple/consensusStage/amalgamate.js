@@ -6,7 +6,8 @@ const { RIPPLE_STAGE_AMALGAMATE,
 	PROTOCOL_CMD_TRANSACTION_AMALGAMATE_RES, 
 	STAGE_STATE_EMPTY, 
 	STAGE_STATE_PROCESSING, 
-	STAGE_STATE_FINISH } = require("../../constant");
+	STAGE_STATE_FINISH,
+	STAGE_AMALGAMATE_TRANSACTIONS_EXPIRATION } = require("../../constant");
 const LeaderStage = require("./leaderStage");
 
 const rlp = utils.rlp;
@@ -16,13 +17,11 @@ const logger = process[Symbol.for("loggerConsensus")];
 const privateKey = process[Symbol.for("privateKey")];
 const unlManager = process[Symbol.for ("unlManager")];
 
-const AMALGAMATE_TRANSACTIONS_WAITING_TIME = 2000;
-
 class Amalgamate extends LeaderStage
 {
 	constructor(ripple)
 	{
-		super({ name: 'amalgamate', expiraion: AMALGAMATE_TRANSACTIONS_WAITING_TIME})
+		super({ name: 'amalgamate', expiraion: STAGE_AMALGAMATE_TRANSACTIONS_EXPIRATION})
 
 		this.ripple = ripple;
 	}
@@ -57,9 +56,6 @@ class Amalgamate extends LeaderStage
 		// receiver is leader
 		if (unlManager.checkPrimaryNode(process[Symbol.for("address")])) {
 
-			// check view, hash and number
-
-
 			// 
 			for (let localCandidate of this.candidates)
 			{
@@ -83,7 +79,7 @@ class Amalgamate extends LeaderStage
 	 * @param {Number} cmd
 	 * @param {Buffer} data
 	 */
-	async handleMessage(address, cmd, data)
+	handleMessage(address, cmd, data)
 	{
 		assert(Buffer.isBuffer(address), `Amalgamate handleMessage, address should be an Buffer, now is ${typeof address}`);
 		assert(typeof cmd === "number", `Amalgamate handleMessage, cmd should be a Number, now is ${typeof cmd}`);

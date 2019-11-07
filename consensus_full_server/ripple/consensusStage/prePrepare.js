@@ -6,7 +6,8 @@ const { RIPPLE_STAGE_PRE_PREPARE,
   PROTOCOL_CMD_PRE_PREPARE_REQ,
   PROTOCOL_CMD_PRE_PREPARE_RES,
   STAGE_STATE_EMPTY,
-  STAGE_STATE_PROCESSING } = require("../../constant");
+  STAGE_STATE_PROCESSING,
+  STAGE_PRE_PREPARE_EXPIRATION } = require("../../constant");
 const LeaderStage = require("./leaderStage");
 
 const rlp = utils.rlp;
@@ -17,12 +18,10 @@ const logger = process[Symbol.for("loggerConsensus")];
 const privateKey = process[Symbol.for("privateKey")];
 const unlManager = process[Symbol.for("unlManager")];
 
-const PRE_PREPARE_WAITING_TIME = 150;
-
 class PrePrepare extends LeaderStage {
   constructor(ripple) {
 
-    super({ name: 'prePrepare', expiraion: PRE_PREPARE_WAITING_TIME })
+    super({ name: 'prePrepare', expiraion: STAGE_PRE_PREPARE_EXPIRATION })
 
     this.ripple = ripple;
   }
@@ -43,10 +42,13 @@ class PrePrepare extends LeaderStage {
 
     // node is leader
     if (unlManager.checkPrimaryNode(process[Symbol.for("address")])) {
+      const now = Date.now();
+
       //
       this.ripple.amalgamatedCandidate = new Candidate({
           hash: this.ripple.hash,
           number: this.ripple.number,
+          timestamp: now,
           view: this.ripple.view,
           candidate: rlp.encode([...this.ripple.amalgamatedTransactions.map(tx => Buffer.from(tx, 'hex'))])
       })
@@ -56,13 +58,14 @@ class PrePrepare extends LeaderStage {
       this.ripple.amalgamatedCandidateDigest = new CandidateDigest({
         hash: this.ripple.hash,
         number: this.ripple.number,
+        timestamp: now,
         view: this.ripple.view,
         digest: sha256(this.ripple.amalgamatedCandidate.transactions)
       })
       this.ripple.amalgamatedCandidateDigest.sign(privateKey);
 
       // broadcast amalgamated transactions
-      p2p.sendAll(PROTOCOL_CMD_PRE_PREPARE_REQ, this.amalgamatedCandidate.serialize())
+      p2p.sendAll(PROTOCOL_CMD_PRE_PREPARE_REQ, this.ripple.amalgamatedCandidate.serialize())
 
       // begin timer
       this.startTimer()
@@ -71,19 +74,7 @@ class PrePrepare extends LeaderStage {
 
   handler()
   {
-    // receiver is leader
-    if (unlManager.checkPrimaryNode(process[Symbol.for("address")])) {
-
-      // check view, hash and number
-      for (let candidate of this.candidates) {
-        
-      }
-
-      this.ripple.prePrepare.run();
-    }
-    else {
-      this.ripple.prePrepare.run();
-    }
+    this.ripple.prepare.run();
   }
 
 	/**
@@ -91,7 +82,7 @@ class PrePrepare extends LeaderStage {
 	 * @param {Number} cmd
 	 * @param {Buffer} data
 	 */
-  async handleMessage(address, cmd, data) {
+  handleMessage(address, cmd, data) {
     assert(Buffer.isBuffer(address), `PrePrepare handleMessage, address should be an Buffer, now is ${typeof address}`);
     assert(typeof cmd === "number", `PrePrepare handleMessage, cmd should be a Number, now is ${typeof cmd}`);
     assert(Buffer.isBuffer(data), `PrePrepare handleMessage, data should be an Buffer, now is ${typeof data}`);
@@ -108,19 +99,21 @@ class PrePrepare extends LeaderStage {
           // sender is leader
           if (unlManager.checkPrimaryNode(address.toString('hex'))) {
 
-            // 
-            this.ripple.amalgamatedCandidate = new Candidate(date);
+            // init candidate
+            this.ripple.candidate = new Candidate(date);
+            this.ripple.candidate.sign(privateKey);
 
-            //
-            const decodedTransactions = rlp.decode(this.ripple.amalgamatedCandidate.transactions);
+            // init candidate transactions
+            const decodedTransactions = rlp.decode(this.ripple.candidate.transactions);
             this.ripple.amalgamatedTransactions = decodedTransactions.map(tx => tx.toString('hex'));
 
-            //
+            // init candidateDigest
             this.ripple.candiateDigest = new CandidateDigest({
-              hash: this.ripple.hash,
-              number: this.ripple.number,
-              view: this.ripple.view,
-              digest: sha256(this.ripple.amalgamatedCandidate.transactions)
+              hash: this.ripple.candidate.hash,
+              number: this.ripple.candidate.number,
+              timestamp: this.ripple.candidate.timestamp,
+              view: this.ripple.candidate.view,
+              digest: sha256(this.ripple.candidate.transactions)
             });
             this.ripple.candiateDigest.sign(privateKey);
 
@@ -141,7 +134,7 @@ class PrePrepare extends LeaderStage {
           //
           candidate.sign(privateKey);
 
-          p2p.send(address, PROTOCOL_CMD_TRANSACTION_AMALGAMATE_RES, candidate.serialize());
+          p2p.send(address, PROTOCOL_CMD_PRE_PREPARE_RES, candidate.serialize());
         }
         break;
       case PROTOCOL_CMD_PRE_PREPARE_RES:

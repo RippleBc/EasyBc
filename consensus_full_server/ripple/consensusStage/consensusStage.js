@@ -2,6 +2,7 @@ const { STAGE_STATE_FINISH } = require("../../constant");
 const Stage = require("./stage");
 
 const unlManager = process[Symbol.for("unlManager")];
+const privateKey = process[Symbol.for("privateKey")];
 
 class ConsensusStage extends Stage {
   constructor({ name, expiration, threshould } = { threshould: unlManager.threshould}) {
@@ -9,26 +10,6 @@ class ConsensusStage extends Stage {
     super({ name, expiration, threshould});
 
     this.trimedCandidates = new Map();
-  }
-
-  startTimer() {
-    if (unlManager.fullUnl.length > 0) {
-
-      this.timeout = setTimeout(() => {
-
-        this.state = STAGE_STATE_FINISH;
-
-        this.handler();
-
-      }, this.expiration)
-
-      return;
-    }
-
-    // adapted to single mode
-    this.state = STAGE_STATE_FINISH;
-
-    this.handler();
   }
 
   /**
@@ -54,8 +35,13 @@ class ConsensusStage extends Stage {
 
     //
     if (candidateDetail.count > this.threshould) {
-      this.ripple.consensusCandidateDigest = candidateDetail.data;
+      if (!this.ripple.consensusCandidateDigest)
+      {
+        this.ripple.consensusCandidateDigest = candidateDetail.data;
+        this.ripple.consensusCandidateDigest.sign(privateKey);
+      }
 
+      //
       this.state = STAGE_STATE_FINISH;
 
       clearTimeout(this.timeout);

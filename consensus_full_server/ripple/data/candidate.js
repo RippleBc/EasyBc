@@ -28,6 +28,12 @@ class Candidate extends Base
       allowLess: true,
       default: Buffer.alloc(0)
     }, {
+      name: "timestamp",
+      length: 32,
+      allowZero: true,
+      allowLess: true,
+      default: Buffer.alloc(0)
+    }, {
       name: "view",
       length: 32,
       allowZero: true,

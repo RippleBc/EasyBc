@@ -42,24 +42,41 @@ class Commit extends ConsensusStage {
   }
 
   handler() {
-    // consensus success
-    if (this.ripple.consensusCandidateDigest)
+    //
+    if (!this.ripple.consensusCandidateDigest)
     {
-      // process block
-      this.ripple.run();
+      this.ripple.runViewChange();
+
+      return;
     }
-    else
+
+    //
+    if (this.ripple.hash.toString('hex') !== this.ripple.consensusCandidateDigest.hash.toString('hex')
+      || this.ripple.number.toString('hex') !== this.ripple.consensusCandidateDigest.number.toString('hex')
+      || this.ripple.view.toString('hex') !== this.ripple.consensusCandidateDigest.view.toString('hex'))
     {
-      // begin view-change
-       
+      this.ripple.runViewChange();
+
+      return;
     }
+
+    // fetch consensus candidate
+    if (this.ripple.consensusCandidateDigest.hash(false).toString('hex') !== this.ripple.candidateDigest.hash(false).toString('hex')) {
+      this.ripple.fetchConsensusCandidate.run(() => {
+        this.ripple.processConsensusCandidate();
+      })
+
+      return;
+    }
+  
+    this.ripple.processConsensusCandidate();
   }
 
   /**
- * @param {Buffer} address
- * @param {Number} cmd
- * @param {Buffer} data
- */
+   * @param {Buffer} address
+   * @param {Number} cmd
+   * @param {Buffer} data
+   */
   handleMessage(address, cmd, data) {
     assert(Buffer.isBuffer(address), `Commit handleMessage, address should be an Buffer, now is ${typeof address}`);
     assert(typeof cmd === "number", `Commit handleMessage, cmd should be a Number, now is ${typeof cmd}`);

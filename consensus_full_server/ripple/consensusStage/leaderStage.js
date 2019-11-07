@@ -10,25 +10,6 @@ class LeaderStage extends Stage {
     super({ name, expiration, threshould });
   }
 
-  startTimer() {
-    if (unlManager.fullUnl.length > 0) {
-
-      this.timeout = setTimeout(() => {
-
-        this.state = STAGE_STATE_FINISH;
-
-        this.handler();
-      }, this.expiration)
-
-      return;
-    }
-
-    // adapted to single mode
-    this.state = STAGE_STATE_FINISH;
-
-    this.handler();
-  }
-
   /**
    * 
    * @param {Base} candidate 

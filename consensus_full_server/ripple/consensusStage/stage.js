@@ -1,7 +1,8 @@
 const { STAGE_STATE_EMPTY, 
   CHEAT_REASON_INVALID_ADDRESS, 
   CHEAT_REASON_INVALID_SIG, 
-  CHEAT_REASON_REPEAT_DATA_EXCHANGE } = require("../../constant");
+  CHEAT_REASON_REPEAT_DATA_EXCHANGE,
+  STAGE_STATE_FINISH } = require("../../constant");
 const assert = require("assert");
 const Base = require("../data/base");
 
@@ -21,7 +22,27 @@ class Stage {
 
     this.cheatedNodes = [];
   }
-  
+
+  startTimer() {
+    if (unlManager.fullUnl.length > 0) {
+
+      this.timeout = setTimeout(() => {
+
+        this.state = STAGE_STATE_FINISH;
+
+        this.handler();
+
+      }, this.expiration)
+
+      return;
+    }
+
+    // switch to single mode
+    this.state = STAGE_STATE_FINISH;
+
+    this.handler();
+  }
+
   /**
 	 * @param {Base} candidate
 	 * @param {String} address
@@ -42,7 +63,7 @@ class Stage {
       return;
     }
 
-    //
+    // try to enter next stage
     this.enterNextStage(candidate);
 
     // add address
