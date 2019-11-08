@@ -7,7 +7,11 @@ const ViewChangeForConsensusFail = require("./abnormalStage/viewChangeForConsens
 const ViewChangeForTimeout = require("./abnormalStage/viewChangeForTimeout");
 const NewView = require("./abnormalStage/NewView");
 
-const { STAGE_STATE_EMPTY, CHEAT_REASON_INVALID_PROTOCOL_CMD, RIPPLE_STATE_EMPTY, MAX_PROCESS_TRANSACTIONS_SIZE } = require("../constant");
+const { STAGE_STATE_EMPTY, 
+	CHEAT_REASON_INVALID_PROTOCOL_CMD, 
+	RIPPLE_STATE_EMPTY, 
+	MAX_PROCESS_TRANSACTIONS_SIZE,
+	RIPPLE_LEADER_EXPIRATION } = require("../constants");
 const assert = require("assert");
 const Block = require("../../depends/block");
 
@@ -31,6 +35,7 @@ class Ripple
 		this.candidate = undefined;
 		this.candidateDigest = undefined;
 		this.consensusCandidateDigest = undefined;
+		this.consensusViewChange = undefined;
 
 		this.amalgamate = new Amalgamate(this);
 		this.prePrepare = new PrePrepare(this);
@@ -52,6 +57,8 @@ class Ripple
 		this.amalgamate.run();
 	}
 
+
+
 	/**
 	 * 
 	 */
@@ -72,6 +79,21 @@ class Ripple
 
 		});
 	}
+
+	startLeaderTimer()
+	{
+		this.leaderTimeout = setTimeout(() => {
+			
+		}, RIPPLE_LEADER_EXPIRATION);
+	}
+
+	clearLeaderTime()
+	{
+		this.leaderTimeout.clear();
+
+		this.leaderTimeout = undefined;
+	}
+
 	/*
 	 * @return {Object} 
 	 *  - {Array} transactions
@@ -213,8 +235,9 @@ class Ripple
 		this.amalgamatedTransactions.clear();
 		this.candidate = undefined;
 		this.candidateDigest = undefined;
-		this.consensusCandidateDigest = undefined;
-
+		this.consensusCandidateDigest = undefined;	
+		this.consensusViewChange = undefined;
+		
 		this.amalgamate.reset();
 		this.prePrepare.reset();
 		this.prepare.reset();

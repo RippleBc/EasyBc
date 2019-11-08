@@ -6,7 +6,7 @@ const { RIPPLE_STATE_VIEW_CHANGE_FOR_TIMEOUT,
   PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT,
   STAGE_STATE_EMPTY,
   STAGE_STATE_PROCESSING,
-  STAGE_VIEW_CHANGE_FOR_TIMEOUT_EXPIRATION } = require("../../constant");
+  STAGE_VIEW_CHANGE_FOR_TIMEOUT_EXPIRATION } = require("../constants");
 
 const Buffer = utils.Buffer;
 const BN = utils.BN;
@@ -17,7 +17,9 @@ const unlManager = process[Symbol.for("unlManager")];
 
 class ViewChangeForTimeout extends Stage {
   constructor(ripple) {
-    super({ name: 'viewChangeTimeout', expiraion: STAGE_VIEW_CHANGE_FOR_TIMEOUT_EXPIRATION, threshould: unlManager.threshould })
+    super({ name: 'viewChangeForTimeout', 
+    expiraion: STAGE_VIEW_CHANGE_FOR_TIMEOUT_EXPIRATION, 
+    threshould: this.ripple.threshould })
 
     this.ripple = ripple;
 
@@ -49,7 +51,7 @@ class ViewChangeForTimeout extends Stage {
     viewChange.sign(privateKey);
 
     // send to new leader 
-    p2p.send(PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT, todo)
+    p2p.send(this.ripple.getNewViewLeaderAddress(), PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT, viewChange.serialize());
   }
 
   /**
@@ -147,7 +149,8 @@ class ViewChangeForTimeout extends Stage {
       this.state = STAGE_STATE_FINISH;
 
       clearTimeout(this.timeout);
-
+      this.timeout = undefined;
+      
       process.nextTick(() => {
         this.handler(true);
       });

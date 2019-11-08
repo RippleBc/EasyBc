@@ -7,16 +7,16 @@ const { RIPPLE_STATE_NEW_VIEW,
   PROTOCOL_CMD_NEW_VIEW_RES,
   STAGE_STATE_EMPTY,
   STAGE_STATE_PROCESSING,
-  STAGE_VIEW_CHANGE_NEW_VIEW_EXPIRATION } = require("../../constant");
+  STAGE_VIEW_CHANGE_NEW_VIEW_EXPIRATION,
+  STAGE_FINISH_SUCCESS } = require("../constants");
 const LeaderStage = require("../stage/leaderStage");
+const Candidate = require("../data/candidate");
 
 const rlp = utils.rlp;
-const sha256 = utils.sha256;
 
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
 const privateKey = process[Symbol.for("privateKey")];
-const unlManager = process[Symbol.for("unlManager")];
 
 class NewView extends LeaderStage {
   constructor(ripple) {
@@ -42,28 +42,51 @@ class NewView extends LeaderStage {
     // node is leader
     if (this.ripple.checkPrimaryNode(process[Symbol.for("address")])) {
       const viewChanges = [];
-      for (let viewChange of this.ripple.viewChangeForTimeout.trimedViewChangesByAddress)
+      const consensusViewChangeHash = this.ripple.viewChangeForTimeout.consensusViewChange.hash(false).toString("hex");
+      for (let viewChange of this.ripple.viewChangeForTimeout.trimedViewChangesByAddress.values())
       {
-        viewChanges.push(viewChange.serialize());
+        if (consensusViewChangeHash === viewChanges.hash(false).toString('hex'))
+        {
+          viewChanges.push(viewChange.serialize());
+        }
       }
 
       //
       const newView = new NewView({
         hash: this.ripple.viewChangeForTimeout.consensusViewChange.hash,
         number: this.ripple.viewChangeForTimeout.consensusViewChange.number,
-        hash: this.ripple.viewChangeForTimeout.consensusViewChange.hash,
         viewChanges: rlp.encode(viewChanges)
       });
 
       // broadcast amalgamated transactions
-      p2p.sendAll(PROTOCOL_CMD_NEW_VIEW_REQ, newView.serialize())
+      p2p.sendAll(PROTOCOL_CMD_NEW_VIEW_REQ, newView.serialize());
 
       // begin timer
-      this.startTimer()
+      this.startTimer();
+
+      //
+      let candidate = new Candidate({
+        hash: this.ripple.hash,
+        number: this.ripple.number,
+        view: this.ripple.view
+      });
+      candidate.sign(privateKey);
+
+      //
+      this.validateAndProcessExchangeData(candidate, process[Symbol.for("address")]);
+    }
+    else
+    {
+      logger.fatal(`NewView run, view is ${this.ripple.view.toString('hex')}, is not a leader`);
+
+      proccess.exit(1);
     }
   }
 
-  handler() {
+  /**
+   * @param {Number} code 
+   */
+  handler(code) {
     this.ripple.run();
   }
 
@@ -85,7 +108,7 @@ class NewView extends LeaderStage {
           const viewChanges = rlp.decode(newView.viewChanges).map(viewChange => new ViewChange(viewChange));
 
           // check size
-          if (viewChanges.length < unlManager.threshould)
+          if (viewChanges.length < this.ripple.threshould)
           {
             return;
           }
@@ -95,6 +118,11 @@ class NewView extends LeaderStage {
           let viewChangeHash;
           for(let viewChange of viewChanges)
           {
+            //
+            if (!viewChange.validate()) {
+              return;
+            }
+
             // check if same
             if (!viewChangeHash)
             {
@@ -108,18 +136,15 @@ class NewView extends LeaderStage {
               }
             }
 
-            //
-            if(!viewChange.validate())
-            {
-              return;
-            }
-
             // check repeat
             const fromAddress = viewChange.from.toString('hex');
             if (trimedViewChangesByAddress.has(fromAddress))
             {
               return;
             }
+
+            //
+            trimedViewChangesByAddress.add(fromAddress.toString('hex'))
           }
 
           // 
@@ -136,6 +161,8 @@ class NewView extends LeaderStage {
           candidate.sign(privateKey);
 
           p2p.send(address, PROTOCOL_CMD_NEW_VIEW_RES, candidate.serialize());
+
+          this.handler(STAGE_FINISH_SUCCESS)
         }
         break;
       case PROTOCOL_CMD_NEW_VIEW_RES:

@@ -6,7 +6,7 @@ const { STAGE_PREPARE,
 	PROTOCOL_CMD_PREPARE,
 	STAGE_STATE_EMPTY,
 	STAGE_STATE_PROCESSING,
-	STAGE_PREPARE_EXPIRATION } = require("../../constant");
+	STAGE_PREPARE_EXPIRATION } = require("../constants");
 
 const Buffer = utils.Buffer;
 
@@ -37,10 +37,13 @@ class Prepare extends ConsensusStage
 		this.ripple.stage = STAGE_PREPARE;
 
 		// broadcast
-		p2p.sendAll(PROTOCOL_CMD_PREPARE, this.ripple.candidateDigest.serialize())
+		p2p.sendAll(PROTOCOL_CMD_PREPARE, this.ripple.candidateDigest.serialize());
 
 		// begin timer
-		this.startTimer()
+		this.startTimer();
+
+		//
+		this.validateAndProcessExchangeData(this.ripple.candidateDigest, process[Symbol.for("address")]);
  	}
 
 	handler() {

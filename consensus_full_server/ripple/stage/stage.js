@@ -2,11 +2,13 @@ const { STAGE_STATE_EMPTY,
   CHEAT_REASON_INVALID_ADDRESS, 
   CHEAT_REASON_INVALID_SIG, 
   CHEAT_REASON_REPEAT_DATA_EXCHANGE,
-  STAGE_STATE_FINISH } = require("../../constant");
+  STAGE_STATE_FINISH,
+  STAGE_FINISH_FOR_TIMEOUT } = require("../constants");
 const assert = require("assert");
 const Base = require("../data/base");
 
 const logger = process[Symbol.for("loggerConsensus")];
+const unlManager = process[Symbol.for("unlManager")];
 
 class Stage {
   constructor({ name, expiration, threshould })
@@ -24,23 +26,15 @@ class Stage {
   }
 
   startTimer() {
-    if (unlManager.fullUnl.length > 0) {
+    this.timer = setTimeout(() => {
 
-      this.timeout = setTimeout(() => {
+      this.state = STAGE_STATE_FINISH;
 
-        this.state = STAGE_STATE_FINISH;
+      this.timer = undefined;
 
-        this.handler();
+      this.handler(STAGE_FINISH_FOR_TIMEOUT);
 
-      }, this.expiration)
-
-      return;
-    }
-
-    // switch to single mode
-    this.state = STAGE_STATE_FINISH;
-
-    this.handler();
+    }, this.expiration)
   }
 
   /**
@@ -48,12 +42,12 @@ class Stage {
 	 * @param {String} address
 	 */
   validateAndProcessExchangeData(candidate, address) {
-    assert(candidate instanceof Base, `${this.name} ConsensusStage, candidate should be an instance of Base, now is ${typeof candidate}`);
-    assert(typeof address === 'string', `${this.name} ConsensusStage, address should be a String, now is ${typeof address}`);
+    assert(candidate instanceof Base, `${this.name} Stage, candidate should be an instance of Base, now is ${typeof candidate}`);
+    assert(typeof address === 'string', `${this.name} Stage, address should be a String, now is ${typeof address}`);
 
     // check if repeated recieve
     if (this.finishedNodes.has(address)) {
-      logger.error(`${name} Sender ConsensusStage, repeated receive, address ${address}`);
+      logger.error(`${name} Stage, repeated receive, address ${address}`);
 
       this.cheatedNodes.push({
         address: toString('hex'),
@@ -63,37 +57,56 @@ class Stage {
       return;
     }
 
-    // try to enter next stage
-    this.enterNextStage(candidate);
-
-    // add address
+    // record received address
     this.finishedNodes.add(address);
 
+    // check if every node's respond has received
+    this.enterNextStage(candidate);
+
+    //
+    const candidateValidateResult = candidate.validate();
+    const addressValidateResult = (address === candidate.from.toString("hex"));
+    
     // check sig
-    if (!candidate.validate()) {
-      logger.error(`${this.name} ConsensusStage validate, address: ${address}, validate failed`);
+    if (!candidateValidateResult) {
+      logger.error(`${this.name} Stage validate, address: ${address}, validate failed`);
 
       this.cheatedNodes.push({
         address: address,
         reason: CHEAT_REASON_INVALID_SIG
       });
-
-      return;
     }
 
-    // check address
-    if (address !== candidate.from.toString("hex")) {
-      logger.error(`${this.name} ConsensusStage validate, address should be ${address}, now is ${candidate.from.toString("hex")}`);
+    // check if msg address is correspond with connect address
+    if (!addressValidateResult)
+    {
+      logger.error(`${this.name} Stage validate, address should be ${address}, now is ${candidate.from.toString("hex")}`);
 
       this.cheatedNodes.push({
         address: address,
         reason: CHEAT_REASON_INVALID_ADDRESS
       });
-
-      return;
     }
 
-    this.candidates.push(candidate);
+    // candidate is valid
+    if (candidateValidateResult && addressValidateResult) {
+      this.candidates.push(candidate);
+
+      if (this.enterNextStage(candidate))
+      {
+        return;
+      }
+    }
+
+    // check if every node's respond has received
+    if (this.finishedNodes.size >= unlManager.fullUnl.length) {
+      this.state = STAGE_STATE_FINISH;
+
+      clearTimeout(this.timer);
+      this.timer = undefined;
+
+      this.handler(STAGE_FINISH_FOR_ALL_NODES_RETURN);
+    }
   }
 
   reset()
@@ -104,11 +117,6 @@ class Stage {
     this.candidates = [];
 
     this.cheatedNodes = [];
-
-    if(this.timeout)
-    {
-      clearTimeout(this.timeout);
-    }
   }
 }
 

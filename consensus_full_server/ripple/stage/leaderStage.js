@@ -1,4 +1,6 @@
-const { STAGE_STATE_FINISH } = require("../../constant");
+const { STAGE_STATE_FINISH,
+  STAGE_FINISH_FOR_ALL_NODES_RETURN,
+  STAGE_FINISH_SUCCESS } = require("../constants");
 const Stage = require("./stage");
 const Base = require("../data/base");
 
@@ -11,23 +13,14 @@ class LeaderStage extends Stage {
   }
 
   /**
-   * 
    * @param {Base} candidate 
+   * @return {Boolean}
    */
   enterNextStage(candidate)
   {
     assert(candidate instanceof Base, `${this.name} LeaderStage, candidate should be an instance of Base, now is ${typeof candidate}`);
 
-    if (this.finishedNodes.size >= unlManager.fullUnl.length 
-      || this.finishedNodes.size > this.threshould) {
-      this.state = STAGE_STATE_FINISH;
-
-      clearTimeout(this.timeout);
-
-      process.nextTick(() => {
-        this.handler();
-      });
-    }
+    return false;
   }
 }
 

@@ -7,7 +7,8 @@ const { STAGE_PRE_PREPARE,
   PROTOCOL_CMD_PRE_PREPARE_RES,
   STAGE_STATE_EMPTY,
   STAGE_STATE_PROCESSING,
-  STAGE_PRE_PREPARE_EXPIRATION } = require("../../constant");
+  STAGE_PRE_PREPARE_EXPIRATION,
+  STAGE_FINISH_SUCCESS } = require("../constants");
 const LeaderStage = require("../stage/leaderStage");
 
 const rlp = utils.rlp;
@@ -16,7 +17,6 @@ const sha256 = utils.sha256;
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
 const privateKey = process[Symbol.for("privateKey")];
-const unlManager = process[Symbol.for("unlManager")];
 
 class PrePrepare extends LeaderStage {
   constructor(ripple) {
@@ -45,14 +45,14 @@ class PrePrepare extends LeaderStage {
       const now = Date.now();
 
       //
-      this.ripple.amalgamatedCandidate = new Candidate({
+      this.ripple.candidate = new Candidate({
           hash: this.ripple.hash,
           number: this.ripple.number,
           timestamp: now,
           view: this.ripple.view,
-          candidate: rlp.encode([...this.ripple.amalgamatedTransactions.map(tx => Buffer.from(tx, 'hex'))])
+          transactions: rlp.encode([...this.ripple.amalgamatedTransactions].map(tx => Buffer.from(tx, 'hex')))
       })
-      this.ripple.amalgamatedCandidate.sign(privateKey);
+      this.ripple.candidate.sign(privateKey);
 
       //
       this.ripple.amalgamatedCandidateDigest = new CandidateDigest({
@@ -60,20 +60,40 @@ class PrePrepare extends LeaderStage {
         number: this.ripple.number,
         timestamp: now,
         view: this.ripple.view,
-        digest: sha256(this.ripple.amalgamatedCandidate.transactions)
+        digest: sha256(this.ripple.candidate.transactions)
       })
       this.ripple.amalgamatedCandidateDigest.sign(privateKey);
 
       // broadcast amalgamated transactions
-      p2p.sendAll(PROTOCOL_CMD_PRE_PREPARE_REQ, this.ripple.amalgamatedCandidate.serialize())
+      p2p.sendAll(PROTOCOL_CMD_PRE_PREPARE_REQ, this.ripple.candidate.serialize())
 
       // begin timer
       this.startTimer()
+
+      //
+      const candidate = new Candidate({
+        hash: this.ripple.hash,
+        number: this.ripple.number,
+        timestamp: Date.now(),
+        view: this.ripple.view
+      });
+      candidate.sign(privateKey);
+
+      //
+      this.validateAndProcessExchangeData(candidate, process[Symbol.for("address")]);
+    }
+    else {
+      this.ripple.startLeaderTimer();
     }
   }
 
   handler()
   {
+    // node is not leader
+    if (!this.ripple.checkPrimaryNode(process[Symbol.for("address")])) {
+      this.ripple.clearLeaderTimer();
+    }
+    
     this.ripple.prepare.run();
   }
 
@@ -120,21 +140,20 @@ class PrePrepare extends LeaderStage {
             //
             this.state = STAGE_STATE_FINISH;
 
-            process.nextTick(() => {
-              this.handler();
+            // 
+            const candidate = new Candidate({
+              hash: this.ripple.hash,
+              number: this.ripple.number,
+              timestamp: Date.now(),
+              view: this.ripple.view
             });
+            candidate.sign(privateKey);
+
+            //
+            p2p.send(address, PROTOCOL_CMD_PRE_PREPARE_RES, candidate.serialize());
+
+            this.handler(STAGE_FINISH_SUCCESS);
           }
-
-          let candidate = new Candidate({
-            hash: this.ripple.hash,
-            number: this.ripple.number,
-            view: this.ripple.view
-          });
-
-          //
-          candidate.sign(privateKey);
-
-          p2p.send(address, PROTOCOL_CMD_PRE_PREPARE_RES, candidate.serialize());
         }
         break;
       case PROTOCOL_CMD_PRE_PREPARE_RES:

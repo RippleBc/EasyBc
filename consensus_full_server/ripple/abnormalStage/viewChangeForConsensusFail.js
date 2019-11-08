@@ -6,22 +6,20 @@ const { RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL,
   PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL,
   STAGE_STATE_EMPTY,
   STAGE_STATE_PROCESSING,
-  STAGE_VIEW_CHANGE_FOR_CONSENSUS_FAIL_EXPIRATION } = require("../../constant");
+  STAGE_VIEW_CHANGE_FOR_CONSENSUS_FAIL_EXPIRATION,
+  STAGE_FINISH_SUCCESS } = require("../constants");
 
 const Buffer = utils.Buffer;
 const BN = utils.BN;
 
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
-const unlManager = process[Symbol.for("unlManager")];
 
 class ViewChangeForConsensusFail extends Stage {
   constructor(ripple) {
-    super({ name: 'viewChangeForConsensusFail', expiraion: STAGE_VIEW_CHANGE_FOR_CONSENSUS_FAIL_EXPIRATION, threshould: unlManager.threshould })
+    super({ name: 'viewChangeForConsensusFail', expiraion: STAGE_VIEW_CHANGE_FOR_CONSENSUS_FAIL_EXPIRATION })
 
     this.ripple = ripple;
-
-    this.trimedViewChanges = new Map();
   }
 
   run() {
@@ -46,22 +44,31 @@ class ViewChangeForConsensusFail extends Stage {
     viewChange.sign(privateKey);
 
     // broadcast
-    p2p.sendAll(PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL, viewChange.serialize())
+    p2p.sendAll(PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL, viewChange.serialize());
 
     // begin timer
-    this.startTimer()
+    this.startTimer();
+
+    //
+    this.validateAndProcessExchangeData(viewChange, process[Symbol.for("address")]);
   }
 
   /**
-   * @param {Bolean} ifViewChangeSuccess
+   * @param {Number} code
    */
-  handler(ifViewChangeSuccess = false) {
-    if (ifViewChangeSuccess)
+  handler(code) {
+    if (code === STAGE_FINISH_SUCCESS)
     {
       this.ripple.view = new BN(this.ripple.view).addn(1).toBuffer();
-    }
 
-    this.ripple.run()
+      this.ripple.run();
+    }
+    else
+    {
+      logger.fatal(`ViewChangeForConsensusFail handler, view change consensus failed`);
+
+      process.exit(1);
+    }
   }
 
   /**
@@ -81,55 +88,6 @@ class ViewChangeForConsensusFail extends Stage {
         }
         break;
     }
-  }
-
-  /**
-   * 
-   * @param {Base} viewChange 
-   */
-  enterNextStage(viewChange) {
-    assert(viewChange instanceof Base, `${this.name} ConsensusStage, viewChange should be an instance of Base, now is ${typeof viewChange}`);
-
-    //
-    const viewChangeHash = viewChange.hash(false).toString('hex');
-    let viewChangeDetail = this.trimedViewChanges.get(viewChangeHash);
-    if (viewChangeDetail) {
-      viewChangeDetail.count += 1;
-    }
-    else {
-      viewChangeDetail.data = viewChange;
-      viewChangeDetail.count = 1;
-    }
-    this.trimedViewChanges.set(viewChangeHash, viewChangeDetail);
-
-    //
-    if (viewChangeDetail.count > this.threshould) {
-      this.state = STAGE_STATE_FINISH;
-
-      clearTimeout(this.timeout);
-
-      process.nextTick(() => {
-        this.handler(true);
-      });
-
-      return;
-    }
-
-    if (this.finishedNodes.size >= unlManager.fullUnl.length) {
-      this.state = STAGE_STATE_FINISH;
-
-      clearTimeout(this.timeout);
-
-      process.nextTick(() => {
-        this.handler()
-      })
-    }
-  }
-
-  reset() {
-    super.reset();
-
-    this.trimedViewChanges.clear();
   }
 }
 

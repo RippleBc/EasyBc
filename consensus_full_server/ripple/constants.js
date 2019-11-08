@@ -20,12 +20,18 @@ module.exports.STAGE_STATE_EMPTY = 1;
 module.exports.STAGE_STATE_PROCESSING = 2;
 module.exports.STAGE_STATE_FINISH = 3;
 
+module.exports.STAGE_FINISH_FOR_TIMEOUT = 1;
+module.exports.STAGE_FINISH_FOR_ALL_NODES_RETURN = 2;
+module.exports.STAGE_FINISH_SUCCESS = 3;
+
 // ripple
 module.exports.RIPPLE_STATE_EMPTY = 1;
 module.exports.RIPPLE_STATE_CONSENSUS = 2;
 module.exports.RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL = 3;
 module.exports.RIPPLE_STATE_VIEW_CHANGE_FOR_TIMEOUT = 4;
 module.exports.RIPPLE_STATE_NEW_VIEW = 5;
+
+module.exports.RIPPLE_LEADER_EXPIRATION = 4000;
 
 // amalgamate
 module.exports.PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ = 100;

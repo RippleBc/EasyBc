@@ -6,7 +6,7 @@ const { STAGE_COMMIT,
   PROTOCOL_CMD_COMMIT,
   STAGE_STATE_EMPTY,
   STAGE_STATE_PROCESSING,
-  STAGE_COMMIT_EXPIRATION } = require("../../constant");
+  STAGE_COMMIT_EXPIRATION } = require("../constants");
 
 const Buffer = utils.Buffer;
 
@@ -34,17 +34,26 @@ class Commit extends ConsensusStage {
     //
     this.ripple.stage = STAGE_COMMIT;
 
-    // broadcast
-    p2p.sendAll(PROTOCOL_CMD_COMMIT, this.ripple.candidateDigest.serialize())
-
     // begin timer
     this.startTimer()
+
+    // consensus success
+    if (this.ripple.consensusCandidateDigest)
+    {
+      // broadcast
+      p2p.sendAll(PROTOCOL_CMD_COMMIT, this.ripple.consensusCandidateDigest.serialize());
+
+      //
+      this.validateAndProcessExchangeData(this.ripple.consensusCandidateDigest, process[Symbol.for("address")]);
+    }
   }
 
   handler() {
     //
     if (!this.ripple.consensusCandidateDigest)
     {
+      logger.error("candidateDigest consensus failed, enter to view change state");
+
       this.ripple.viewChangeForConsensusFail.run();
 
       return;
@@ -55,6 +64,11 @@ class Commit extends ConsensusStage {
       || this.ripple.number.toString('hex') !== this.ripple.consensusCandidateDigest.number.toString('hex')
       || this.ripple.view.toString('hex') !== this.ripple.consensusCandidateDigest.view.toString('hex'))
     {
+      logger.error(`candidateDigest consensus success, hash, number, view should be 
+      ${this.ripple.hash.toString('hex')}, ${this.ripple.number.toString('hex')}, ${this.ripple.view.toString('hex')},
+      now is ${this.ripple.consensusCandidateDigest.hash.toString('hex')}, ${this.ripple.consensusCandidateDigest.number.toString('hex')}, ${this.ripple.consensusCandidateDigest.view.toString('hex')},
+      enter to view change state`);
+
       this.ripple.viewChangeForConsensusFail.run();
 
       return;

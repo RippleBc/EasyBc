@@ -44,10 +44,12 @@ class FetchConsensusCandidate
     this.handler = handler;
 
     //
-    p2p.sendAll(PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ, this.consensusCandidateDigest.serialize());
+    p2p.sendAll(PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ, this.ripple.consensusCandidateDigest.serialize());
 
-    this.timeout = setTimeout(() => {
+    this.timer = setTimeout(() => {
       logger.fatal("FetchConsensusCandidate run, fetch consensus candidate failed");
+
+      this.timer = undefined;
 
       process.exit(1);
     }, STAGE_FETCH_CANDIDATE_EXPIRATION);
@@ -70,7 +72,7 @@ class FetchConsensusCandidate
 
           if (!consensusCandidateDigest.validate())
           {
-            logger.error(`FetchConsensusCandidate validate, address: ${address.toString('hex')}, validate failed`);
+            logger.error(`FetchConsensusCandidate handleMessage validate, address: ${address.toString('hex')}, validate failed`);
 
             this.cheatedNodes.push({
               address: address.toString('hex'),
@@ -83,6 +85,8 @@ class FetchConsensusCandidate
           // 
           if (this.ripple.candidateDigest && this.ripple.candidateDigest.hash(false).toString('hex') !== consensusCandidateDigest.hash(false).toString('hex'))
           {
+            logger.error(`FetchConsensusCandidate handleMessage, candidateDigest should be ${this.ripple.candidateDigest.hash(false).toString('hex')}, now is ${consensusCandidateDigest.hash(false).toString('hex')}`);
+
             return;
           }
 
@@ -101,7 +105,7 @@ class FetchConsensusCandidate
           const candidate = new Candidate(data);
 
           if (!candidate.validate()) {
-            logger.error(`FetchConsensusCandidate validate, address: ${address.toString('hex')}, validate failed`);
+            logger.error(`FetchConsensusCandidate handleMessage validate, address: ${address.toString('hex')}, validate failed`);
 
             this.cheatedNodes.push({
               address: address.toString('hex'),
@@ -113,6 +117,8 @@ class FetchConsensusCandidate
 
           // 
           if (this.ripple.consensusCandidateDigest.digest.toString('hex') !== sha256(candidate.transactions).toString('hex')) {
+            logger.error(`FetchConsensusCandidate handleMessage, txs digest should be ${this.ripple.consensusCandidateDigest.digest.toString('hex')}, now is ${sha256(candidate.transactions).toString('hex')}`);
+            
             return;
           }
 
@@ -129,7 +135,8 @@ class FetchConsensusCandidate
           //
           this.state = STAGE_STATE_FINISH;
 
-          clearTimeout(this.timeout);
+          clearTimeout(this.timer);
+          this.timer = undefined;
 
           this.handler();
       }
@@ -142,11 +149,6 @@ class FetchConsensusCandidate
     this.state = STAGE_STATE_EMPTY;
 
     this.cheatedNodes = [];
-
-    if(this.timeout)
-    {
-      clearTimeout(this.timeout);
-    }
   }
 }
 
