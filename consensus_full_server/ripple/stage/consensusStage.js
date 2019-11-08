@@ -1,4 +1,4 @@
-const { STAGE_STATE_FINISH } = require("../constants");
+const { STAGE_STATE_FINISH, STAGE_FINISH_SUCCESS } = require("../constants");
 const Stage = require("./stage");
 
 const privateKey = process[Symbol.for("privateKey")];
@@ -49,7 +49,7 @@ class ConsensusStage extends Stage {
       }
       else
       {
-        logger.fatal(`${this.name} ConsensusStage enterNextStage, ripple state should be ${RIPPLE_STATE_CONSENSUS} or ${RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL}, now is ${this.ripple.state}`);
+        logger.fatal(`${this.name} ConsensusStage enterNextStage, ripple state should be ${RIPPLE_STATE_CONSENSUS} or ${RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL}, now is ${this.ripple.state}, ${process[Symbol.for("getStackInfo")]()}`);
       
         process.exit(1);
       }
@@ -61,7 +61,7 @@ class ConsensusStage extends Stage {
       this.timer = undefined;
 
       process.nextTick(() => {
-        this.handler();
+        this.handler(STAGE_FINISH_SUCCESS);
       });
 
       return true;

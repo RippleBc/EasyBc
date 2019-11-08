@@ -65,9 +65,20 @@ class ViewChangeForConsensusFail extends Stage {
     }
     else
     {
-      logger.fatal(`ViewChangeForConsensusFail handler, view change consensus failed`);
+      if (this.ripple.consensusCandidateDigest)
+      {
+        // consensus success
+        // hash, number, view check failed
+        // and view change failed
+        // try to sync state
+        this.ripple.syncNodeState();
+      }
+      else
+      {
+        logger.fatal(`ViewChangeForConsensusFail handler, view change consensus failed`);
 
-      process.exit(1);
+        process.exit(1);
+      }
     }
   }
 

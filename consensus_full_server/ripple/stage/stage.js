@@ -117,6 +117,10 @@ class Stage {
     this.candidates = [];
 
     this.cheatedNodes = [];
+
+    if (this.timer) {
+      clearTimeout(this.timer);
+    }
   }
 }
 

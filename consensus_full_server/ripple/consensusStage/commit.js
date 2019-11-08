@@ -16,7 +16,7 @@ const logger = process[Symbol.for("loggerConsensus")];
 
 class Commit extends ConsensusStage {
   constructor(ripple) {
-    super({ name: 'commit', expiraion: STAGE_COMMIT_EXPIRATION, threshould: parsent(unlManager.fullUnl.length / 2) })
+    super({ name: 'commit', expiraion: STAGE_COMMIT_EXPIRATION, threshould: parsent(unlManager.fullUnl.length / 2 + 1) })
 
     this.ripple = ripple;
   }

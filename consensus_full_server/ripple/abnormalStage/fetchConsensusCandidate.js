@@ -47,11 +47,15 @@ class FetchConsensusCandidate
     p2p.sendAll(PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ, this.ripple.consensusCandidateDigest.serialize());
 
     this.timer = setTimeout(() => {
-      logger.fatal("FetchConsensusCandidate run, fetch consensus candidate failed");
+      logger.fatal(`FetchConsensusCandidate run, fetch consensus candidate failed, ${process[Symbol.for("getStackInfo")]()}`);
 
       this.timer = undefined;
 
-      process.exit(1);
+      // consensus success
+      // hash, number, view check success
+      // try to fetch consensus candidate failed
+      // try to sync state
+      this.ripple.syncNodeState();
     }, STAGE_FETCH_CANDIDATE_EXPIRATION);
   }
 
@@ -149,6 +153,11 @@ class FetchConsensusCandidate
     this.state = STAGE_STATE_EMPTY;
 
     this.cheatedNodes = [];
+
+    if (this.timer)
+    {
+      clearTimeout(this.timer);
+    }
   }
 }
 

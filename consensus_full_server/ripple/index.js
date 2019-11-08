@@ -11,7 +11,8 @@ const { STAGE_STATE_EMPTY,
 	CHEAT_REASON_INVALID_PROTOCOL_CMD, 
 	RIPPLE_STATE_EMPTY, 
 	MAX_PROCESS_TRANSACTIONS_SIZE,
-	RIPPLE_LEADER_EXPIRATION } = require("../constants");
+	RIPPLE_LEADER_EXPIRATION,
+	RIPPLE_STAGE_PROCESS_CONSENSUS_CANDIDATE } = require("./constants");
 const assert = require("assert");
 const Block = require("../../depends/block");
 
@@ -72,6 +73,11 @@ class Ripple
 		this.amalgamate.run();
 	}
 
+	syncNodeState()
+	{
+
+	}
+
 	/**
 	 * 
 	 */
@@ -86,14 +92,21 @@ class Ripple
 			transactions: this.candidate.transactions
 		});
 
-		this.processor.processBlock({
-			block: consensusBlock
-		}).then(() => {
-			// check view 
-			if (this.candidate.view.toString('hex') === this.ripple.view.toString('hex'))
-			{
-				this.ripple.run();
-			}
+		this.state = RIPPLE_STAGE_PROCESS_CONSENSUS_CANDIDATE;
+
+		(async () => {
+
+			// update hash and number
+			this.ripple.hash = consensusBlock.hash();
+			this.ripple.number = consensusBlock.header.number;
+
+			// process block
+			await this.processor.processBlock({
+				block: consensusBlock
+			});
+
+			// notice view may have been changed
+			this.ripple.run();
 		});
 	}
 
