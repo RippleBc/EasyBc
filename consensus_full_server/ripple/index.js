@@ -12,7 +12,8 @@ const { STAGE_STATE_EMPTY,
 	RIPPLE_STATE_EMPTY, 
 	MAX_PROCESS_TRANSACTIONS_SIZE,
 	RIPPLE_LEADER_EXPIRATION,
-	RIPPLE_STAGE_PROCESS_CONSENSUS_CANDIDATE } = require("./constants");
+	RIPPLE_STAGE_PROCESS_CONSENSUS_CANDIDATE,
+	RIPPLE_STATE_SYNC_NODE_STATE } = require("./constants");
 const assert = require("assert");
 const Block = require("../../depends/block");
 
@@ -75,7 +76,10 @@ class Ripple
 
 	syncNodeState()
 	{
+		this.state = RIPPLE_STATE_SYNC_NODE_STATE;
 
+		// 
+		process.exit(1);
 	}
 
 	/**
@@ -113,7 +117,11 @@ class Ripple
 	startLeaderTimer()
 	{
 		this.leaderTimeout = setTimeout(() => {
-			
+			// try to view change
+			this.viewChangeForTimeout.run();
+
+			// try to
+			this.syncNodeState();
 		}, RIPPLE_LEADER_EXPIRATION);
 	}
 
@@ -175,25 +183,9 @@ class Ripple
 
 	handleMessage()
 	{	
-		let { address, cmd, data } = {};
-
-		while(address === undefined)
-		{
-			setTimeout(() => { });
-
-			({ address, cmd, data }) = this.processor.getMessage();
-		}
-
-		assert(Buffer.isBuffer(address), `Ripple handleMessage, address should be an Buffer, now is ${typeof address}`);
-		assert(typeof cmd === "number", `Ripple handleMessage, cmd should be a Number, now is ${typeof cmd}`);
-		assert(Buffer.isBuffer(data), `Ripple handleMessage, data should be an Buffer, now is ${typeof data}`);
-
-		logger.error(`Ripple handleMessage, address ${address.toString("hex")}, invalid cmd: ${cmd}`);
-
-		this.handleCheatedNodes({
-			address: address.toString("hex"),
-			reason: CHEAT_REASON_INVALID_PROTOCOL_CMD
-		});
+		const msg = this.processor.getMessage();
+		
+		// check get specified msg
 	}
 
 	/**

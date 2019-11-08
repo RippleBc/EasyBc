@@ -1,6 +1,5 @@
 const assert = require("assert");
 const utils = require("../../../depends/utils");
-const Candidate = require("./base.js");
 
 const rlp = utils.rlp;
 const sha256 = utils.sha256;

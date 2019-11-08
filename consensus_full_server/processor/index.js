@@ -67,7 +67,12 @@ class Processor
 
 	getMessage()
 	{
-		return this.msgBuffer.shift();
+		return this.msgBuffer.pop();
+	}
+
+	recoverMessage(msg)
+	{
+		this.msgBuffer.push(msg);
 	}
 
 	/**
