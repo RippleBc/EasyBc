@@ -81,6 +81,12 @@ class ViewChangeForConsensusFail extends Stage {
     assert(typeof cmd === "number", `ViewChangeForConsensusFail handleMessage, cmd should be a Number, now is ${typeof cmd}`);
     assert(Buffer.isBuffer(data), `ViewChangeForConsensusFail handleMessage, data should be an Buffer, now is ${typeof data}`);
 
+    if (this.state !== STAGE_STATE_PROCESSING) {
+      logger.info(`ViewChangeForConsensusFail handleMessage, state should be ${STAGE_STATE_PROCESSING}, now is ${this.state}`);
+
+      return;
+    }
+
     switch (cmd) {
       case PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL:
         {

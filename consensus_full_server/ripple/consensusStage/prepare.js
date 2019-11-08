@@ -61,6 +61,12 @@ class Prepare extends ConsensusStage
 		assert(typeof cmd === "number", `Prepare handleMessage, cmd should be a Number, now is ${typeof cmd}`);
 		assert(Buffer.isBuffer(data), `Prepare handleMessage, data should be an Buffer, now is ${typeof data}`);
 
+		if (this.state !== STAGE_STATE_PROCESSING) {
+			logger.info(`Prepare handleMessage, state should be ${STAGE_STATE_PROCESSING}, now is ${this.state}`);
+
+			return;
+		}
+
 		switch(cmd)
 		{
 			case PROTOCOL_CMD_PREPARE:
