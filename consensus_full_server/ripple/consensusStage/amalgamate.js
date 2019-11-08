@@ -41,7 +41,7 @@ class Amalgamate extends LeaderStage
 		this.ripple.stage = STAGE_AMALGAMATE;
 		
 		// node is leader
-		if (this.ripple.checkPrimaryNode(process[Symbol.for("address")]))
+		if (this.ripple.checkLeader(process[Symbol.for("address")]))
 		{
 			// request candidates
 			p2p.sendAll(PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ);
@@ -71,7 +71,7 @@ class Amalgamate extends LeaderStage
 	handler()
 	{
 		// node is leader
-		if (this.ripple.checkPrimaryNode(process[Symbol.for("address")])) {
+		if (this.ripple.checkLeader(process[Symbol.for("address")])) {
 			for (let localCandidate of this.candidates)
 			{
 				const decodedTransactions = rlp.decode(localCandidate.transactions);
@@ -112,7 +112,7 @@ class Amalgamate extends LeaderStage
 			case PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ:
 			{
 				// sender is leader
-				if (this.ripple.checkPrimaryNode(address.toString('hex'))) {
+				if (this.ripple.checkLeader(address.toString('hex'))) {
 
 					//
 					let localCandidate = new Candidate({
@@ -136,7 +136,7 @@ class Amalgamate extends LeaderStage
 			break;
 			case PROTOCOL_CMD_TRANSACTION_AMALGAMATE_RES:
 			{
-				if (this.ripple.checkPrimaryNode(process[Symbol.for("address")])) {
+				if (this.ripple.checkLeader(process[Symbol.for("address")])) {
 					this.validateAndProcessExchangeData(new Candidate(data), address.toString('hex'));
 				}
 			}

@@ -136,6 +136,7 @@ class UnlManager
                 queryPort: node.queryPort,
                 p2pPort: node.p2pPort,
                 address: node.address,
+                index: node.index,
                 state: 1
             })
         }
@@ -170,6 +171,12 @@ class UnlManager
                         assert(typeof node.p2pPort === 'number', `UnlManager updateNodes, node.p2pPort should be a Number, now is ${typeof node.p2pPort}`);
 
                         existNode.p2pPort = node.p2pPort;
+                    }
+
+                    if (undefined !== node.index) {
+                        assert(typeof node.index === 'number', `UnlManager updateNodes, node.index should be a Number, now is ${typeof node.index}`);
+
+                        existNode.index = node.index;
                     }
 
                     if (undefined !== node.state) {
@@ -208,6 +215,12 @@ class UnlManager
                         assert(typeof node.p2pPort === 'number', `UnlManager updateNodes, node.p2pPort should be a Number, now is ${typeof node.p2pPort}`);
 
                         existNode.p2pPort = node.p2pPort;
+                    }
+
+                    if (undefined !== node.index) {
+                        assert(typeof node.index === 'number', `UnlManager updateNodes, node.index should be a Number, now is ${typeof node.index}`);
+
+                        existNode.index = node.index;
                     }
 
                     if (undefined !== node.state) {

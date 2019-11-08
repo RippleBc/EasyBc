@@ -7,8 +7,7 @@ const { RIPPLE_STATE_NEW_VIEW,
   PROTOCOL_CMD_NEW_VIEW_RES,
   STAGE_STATE_EMPTY,
   STAGE_STATE_PROCESSING,
-  STAGE_VIEW_CHANGE_NEW_VIEW_EXPIRATION,
-  STAGE_FINISH_SUCCESS } = require("../constants");
+  STAGE_VIEW_CHANGE_NEW_VIEW_EXPIRATION } = require("../constants");
 const LeaderStage = require("../stage/leaderStage");
 const Candidate = require("../data/candidate");
 
@@ -40,7 +39,7 @@ class NewView extends LeaderStage {
     this.ripple.state = RIPPLE_STATE_NEW_VIEW;
 
     // node is leader
-    if (this.ripple.checkPrimaryNode(process[Symbol.for("address")])) {
+    if (this.ripple.checkLeader(process[Symbol.for("address")])) {
       const viewChanges = [];
       const consensusViewChangeHash = this.ripple.viewChangeForTimeout.consensusViewChange.hash(false).toString("hex");
       for (let viewChange of this.ripple.viewChangeForTimeout.trimedViewChangesByAddress.values())
@@ -83,10 +82,14 @@ class NewView extends LeaderStage {
     }
   }
 
-  /**
-   * @param {Number} code 
-   */
-  handler(code) {
+  handler() {
+
+    // reset
+    this.ripple.viewChangeForConsensusFail.reset();
+    this.ripple.viewChangeForTimeout.reset();
+    this.newView.reset();
+
+    //
     this.ripple.run();
   }
 
@@ -147,8 +150,15 @@ class NewView extends LeaderStage {
             trimedViewChangesByAddress.add(fromAddress.toString('hex'))
           }
 
-          // 
-          this.ripple.view = new BN(viewChanges[0].view).addn(1).toBuffer();
+          // check if new view is valid
+          const newViewBN = new BN(viewChanges[0].view).addn(1)
+          if (newViewBN.lte(new BN(this.ripple.view)))
+          {
+            return;
+          }
+
+          // init new view
+          this.ripple.view = newViewBN.toBuffer();
 
           //
           let candidate = new Candidate({
@@ -162,7 +172,7 @@ class NewView extends LeaderStage {
 
           p2p.send(address, PROTOCOL_CMD_NEW_VIEW_RES, candidate.serialize());
 
-          this.handler(STAGE_FINISH_SUCCESS)
+          this.handler()
         }
         break;
       case PROTOCOL_CMD_NEW_VIEW_RES:
@@ -173,7 +183,7 @@ class NewView extends LeaderStage {
             return;
           }
 
-          if (this.ripple.checkPrimaryNode(process[Symbol.for("address")])) {
+          if (this.ripple.checkLeader(process[Symbol.for("address")])) {
             this.validateAndProcessExchangeData(new Candidate(data), address.toString('hex'));
           }
         }

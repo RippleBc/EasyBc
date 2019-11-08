@@ -52,12 +52,25 @@ class Ripple
 	 */
 	run()
 	{	
+		await mysql.getRawTransactions(MAX_PROCESS_TRANSACTIONS_SIZE);
+
+		this.localTransactions = [];
+		this.amalgamatedTransactions.clear();
+		this.candidate = undefined;
+		this.candidateDigest = undefined;
+		this.consensusCandidateDigest = undefined;
+		this.consensusViewChange = undefined;
+
+		this.amalgamate.reset();
+		this.prePrepare.reset();
+		this.prepare.reset();
+		this.commit.reset();
+		this.fetchConsensusCandidate.reset();
+
 		this.state = RIPPLE_STATE_CONSENSUS;
 
 		this.amalgamate.run();
 	}
-
-
 
 	/**
 	 * 
@@ -76,7 +89,11 @@ class Ripple
 		this.processor.processBlock({
 			block: consensusBlock
 		}).then(() => {
-
+			// check view 
+			if (this.candidate.view.toString('hex') === this.ripple.view.toString('hex'))
+			{
+				this.ripple.run();
+			}
 		});
 	}
 
@@ -87,21 +104,44 @@ class Ripple
 		}, RIPPLE_LEADER_EXPIRATION);
 	}
 
-	clearLeaderTime()
+	clearLeaderTimer()
 	{
 		this.leaderTimeout.clear();
 
 		this.leaderTimeout = undefined;
 	}
 
-	/*
-	 * @return {Object} 
-	 *  - {Array} transactions
-	 *  - {Function} deleteTransactions
+	/**
+	 * 
+	 * @param {String} address 
 	 */
-	async getNewTransactions()
+	checkLeader(address)
 	{
-		return await mysql.getRawTransactions(MAX_PROCESS_TRANSACTIONS_SIZE);
+		assert(typeof address === 'string', `Ripple checkLeader, address should be a String, now is ${typeof address}`);
+
+		let nextViewLeaderIndex = new BN(this.ripple.view).modrn(unlManager.fullUnl.length);
+		for (let node of unlManager.fullUnl) {
+			if (node.index === nextViewLeaderIndex) {
+				return node.address;
+			}
+		}
+	}
+
+	get nextViewLeaderAddress()
+	{
+		let nextViewLeaderIndex = new BN(this.ripple.view).addn(1).modrn(unlManager.fullUnl.length);
+		for (let node of unlManager.fullUnl)
+		{
+			if (node.index === nextViewLeaderIndex)
+			{
+				return node.address;
+			}
+		}
+	}
+
+	get threshould() 
+	{
+		return unlManager.fullUnl.length * 2 / 3 + 1;
 	}
 
 	/**
@@ -120,67 +160,6 @@ class Ripple
 		});
 	}
 
-	/**
-	 * @param {Buffer} address
-	 * @return {Boolean}
-	 */
-	perishNode(address)
-	{
-		if (this.perish.state !== STAGE_STATE_EMPTY)
-		{
-			return false;
-		}
-		else
-		{
-			this.perish.startPerishNodeSpreadMode({
-				address: address
-			});
-
-			return true;
-		}
-	}
-
-	/**
-	 * @param {Array/String} address
-	 */
-	async pardonNodes(addresses)
-	{
-		assert(Array.isArray(addresses), `Ripple pardonNodes, addresses should be an Array, now is ${typeof addresses}`)
-
-		await unlManager.setNodesRighteous(addresses)
-	}
-
-	/**
-	 * @param {Array} nodes 
-	 */
-	async addNodes(nodes)
-	{
-		assert(Array.isArray(nodes), `Ripple addNodes, nodes should be an Array, now is ${typeof nodes}`)
-
-		await unlManager.addNodes(nodes);
-	}
-
-	/**
-	 * @param {Array} nodes 
-	 */
-	async updateNodes(nodes)
-	{
-		assert(Array.isArray(nodes), `Ripple updateNodes, nodes should be an Array, now is ${typeof nodes}`)
-
-		await unlManager.updateNodes({
-			nodes: nodes
-		});
-	}
-
-	/**
-	 * @param {Array} nodes 
-	 */
-	async deleteNodes(nodes) {
-		assert(Array.isArray(nodes), `Ripple deleteNodes, nodes should be an Array, now is ${typeof nodes}`)
-
-		await unlManager.deleteNodes(nodes);
-	}
-
 	handleMessage()
 	{	
 		let { address, cmd, data } = {};
@@ -196,56 +175,67 @@ class Ripple
 		assert(typeof cmd === "number", `Ripple handleMessage, cmd should be a Number, now is ${typeof cmd}`);
 		assert(Buffer.isBuffer(data), `Ripple handleMessage, data should be an Buffer, now is ${typeof data}`);
 
-		if (this.state === RIPPLE_STATE_EMPTY)
-		{
-			logger.info(`Ripple handleMessage, ripple has not begin, do not process messages`);
+		logger.error(`Ripple handleMessage, address ${address.toString("hex")}, invalid cmd: ${cmd}`);
 
-			return;
-		}
+		this.handleCheatedNodes({
+			address: address.toString("hex"),
+			reason: CHEAT_REASON_INVALID_PROTOCOL_CMD
+		});
+	}
 
-		if(cmd >= 100 && cmd < 200)
-		{
-			this.amalgamate.handleMessage(address, cmd, data);
+	/**
+ * @param {Buffer} address
+ * @return {Boolean}
+ */
+	perishNode(address) {
+		if (this.perish.state !== STAGE_STATE_EMPTY) {
+			return false;
 		}
-		else if(cmd >= 200 && cmd < 300)
-		{
-			this.candidateAgreement.handleMessage(address, cmd, data);
-		}
-		else if(cmd >= 300 && cmd < 400)
-		{
-			this.blockAgreement.handleMessage(address, cmd, data);
-		}
-		else
-		{
-			logger.error(`Ripple handleMessage, address ${address.toString("hex")}, invalid cmd: ${cmd}`);
-
-			this.handleCheatedNodes({
-				address: address.toString("hex"),
-				reason: CHEAT_REASON_INVALID_PROTOCOL_CMD
+		else {
+			this.perish.startPerishNodeSpreadMode({
+				address: address
 			});
+
+			return true;
 		}
 	}
 
-	reset()
-	{
-		this.state = RIPPLE_STATE_EMPTY;
+	/**
+	 * @param {Array/String} address
+	 */
+	async pardonNodes(addresses) {
+		assert(Array.isArray(addresses), `Ripple pardonNodes, addresses should be an Array, now is ${typeof addresses}`)
 
-		// 
-		this.localTransactions = [];
-		this.amalgamatedTransactions.clear();
-		this.candidate = undefined;
-		this.candidateDigest = undefined;
-		this.consensusCandidateDigest = undefined;	
-		this.consensusViewChange = undefined;
-		
-		this.amalgamate.reset();
-		this.prePrepare.reset();
-		this.prepare.reset();
-		this.commit.reset();
-		this.fetchConsensusCandidate.reset();
-		this.viewChangeForConsensusFail.reset();
-		this.viewChangeForTimeout.reset();
-		this.newView.reset();
+		await unlManager.setNodesRighteous(addresses)
+	}
+
+	/**
+	 * @param {Array} nodes 
+	 */
+	async addNodes(nodes) {
+		assert(Array.isArray(nodes), `Ripple addNodes, nodes should be an Array, now is ${typeof nodes}`)
+
+		await unlManager.addNodes(nodes);
+	}
+
+	/**
+	 * @param {Array} nodes 
+	 */
+	async updateNodes(nodes) {
+		assert(Array.isArray(nodes), `Ripple updateNodes, nodes should be an Array, now is ${typeof nodes}`)
+
+		await unlManager.updateNodes({
+			nodes: nodes
+		});
+	}
+
+	/**
+	 * @param {Array} nodes 
+	 */
+	async deleteNodes(nodes) {
+		assert(Array.isArray(nodes), `Ripple deleteNodes, nodes should be an Array, now is ${typeof nodes}`)
+
+		await unlManager.deleteNodes(nodes);
 	}
 }
 

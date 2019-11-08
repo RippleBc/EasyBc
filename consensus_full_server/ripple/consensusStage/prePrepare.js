@@ -41,7 +41,7 @@ class PrePrepare extends LeaderStage {
 
 
     // node is leader
-    if (this.ripple.checkPrimaryNode(process[Symbol.for("address")])) {
+    if (this.ripple.checkLeader(process[Symbol.for("address")])) {
       const now = Date.now();
 
       //
@@ -90,7 +90,7 @@ class PrePrepare extends LeaderStage {
   handler()
   {
     // node is not leader
-    if (!this.ripple.checkPrimaryNode(process[Symbol.for("address")])) {
+    if (!this.ripple.checkLeader(process[Symbol.for("address")])) {
       this.ripple.clearLeaderTimer();
     }
     
@@ -117,7 +117,7 @@ class PrePrepare extends LeaderStage {
       case PROTOCOL_CMD_PRE_PREPARE_REQ:
         {
           // sender is leader
-          if (this.ripple.checkPrimaryNode(address.toString('hex'))) {
+          if (this.ripple.checkLeader(address.toString('hex'))) {
 
             // init candidate
             this.ripple.candidate = new Candidate(date);
@@ -158,7 +158,7 @@ class PrePrepare extends LeaderStage {
         break;
       case PROTOCOL_CMD_PRE_PREPARE_RES:
         {
-          if (this.ripple.checkPrimaryNode(process[Symbol.for("address")])) {
+          if (this.ripple.checkLeader(process[Symbol.for("address")])) {
             this.validateAndProcessExchangeData(new Candidate(data), address.toString('hex'));
           } 
         }

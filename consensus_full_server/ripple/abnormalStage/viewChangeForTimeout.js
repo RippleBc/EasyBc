@@ -1,27 +1,23 @@
 const ViewChange = require("../data/viewChange");
 const utils = require("../../../depends/utils");
-const Stage = require("../stage/stage");
 const assert = require("assert");
-const { RIPPLE_STATE_VIEW_CHANGE_FOR_TIMEOUT,
-  PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT,
-  STAGE_STATE_EMPTY,
-  STAGE_STATE_PROCESSING,
-  STAGE_VIEW_CHANGE_FOR_TIMEOUT_EXPIRATION } = require("../constants");
+const { PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT,
+  CHEAT_REASON_INVALID_SIG,
+  CHEAT_REASON_INVALID_ADDRESS } = require("../constants");
 
 const Buffer = utils.Buffer;
 const BN = utils.BN;
 
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
-const unlManager = process[Symbol.for("unlManager")];
 
-class ViewChangeForTimeout extends Stage {
+class ViewChangeForTimeout {
   constructor(ripple) {
-    super({ name: 'viewChangeForTimeout', 
-    expiraion: STAGE_VIEW_CHANGE_FOR_TIMEOUT_EXPIRATION, 
-    threshould: this.ripple.threshould })
-
     this.ripple = ripple;
+
+    this.threshould = this.ripple.threshould;
+
+    this.cheatedNodes = [];
 
     this.trimedViewChangesByAddress = new Map();
     this.trimedViewChangesByHash = new Map();
@@ -30,19 +26,6 @@ class ViewChangeForTimeout extends Stage {
   }
 
   run() {
-    if (this.state !== STAGE_STATE_EMPTY) {
-      logger.fatal(`ViewChangeForTimeout run, state should be ${STAGE_STATE_EMPTY}, now is ${this.state}, ${process[Symbol.for("getStackInfo")]()}`);
-
-      process.exit(1);
-    }
-
-    //
-    this.state = STAGE_STATE_PROCESSING;
-
-    //
-    this.ripple.state = RIPPLE_STATE_VIEW_CHANGE_FOR_TIMEOUT;
-
-    //
     const viewChange = new ViewChange({
       hash: this.ripple.hash,
       number: this.ripple.number,
@@ -50,19 +33,23 @@ class ViewChangeForTimeout extends Stage {
     });
     viewChange.sign(privateKey);
 
-    // send to new leader 
-    p2p.send(this.ripple.getNewViewLeaderAddress(), PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT, viewChange.serialize());
+    //
+    if (this.ripple.nextViewLeaderAddress.toString('hex') === process[Symbol.for("address")])
+    {
+      // node is new leader
+      this.validateAndProcessExchangeData(viewChange, process[Symbol.for("address")]);
+    }
+    else
+    {
+      // send to new leader
+      p2p.send(this.ripple.nextViewLeaderAddress, PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT, viewChange.serialize());
+    }
   }
 
-  /**
-   * @param {Bolean} ifViewChangeSuccess
-   */
-  handler(ifViewChangeSuccess = false) {
-    if (ifViewChangeSuccess) {
-      this.ripple.view = new BN(this.ripple.view).addn(1).toBuffer();
-    }
+  handler() {
+    this.ripple.view = new BN(this.ripple.view).addn(1).toBuffer();
 
-    this.ripple.newView.run()
+    this.ripple.newView.run();
   }
 
   /**
@@ -78,99 +65,89 @@ class ViewChangeForTimeout extends Stage {
     switch (cmd) {
       case PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT:
         {
-          this.validateAndProcessExchangeData(new ViewChange(data), address.toString('hex'));
+          validateAndProcessExchangeData(new ViewChange(data), address.toString('hex'));
         }
         break;
     }
   }
 
   /**
-   * 
-   * @param {Base} viewChange 
+   * @param {ViewChange} viewChange
+   * @param {String} address
    */
-  enterNextStage(viewChange) {
-    assert(viewChange instanceof Base, `${this.name} ConsensusStage, viewChange should be an instance of Base, now is ${typeof viewChange}`);
+  validateAndProcessExchangeData(viewChange, address)
+  {
+    assert(viewChange instanceof ViewChange, `ViewChangeForTimeout validateAndProcessExchangeData, viewChange should be an instance of ViewChange, now is ${typeof viewChange}`);
+    assert(typeof address === 'string', `ViewChangeForTimeout validateAndProcessExchangeData, address should be a String, now is ${typeof address}`);
+    
+    // check sig
+    if (!viewChange.validate()) {
+      logger.error(`ViewChangeForTimeout validateAndProcessExchangeData validate, address: ${address}, validate failed`);
 
+      this.cheatedNodes.push({
+        address: address,
+        reason: CHEAT_REASON_INVALID_SIG
+      });
+    }
+
+    // check if msg address is correspond with connect address
+    if (address !== viewChange.from.toString("hex")) {
+      logger.error(`${this.name} ViewChangeForTimeout validateAndProcessExchangeData validate, address should be ${address}, now is ${viewChange.from.toString("hex")}`);
+
+      this.cheatedNodes.push({
+        address: address,
+        reason: CHEAT_REASON_INVALID_ADDRESS
+      });
+    }
+
+    //
     const updateTrimedViewChangesByHash = (viewChange, type) => {
-      //
       const viewChangeHash = viewChange.hash(false).toString('hex');
       let viewChangeByHashDetail = this.trimedViewChangesByHash.get(viewChangeHash);
       if (viewChangeByHashDetail) {
         if (type === 1) {
           viewChangeByHashDetail.count += 1;
+
+          if (viewChangeByHashDetail.count >= this.threshould) {
+            this.consensusViewChange = viewChangeByHashDetail.data;
+            this.consensusViewChange.sign(privateKey);
+
+            this.handler();
+          }
         }
         else {
           viewChangeByHashDetail.count -= 1;
-          if (viewChangeByHashDetail.count === 0)
-          {
+          if (viewChangeByHashDetail.count === 0) {
             this.trimedViewChangesByHash.delete(viewChangeHash);
           }
         }
       }
       else {
-        viewChangeByHashDetail.data = viewChange;
-        viewChangeByHashDetail.count = 1;
+        if (type === 1) {
+          viewChangeByHashDetail.data = viewChange;
+          viewChangeByHashDetail.count = 1;
+        }
       }
-      this.trimedViewChangesByHash.set(viewChangeHash, viewChangeByHashDetail);
 
-      return viewChangeByHashDetail;
+      this.trimedViewChangesByHash.set(viewChangeHash, viewChangeByHashDetail);      
     }
 
     //
-    const fromAddress = viewChange.fromAddress.toString('hex');
+    const fromAddress = viewChange.from.toString('hex');
     let viewChangeByAddressDetail = this.trimedViewChangesByAddress.get(fromAddress);
     if (viewChangeByAddressDetail) {
-      if (new BN(viewChange).gt(new BN(viewChangeByAddressDetail.number)))
-      {
-        //
-        updateTrimedViewChangesByHash(viewChangeByAddressDetail.data, 0)
-        updateTrimedViewChangesByHash(viewChange, 1);
+      updateTrimedViewChangesByHash(viewChangeByAddressDetail.data, 0)
+      updateTrimedViewChangesByHash(viewChange, 1);
 
-        //
-        viewChangeByAddressDetail.data = viewChange;
-
-        this.trimedViewChangesByAddress.set(from, viewChangeByAddressDetail);
-      }
+      this.trimedViewChangesByAddress.set(from, viewChange);
     }
-    else
-    {
-      this.trimedViewChangesByAddress.set(from, {
-        data: viewChange,
-        count: 1
-      });
-    }
-
-    //
-    if (viewChangeDetail.count > this.threshould) {
-      this.consensusViewChange = viewChangeDetail.data;
-      this.consensusViewChange.sign(privateKey);
-
-      //
-      this.state = STAGE_STATE_FINISH;
-
-      clearTimeout(this.timeout);
-      this.timeout = undefined;
-      
-      process.nextTick(() => {
-        this.handler(true);
-      });
-
-      return;
-    }
-
-    if (this.finishedNodes.size >= unlManager.fullUnl.length) {
-      this.state = STAGE_STATE_FINISH;
-
-      clearTimeout(this.timeout);
-
-      process.nextTick(() => {
-        this.handler()
-      });
+    else {
+      this.trimedViewChangesByAddress.set(from, viewChange);
     }
   }
 
   reset() {
-    super.reset();
+    this.cheatedNodes = [];
 
     this.trimedViewChangesByAddress.clear();
     this.trimedViewChangesByHash.clear();
