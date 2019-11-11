@@ -46,6 +46,7 @@ class PrePrepare extends LeaderStage {
 
       //
       this.ripple.candidate = new Candidate({
+          sequence: this.ripple.sequence,
           hash: this.ripple.hash,
           number: this.ripple.number,
           timestamp: now,
@@ -56,6 +57,7 @@ class PrePrepare extends LeaderStage {
 
       //
       this.ripple.amalgamatedCandidateDigest = new CandidateDigest({
+        sequence: this.ripple.sequence,
         hash: this.ripple.hash,
         number: this.ripple.number,
         timestamp: now,
@@ -70,16 +72,15 @@ class PrePrepare extends LeaderStage {
       // begin timer
       this.startTimer()
 
-      //
+      // record self
       const candidate = new Candidate({
+        sequence: this.ripple.sequence,
         hash: this.ripple.hash,
         number: this.ripple.number,
         timestamp: Date.now(),
         view: this.ripple.view
       });
       candidate.sign(privateKey);
-
-      //
       this.validateAndProcessExchangeData(candidate, process[Symbol.for("address")]);
     }
     else {
@@ -142,6 +143,7 @@ class PrePrepare extends LeaderStage {
 
             // 
             const candidate = new Candidate({
+              sequence: this.ripple.sequence,
               hash: this.ripple.hash,
               number: this.ripple.number,
               timestamp: Date.now(),

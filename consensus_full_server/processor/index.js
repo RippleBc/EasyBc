@@ -31,9 +31,6 @@ class Processor
 
 		// 
 		this.consensus = new Consensus(self);
-
-		// 
-		this.msgBuffer = [];
 	}
 
 	run()
@@ -62,17 +59,7 @@ class Processor
 		const data = message.data;
 
 		//
-		this.msgBuffer.push({ address, cmd, data });
-	}
-
-	getMessage()
-	{
-		return this.msgBuffer.pop();
-	}
-
-	recoverMessage(msg)
-	{
-		this.msgBuffer.push(msg);
+		this.consensus.handleMessage({ address, cmd, data });
 	}
 
 	/**

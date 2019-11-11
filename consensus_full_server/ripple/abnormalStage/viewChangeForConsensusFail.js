@@ -37,6 +37,7 @@ class ViewChangeForConsensusFail extends Stage {
 
     //
     const viewChange = new ViewChange({
+      sequence: this.ripple.sequence,
       hash: this.ripple.hash,
       number: this.ripple.number,
       view: this.ripple.view
@@ -61,7 +62,7 @@ class ViewChangeForConsensusFail extends Stage {
     {
       this.ripple.view = new BN(this.ripple.view).addn(1).toBuffer();
 
-      this.ripple.run();
+      this.ripple.runNewConsensusRound();
     }
     else
     {

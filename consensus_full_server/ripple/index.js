@@ -12,7 +12,7 @@ const { STAGE_STATE_EMPTY,
 	RIPPLE_STATE_EMPTY, 
 	MAX_PROCESS_TRANSACTIONS_SIZE,
 	RIPPLE_LEADER_EXPIRATION,
-	RIPPLE_STAGE_PROCESS_CONSENSUS_CANDIDATE,
+	STAGE_PROCESS_CONSENSUS_CANDIDATE,
 	RIPPLE_STATE_SYNC_NODE_STATE } = require("./constants");
 const assert = require("assert");
 const Block = require("../../depends/block");
@@ -39,6 +39,7 @@ class Ripple
 		this.consensusCandidateDigest = undefined;
 		this.consensusViewChange = undefined;
 
+		//
 		this.amalgamate = new Amalgamate(this);
 		this.prePrepare = new PrePrepare(this);
 		this.prepare = new Prepare(this);
@@ -47,15 +48,116 @@ class Ripple
 		this.viewChangeForConsensusFail = new ViewChangeForConsensusFail(this);
 		this.viewChangeForTimeout = new ViewChangeForTimeout(this);
 		this.newView = new NewView(this);
+
+		//
+		this.msgBuffer = new Map();
+
+		//
+		this.sequence = undefined;
+		this.hash = undefined;
+		this.number = undefined;
+		this.view = undefined;
+	}
+
+	async run()
+	{
+		// fetch new txs
+		this.ripple.localTransactions = await mysql.getRawTransactions(MAX_PROCESS_TRANSACTIONS_SIZE);
+
+		//
+		this.runNewConsensusRound();
+
+		// 
+		while(1)
+		{
+			const msg = this.fetchMsg();
+
+			if (!msg) {
+				await new Promise(resolve => {
+					setTimeout(() => {
+						resolve();
+					}, 20);
+				});
+			}
+
+			if (this.ripple.state === RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL) {
+				const msg = this.fetchMsg(PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL);
+
+				if (msg) {
+					this.viewChangeForConsensusFail.handleMessage(msg);
+				}
+			}
+
+			if (this.ripple.state === RIPPLE_STATE_CONSENSUS) {
+				switch (this.ripple.stage) {
+					case STAGE_AMALGAMATE:
+						{
+							const msg1 = this.fetchMsg(PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ);
+							const msg2 = this.fetchMsg(PROTOCOL_CMD_TRANSACTION_AMALGAMATE_RES);
+
+							this.amalgamate.handleMessage(msg1);
+							this.amalgamate.handleMessage(msg2);
+						}
+						break;
+					case STAGE_PRE_PREPARE:
+						{
+							const msg1 = this.fetchMsg(PROTOCOL_CMD_PRE_PREPARE_REQ);
+							const msg2 = this.fetchMsg(PROTOCOL_CMD_PRE_PREPARE_RES);
+
+							if (msg1) {
+								this.prePrepare.handleMessage(msg1);
+							}
+							if (msg2) {
+								this.prePrepare.handleMessage(msg2);
+							}
+						}
+						break;
+					case STAGE_PREPARE:
+						{
+							const msg = this.fetchMsg(PROTOCOL_CMD_PREPARE);
+
+							if (msg) {
+								this.prepare.handleMessage(msg);
+							}
+						}
+						break;
+					case STAGE_COMMIT:
+						{
+							const msg = this.fetchMsg(PROTOCOL_CMD_COMMIT);
+
+							if (msg) {
+								this.commit.handleMessage(msg);
+							}
+						}
+						break;
+					case STAGE_FETCH_CANDIDATE:
+						{
+							const msg1 = this.fetchMsg(PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ);
+							const msg2 = this.fetchMsg(PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES);
+
+							if (msg1) {
+								this.fetchConsensusCandidate.handleMessage(msg1);
+							}
+							if (msg2) {
+								this.fetchConsensusCandidate.handleMessage(msg2);
+							}
+						}
+						break;
+					case STAGE_PROCESS_CONSENSUS_CANDIDATE:
+						{
+
+						}
+						break;
+				}
+			}
+		}
 	}
 
 	/**
-	 *
+	 * 
 	 */
-	run()
-	{	
-		await mysql.getRawTransactions(MAX_PROCESS_TRANSACTIONS_SIZE);
-
+	runNewConsensusRound()
+	{
 		this.localTransactions = [];
 		this.amalgamatedTransactions.clear();
 		this.candidate = undefined;
@@ -96,21 +198,24 @@ class Ripple
 			transactions: this.candidate.transactions
 		});
 
-		this.state = RIPPLE_STAGE_PROCESS_CONSENSUS_CANDIDATE;
+		this.state = STAGE_PROCESS_CONSENSUS_CANDIDATE;
 
 		(async () => {
 
 			// update hash and number
-			this.ripple.hash = consensusBlock.hash();
-			this.ripple.number = consensusBlock.header.number;
+			this.hash = consensusBlock.hash();
+			this.number = consensusBlock.header.number;
 
 			// process block
 			await this.processor.processBlock({
 				block: consensusBlock
 			});
 
+			// fetch new txs
+			this.ripple.localTransactions = await mysql.getRawTransactions(MAX_PROCESS_TRANSACTIONS_SIZE);
+
 			// notice view may have been changed
-			this.ripple.run();
+			this.runNewConsensusRound();
 		});
 	}
 
@@ -120,7 +225,7 @@ class Ripple
 			// try to view change
 			this.viewChangeForTimeout.run();
 
-			// try to
+			// try to sync state
 			this.syncNodeState();
 		}, RIPPLE_LEADER_EXPIRATION);
 	}
@@ -140,7 +245,7 @@ class Ripple
 	{
 		assert(typeof address === 'string', `Ripple checkLeader, address should be a String, now is ${typeof address}`);
 
-		let nextViewLeaderIndex = new BN(this.ripple.view).modrn(unlManager.fullUnl.length);
+		let nextViewLeaderIndex = new BN(this.view).modrn(unlManager.fullUnl.length);
 		for (let node of unlManager.fullUnl) {
 			if (node.index === nextViewLeaderIndex) {
 				return node.address;
@@ -150,7 +255,7 @@ class Ripple
 
 	get nextViewLeaderAddress()
 	{
-		let nextViewLeaderIndex = new BN(this.ripple.view).addn(1).modrn(unlManager.fullUnl.length);
+		let nextViewLeaderIndex = new BN(this.view).addn(1).modrn(unlManager.fullUnl.length);
 		for (let node of unlManager.fullUnl)
 		{
 			if (node.index === nextViewLeaderIndex)
@@ -166,32 +271,130 @@ class Ripple
 	}
 
 	/**
+	 * @param {Buffer} address
+	 * @param {Number} cmd
+	 * @param {Buffer} data
+	 */
+	handleMessage({ address, cmd, data })
+	{	
+		assert(Buffer.isBuffer(address), `Ripple handleMessage, address should be an Buffer, now is ${typeof address}`);
+		assert(typeof cmd === 'number', `Ripple handleMessage, cmd should be a Number, now is ${typeof cmd}`);
+		assert(Buffer.isBuffer(data), `Ripple handleMessage, data should be an Buffer, now is ${typeof data}`);
+
+		switch(cmd)
+		{
+			case PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ:
+			case PROTOCOL_CMD_TRANSACTION_AMALGAMATE_RES:
+			case PROTOCOL_CMD_PRE_PREPARE_REQ:
+			case PROTOCOL_CMD_PRE_PREPARE_RES:
+			case PROTOCOL_CMD_PREPARE:
+			case PROTOCOL_CMD_COMMIT:
+			case PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ:
+			case PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES:
+			case PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL:
+				{
+					const [sequence] = rlp.decode(data);
+					
+					// check sequence
+					if(new BN(sequence).lt(new BN(this.sequence)))
+					{
+						logger.error(`Ripplr handleMessage, sequence should larger or equal to ${this.sequence}, now is ${sequence.toString('hex')}`)
+						
+						return;
+					}
+				}
+				break;
+			case PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT:
+				{
+					this.viewChangeForTimeout.handleMessage({ address, cmd, data });
+
+					return;
+				}
+			case PROTOCOL_CMD_NEW_VIEW_REQ:
+			case PROTOCOL_CMD_NEW_VIEW_RES:
+				{
+					this.newView.handleMessage({ address, cmd, data });
+
+					return;
+				}
+			default:
+				{
+					this.cheatedNodes.push({
+						address: address.toString('hex'),
+						reason: CHEAT_REASON_INVALID_PROTOCOL_CMD
+					});
+
+					return;
+				}
+		}
+
+		// update msg buffer
+		const msgsDifferByCmd = this.msgBuffer.get(cmd);
+		msgsDifferByCmd.push({sequence, address, data});
+		this.msgBuffer.set(msgsDifferByCmd);
+	}
+
+	/**
+	 * 
+	 * @param {Number} cmd 
+	 */
+	fetchMsg(cmd)
+	{
+		assert(typeof cmd === 'number', `Ripple fetchMsg, cmd should be a Number, now is ${typeof cmd}`);
+
+		const msgsDifferByCmd = this.msgBuffer.get(cmd) || [];
+
+		//
+		let correspondMsg = undefined;
+		
+		// delete expired msgs
+		const filteredMsgs = [];
+		for (let msg of msgsDifferByCmd)
+		{
+			if(new BN(msg.sequence).lt(new BN(this.sequence)))
+			{
+				continue;
+			}
+
+			if (msg.sequence.toString('hex') === this.sequence.toString('hex'))
+			{
+				correspondMsg = { 
+					address: msg.address, 
+					cmd: cmd,
+					data: msg.data
+				};
+
+				break;
+			}
+
+			filteredMsgs.push(msg);
+		}
+
+		// update msg buffer
+		this.msgBuffer.set(cmd, filteredMsgs);
+
+		return correspondMsg;
+	}
+
+	/**
 	 * @param {Array} cheatedNodes
 	 */
-	handleCheatedNodes(cheatedNodes)
-	{
+	handleCheatedNodes(cheatedNodes) {
 		assert(Array.isArray(cheatedNodes), `Ripple handleCheatedNodes, cheatedNodes should be an Buffer, now is ${typeof cheatedNodes}`);
 
 		cheatedNodes.forEach(cheatedNode => {
 			mysql.saveCheatedNode(cheatedNode.address, cheatedNode.reason).catch(e => {
 				logger.fatal(`Ripple handleCheatedNodes, saveCheatedNode throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
-				
+
 				process.exit(1);
 			});
 		});
 	}
 
-	handleMessage()
-	{	
-		const msg = this.processor.getMessage();
-		
-		// check get specified msg
-	}
-
 	/**
- * @param {Buffer} address
- * @return {Boolean}
- */
+	 * @param {Buffer} address
+	 * @return {Boolean}
+	 */
 	perishNode(address) {
 		if (this.perish.state !== STAGE_STATE_EMPTY) {
 			return false;

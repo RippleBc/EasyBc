@@ -43,14 +43,24 @@ class Amalgamate extends LeaderStage
 		// node is leader
 		if (this.ripple.checkLeader(process[Symbol.for("address")]))
 		{
+			const candidate = new Candidate({
+				sequence: this.ripple.sequence,
+				hash: this.ripple.hash,
+				number: this.ripple.number,
+				timestamp: Date.now(),
+				view: this.ripple.view
+			});
+			candidate.sign(privateKey);
+
 			// request candidates
-			p2p.sendAll(PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ);
+			p2p.sendAll(PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ, candidate.serialize());
 
 			// begin timer
 			this.startTimer();
 
-			//
+			// record self
 			let localCandidate = new Candidate({
+				sequence: this.ripple.sequence,
 				hash: this.ripple.hash,
 				number: this.ripple.number,
 				timestamp: Date.now(),
@@ -58,8 +68,6 @@ class Amalgamate extends LeaderStage
 				transactions: rlp.encode(this.ripple.localTransactions.map(localTransaction => Buffer.from(localTransaction, 'hex')))
 			});
 			localCandidate.sign(privateKey);
-
-			//
 			this.validateAndProcessExchangeData(localCandidate, process[Symbol.for("address")]);
 		}
 		else
@@ -116,6 +124,7 @@ class Amalgamate extends LeaderStage
 
 					//
 					let localCandidate = new Candidate({
+						sequence: this.ripple.sequence,
 						hash: this.ripple.hash,
 						number: this.ripple.number,
 						timestamp: Date.now(),

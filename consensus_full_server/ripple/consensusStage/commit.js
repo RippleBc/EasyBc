@@ -61,12 +61,11 @@ class Commit extends ConsensusStage {
 
     //
     if (this.ripple.hash.toString('hex') !== this.ripple.consensusCandidateDigest.hash.toString('hex')
-      || this.ripple.number.toString('hex') !== this.ripple.consensusCandidateDigest.number.toString('hex')
-      || this.ripple.view.toString('hex') !== this.ripple.consensusCandidateDigest.view.toString('hex'))
+      || this.ripple.number.toString('hex') !== this.ripple.consensusCandidateDigest.number.toString('hex'))
     {
-      logger.error(`candidateDigest consensus success, hash, number, view should be 
-      ${this.ripple.hash.toString('hex')}, ${this.ripple.number.toString('hex')}, ${this.ripple.view.toString('hex')},
-      now is ${this.ripple.consensusCandidateDigest.hash.toString('hex')}, ${this.ripple.consensusCandidateDigest.number.toString('hex')}, ${this.ripple.consensusCandidateDigest.view.toString('hex')},
+      logger.error(`candidateDigest consensus success, hash, number should be 
+      ${this.ripple.hash.toString('hex')}, ${this.ripple.number.toString('hex')},
+      now is ${this.ripple.consensusCandidateDigest.hash.toString('hex')}, ${this.ripple.consensusCandidateDigest.number.toString('hex')}},
       enter to view change state`);
 
       this.ripple.viewChangeForConsensusFail.run();

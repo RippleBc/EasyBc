@@ -10,6 +10,12 @@ class ViewChange extends Base {
     data = data || {};
 
     const fields = [{
+      name: "sequence",
+      length: 32,
+      allowZero: true,
+      allowLess: true,
+      default: Buffer.alloc(0)
+    }, {
       name: "hash",
       length: 32,
       allowZero: true,
