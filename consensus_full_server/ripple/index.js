@@ -20,13 +20,12 @@ const Block = require("../../depends/block");
 
 const BN = utils.BN;
 
-const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
 const mysql = process[Symbol.for("mysql")];
 const unlManager = process[Symbol.for("unlManager")];
-const privateKey = process[Symbol.for("privateKey")];
 
 const WATER_LINE_STEP_LENGTH = 19901112;
+const SYSTEM_LOOP_DELAY_TIME = 20;
 
 class Ripple
 {
@@ -74,6 +73,66 @@ class Ripple
 		return new BN(this.lowWaterLine).addn(WATER_LINE_STEP_LENGTH);
 	}
 
+	/**
+	 * @param {Buffer} address
+	 * @param {Number} cmd
+	 * @param {Buffer} data
+	 */
+	handleMessage({ address, cmd, data }) {
+		assert(Buffer.isBuffer(address), `Ripple handleMessage, address should be an Buffer, now is ${typeof address}`);
+		assert(typeof cmd === 'number', `Ripple handleMessage, cmd should be a Number, now is ${typeof cmd}`);
+		assert(Buffer.isBuffer(data), `Ripple handleMessage, data should be an Buffer, now is ${typeof data}`);
+
+		switch (cmd) {
+			case PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ:
+			case PROTOCOL_CMD_TRANSACTION_AMALGAMATE_RES:
+			case PROTOCOL_CMD_PRE_PREPARE_REQ:
+			case PROTOCOL_CMD_PRE_PREPARE_RES:
+			case PROTOCOL_CMD_PREPARE:
+			case PROTOCOL_CMD_COMMIT:
+			case PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ:
+			case PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES:
+			case PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL:
+				{
+					const msgsDifferByCmd = this.msgBuffer.get(cmd);
+
+					// update msg buffer
+					msgsDifferByCmd.push({ sequence, address, data });
+					this.msgBuffer.set(cmd, msgsDifferByCmd);
+				}
+				break;
+			case PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT:
+				{
+					this.viewChangeForTimeout.handleMessage({ address, cmd, data });
+
+					return;
+				}
+			case PROTOCOL_CMD_NEW_VIEW_REQ:
+			case PROTOCOL_CMD_NEW_VIEW_RES:
+				{
+					this.newView.handleMessage({ address, cmd, data });
+
+					return;
+				}
+			case PROTOCOL_CMD_PROCESS_STATE_REQ:
+			case PROTOCOL_CMD_PROCESS_STATE_RES:
+				{
+					this.fetchConsensusCandidate.handleMessage({ address, cmd, data });
+
+					return;
+				}
+			default:
+				{
+					this.cheatedNodes.push({
+						address: address.toString('hex'),
+						reason: CHEAT_REASON_INVALID_PROTOCOL_CMD
+					});
+
+					return;
+				}
+		}
+	}
+
 	async run()
 	{
 		// fetch new txs
@@ -82,90 +141,160 @@ class Ripple
 		// 
 		this.runNewConsensusRound();
 
-		// 
+		//
 		while(1)
 		{
-			const msg = this.fetchMsg();
-
-			if (!msg) {
-				await new Promise(resolve => {
-					setTimeout(() => {
-						resolve();
-					}, 20);
-				});
-			}
-
-			// view change for consensus fail
 			if (this.ripple.state === RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL) {
 				const msg = this.fetchMsg(PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL);
 
 				if (msg) {
 					this.viewChangeForConsensusFail.handleMessage(msg);
 				}
-			}
+				else
+				{
+					await new Promise(resolve => {
+						setTimeout(() => {
+							resolve();
+						}, SYSTEM_LOOP_DELAY_TIME);
+					});
+				}
 
-			// cosnensus
-			if (this.ripple.state === RIPPLE_STATE_CONSENSUS) {
+			}
+			else if (this.ripple.state === RIPPLE_STATE_FETCH_PROCESS_STATE)
+			{
+				const msg1 = this.fetchMsg(PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ);
+				if (msg1) {
+					this.fetchConsensusCandidate.handleMessage(msg1);
+				}
+
+				const msg2 = this.fetchMsg(PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES);
+				if (msg2) {
+					this.fetchConsensusCandidate.handleMessage(msg2);
+				}
+
+				//
+				if(!msg1 && !msg2)
+				{
+					await new Promise(resolve => {
+						setTimeout(() => {
+							resolve();
+						}, SYSTEM_LOOP_DELAY_TIME);
+					});
+				}
+			}
+			else if (this.ripple.state === RIPPLE_STATE_CONSENSUS) {
 				switch (this.ripple.stage) {
 					case STAGE_AMALGAMATE:
 						{
 							const msg1 = this.fetchMsg(PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ);
-							const msg2 = this.fetchMsg(PROTOCOL_CMD_TRANSACTION_AMALGAMATE_RES);
+							if(msg1)
+							{
+								this.amalgamate.handleMessage(msg1);
+							}
 
-							this.amalgamate.handleMessage(msg1);
-							this.amalgamate.handleMessage(msg2);
+							const msg2 = this.fetchMsg(PROTOCOL_CMD_TRANSACTION_AMALGAMATE_RES);
+							if (msg2) {
+								this.amalgamate.handleMessage(msg2);
+							}
+							
+							//
+							if (!msg1 && !msg2) {
+								await new Promise(resolve => {
+									setTimeout(() => {
+										resolve();
+									}, SYSTEM_LOOP_DELAY_TIME);
+								});
+							}
 						}
-						break;
 					case STAGE_PRE_PREPARE:
 						{
 							const msg1 = this.fetchMsg(PROTOCOL_CMD_PRE_PREPARE_REQ);
-							const msg2 = this.fetchMsg(PROTOCOL_CMD_PRE_PREPARE_RES);
-
 							if (msg1) {
 								this.prePrepare.handleMessage(msg1);
 							}
+
+							const msg2 = this.fetchMsg(PROTOCOL_CMD_PRE_PREPARE_RES);
 							if (msg2) {
 								this.prePrepare.handleMessage(msg2);
 							}
+
+							//
+							if (!msg1 && !msg2) {
+								await new Promise(resolve => {
+									setTimeout(() => {
+										resolve();
+									}, SYSTEM_LOOP_DELAY_TIME);
+								});
+							}
 						}
-						break;
 					case STAGE_PREPARE:
 						{
 							const msg = this.fetchMsg(PROTOCOL_CMD_PREPARE);
-
 							if (msg) {
 								this.prepare.handleMessage(msg);
 							}
+							else
+							{
+								await new Promise(resolve => {
+									setTimeout(() => {
+										resolve();
+									}, SYSTEM_LOOP_DELAY_TIME);
+								});
+							}
 						}
-						break;
 					case STAGE_COMMIT:
 						{
-							const msg = this.fetchMsg(PROTOCOL_CMD_COMMIT);
-
+							msg = this.fetchMsg(PROTOCOL_CMD_COMMIT);
 							if (msg) {
 								this.commit.handleMessage(msg);
 							}
+							else {
+								await new Promise(resolve => {
+									setTimeout(() => {
+										resolve();
+									}, SYSTEM_LOOP_DELAY_TIME);
+								});
+							}
 						}
-						break;
 					case STAGE_FETCH_CANDIDATE:
 						{
 							const msg1 = this.fetchMsg(PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ);
-							const msg2 = this.fetchMsg(PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES);
-
 							if (msg1) {
 								this.fetchConsensusCandidate.handleMessage(msg1);
 							}
+
+							const msg2 = this.fetchMsg(PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES);
 							if (msg2) {
 								this.fetchConsensusCandidate.handleMessage(msg2);
 							}
+
+							//
+							if (!msg1 && !msg2) {
+								await new Promise(resolve => {
+									setTimeout(() => {
+										resolve();
+									}, SYSTEM_LOOP_DELAY_TIME);
+								});
+							}
 						}
-						break;
 					case STAGE_PROCESS_CONSENSUS_CANDIDATE:
 						{
-
+							await new Promise(resolve => {
+								setTimeout(() => {
+									resolve();
+								}, SYSTEM_LOOP_DELAY_TIME);
+							});
 						}
 						break;
 				}
+			}
+			else
+			{
+				await new Promise(resolve => {
+					setTimeout(() => {
+						resolve();
+					}, SYSTEM_LOOP_DELAY_TIME);
+				});
 			}
 		}
 	}
@@ -238,7 +367,7 @@ class Ripple
 			this.viewChangeForTimeout.run();
 
 			// try to sync state
-			this.fetchProcessState.syncNodeState();
+			this.fetchProcessState.run();
 		}, RIPPLE_LEADER_EXPIRATION);
 	}
 
@@ -283,69 +412,6 @@ class Ripple
 	get threshould() 
 	{
 		return unlManager.fullUnl.length * 2 / 3 + 1;
-	}
-
-	/**
-	 * @param {Buffer} address
-	 * @param {Number} cmd
-	 * @param {Buffer} data
-	 */
-	handleMessage({ address, cmd, data })
-	{	
-		assert(Buffer.isBuffer(address), `Ripple handleMessage, address should be an Buffer, now is ${typeof address}`);
-		assert(typeof cmd === 'number', `Ripple handleMessage, cmd should be a Number, now is ${typeof cmd}`);
-		assert(Buffer.isBuffer(data), `Ripple handleMessage, data should be an Buffer, now is ${typeof data}`);
-
-		switch(cmd)
-		{
-			case PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ:
-			case PROTOCOL_CMD_TRANSACTION_AMALGAMATE_RES:
-			case PROTOCOL_CMD_PRE_PREPARE_REQ:
-			case PROTOCOL_CMD_PRE_PREPARE_RES:
-			case PROTOCOL_CMD_PREPARE:
-			case PROTOCOL_CMD_COMMIT:
-			case PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ:
-			case PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES:
-			case PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL:
-				{
-					
-				}
-				break;
-			case PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT:
-				{
-					this.viewChangeForTimeout.handleMessage({ address, cmd, data });
-
-					return;
-				}
-			case PROTOCOL_CMD_NEW_VIEW_REQ:
-			case PROTOCOL_CMD_NEW_VIEW_RES:
-				{
-					this.newView.handleMessage({ address, cmd, data });
-
-					return;
-				}
-			case PROTOCOL_CMD_PROCESS_STATE_REQ:
-			case PROTOCOL_CMD_PROCESS_STATE_RES:
-				{
-					this.fetchConsensusCandidate.handleMessage({ address, cmd, data });
-
-					return;
-				}
-			default:
-				{
-					this.cheatedNodes.push({
-						address: address.toString('hex'),
-						reason: CHEAT_REASON_INVALID_PROTOCOL_CMD
-					});
-
-					return;
-				}
-		}
-
-		// update msg buffer
-		const msgsDifferByCmd = this.msgBuffer.get(cmd);
-		msgsDifferByCmd.push({sequence, address, data});
-		this.msgBuffer.set(msgsDifferByCmd);
 	}
 
 	/**

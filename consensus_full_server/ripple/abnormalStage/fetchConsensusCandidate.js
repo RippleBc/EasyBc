@@ -55,7 +55,7 @@ class FetchConsensusCandidate
       // hash, number, view check success
       // try to fetch consensus candidate failed
       // try to sync state
-      this.ripple.fetchProcessState.syncNodeState();
+      this.ripple.fetchProcessState.run();
     }, RIPPLE_STATE_FETCH_CONSENSUS_CANDIDATE_EXPIRATION);
   }
 
