@@ -12,6 +12,7 @@ const { STAGE_AMALGAMATE,
 const LeaderStage = require("../stage/leaderStage");
 
 const rlp = utils.rlp;
+const BN = utils.BN;
 
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
@@ -43,17 +44,21 @@ class Amalgamate extends LeaderStage
 		// node is leader
 		if (this.ripple.checkLeader(process[Symbol.for("address")]))
 		{
-			const candidate = new Candidate({
+			// update sequence
+			this.ripple.sequence = new BN(this.ripple.sequence).addn(1).toBuffer();
+
+			// 
+			const reqCandidate = new Candidate({
 				sequence: this.ripple.sequence,
 				hash: this.ripple.hash,
 				number: this.ripple.number,
 				timestamp: Date.now(),
 				view: this.ripple.view
 			});
-			candidate.sign(privateKey);
+			reqCandidate.sign(privateKey);
 
 			// request candidates
-			p2p.sendAll(PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ, candidate.serialize());
+			p2p.sendAll(PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ, reqCandidate.serialize());
 
 			// begin timer
 			this.startTimer();
@@ -121,6 +126,26 @@ class Amalgamate extends LeaderStage
 			{
 				// sender is leader
 				if (this.ripple.checkLeader(address.toString('hex'))) {
+
+					// check req candidate
+					const reqCandidate = new Candidate(data);
+					if(!reqCandidate.validate())
+					{
+						logger.error(`Amalgamate handleMessage, address: ${address.toString('hex')}, reqCandidate validate failed`)
+
+						return;
+					}
+
+					// check sequence
+					if (new BN(reqCandidate.sequence).lte(new BN(this.ripple.sequence)))
+					{
+						logger.error(`Amalgamate handleMessage, address: ${address.toString('hex')}, sequence should bigger than ${this.ripple.sequence.toString('hex')}, now is ${reqCandidate.sequence.toString('hex')}`);
+					
+						return;
+					}
+					
+					// update sequence
+					this.ripple.sequence = reqCandidate.sequence;
 
 					//
 					let localCandidate = new Candidate({

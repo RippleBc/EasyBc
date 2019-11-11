@@ -179,7 +179,7 @@ class Update
 			if(sortedBlocks[0])
 			{
 				const [majorityBlock, count] = sortedBlocks[0];
-				if(fullUnl.length < FULL_BLOCK_CHAIN_UNL_SCALE_LIMIT || count / fullUnl.length >= 1 / 2)
+				if (fullUnl.length < FULL_BLOCK_CHAIN_UNL_SCALE_LIMIT || count > fullUnl.length / 2)
 				{
 					const result = await this.blockChain.runBlockChain({
 						block: new Block(Buffer.from(majorityBlock, 'hex'))

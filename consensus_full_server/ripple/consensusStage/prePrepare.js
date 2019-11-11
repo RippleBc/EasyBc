@@ -56,7 +56,7 @@ class PrePrepare extends LeaderStage {
       this.ripple.candidate.sign(privateKey);
 
       //
-      this.ripple.amalgamatedCandidateDigest = new CandidateDigest({
+      this.ripple.candidateDigest = new CandidateDigest({
         sequence: this.ripple.sequence,
         hash: this.ripple.hash,
         number: this.ripple.number,
@@ -64,7 +64,7 @@ class PrePrepare extends LeaderStage {
         view: this.ripple.view,
         digest: sha256(this.ripple.candidate.transactions)
       })
-      this.ripple.amalgamatedCandidateDigest.sign(privateKey);
+      this.ripple.candidateDigest.sign(privateKey);
 
       // broadcast amalgamated transactions
       p2p.sendAll(PROTOCOL_CMD_PRE_PREPARE_REQ, this.ripple.candidate.serialize())
@@ -73,15 +73,15 @@ class PrePrepare extends LeaderStage {
       this.startTimer()
 
       // record self
-      const candidate = new Candidate({
+      const resCandidate = new Candidate({
         sequence: this.ripple.sequence,
         hash: this.ripple.hash,
         number: this.ripple.number,
         timestamp: Date.now(),
         view: this.ripple.view
       });
-      candidate.sign(privateKey);
-      this.validateAndProcessExchangeData(candidate, process[Symbol.for("address")]);
+      resCandidate.sign(privateKey);
+      this.validateAndProcessExchangeData(resCandidate, process[Symbol.for("address")]);
     }
     else {
       this.ripple.startLeaderTimer();
@@ -142,17 +142,17 @@ class PrePrepare extends LeaderStage {
             this.state = STAGE_STATE_FINISH;
 
             // 
-            const candidate = new Candidate({
+            const resCandidate = new Candidate({
               sequence: this.ripple.sequence,
               hash: this.ripple.hash,
               number: this.ripple.number,
               timestamp: Date.now(),
               view: this.ripple.view
             });
-            candidate.sign(privateKey);
+            resCandidate.sign(privateKey);
 
             //
-            p2p.send(address, PROTOCOL_CMD_PRE_PREPARE_RES, candidate.serialize());
+            p2p.send(address, PROTOCOL_CMD_PRE_PREPARE_RES, resCandidate.serialize());
 
             this.handler(STAGE_FINISH_SUCCESS);
           }
