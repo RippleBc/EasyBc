@@ -17,6 +17,7 @@ const { STAGE_STATE_EMPTY,
 	STAGE_PROCESS_CONSENSUS_CANDIDATE } = require("./constants");
 const assert = require("assert");
 const Block = require("../../depends/block");
+const Update = require("./update");
 
 const BN = utils.BN;
 
@@ -66,6 +67,9 @@ class Ripple
 
 		// 
 		this.lowWaterLine = new BN();
+
+		//
+		this.update = new Update();
 	}
 
 	get highWaterLine()
@@ -135,11 +139,14 @@ class Ripple
 
 	async run()
 	{
+		// sync block chain
+		await this.update.run();
+
 		// fetch new txs
 		this.ripple.localTransactions = await mysql.getRawTransactions(MAX_PROCESS_TRANSACTIONS_SIZE);
 
-		// 
-		this.runNewConsensusRound();
+		// sync state
+		this.fetchProcessState.run();
 
 		//
 		while(1)
@@ -325,6 +332,15 @@ class Ripple
 		this.amalgamate.run();
 	}
 
+	async syncProcessState()
+	{
+		// update block
+		await this.update.run();
+
+		// update process state
+		this.fetchProcessState.run();
+	}
+
 	/**
 	 * 
 	 */
@@ -367,7 +383,7 @@ class Ripple
 			this.viewChangeForTimeout.run();
 
 			// try to sync state
-			this.fetchProcessState.run();
+			this.syncProcessState();
 		}, RIPPLE_LEADER_EXPIRATION);
 	}
 

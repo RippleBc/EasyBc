@@ -72,7 +72,7 @@ class ViewChangeForConsensusFail extends Stage {
         // hash, number, view check failed
         // and view change failed
         // try to sync state
-        this.ripple.fetchProcessState.run();
+        this.ripple.syncProcessState();
       }
       else
       {

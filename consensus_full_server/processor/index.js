@@ -4,7 +4,7 @@ const utils = require("../../depends/utils");
 const Consensus = require("../ripple");
 const assert = require("assert");
 const Message = require("../../depends/fly/net/message");
-const Update = require("./update");
+
 
 const loggerConsensus = process[Symbol.for("loggerConsensus")];
 const loggerUpdate = process[Symbol.for("loggerUpdate")];
@@ -12,8 +12,6 @@ const mongo = process[Symbol.for("mongo")];
 
 const bufferToInt = utils.bufferToInt;
 const Buffer = utils.Buffer;
-
-const update = new Update();
 
 let ifProcessingBlock = false;
 
@@ -35,15 +33,11 @@ class Processor
 
 	run()
 	{
-		update.run().then(() => {
-			loggerUpdate.info("update is success");
-
-			this.consensus.run();
-		}).catch(e => {
-			loggerUpdate.fatal(`update throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+		this.consensus.run().catch(e => {
+			loggerUpdate.fatal(`consensus run throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 
 			process.exit(1)
-		})
+		});
 	}
 
 	/**
@@ -114,8 +108,8 @@ class Processor
 			}
 			else if(state === 2)
 			{
-				update.run().then(() => {
-					loggerUpdate.info("update is success");
+				this.consensus.syncProcessState().then(() => {
+					loggerUpdate.info("update block is success");
 				});
 				break;
 			}
