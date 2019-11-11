@@ -14,7 +14,34 @@ const { STAGE_STATE_EMPTY,
 	RIPPLE_STATE_EMPTY, 
 	MAX_PROCESS_TRANSACTIONS_SIZE,
 	RIPPLE_LEADER_EXPIRATION,
-	STAGE_PROCESS_CONSENSUS_CANDIDATE } = require("./constants");
+	STAGE_PROCESS_CONSENSUS_CANDIDATE,
+
+	STAGE_AMALGAMATE, 
+	STAGE_PRE_PREPARE, 
+	STAGE_PREPARE, 
+	STAGE_COMMIT, 
+	STAGE_FETCH_CANDIDATE, 
+	STAGE_PROCESS_CONSENSUS_CANDIDATE,
+
+	RIPPLE_STATE_CONSENSUS,
+	RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL,
+	RIPPLE_STATE_NEW_VIEW,
+	RIPPLE_STATE_FETCH_PROCESS_STATE,
+
+	PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ,
+	PROTOCOL_CMD_TRANSACTION_AMALGAMATE_RES,
+	PROTOCOL_CMD_PRE_PREPARE_REQ,
+	PROTOCOL_CMD_PRE_PREPARE_RES,
+	PROTOCOL_CMD_PREPARE,
+	PROTOCOL_CMD_COMMIT,
+	PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ,
+	PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES,
+	PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL,
+	PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT,
+	PROTOCOL_CMD_NEW_VIEW_REQ,
+	PROTOCOL_CMD_NEW_VIEW_RES,
+	PROTOCOL_CMD_PROCESS_STATE_REQ,
+	PROTOCOL_CMD_PROCESS_STATE_RES } = require("./constants");
 const assert = require("assert");
 const Block = require("../../depends/block");
 const Update = require("./update");
@@ -121,7 +148,7 @@ class Ripple
 			case PROTOCOL_CMD_PROCESS_STATE_REQ:
 			case PROTOCOL_CMD_PROCESS_STATE_RES:
 				{
-					this.fetchConsensusCandidate.handleMessage({ address, cmd, data });
+					this.fetchProcessState.handleMessage({ address, cmd, data });
 
 					return;
 				}
@@ -166,28 +193,6 @@ class Ripple
 					});
 				}
 
-			}
-			else if (this.ripple.state === RIPPLE_STATE_FETCH_PROCESS_STATE)
-			{
-				const msg1 = this.fetchMsg(PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ);
-				if (msg1) {
-					this.fetchConsensusCandidate.handleMessage(msg1);
-				}
-
-				const msg2 = this.fetchMsg(PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES);
-				if (msg2) {
-					this.fetchConsensusCandidate.handleMessage(msg2);
-				}
-
-				//
-				if(!msg1 && !msg2)
-				{
-					await new Promise(resolve => {
-						setTimeout(() => {
-							resolve();
-						}, SYSTEM_LOOP_DELAY_TIME);
-					});
-				}
 			}
 			else if (this.ripple.state === RIPPLE_STATE_CONSENSUS) {
 				switch (this.ripple.stage) {

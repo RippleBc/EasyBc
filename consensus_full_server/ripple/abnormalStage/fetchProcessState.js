@@ -59,16 +59,16 @@ class FetchProcessState extends ConsensusStage {
    * @param {Number} code 
    */
   handler(code) {
+    //
+    this.reset();
+
+    //
     if (code === STAGE_FINISH_SUCCESS)
     {
       this.ripple.runNewConsensusRound();
     }
     else
     {
-      //
-      this.reset();
-
-      //
       this.run();
     }
   }

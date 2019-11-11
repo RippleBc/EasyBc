@@ -69,13 +69,14 @@ class ViewChangeForConsensusFail extends Stage {
       if (this.ripple.consensusCandidateDigest)
       {
         // consensus success
-        // hash, number, view check failed
-        // and view change failed
+        // hash, number check failed(out of date)
         // try to sync state
         this.ripple.syncProcessState();
       }
       else
       {
+
+        // consensus failed
         logger.fatal(`ViewChangeForConsensusFail handler, view change consensus failed`);
 
         process.exit(1);
