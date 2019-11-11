@@ -7,7 +7,7 @@ const { RIPPLE_STATE_NEW_VIEW,
   PROTOCOL_CMD_NEW_VIEW_RES,
   STAGE_STATE_EMPTY,
   STAGE_STATE_PROCESSING,
-  STAGE_VIEW_CHANGE_NEW_VIEW_EXPIRATION } = require("../constants");
+  RIPPLE_STATE_VIEW_CHANGE_NEW_VIEW_EXPIRATION } = require("../constants");
 const LeaderStage = require("../stage/leaderStage");
 const Candidate = require("../data/candidate");
 
@@ -20,7 +20,7 @@ const privateKey = process[Symbol.for("privateKey")];
 class NewView extends LeaderStage {
   constructor(ripple) {
 
-    super({ name: 'newView', expiraion: STAGE_VIEW_CHANGE_NEW_VIEW_EXPIRATION })
+    super({ name: 'newView', expiraion: RIPPLE_STATE_VIEW_CHANGE_NEW_VIEW_EXPIRATION })
 
     this.ripple = ripple;
   }
@@ -40,7 +40,10 @@ class NewView extends LeaderStage {
 
     // node is leader
     if (this.ripple.checkLeader(process[Symbol.for("address")])) {
-      //
+      // update view
+      this.ripple.view = new BN(this.ripple.view).addn(1).toBuffer();
+
+      // encode view changes
       const viewChanges = [];
       const consensusViewChangeHash = this.ripple.viewChangeForTimeout.consensusViewChange.hash(false).toString("hex");
       for (let viewChange of this.ripple.viewChangeForTimeout.trimedViewChangesByAddress.values())
@@ -51,7 +54,7 @@ class NewView extends LeaderStage {
         }
       }
 
-      //
+      // 
       const newView = new NewView({
         hash: this.ripple.viewChangeForTimeout.consensusViewChange.hash,
         number: this.ripple.viewChangeForTimeout.consensusViewChange.number,

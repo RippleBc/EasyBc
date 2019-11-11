@@ -47,6 +47,11 @@ class ConsensusStage extends Stage {
         this.ripple.consensusViewChange = candidateDetail.data;
         this.ripple.consensusViewChange.sign(privateKey);
       }
+      else if (this.ripple.state === RIPPLE_STATE_FETCH_PROCESS_STATE)
+      {
+        this.ripple.consensusProcessState = candidateDetail.data;
+        this.ripple.consensusProcessState.sign(privateKey);
+      }
       else
       {
         logger.fatal(`${this.name} ConsensusStage enterNextStage, ripple state should be ${RIPPLE_STATE_CONSENSUS} or ${RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL}, now is ${this.ripple.state}, ${process[Symbol.for("getStackInfo")]()}`);

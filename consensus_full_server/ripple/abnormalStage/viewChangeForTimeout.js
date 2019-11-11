@@ -47,8 +47,6 @@ class ViewChangeForTimeout {
   }
 
   handler() {
-    this.ripple.view = new BN(this.ripple.view).addn(1).toBuffer();
-
     this.ripple.newView.run();
   }
 

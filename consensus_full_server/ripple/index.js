@@ -5,6 +5,7 @@ const Commit = require("./consensusStage/commit");
 const FetchConsensusCandidate = require("./fetchConsensusCandidate");
 const ViewChangeForConsensusFail = require("./abnormalStage/viewChangeForConsensusFail");
 const ViewChangeForTimeout = require("./abnormalStage/viewChangeForTimeout");
+const FetchProcessState = require("./abnormalStage/fetchProcessState");
 const NewView = require("./abnormalStage/NewView");
 const utils = require("../../depends/utils");
 
@@ -13,8 +14,7 @@ const { STAGE_STATE_EMPTY,
 	RIPPLE_STATE_EMPTY, 
 	MAX_PROCESS_TRANSACTIONS_SIZE,
 	RIPPLE_LEADER_EXPIRATION,
-	STAGE_PROCESS_CONSENSUS_CANDIDATE,
-	RIPPLE_STATE_SYNC_NODE_STATE } = require("./constants");
+	STAGE_PROCESS_CONSENSUS_CANDIDATE } = require("./constants");
 const assert = require("assert");
 const Block = require("../../depends/block");
 
@@ -23,7 +23,7 @@ const BN = utils.BN;
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
 const mysql = process[Symbol.for("mysql")];
-const unlManager = process[Symbol.for("unlManager")]
+const unlManager = process[Symbol.for("unlManager")];
 const privateKey = process[Symbol.for("privateKey")];
 
 const WATER_LINE_STEP_LENGTH = 19901112;
@@ -43,6 +43,7 @@ class Ripple
 		this.candidateDigest = undefined;
 		this.consensusCandidateDigest = undefined;
 		this.consensusViewChange = undefined;
+		this.consensusProcessState = undefined;
 
 		//
 		this.amalgamate = new Amalgamate(this);
@@ -51,6 +52,7 @@ class Ripple
 		this.commit = new Commit(this);
 		this.fetchConsensusCandidate = new FetchConsensusCandidate(this);
 		this.viewChangeForConsensusFail = new ViewChangeForConsensusFail(this);
+		this.fetchProcessState = new FetchProcessState(this);
 		this.viewChangeForTimeout = new ViewChangeForTimeout(this);
 		this.newView = new NewView(this);
 
@@ -93,6 +95,7 @@ class Ripple
 				});
 			}
 
+			// view change for consensus fail
 			if (this.ripple.state === RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL) {
 				const msg = this.fetchMsg(PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL);
 
@@ -101,6 +104,7 @@ class Ripple
 				}
 			}
 
+			// cosnensus
 			if (this.ripple.state === RIPPLE_STATE_CONSENSUS) {
 				switch (this.ripple.stage) {
 					case STAGE_AMALGAMATE:
@@ -177,24 +181,19 @@ class Ripple
 		this.candidateDigest = undefined;
 		this.consensusCandidateDigest = undefined;
 		this.consensusViewChange = undefined;
+		this.consensusProcessState = undefined;
 
 		this.amalgamate.reset();
 		this.prePrepare.reset();
 		this.prepare.reset();
 		this.commit.reset();
 		this.fetchConsensusCandidate.reset();
+		this.viewChangeForConsensusFail.reset();
+		this.fetchProcessState.reset();
 
 		this.state = RIPPLE_STATE_CONSENSUS;
 
 		this.amalgamate.run();
-	}
-
-	syncNodeState()
-	{
-		this.state = RIPPLE_STATE_SYNC_NODE_STATE;
-
-		// 
-		process.exit(1);
 	}
 
 	/**
@@ -239,7 +238,7 @@ class Ripple
 			this.viewChangeForTimeout.run();
 
 			// try to sync state
-			this.syncNodeState();
+			this.fetchProcessState.syncNodeState();
 		}, RIPPLE_LEADER_EXPIRATION);
 	}
 
@@ -309,15 +308,7 @@ class Ripple
 			case PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES:
 			case PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL:
 				{
-					const [sequence] = rlp.decode(data);
 					
-					// check sequence
-					if(new BN(sequence).lt(new BN(this.sequence)))
-					{
-						logger.error(`Ripplr handleMessage, sequence should larger or equal to ${this.sequence}, now is ${sequence.toString('hex')}`)
-						
-						return;
-					}
 				}
 				break;
 			case PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT:
@@ -330,6 +321,13 @@ class Ripple
 			case PROTOCOL_CMD_NEW_VIEW_RES:
 				{
 					this.newView.handleMessage({ address, cmd, data });
+
+					return;
+				}
+			case PROTOCOL_CMD_PROCESS_STATE_REQ:
+			case PROTOCOL_CMD_PROCESS_STATE_RES:
+				{
+					this.fetchConsensusCandidate.handleMessage({ address, cmd, data });
 
 					return;
 				}

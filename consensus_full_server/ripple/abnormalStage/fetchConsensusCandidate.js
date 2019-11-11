@@ -4,7 +4,7 @@ const { STAGE_STATE_EMPTY,
   PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ, 
   PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES,
   STAGE_FETCH_CANDIDATE,
-  STAGE_FETCH_CANDIDATE_EXPIRATION } = require("../../constant");
+  RIPPLE_STATE_FETCH_CONSENSUS_CANDIDATE_EXPIRATION } = require("../../constant");
 const CandidateDigest = require("../data/candidateDigest");
 const Candidate = require("../data/candidate");
 const utils = require("../../../depends/utils");
@@ -55,8 +55,8 @@ class FetchConsensusCandidate
       // hash, number, view check success
       // try to fetch consensus candidate failed
       // try to sync state
-      this.ripple.syncNodeState();
-    }, STAGE_FETCH_CANDIDATE_EXPIRATION);
+      this.ripple.fetchProcessState.syncNodeState();
+    }, RIPPLE_STATE_FETCH_CONSENSUS_CANDIDATE_EXPIRATION);
   }
 
   /**

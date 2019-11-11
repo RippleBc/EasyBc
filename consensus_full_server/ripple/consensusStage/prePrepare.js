@@ -117,45 +117,47 @@ class PrePrepare extends LeaderStage {
     switch (cmd) {
       case PROTOCOL_CMD_PRE_PREPARE_REQ:
         {
-          // sender is leader
-          if (this.ripple.checkLeader(address.toString('hex'))) {
-
-            // init candidate
-            this.ripple.candidate = new Candidate(date);
-            this.ripple.candidate.sign(privateKey);
-
-            // init candidate transactions
-            const decodedTransactions = rlp.decode(this.ripple.candidate.transactions);
-            this.ripple.amalgamatedTransactions = decodedTransactions.map(tx => tx.toString('hex'));
-
-            // init candidateDigest
-            this.ripple.candiateDigest = new CandidateDigest({
-              hash: this.ripple.candidate.hash,
-              number: this.ripple.candidate.number,
-              timestamp: this.ripple.candidate.timestamp,
-              view: this.ripple.candidate.view,
-              digest: sha256(this.ripple.candidate.transactions)
-            });
-            this.ripple.candiateDigest.sign(privateKey);
-
-            //
-            this.state = STAGE_STATE_FINISH;
-
-            // 
-            const resCandidate = new Candidate({
-              sequence: this.ripple.sequence,
-              hash: this.ripple.hash,
-              number: this.ripple.number,
-              timestamp: Date.now(),
-              view: this.ripple.view
-            });
-            resCandidate.sign(privateKey);
-
-            //
-            p2p.send(address, PROTOCOL_CMD_PRE_PREPARE_RES, resCandidate.serialize());
-
-            this.handler(STAGE_FINISH_SUCCESS);
+          // check if sender is leader
+          if (!this.ripple.checkLeader(address.toString('hex'))) 
+          {
+            return;
           }
+
+          // init candidate
+          this.ripple.candidate = new Candidate(date);
+          this.ripple.candidate.sign(privateKey);
+
+          // init candidate transactions
+          const decodedTransactions = rlp.decode(this.ripple.candidate.transactions);
+          this.ripple.amalgamatedTransactions = decodedTransactions.map(tx => tx.toString('hex'));
+
+          // init candidateDigest
+          this.ripple.candiateDigest = new CandidateDigest({
+            hash: this.ripple.candidate.hash,
+            number: this.ripple.candidate.number,
+            timestamp: this.ripple.candidate.timestamp,
+            view: this.ripple.candidate.view,
+            digest: sha256(this.ripple.candidate.transactions)
+          });
+          this.ripple.candiateDigest.sign(privateKey);
+
+          //
+          this.state = STAGE_STATE_FINISH;
+
+          // 
+          const resCandidate = new Candidate({
+            sequence: this.ripple.sequence,
+            hash: this.ripple.hash,
+            number: this.ripple.number,
+            timestamp: Date.now(),
+            view: this.ripple.view
+          });
+          resCandidate.sign(privateKey);
+
+          //
+          p2p.send(address, PROTOCOL_CMD_PRE_PREPARE_RES, resCandidate.serialize());
+
+          this.handler(STAGE_FINISH_SUCCESS);
         }
         break;
       case PROTOCOL_CMD_PRE_PREPARE_RES:

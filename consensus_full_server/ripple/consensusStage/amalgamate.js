@@ -132,48 +132,50 @@ class Amalgamate extends LeaderStage
 		{
 			case PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ:
 			{
-				// sender is leader
-				if (this.ripple.checkLeader(address.toString('hex'))) {
-
-					// check req candidate
-					const reqCandidate = new Candidate(data);
-					if(!reqCandidate.validate())
-					{
-						logger.error(`Amalgamate handleMessage, address: ${address.toString('hex')}, reqCandidate validate failed`)
-
-						return;
-					}
-
-					// check sequence
-					if (new BN(reqCandidate.sequence).lte(new BN(this.ripple.sequence)))
-					{
-						logger.error(`Amalgamate handleMessage, address: ${address.toString('hex')}, sequence should bigger than ${this.ripple.sequence.toString('hex')}, now is ${reqCandidate.sequence.toString('hex')}`);
-					
-						return;
-					}
-					
-					// update sequence
-					this.ripple.sequence = reqCandidate.sequence;
-
-					//
-					let localCandidate = new Candidate({
-						sequence: this.ripple.sequence,
-						hash: this.ripple.hash,
-						number: this.ripple.number,
-						timestamp: Date.now(),
-						view: this.ripple.view,
-						transactions: rlp.encode(this.ripple.localTransactions.map(localTransaction => Buffer.from(localTransaction, 'hex')))
-					});
-					localCandidate.sign(privateKey);
-
-					//
-					this.state = STAGE_STATE_FINISH;
-
-					//
-					p2p.send(address, PROTOCOL_CMD_TRANSACTION_AMALGAMATE_RES, localCandidate.serialize());
-
-					this.handler(STAGE_FINISH_SUCCESS);
+				// check if sender is leader
+				if (!this.ripple.checkLeader(address.toString('hex')))
+				{
+					return;
 				}
+
+				// check req candidate
+				const reqCandidate = new Candidate(data);
+				if(!reqCandidate.validate())
+				{
+					logger.error(`Amalgamate handleMessage, address: ${address.toString('hex')}, reqCandidate validate failed`)
+
+					return;
+				}
+
+				// check sequence
+				if (new BN(reqCandidate.sequence).lte(new BN(this.ripple.sequence)))
+				{
+					logger.error(`Amalgamate handleMessage, address: ${address.toString('hex')}, sequence should bigger than ${this.ripple.sequence.toString('hex')}, now is ${reqCandidate.sequence.toString('hex')}`);
+				
+					return;
+				}
+				
+				// update sequence
+				this.ripple.sequence = reqCandidate.sequence;
+
+				//
+				let localCandidate = new Candidate({
+					sequence: this.ripple.sequence,
+					hash: this.ripple.hash,
+					number: this.ripple.number,
+					timestamp: Date.now(),
+					view: this.ripple.view,
+					transactions: rlp.encode(this.ripple.localTransactions.map(localTransaction => Buffer.from(localTransaction, 'hex')))
+				});
+				localCandidate.sign(privateKey);
+
+				//
+				this.state = STAGE_STATE_FINISH;
+
+				//
+				p2p.send(address, PROTOCOL_CMD_TRANSACTION_AMALGAMATE_RES, localCandidate.serialize());
+
+				this.handler(STAGE_FINISH_SUCCESS);
 			}
 			break;
 			case PROTOCOL_CMD_TRANSACTION_AMALGAMATE_RES:
