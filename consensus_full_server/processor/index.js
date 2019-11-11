@@ -5,9 +5,7 @@ const Consensus = require("../ripple");
 const assert = require("assert");
 const Message = require("../../depends/fly/net/message");
 
-
 const loggerConsensus = process[Symbol.for("loggerConsensus")];
-const loggerUpdate = process[Symbol.for("loggerUpdate")];
 const mongo = process[Symbol.for("mongo")];
 
 const bufferToInt = utils.bufferToInt;
@@ -33,8 +31,10 @@ class Processor
 
 	run()
 	{
-		this.consensus.run().catch(e => {
-			loggerUpdate.fatal(`consensus run throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+		this.consensus.run().then(() => {
+			loggerConsensus.info("Processor run, success");
+		}).catch(e => {
+			loggerConsensus.fatal(`Processor run, throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 
 			process.exit(1)
 		});
@@ -109,7 +109,9 @@ class Processor
 			else if(state === 2)
 			{
 				this.consensus.syncProcessState().then(() => {
-					loggerUpdate.info("update block is success");
+					loggerConsensus.info("Processor processBlock, syncProcessState is success");
+				}).catch(e => {
+					loggerConsensus.fatal(`Processor processBlock, syncProcessState throw exception, ${process[Symbol.for("getStackInfo")](e)}`)
 				});
 				break;
 			}
