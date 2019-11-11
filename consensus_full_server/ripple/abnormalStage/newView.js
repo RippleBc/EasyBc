@@ -40,6 +40,7 @@ class NewView extends LeaderStage {
 
     // node is leader
     if (this.ripple.checkLeader(process[Symbol.for("address")])) {
+      //
       const viewChanges = [];
       const consensusViewChangeHash = this.ripple.viewChangeForTimeout.consensusViewChange.hash(false).toString("hex");
       for (let viewChange of this.ripple.viewChangeForTimeout.trimedViewChangesByAddress.values())
@@ -88,6 +89,9 @@ class NewView extends LeaderStage {
     this.ripple.viewChangeForConsensusFail.reset();
     this.ripple.viewChangeForTimeout.reset();
     this.ripple.newView.reset();
+
+    // update water line
+    this.ripple.lowWaterLine = this.ripple.highWaterLine.toBuffer();
   }
 
 	/**

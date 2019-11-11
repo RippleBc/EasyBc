@@ -6,6 +6,7 @@ const FetchConsensusCandidate = require("./fetchConsensusCandidate");
 const ViewChangeForConsensusFail = require("./abnormalStage/viewChangeForConsensusFail");
 const ViewChangeForTimeout = require("./abnormalStage/viewChangeForTimeout");
 const NewView = require("./abnormalStage/NewView");
+const utils = require("../../depends/utils");
 
 const { STAGE_STATE_EMPTY, 
 	CHEAT_REASON_INVALID_PROTOCOL_CMD, 
@@ -17,11 +18,15 @@ const { STAGE_STATE_EMPTY,
 const assert = require("assert");
 const Block = require("../../depends/block");
 
+const BN = utils.BN;
+
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
 const mysql = process[Symbol.for("mysql")];
 const unlManager = process[Symbol.for("unlManager")]
 const privateKey = process[Symbol.for("privateKey")];
+
+const WATER_LINE_STEP_LENGTH = 19901112;
 
 class Ripple
 {
@@ -57,6 +62,14 @@ class Ripple
 		this.hash = undefined;
 		this.number = undefined;
 		this.view = undefined;
+
+		// 
+		this.lowWaterLine = new BN();
+	}
+
+	get highWaterLine()
+	{
+		return new BN(this.lowWaterLine).addn(WATER_LINE_STEP_LENGTH);
 	}
 
 	async run()
@@ -64,7 +77,7 @@ class Ripple
 		// fetch new txs
 		this.ripple.localTransactions = await mysql.getRawTransactions(MAX_PROCESS_TRANSACTIONS_SIZE);
 
-		//
+		// 
 		this.runNewConsensusRound();
 
 		// 
@@ -253,6 +266,9 @@ class Ripple
 		}
 	}
 
+	/**
+	 * @return {Buffer} address
+	 */
 	get nextViewLeaderAddress()
 	{
 		let nextViewLeaderIndex = new BN(this.view).addn(1).modrn(unlManager.fullUnl.length);
@@ -260,7 +276,7 @@ class Ripple
 		{
 			if (node.index === nextViewLeaderIndex)
 			{
-				return node.address;
+				return Buffer.from(node.address, 'hex');
 			}
 		}
 	}

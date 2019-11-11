@@ -41,6 +41,14 @@ class Amalgamate extends LeaderStage
 		//
 		this.ripple.stage = STAGE_AMALGAMATE;
 		
+		// check sequence
+		if(new BN(this.ripple.sequence).eq(this.ripple.highWaterLine))
+		{
+			this.ripple.viewChangeForTimeout.run();
+
+			return;
+		}
+
 		// node is leader
 		if (this.ripple.checkLeader(process[Symbol.for("address")]))
 		{
