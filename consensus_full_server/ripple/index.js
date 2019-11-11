@@ -322,7 +322,6 @@ class Ripple
 		this.candidateDigest = undefined;
 		this.consensusCandidateDigest = undefined;
 		this.consensusViewChange = undefined;
-		this.consensusProcessState = undefined;
 
 		this.amalgamate.reset();
 		this.prePrepare.reset();
@@ -330,7 +329,6 @@ class Ripple
 		this.commit.reset();
 		this.fetchConsensusCandidate.reset();
 		this.viewChangeForConsensusFail.reset();
-		this.fetchProcessState.reset();
 
 		this.state = RIPPLE_STATE_CONSENSUS;
 

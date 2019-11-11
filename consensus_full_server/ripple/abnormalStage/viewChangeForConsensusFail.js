@@ -60,8 +60,13 @@ class ViewChangeForConsensusFail extends Stage {
   handler(code) {
     if (code === STAGE_FINISH_SUCCESS)
     {
+      // update view
       this.ripple.view = new BN(this.ripple.view).addn(1).toBuffer();
 
+      // update water line
+      this.ripple.lowWaterLine = this.ripple.highWaterLine.toBuffer();
+
+      //
       this.ripple.runNewConsensusRound();
     }
     else

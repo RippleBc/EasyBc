@@ -49,8 +49,8 @@ class ConsensusStage extends Stage {
       }
       else if (this.ripple.state === RIPPLE_STATE_FETCH_PROCESS_STATE)
       {
-        this.ripple.consensusProcessState = candidateDetail.data;
-        this.ripple.consensusProcessState.sign(privateKey);
+        this.ripple.fetchProcessState.consensusProcessState = candidateDetail.data;
+        this.ripple.fetchProcessState.consensusProcessState.sign(privateKey);
       }
       else
       {

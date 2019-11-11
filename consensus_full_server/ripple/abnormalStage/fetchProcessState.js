@@ -69,6 +69,7 @@ class FetchProcessState extends ConsensusStage {
     }
     else
     {
+      //
       this.run();
     }
   }
@@ -120,6 +121,14 @@ class FetchProcessState extends ConsensusStage {
         }
         break;
     }
+  }
+
+  reset()
+  {
+    super.reset();
+
+    //
+    this.consensusProcessState = undefined;
   }
 }
 
