@@ -131,21 +131,21 @@ class Ripple
 				break;
 			case PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT:
 				{
-					this.viewChangeForTimeout.handleMessage({ address, cmd, data });
+					this.viewChangeForTimeout.handleMessage(address, cmd, data);
 
 					return;
 				}
 			case PROTOCOL_CMD_NEW_VIEW_REQ:
 			case PROTOCOL_CMD_NEW_VIEW_RES:
 				{
-					this.newView.handleMessage({ address, cmd, data });
+					this.newView.handleMessage(address, cmd, data);
 
 					return;
 				}
 			case PROTOCOL_CMD_PROCESS_STATE_REQ:
 			case PROTOCOL_CMD_PROCESS_STATE_RES:
 				{
-					this.fetchProcessState.handleMessage({ address, cmd, data });
+					this.fetchProcessState.handleMessage(address, cmd, data);
 
 					return;
 				}
@@ -176,7 +176,7 @@ class Ripple
 				const msg = this.fetchMsg(PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL);
 
 				if (msg) {
-					this.viewChangeForConsensusFail.handleMessage(msg);
+					this.viewChangeForConsensusFail.handleMessage(msg.address, msg.cmd, msg.data);
 				}
 				else
 				{
@@ -194,12 +194,12 @@ class Ripple
 							const msg1 = this.fetchMsg(PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ);
 							if(msg1)
 							{
-								this.amalgamate.handleMessage(msg1);
+								this.amalgamate.handleMessage(msg1.address, msg1.cmd, msg1.data);
 							}
 
 							const msg2 = this.fetchMsg(PROTOCOL_CMD_TRANSACTION_AMALGAMATE_RES);
 							if (msg2) {
-								this.amalgamate.handleMessage(msg2);
+								this.amalgamate.handleMessage(msg2.address, msg2.cmd, msg2.data);
 							}
 							
 							//
@@ -215,12 +215,12 @@ class Ripple
 						{
 							const msg1 = this.fetchMsg(PROTOCOL_CMD_PRE_PREPARE_REQ);
 							if (msg1) {
-								this.prePrepare.handleMessage(msg1);
+								this.prePrepare.handleMessage(msg1.address, msg1.cmd, msg1.data);
 							}
 
 							const msg2 = this.fetchMsg(PROTOCOL_CMD_PRE_PREPARE_RES);
 							if (msg2) {
-								this.prePrepare.handleMessage(msg2);
+								this.prePrepare.handleMessage(msg2.address, msg2.cmd, msg2.data);
 							}
 
 							//
@@ -236,7 +236,7 @@ class Ripple
 						{
 							const msg = this.fetchMsg(PROTOCOL_CMD_PREPARE);
 							if (msg) {
-								this.prepare.handleMessage(msg);
+								this.prepare.handleMessage(msg.address, msg.cmd, msg.data);
 							}
 							else
 							{
@@ -251,7 +251,7 @@ class Ripple
 						{
 							const msg = this.fetchMsg(PROTOCOL_CMD_COMMIT);
 							if (msg) {
-								this.commit.handleMessage(msg);
+								this.commit.handleMessage(msg.address, msg.cmd, msg.data);
 							}
 							else {
 								await new Promise(resolve => {
@@ -265,12 +265,12 @@ class Ripple
 						{
 							const msg1 = this.fetchMsg(PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ);
 							if (msg1) {
-								this.fetchConsensusCandidate.handleMessage(msg1);
+								this.fetchConsensusCandidate.handleMessage(msg1.address, msg1.cmd, msg1.data);
 							}
 
 							const msg2 = this.fetchMsg(PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES);
 							if (msg2) {
-								this.fetchConsensusCandidate.handleMessage(msg2);
+								this.fetchConsensusCandidate.handleMessage(msg2.address, msg2.cmd, msg2.data);
 							}
 
 							//
@@ -438,8 +438,8 @@ class Ripple
 	}
 
 	/**
-	 * 
 	 * @param {Number} cmd 
+	 * @return {Object} 
 	 */
 	fetchMsg(cmd)
 	{
