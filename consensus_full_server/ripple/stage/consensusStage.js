@@ -1,5 +1,7 @@
 const { STAGE_STATE_FINISH, STAGE_FINISH_SUCCESS } = require("../constants");
 const Stage = require("./stage");
+const assert = require("assert");
+const Base = require("../data/base");
 
 class ConsensusStage extends Stage {
   constructor({ name, expiration, threshould } = { threshould: this.ripple.threshould }) {

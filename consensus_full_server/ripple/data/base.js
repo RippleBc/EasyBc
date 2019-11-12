@@ -109,11 +109,11 @@ class Base
   {
     assert(Buffer.isBuffer(address), `${this.name} Base checkAddress, address should be an Buffer, now is ${typeof address}`);
 
-    const fullUnl = unlManager.fullUnl;
+    const unlIncludeSelf = unlManager.unlIncludeSelf;
 
-    for(let i = 0; i < fullUnl.length; i++)
+    for(let i = 0; i < unlIncludeSelf.length; i++)
     {
-      const node = fullUnl[i];
+      const node = unlIncludeSelf[i];
 
       if(address.toString("hex") === utils.stripHexPrefix(node.address))
       {

@@ -99,7 +99,7 @@ class Stage {
     }
 
     // check if every node's respond has received
-    if (this.finishedNodes.size >= unlManager.fullUnl.length) {
+    if (this.finishedNodes.size >= unlManager.unlFullSize) {
       this.state = STAGE_STATE_FINISH;
 
       clearTimeout(this.timer);

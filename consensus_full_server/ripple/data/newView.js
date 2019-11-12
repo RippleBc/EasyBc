@@ -10,7 +10,7 @@ class ViewChange extends Base {
     data = data || {};
 
     const fields = [{
-      name: "hash",
+      name: "blockHash",
       length: 32,
       allowZero: true,
       allowLess: true,

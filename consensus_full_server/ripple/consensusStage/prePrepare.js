@@ -47,7 +47,7 @@ class PrePrepare extends LeaderStage {
       //
       this.ripple.candidate = new Candidate({
           sequence: this.ripple.sequence,
-          hash: this.ripple.hash,
+          blockHash: this.ripple.hash,
           number: this.ripple.number,
           timestamp: now,
           view: this.ripple.view,
@@ -58,7 +58,7 @@ class PrePrepare extends LeaderStage {
       //
       this.ripple.candidateDigest = new CandidateDigest({
         sequence: this.ripple.sequence,
-        hash: this.ripple.hash,
+        blockHash: this.ripple.hash,
         number: this.ripple.number,
         timestamp: now,
         view: this.ripple.view,
@@ -75,7 +75,7 @@ class PrePrepare extends LeaderStage {
       // record self
       const resCandidate = new Candidate({
         sequence: this.ripple.sequence,
-        hash: this.ripple.hash,
+        blockHash: this.ripple.hash,
         number: this.ripple.number,
         timestamp: Date.now(),
         view: this.ripple.view
@@ -147,7 +147,7 @@ class PrePrepare extends LeaderStage {
           // 
           const resCandidate = new Candidate({
             sequence: this.ripple.sequence,
-            hash: this.ripple.hash,
+            blockHash: this.ripple.hash,
             number: this.ripple.number,
             timestamp: Date.now(),
             view: this.ripple.view

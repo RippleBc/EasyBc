@@ -63,7 +63,7 @@ class Amalgamate extends LeaderStage
 			// 
 			const reqCandidate = new Candidate({
 				sequence: this.ripple.sequence,
-				hash: this.ripple.hash,
+				blockHash: this.ripple.hash,
 				number: this.ripple.number,
 				timestamp: Date.now(),
 				view: this.ripple.view
@@ -79,7 +79,7 @@ class Amalgamate extends LeaderStage
 			// record self
 			let localCandidate = new Candidate({
 				sequence: this.ripple.sequence,
-				hash: this.ripple.hash,
+				blockHash: this.ripple.hash,
 				number: this.ripple.number,
 				timestamp: Date.now(),
 				view: this.ripple.view,
@@ -166,7 +166,7 @@ class Amalgamate extends LeaderStage
 				//
 				let localCandidate = new Candidate({
 					sequence: this.ripple.sequence,
-					hash: this.ripple.hash,
+					blockHash: this.ripple.hash,
 					number: this.ripple.number,
 					timestamp: Date.now(),
 					view: this.ripple.view,

@@ -16,7 +16,7 @@ class ViewChange extends Base {
       allowLess: true,
       default: Buffer.alloc(0)
     }, {
-      name: "hash",
+      name: "blockHash",
       length: 32,
       allowZero: true,
       allowLess: true,

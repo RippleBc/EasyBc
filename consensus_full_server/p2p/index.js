@@ -27,7 +27,7 @@ class P2p
 		connectionsManager.on("addressConnected", address => {
 			assert(typeof address === 'string', `addressConnected handler, address shoule be an Array, now is ${typeof address}`)
 
-			if(unlManager.fullUnl.find(node => node.address === address))
+			if(unlManager.unlNotIncludeSelf.find(node => node.address === address))
 			{
 				unlManager.setNodesOnline([address])
 			}
@@ -38,7 +38,7 @@ class P2p
 
 			assert(typeof address === 'string', `addressClosed handler, address shoule be an Array, now is ${typeof address}`)
 
-			if(unlManager.fullUnl.find(node => node.address === address))
+			if(unlManager.unlNotIncludeSelf.find(node => node.address === address))
 			{
 				unlManager.setNodesOffline([address])
 			}
@@ -47,7 +47,7 @@ class P2p
 
 	async init()
 	{
-		const fullUnl = unlManager.fullUnl;
+		const unlNotIncludeSelf = unlManager.unlNotIncludeSelf;
 
 		// init server
 		const server = await createServer({
@@ -58,9 +58,9 @@ class P2p
 		});
 
 		// init conn
-		for(let i = 0; i < fullUnl.length; i++)
+		for(let i = 0; i < unlNotIncludeSelf.length; i++)
 		{
-			const node = fullUnl[i];
+			const node = unlNotIncludeSelf[i];
 
 			try
 			{
@@ -83,10 +83,10 @@ class P2p
 
 		// check connections
 		setInterval(() => {
-			const fullUnl = unlManager.fullUnl;
+			const unlNotIncludeSelf = unlManager.unlNotIncludeSelf;
 
 			// clear invalid connections
-			connectionsManager.clearInvalidConnections(fullUnl.map(node => node.address))
+			connectionsManager.clearInvalidConnections(unlNotIncludeSelf.map(node => node.address))
 
 			// try to reconnect other nodes
 			this.reconnectAll();
@@ -117,11 +117,11 @@ class P2p
 	{
 		assert(typeof cmd === "number", `P2p sendAll, cmd should be a Number, now is ${typeof cmd}`);
 
-		const unl = unlManager.unl;
+		const unlOnline = unlManager.unlOnline;
 		
-		for(let i = 0; i < unl.length; i++)
+		for(let i = 0; i < unlOnline.length; i++)
 		{
-			const connection = connectionsManager.get(Buffer.from(unl[i].address, "hex"));
+			const connection = connectionsManager.get(Buffer.from(unlOnline[i].address, "hex"));
 			if(connection && connection.checkIfCanWrite())
 			{
 				try
@@ -156,11 +156,11 @@ class P2p
 
 	async reconnectAll()
 	{
-		const fullUnl = unlManager.fullUnl;
+		const unlNotIncludeSelf = unlManager.unlNotIncludeSelf;
 
-		for(let i = 0; i < fullUnl.length; i++)
+		for(let i = 0; i < unlNotIncludeSelf.length; i++)
 		{
-			const node = fullUnl[i];
+			const node = unlNotIncludeSelf[i];
 			const connection = connectionsManager.get(Buffer.from(node.address, "hex"));
 
 			if(!connection || connection.checkIfClosed())

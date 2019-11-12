@@ -6,7 +6,7 @@ const FetchConsensusCandidate = require("./consensusStage/fetchConsensusCandidat
 const ViewChangeForConsensusFail = require("./abnormalStage/viewChangeForConsensusFail");
 const ViewChangeForTimeout = require("./abnormalStage/viewChangeForTimeout");
 const FetchProcessState = require("./abnormalStage/fetchProcessState");
-const NewView = require("./abnormalStage/NewView");
+const NewView = require("./abnormalStage/newView");
 const utils = require("../../depends/utils");
 
 const { STAGE_STATE_EMPTY, 
@@ -164,7 +164,7 @@ class Ripple
 	async run()
 	{
 		// fetch new txs
-		this.ripple.localTransactions = await mysql.getRawTransactions(MAX_PROCESS_TRANSACTIONS_SIZE);
+		this.localTransactions = await mysql.getRawTransactions(MAX_PROCESS_TRANSACTIONS_SIZE);
 
 		// sync block chain and process state
 		await this.syncProcessState();
@@ -172,7 +172,7 @@ class Ripple
 		//
 		while(1)
 		{
-			if (this.ripple.state === RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL) {
+			if (this.state === RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL) {
 				const msg = this.fetchMsg(PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL);
 
 				if (msg) {
@@ -187,8 +187,8 @@ class Ripple
 					});
 				}
 			}
-			else if (this.ripple.state === RIPPLE_STATE_CONSENSUS) {
-				switch (this.ripple.stage) {
+			else if (this.state === RIPPLE_STATE_CONSENSUS) {
+				switch (this.stage) {
 					case STAGE_AMALGAMATE:
 						{
 							const msg1 = this.fetchMsg(PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ);
@@ -370,7 +370,7 @@ class Ripple
 			});
 
 			// fetch new txs
-			this.ripple.localTransactions = await mysql.getRawTransactions(MAX_PROCESS_TRANSACTIONS_SIZE);
+			this.localTransactions = await mysql.getRawTransactions(MAX_PROCESS_TRANSACTIONS_SIZE);
 
 			// notice view may have been changed
 			this.runNewConsensusRound();
@@ -403,9 +403,9 @@ class Ripple
 	{
 		assert(typeof address === 'string', `Ripple checkLeader, address should be a String, now is ${typeof address}`);
 
-		let nextViewLeaderIndex = new BN(this.view).modrn(unlManager.fullUnl.length);
-		for (let node of unlManager.fullUnl) {
-			if (node.index === nextViewLeaderIndex) {
+		let leaderIndex = new BN(this.view).modn(unlManager.unlFullSize).toNumber();
+		for (let node of unlManager.unlIncludeSelf) {
+			if (node.index === leaderIndex) {
 				return node.address;
 			}
 		}
@@ -416,8 +416,8 @@ class Ripple
 	 */
 	get nextViewLeaderAddress()
 	{
-		let nextViewLeaderIndex = new BN(this.view).addn(1).modrn(unlManager.fullUnl.length);
-		for (let node of unlManager.fullUnl)
+		let nextViewLeaderIndex = new BN(this.view).addn(1).modn(unlManager.unlFullSize);
+		for (let node of unlManager.unlIncludeSelf)
 		{
 			if (node.index === nextViewLeaderIndex)
 			{
@@ -428,7 +428,7 @@ class Ripple
 
 	get threshould() 
 	{
-		return unlManager.fullUnl.length * 2 / 3 + 1;
+		return unlManager.unlFullSize * 2 / 3 + 1;
 	}
 
 	/**

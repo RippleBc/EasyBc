@@ -117,17 +117,15 @@ class Update
 	}
 
 	async synchronize()
-	{
-		const fullUnl = unlManager.fullUnl;
-		
+	{		
 		let blockNumberBn = new BN(this.blockChainHeight).addn(1);
 		while(true)
 		{
 			let blocks = new Map();
 			
-			for(let i = 0; i < fullUnl.length; i++)
+			for (let i = 0; i < unlManager.unlNotIncludeSelf.length; i++)
 			{
-				const node = fullUnl[i];
+				const node = unlManager.unlNotIncludeSelf[i];
 
 
 				let options = {
@@ -179,7 +177,7 @@ class Update
 			if(sortedBlocks[0])
 			{
 				const [majorityBlock, count] = sortedBlocks[0];
-				if (fullUnl.length < FULL_BLOCK_CHAIN_UNL_SCALE_LIMIT || count > fullUnl.length / 2)
+				if (unlManager.unlFullSize < FULL_BLOCK_CHAIN_UNL_SCALE_LIMIT || count > parseInt(unlManager.unlFullSize / 2 + 1))
 				{
 					const result = await this.blockChain.runBlockChain({
 						block: new Block(Buffer.from(majorityBlock, 'hex'))

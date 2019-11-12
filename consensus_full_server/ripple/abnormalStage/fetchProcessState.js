@@ -15,10 +15,11 @@ const Buffer = utils.Buffer;
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
 const unlManager = process[Symbol.for("unlManager")];
+const privateKey = process[Symbol.for("privateKey")];
 
 class FetchProcessState extends ConsensusStage {
   constructor(ripple) {
-    super({ name: 'fetchProcessState', expiraion: RIPPLE_STATE_FETCH_PROCESS_STATE_EXPIRATION, threshould: parseInt(unlManager.fullUnl.length / 2) + 1 })
+    super({ name: 'fetchProcessState', expiraion: RIPPLE_STATE_FETCH_PROCESS_STATE_EXPIRATION, threshould: parseInt(unlManager.unlFullSize / 2 + 1 )})
 
     this.ripple = ripple;
   }
@@ -39,11 +40,11 @@ class FetchProcessState extends ConsensusStage {
     //
     const reqCandidate = new Candidate({
       sequence: this.ripple.sequence,
-      hash: this.ripple.hash,
+      blockHash: this.ripple.hash,
       number: this.ripple.number,
-      timestamp: this.ripple.timestamp,
       view: this.ripple.view
-    })
+    });
+    reqCandidate.sign(privateKey);
 
     // broadcast
     p2p.sendAll(PROTOCOL_CMD_PROCESS_STATE_REQ, reqCandidate.serialize());
@@ -71,7 +72,7 @@ class FetchProcessState extends ConsensusStage {
       this.ripple.view = candidate.view;
 
       // check hash and number
-      if (this.ripple.hash.toString('hex') === candidate.hash.toString('hex')
+      if (this.ripple.hash.toString('hex') === candidate.blockHash.toString('hex')
         && this.ripple.number.toString('hex') === candidate.number.toString('hex'))
       {
         //
@@ -123,7 +124,7 @@ class FetchProcessState extends ConsensusStage {
           //
           let resCandidate = new Candidate({
             sequence: this.ripple.sequence,
-            hash: this.ripple.hash,
+            blockHash: this.ripple.hash,
             number: this.ripple.number,
             view: this.ripple.view,
           });

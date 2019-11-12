@@ -1,13 +1,11 @@
-const { STAGE_STATE_FINISH,
-  STAGE_FINISH_FOR_ALL_NODES_RETURN,
-  STAGE_FINISH_SUCCESS } = require("../constants");
 const Stage = require("./stage");
 const Base = require("../data/base");
+const assert = require("assert");
 
 const unlManager = process[Symbol.for("unlManager")];
 
 class LeaderStage extends Stage {
-  constructor({ name, expiration, threshould } = { threshould: unlManager.fullUnl.length }) {
+  constructor({ name, expiration, threshould } = { threshould: unlManager.unlFullSize }) {
 
     super({ name, expiration, threshould });
   }

@@ -1,4 +1,5 @@
 const assert = require("assert")
+const { index: processIndex } = require("../globalConfig.json")
 
 const mongo = process[Symbol.for("mongo")];
 
@@ -15,19 +16,36 @@ class UnlManager
         this._unl = await this.unlDb.getUnl();
     }
 
-    get fullUnl()
+    get unlIncludeSelf()
+    {
+        return [...this._unl.filter(node => node.state !== 2), {
+            address: process[Symbol.for("address")],
+            host: "",
+            queryPort: 0,
+            p2pPort: 0,
+            state: 0,
+            index: processIndex
+        }];
+    }
+
+    get unlNotIncludeSelf()
     {
         return this._unl.filter(node => node.state !== 2);
     }
 
-    get unl()
+    get unlFullSize()
+    {
+        this.unlNotIncludeSelf.length + 1;
+    }
+
+    get unlOnline()
     {
         return this._unl.filter(node => node.state === 0);
     }
 
     get threshould()
     {
-        parseInt(this.fullUnl.length) * 2 / 3;
+        parseInt(this.unlFullSize * 2 / 3 + 1);
     }
 
     /**

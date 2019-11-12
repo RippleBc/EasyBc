@@ -1,4 +1,4 @@
-const NewView = require("../data/newView");
+const NewViewData = require("../data/newView");
 const ViewChange = require("../data/viewChange");
 const utils = require("../../../depends/utils");
 const assert = require("assert");
@@ -52,8 +52,8 @@ class NewView extends LeaderStage {
       }
 
       // 
-      const newView = new NewView({
-        hash: this.ripple.viewChangeForTimeout.consensusViewChange.hash,
+      const newView = new NewViewData({
+        hash: this.ripple.viewChangeForTimeout.consensusViewChange.blockHash,
         number: this.ripple.viewChangeForTimeout.consensusViewChange.number,
         viewChanges: rlp.encode(viewChanges)
       });
@@ -66,7 +66,7 @@ class NewView extends LeaderStage {
 
       //
       let candidate = new Candidate({
-        hash: this.ripple.hash,
+        blockHash: this.ripple.hash,
         number: this.ripple.number,
         view: this.ripple.view
       });
@@ -112,7 +112,7 @@ class NewView extends LeaderStage {
     switch (cmd) {
       case PROTOCOL_CMD_NEW_VIEW_REQ:
         {
-          const newView = new NewView(data);
+          const newView = new NewViewData(data);
           
           const viewChanges = rlp.decode(newView.viewChanges).map(viewChange => new ViewChange(viewChange));
 
@@ -180,7 +180,7 @@ class NewView extends LeaderStage {
 
           //
           let candidate = new Candidate({
-            hash: this.ripple.hash,
+            blockHash: this.ripple.hash,
             number: this.ripple.number,
             view: this.ripple.view
           });
