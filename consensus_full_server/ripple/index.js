@@ -416,10 +416,12 @@ class Ripple
 
 		let leaderIndex = new BN(this.view).modn(unlManager.unlFullSize);
 		for (let node of unlManager.unlIncludeSelf) {
-			if (node.index === leaderIndex) {
-				return node.address;
+			if (node.index === leaderIndex && node.address === address) {
+				return true;
 			}
 		}
+
+		return false;
 	}
 
 	/**
