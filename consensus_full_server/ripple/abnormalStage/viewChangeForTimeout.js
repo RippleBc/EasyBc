@@ -27,6 +27,7 @@ class ViewChangeForTimeout {
 
   run() {
     const viewChange = new ViewChange({
+      sequence: this.ripple.sequence,
       hash: this.ripple.hash,
       number: this.ripple.number,
       view: this.ripple.view
@@ -53,6 +54,9 @@ class ViewChangeForTimeout {
     // update water line
     this.ripple.lowWaterLine = this.ripple.highWaterLine;
 
+    // update sequence
+    this.ripple.sequence = this.ripple.lowWaterLine.toBuffer();
+    
     //
     this.ripple.newView.run();
   }

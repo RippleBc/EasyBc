@@ -42,7 +42,12 @@ class Amalgamate extends LeaderStage
 		this.ripple.stage = STAGE_AMALGAMATE;
 		
 		// check sequence
-		if(new BN(this.ripple.sequence).eq(this.ripple.highWaterLine))
+		const sequenceBN = new BN(this.ripple.sequence);
+		if (sequenceBN.lt(this.ripple.lowWaterLine))
+		{
+			return;
+		}
+		if (sequenceBN.gte(this.ripple.highWaterLine))
 		{
 			this.ripple.viewChangeForTimeout.run();
 

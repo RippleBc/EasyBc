@@ -90,8 +90,21 @@ class NewView extends LeaderStage {
     this.ripple.newView.reset();
 
     // node is leader
+    switch(this.ripple.stage)
+    {
+      case STAGE_AMALGAMATE:
+      case STAGE_PRE_PREPARE:
+      case STAGE_PREPARE:
+      case STAGE_COMMIT: 
+      case STAGE_FETCH_CANDIDATE:
+      case STAGE_PROCESS_CONSENSUS_CANDIDATE:
+    }
     if (this.ripple.checkLeader(process[Symbol.for("address")])) {
-      
+
+    }
+    else
+    {
+
     }
   }
 
@@ -104,6 +117,12 @@ class NewView extends LeaderStage {
     assert(Buffer.isBuffer(address), `NewView handleMessage, address should be an Buffer, now is ${typeof address}`);
     assert(typeof cmd === "number", `NewView handleMessage, cmd should be a Number, now is ${typeof cmd}`);
     assert(Buffer.isBuffer(data), `NewView handleMessage, data should be an Buffer, now is ${typeof data}`);
+
+    if (this.state !== STAGE_STATE_PROCESSING) {
+      logger.info(`NewView handleMessage, state should be ${STAGE_STATE_PROCESSING}, now is ${this.state}`);
+
+      return;
+    }
 
     switch (cmd) {
       case PROTOCOL_CMD_NEW_VIEW_REQ:
@@ -159,9 +178,21 @@ class NewView extends LeaderStage {
             return;
           }
 
-          // init new view
+          //
+          this.state = STAGE_STATE_PROCESSING;
+
+          //
+          this.ripple.state = RIPPLE_STATE_NEW_VIEW;
+          
+          // update view
           this.ripple.view = newViewBN.toBuffer();
 
+          // update water line
+          this.ripple.lowWaterLine = this.ripple.highWaterLine;
+
+          // update sequence
+          this.ripple.sequence = this.ripple.lowWaterLine.toBuffer();
+          
           //
           let candidate = new Candidate({
             hash: this.ripple.hash,
@@ -179,12 +210,6 @@ class NewView extends LeaderStage {
         break;
       case PROTOCOL_CMD_NEW_VIEW_RES:
         {
-          if (this.state !== STAGE_STATE_PROCESSING) {
-            logger.info(`NewView handleMessage, state should be ${STAGE_STATE_PROCESSING}, now is ${this.state}`);
-
-            return;
-          }
-
           if (this.ripple.checkLeader(process[Symbol.for("address")])) {
             this.validateAndProcessExchangeData(new Candidate(data), address.toString('hex'));
           }

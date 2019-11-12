@@ -164,15 +164,12 @@ class Ripple
 
 	async run()
 	{
-		// sync block chain
-		await this.update.run();
-
 		// fetch new txs
 		this.ripple.localTransactions = await mysql.getRawTransactions(MAX_PROCESS_TRANSACTIONS_SIZE);
 
-		// sync state
-		this.fetchProcessState.run();
-
+		// sync block chain and process state
+		await this.syncProcessState();
+		
 		//
 		while(1)
 		{
@@ -325,7 +322,7 @@ class Ripple
 		this.commit.reset();
 		this.fetchConsensusCandidate.reset();
 		this.viewChangeForConsensusFail.reset();
-		
+
 		this.state = RIPPLE_STATE_CONSENSUS;
 
 		this.amalgamate.run();
@@ -333,8 +330,14 @@ class Ripple
 
 	async syncProcessState()
 	{
-		// update block
+		// update block chain
 		await this.update.run();
+
+		// init number
+		this.number = await this.update.blockChain.getBlockChainHeight(); 
+
+		// init hash
+		this.hash = await this.update.blockChain.getBlockHashByNumber(this.number)
 
 		// update process state
 		this.fetchProcessState.run();
