@@ -128,6 +128,7 @@ class Ripple
 			case PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL:
 				{
 					const msgsDifferByCmd = this.msgBuffer.get(cmd);
+					const [sequence] = rlp.decode(data);
 
 					// update msg buffer
 					msgsDifferByCmd.push({ sequence, address, data });
