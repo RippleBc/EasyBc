@@ -89,23 +89,8 @@ class NewView extends LeaderStage {
     this.ripple.viewChangeForTimeout.reset();
     this.ripple.newView.reset();
 
-    // node is leader
-    switch(this.ripple.stage)
-    {
-      case STAGE_AMALGAMATE:
-      case STAGE_PRE_PREPARE:
-      case STAGE_PREPARE:
-      case STAGE_COMMIT: 
-      case STAGE_FETCH_CANDIDATE:
-      case STAGE_PROCESS_CONSENSUS_CANDIDATE:
-    }
-    if (this.ripple.checkLeader(process[Symbol.for("address")])) {
-
-    }
-    else
-    {
-
-    }
+    //
+    this.ripple.runNewConsensusRound();
   }
 
 	/**
@@ -192,7 +177,7 @@ class NewView extends LeaderStage {
 
           // update sequence
           this.ripple.sequence = this.ripple.lowWaterLine.toBuffer();
-          
+
           //
           let candidate = new Candidate({
             hash: this.ripple.hash,
