@@ -111,6 +111,11 @@ class Ripple
 		assert(typeof cmd === 'number', `Ripple handleMessage, cmd should be a Number, now is ${typeof cmd}`);
 		assert(Buffer.isBuffer(data), `Ripple handleMessage, data should be an Buffer, now is ${typeof data}`);
 
+		if(this.state === RIPPLE_STATE_EMPTY)
+		{
+			return;
+		}
+
 		switch (cmd) {
 			case PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ:
 			case PROTOCOL_CMD_TRANSACTION_AMALGAMATE_RES:
@@ -335,7 +340,7 @@ class Ripple
 		this.number = await this.update.blockChain.getBlockChainHeight(); 
 
 		// init hash
-		this.hash = await this.update.blockChain.getBlockHashByNumber(this.number)
+		this.hash = await this.update.blockChain.getBlockHashByNumber(this.number);
 
 		// update process state
 		this.fetchProcessState.run();
