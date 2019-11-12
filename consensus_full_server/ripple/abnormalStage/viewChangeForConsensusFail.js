@@ -1,6 +1,6 @@
 const ViewChange = require("../data/viewChange");
 const utils = require("../../../depends/utils");
-const Stage = require("../stage/stage");
+const ConsensusStage = require("../stage/stage");
 const assert = require("assert");
 const { RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL,
   PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL,
@@ -15,7 +15,7 @@ const BN = utils.BN;
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
 
-class ViewChangeForConsensusFail extends Stage {
+class ViewChangeForConsensusFail extends ConsensusStage {
   constructor(ripple) {
     super({ name: 'viewChangeForConsensusFail', expiraion: STAGE_VIEW_CHANGE_FOR_CONSENSUS_FAIL_EXPIRATION })
 
@@ -56,12 +56,16 @@ class ViewChangeForConsensusFail extends Stage {
 
   /**
    * @param {Number} code
+   * @param {ViewChange} viewChange
    */
-  handler(code) {
+  handler(code, viewChange) {
+    assert(typeof code === 'number', `ViewChangeForConsensusFail handler, code should be a Number, now is ${typeof code}`);
+    assert(viewChange instanceof ViewChange, `ViewChangeForConsensusFail handler, viewChange should be an instanceof ViewChange, now is ${typeof viewChange}`);
+
     if (code === STAGE_FINISH_SUCCESS)
     {
       // update view
-      this.ripple.view = new BN(this.ripple.view).addn(1).toBuffer();
+      this.ripple.view = new BN(viewChange.view).addn(1).toBuffer();
 
       // update water line
       this.ripple.lowWaterLine = this.ripple.highWaterLine.toBuffer();

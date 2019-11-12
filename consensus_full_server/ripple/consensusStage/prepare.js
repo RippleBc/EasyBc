@@ -46,7 +46,20 @@ class Prepare extends ConsensusStage
 		this.validateAndProcessExchangeData(this.ripple.candidateDigest, process[Symbol.for("address")]);
  	}
 
-	handler() {
+	/**
+		* @param {Number} code
+		* @param {CandidateDigest} candidateDigest
+		*/
+	handler(code, candidateDigest) {
+		assert(typeof code === 'number', `Prepare handler, code should be a Number, now is ${typeof code}`);
+		assert(candidateDigest instanceof CandidateDigest, `Prepare handler, data should be an instanceof CandidateDigest, now is ${typeof candidateDigest}`);
+
+		//
+		if (code === STAGE_FINISH_SUCCESS) {
+			this.ripple.consensusCandidateDigest = candidateDigest;
+		}
+
+		//
 		this.ripple.commit.run();
 	}
 

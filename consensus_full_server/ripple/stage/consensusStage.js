@@ -1,8 +1,6 @@
 const { STAGE_STATE_FINISH, STAGE_FINISH_SUCCESS } = require("../constants");
 const Stage = require("./stage");
 
-const privateKey = process[Symbol.for("privateKey")];
-
 class ConsensusStage extends Stage {
   constructor({ name, expiration, threshould } = { threshould: this.ripple.threshould }) {
 
@@ -37,28 +35,6 @@ class ConsensusStage extends Stage {
 
     // 
     if (candidateDetail.count >= this.threshould) {
-      if (this.ripple.state === RIPPLE_STATE_CONSENSUS && !this.ripple.consensusCandidateDigest)
-      {
-        this.ripple.consensusCandidateDigest = candidateDetail.data;
-        this.ripple.consensusCandidateDigest.sign(privateKey);
-      }
-      else if (this.ripple.state === RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL)
-      {
-        this.ripple.consensusViewChange = candidateDetail.data;
-        this.ripple.consensusViewChange.sign(privateKey);
-      }
-      else if (this.ripple.state === RIPPLE_STATE_FETCH_PROCESS_STATE)
-      {
-        this.ripple.fetchProcessState.consensusProcessState = candidateDetail.data;
-        this.ripple.fetchProcessState.consensusProcessState.sign(privateKey);
-      }
-      else
-      {
-        logger.fatal(`${this.name} ConsensusStage enterNextStage, ripple state should be ${RIPPLE_STATE_CONSENSUS} or ${RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL}, now is ${this.ripple.state}, ${process[Symbol.for("getStackInfo")]()}`);
-      
-        process.exit(1);
-      }
-
       //
       this.state = STAGE_STATE_FINISH;
 
@@ -66,7 +42,7 @@ class ConsensusStage extends Stage {
       this.timer = undefined;
 
       process.nextTick(() => {
-        this.handler(STAGE_FINISH_SUCCESS);
+        this.handler(STAGE_FINISH_SUCCESS, candidateDetail.data);
       });
 
       return true;

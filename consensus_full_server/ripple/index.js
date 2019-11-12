@@ -2,7 +2,7 @@ const Amalgamate = require("./consensusStage/amalgamate");
 const PrePrepare = require("./consensusStage/prePrepare");
 const Prepare = require("./consensusStage/prepare");
 const Commit = require("./consensusStage/commit");
-const FetchConsensusCandidate = require("./fetchConsensusCandidate");
+const FetchConsensusCandidate = require("./consensusStage/fetchConsensusCandidate");
 const ViewChangeForConsensusFail = require("./abnormalStage/viewChangeForConsensusFail");
 const ViewChangeForTimeout = require("./abnormalStage/viewChangeForTimeout");
 const FetchProcessState = require("./abnormalStage/fetchProcessState");
@@ -69,8 +69,6 @@ class Ripple
 		this.candidate = undefined;
 		this.candidateDigest = undefined;
 		this.consensusCandidateDigest = undefined;
-		this.consensusViewChange = undefined;
-		this.consensusProcessState = undefined;
 
 		//
 		this.amalgamate = new Amalgamate(this);
@@ -321,7 +319,6 @@ class Ripple
 		this.candidate = undefined;
 		this.candidateDigest = undefined;
 		this.consensusCandidateDigest = undefined;
-		this.consensusViewChange = undefined;
 
 		this.amalgamate.reset();
 		this.prePrepare.reset();

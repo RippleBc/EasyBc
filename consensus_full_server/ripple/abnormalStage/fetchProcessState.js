@@ -57,18 +57,43 @@ class FetchProcessState extends ConsensusStage {
 
   /**
    * @param {Number} code 
+   * @param {Candidate} candidate
    */
-  handler(code) {
-    //
-    this.reset();
+  handler(code, candidate) {
+    assert(typeof code === 'number', `FetchProcessState handler, code should be a Number, now is ${typeof code}`);
+    assert(candidate instanceof Candidate, `FetchProcessState handler, candidate should be an instanceof Candidate, now is ${typeof candidate}`);
 
     //
     if (code === STAGE_FINISH_SUCCESS)
     {
-      this.ripple.runNewConsensusRound();
+      // update sequence and view
+      this.ripple.sequence = candidate.sequence;
+      this.ripple.view = candidate.view;
+
+      // check hash and number
+      if (this.ripple.hash.toString('hex') === candidate.hash.toString('hex')
+        && this.ripple.number.toString('hex') === candidate.number.toString('hex'))
+      {
+        //
+        this.reset();
+
+        //
+        this.ripple.runNewConsensusRound();
+      }
+      else
+      {
+        //
+        this.reset();
+
+        //
+        this.ripple.syncProcessState();
+      }
     }
     else
     {
+      //
+      this.reset();
+
       //
       this.run();
     }

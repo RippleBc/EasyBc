@@ -48,11 +48,23 @@ class Commit extends ConsensusStage {
     }
   }
 
-  handler() {
+  /**
+    * @param {Number} code
+    * @param {CandidateDigest} candidateDigest
+    */
+  handler(code, candidateDigest) {
+    assert(typeof code === 'number', `Commit handler, code should be a Number, now is ${typeof code}`);
+    assert(candidateDigest instanceof CandidateDigest, `Commit handler, data should be an instanceof CandidateDigest, now is ${typeof candidateDigest}`);
+
+    //
+    if (code === STAGE_FINISH_SUCCESS) {
+      this.ripple.consensusCandidateDigest = candidateDigest;
+    }
+
     //
     if (!this.ripple.consensusCandidateDigest)
     {
-      logger.error("candidateDigest consensus failed, enter to view change state");
+      logger.error("Commit handler, candidateDigest consensus failed, enter to view change state");
 
       this.ripple.viewChangeForConsensusFail.run();
 
@@ -63,7 +75,7 @@ class Commit extends ConsensusStage {
     if (this.ripple.hash.toString('hex') !== this.ripple.consensusCandidateDigest.hash.toString('hex')
       || this.ripple.number.toString('hex') !== this.ripple.consensusCandidateDigest.number.toString('hex'))
     {
-      logger.error(`candidateDigest consensus success, hash, number should be 
+      logger.error(`Commit handler, candidateDigest consensus success, hash, number should be 
       ${this.ripple.hash.toString('hex')}, ${this.ripple.number.toString('hex')},
       now is ${this.ripple.consensusCandidateDigest.hash.toString('hex')}, ${this.ripple.consensusCandidateDigest.number.toString('hex')}},
       enter to view change state`);
