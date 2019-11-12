@@ -190,7 +190,6 @@ class Ripple
 						}, SYSTEM_LOOP_DELAY_TIME);
 					});
 				}
-
 			}
 			else if (this.ripple.state === RIPPLE_STATE_CONSENSUS) {
 				switch (this.ripple.stage) {
@@ -326,7 +325,7 @@ class Ripple
 		this.commit.reset();
 		this.fetchConsensusCandidate.reset();
 		this.viewChangeForConsensusFail.reset();
-
+		
 		this.state = RIPPLE_STATE_CONSENSUS;
 
 		this.amalgamate.run();

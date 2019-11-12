@@ -88,6 +88,11 @@ class NewView extends LeaderStage {
     this.ripple.viewChangeForConsensusFail.reset();
     this.ripple.viewChangeForTimeout.reset();
     this.ripple.newView.reset();
+
+    // node is leader
+    if (this.ripple.checkLeader(process[Symbol.for("address")])) {
+      
+    }
   }
 
 	/**

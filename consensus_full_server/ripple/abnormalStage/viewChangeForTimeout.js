@@ -51,7 +51,7 @@ class ViewChangeForTimeout {
     this.ripple.view = new BN(this.consensusViewChange.view).addn(1).toBuffer();
 
     // update water line
-    this.ripple.lowWaterLine = this.ripple.highWaterLine.toBuffer();
+    this.ripple.lowWaterLine = this.ripple.highWaterLine;
 
     //
     this.ripple.newView.run();
