@@ -85,10 +85,10 @@ class Ripple
 		this.msgBuffer = new Map();
 
 		//
-		this.sequence = undefined;
+		this.sequence = Buffer.alloc(0);
 		this.hash = undefined;
 		this.number = undefined;
-		this.view = undefined;
+		this.view = Buffer.alloc(0);
 
 		// 
 		this.lowWaterLine = new BN();
