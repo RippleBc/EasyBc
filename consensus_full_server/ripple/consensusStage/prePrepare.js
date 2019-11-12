@@ -88,7 +88,7 @@ class PrePrepare extends LeaderStage {
     }
   }
 
-  handler()
+  handler(code)
   {
     // node is not leader
     if (!this.ripple.checkLeader(process[Symbol.for("address")])) {

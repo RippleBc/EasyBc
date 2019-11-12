@@ -62,11 +62,12 @@ class FetchProcessState extends ConsensusStage {
    */
   handler(code, candidate) {
     assert(typeof code === 'number', `FetchProcessState handler, code should be a Number, now is ${typeof code}`);
-    assert(candidate instanceof Candidate, `FetchProcessState handler, candidate should be an instanceof Candidate, now is ${typeof candidate}`);
 
     //
     if (code === STAGE_FINISH_SUCCESS)
     {
+      assert(candidate instanceof Candidate, `FetchProcessState handler, candidate should be an instanceof Candidate, now is ${typeof candidate}`);
+      
       // update sequence and view
       this.ripple.sequence = candidate.sequence;
       this.ripple.view = candidate.view;

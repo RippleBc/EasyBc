@@ -94,7 +94,7 @@ class Amalgamate extends LeaderStage
 		}
 	}
 
-	handler()
+	handler(code)
 	{
 		// node is leader
 		if (this.ripple.checkLeader(process[Symbol.for("address")])) {

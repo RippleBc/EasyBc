@@ -3,7 +3,8 @@ const { STAGE_STATE_EMPTY,
   CHEAT_REASON_INVALID_SIG, 
   CHEAT_REASON_REPEAT_DATA_EXCHANGE,
   STAGE_STATE_FINISH,
-  STAGE_FINISH_FOR_TIMEOUT } = require("../constants");
+  STAGE_FINISH_FOR_TIMEOUT,
+  STAGE_FINISH_FOR_ALL_NODES_RETURN } = require("../constants");
 const assert = require("assert");
 const Base = require("../data/base");
 
@@ -59,9 +60,6 @@ class Stage {
 
     // record received address
     this.finishedNodes.add(address);
-
-    // check if every node's respond has received
-    this.enterNextStage(candidate);
 
     //
     const candidateValidateResult = candidate.validate();

@@ -4,9 +4,16 @@ const assert = require("assert");
 const Base = require("../data/base");
 
 class ConsensusStage extends Stage {
-  constructor({ name, expiration, threshould } = { threshould: this.ripple.threshould }) {
+  constructor({ name, expiration, threshould }) {
 
-    super({ name, expiration, threshould});
+    super({ name, expiration, threshould });
+
+    if(!this.threshould)
+    {
+      process.nextTick(() => {
+        this.threshould = this.ripple.threshould;
+      });
+    }
 
     this.trimedCandidates = new Map();
   }

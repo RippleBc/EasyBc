@@ -164,7 +164,7 @@ class Ripple
 	async run()
 	{
 		// fetch new txs
-		this.localTransactions = await mysql.getRawTransactions(MAX_PROCESS_TRANSACTIONS_SIZE);
+		({ transactions: this.localTransactions, deleteTransactions: this.deleteTransactions } = await mysql.getRawTransactions(MAX_PROCESS_TRANSACTIONS_SIZE));
 
 		// sync block chain and process state
 		await this.syncProcessState();
@@ -249,7 +249,7 @@ class Ripple
 						}
 					case STAGE_COMMIT:
 						{
-							msg = this.fetchMsg(PROTOCOL_CMD_COMMIT);
+							const msg = this.fetchMsg(PROTOCOL_CMD_COMMIT);
 							if (msg) {
 								this.commit.handleMessage(msg);
 							}
@@ -309,7 +309,6 @@ class Ripple
 	 */
 	runNewConsensusRound()
 	{
-		this.localTransactions = [];
 		this.amalgamatedTransactions.clear();
 		this.candidate = undefined;
 		this.candidateDigest = undefined;
@@ -350,7 +349,7 @@ class Ripple
 		const consensusBlock = new Block({
 			header: {
 				number: this.candidate.number,
-				parentHash: this.candidate.parentHash,
+				parentHash: this.candidate.blockHash,
 				timestamp: this.candidate.timestamp
 			},
 			transactions: this.candidate.transactions
@@ -369,11 +368,18 @@ class Ripple
 				block: consensusBlock
 			});
 
+			//
+			await this.deleteTransactions();
+
 			// fetch new txs
-			this.localTransactions = await mysql.getRawTransactions(MAX_PROCESS_TRANSACTIONS_SIZE);
+			({ transactions: this.localTransactions, deleteTransactions: this.deleteTransactions} = await mysql.getRawTransactions(MAX_PROCESS_TRANSACTIONS_SIZE));
 
 			// notice view may have been changed
 			this.runNewConsensusRound();
+		})().catch(e => {
+			logger.fatal(`Ripple processConsensusCandidate, throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+
+			process.exit(1);
 		});
 	}
 
@@ -403,7 +409,7 @@ class Ripple
 	{
 		assert(typeof address === 'string', `Ripple checkLeader, address should be a String, now is ${typeof address}`);
 
-		let leaderIndex = new BN(this.view).modn(unlManager.unlFullSize).toNumber();
+		let leaderIndex = new BN(this.view).modn(unlManager.unlFullSize);
 		for (let node of unlManager.unlIncludeSelf) {
 			if (node.index === leaderIndex) {
 				return node.address;
@@ -428,7 +434,7 @@ class Ripple
 
 	get threshould() 
 	{
-		return unlManager.unlFullSize * 2 / 3 + 1;
+		return parseInt(unlManager.unlFullSize * 2 / 3 + 1);
 	}
 
 	/**

@@ -6,12 +6,14 @@ const { STAGE_PREPARE,
 	PROTOCOL_CMD_PREPARE,
 	STAGE_STATE_EMPTY,
 	STAGE_STATE_PROCESSING,
-	STAGE_PREPARE_EXPIRATION } = require("../constants");
+	STAGE_PREPARE_EXPIRATION,
+	STAGE_FINISH_SUCCESS } = require("../constants");
 
 const Buffer = utils.Buffer;
 
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
+const privateKey = process[Symbol.for("privateKey")];
 
 class Prepare extends ConsensusStage
 {
@@ -52,11 +54,13 @@ class Prepare extends ConsensusStage
 		*/
 	handler(code, candidateDigest) {
 		assert(typeof code === 'number', `Prepare handler, code should be a Number, now is ${typeof code}`);
-		assert(candidateDigest instanceof CandidateDigest, `Prepare handler, data should be an instanceof CandidateDigest, now is ${typeof candidateDigest}`);
-
+		
 		//
 		if (code === STAGE_FINISH_SUCCESS) {
+			assert(candidateDigest instanceof CandidateDigest, `Prepare handler, data should be an instanceof CandidateDigest, now is ${typeof candidateDigest}`);
+
 			this.ripple.consensusCandidateDigest = candidateDigest;
+			this.ripple.consensusCandidateDigest.sign(privateKey)
 		}
 
 		//

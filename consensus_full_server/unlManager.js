@@ -35,17 +35,12 @@ class UnlManager
 
     get unlFullSize()
     {
-        this.unlNotIncludeSelf.length + 1;
+        return this.unlNotIncludeSelf.length + 1;
     }
 
     get unlOnline()
     {
         return this._unl.filter(node => node.state === 0);
-    }
-
-    get threshould()
-    {
-        parseInt(this.unlFullSize * 2 / 3 + 1);
     }
 
     /**

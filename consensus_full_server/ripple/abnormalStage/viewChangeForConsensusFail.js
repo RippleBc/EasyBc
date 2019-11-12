@@ -60,10 +60,11 @@ class ViewChangeForConsensusFail extends ConsensusStage {
    */
   handler(code, viewChange) {
     assert(typeof code === 'number', `ViewChangeForConsensusFail handler, code should be a Number, now is ${typeof code}`);
-    assert(viewChange instanceof ViewChange, `ViewChangeForConsensusFail handler, viewChange should be an instanceof ViewChange, now is ${typeof viewChange}`);
 
     if (code === STAGE_FINISH_SUCCESS)
     {
+      assert(viewChange instanceof ViewChange, `ViewChangeForConsensusFail handler, viewChange should be an instanceof ViewChange, now is ${typeof viewChange}`);
+      
       // update view
       this.ripple.view = new BN(viewChange.view).addn(1).toBuffer();
 
