@@ -1,6 +1,6 @@
 const ViewChange = require("../data/viewChange");
 const utils = require("../../../depends/utils");
-const ConsensusStage = require("../stage/stage");
+const ConsensusStage = require("../stage/consensusStage");
 const assert = require("assert");
 const { RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL,
   PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL,
@@ -14,6 +14,7 @@ const BN = utils.BN;
 
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
+const privateKey = process[Symbol.for("privateKey")];
 
 class ViewChangeForConsensusFail extends ConsensusStage {
   constructor(ripple) {

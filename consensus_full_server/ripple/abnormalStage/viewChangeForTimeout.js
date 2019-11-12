@@ -10,6 +10,7 @@ const BN = utils.BN;
 
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
+const privateKey = process[Symbol.for("privateKey")];
 
 class ViewChangeForTimeout {
   constructor(ripple) {
