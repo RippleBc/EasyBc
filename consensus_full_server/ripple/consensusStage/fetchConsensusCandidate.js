@@ -4,7 +4,7 @@ const { STAGE_STATE_EMPTY,
   PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ, 
   PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES,
   STAGE_FETCH_CANDIDATE,
-  RIPPLE_STATE_FETCH_CONSENSUS_CANDIDATE_EXPIRATION } = require("../../constant");
+  RIPPLE_STATE_FETCH_CONSENSUS_CANDIDATE_EXPIRATION } = require("../constants");
 const CandidateDigest = require("../data/candidateDigest");
 const Candidate = require("../data/candidate");
 const utils = require("../../../depends/utils");
