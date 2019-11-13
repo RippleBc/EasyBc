@@ -111,11 +111,6 @@ class Ripple
 		assert(typeof cmd === 'number', `Ripple handleMessage, cmd should be a Number, now is ${typeof cmd}`);
 		assert(Buffer.isBuffer(data), `Ripple handleMessage, data should be an Buffer, now is ${typeof data}`);
 
-		if(this.state === RIPPLE_STATE_EMPTY)
-		{
-			return;
-		}
-
 		switch (cmd) {
 			case PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ:
 			case PROTOCOL_CMD_TRANSACTION_AMALGAMATE_RES:
@@ -138,6 +133,10 @@ class Ripple
 				break;
 			case PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT:
 				{
+					if (this.hash === undefined || this.number === undefined) {
+						return;
+					}
+
 					this.viewChangeForTimeout.handleMessage(address, cmd, data);
 
 					return;
@@ -145,6 +144,10 @@ class Ripple
 			case PROTOCOL_CMD_NEW_VIEW_REQ:
 			case PROTOCOL_CMD_NEW_VIEW_RES:
 				{
+					if (this.hash === undefined || this.number === undefined) {
+						return;
+					}
+
 					this.newView.handleMessage(address, cmd, data);
 
 					return;
@@ -152,6 +155,10 @@ class Ripple
 			case PROTOCOL_CMD_PROCESS_STATE_REQ:
 			case PROTOCOL_CMD_PROCESS_STATE_RES:
 				{
+					if (this.hash === undefined || this.number === undefined) {
+						return;
+					}
+					
 					this.fetchProcessState.handleMessage(address, cmd, data);
 
 					return;
