@@ -64,6 +64,8 @@ class Amalgamate extends LeaderStage
 		// node is leader
 		if (this.ripple.checkLeader(process[Symbol.for("address")]))
 		{
+			logger.info("Amalgamate run, start leader broadcast");
+
 			// update sequence
 			this.ripple.sequence = new BN(this.ripple.sequence).addn(1).toBuffer();
 

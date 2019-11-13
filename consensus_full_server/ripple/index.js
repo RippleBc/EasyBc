@@ -412,9 +412,6 @@ class Ripple
 
 	startLeaderTimer()
 	{
-		logger.fatal(`Ripple processConsensusCandidate, throw exception, ${process[Symbol.for("getStackInfo")]()}`);
-
-
 		this.leaderTimeout = setTimeout(() => {
 			// try to view change
 			this.viewChangeForTimeout.run();
@@ -495,11 +492,20 @@ class Ripple
 		const filteredMsgs = [];
 		for (let msg of msgsDifferByCmd)
 		{
+			// filter msg with invalid seuqnce 
 			if(new BN(msg.sequence).lt(new BN(this.sequence)))
 			{
 				continue;
 			}
 
+			// correpond msg has found, record follow msg
+			if (correspondMsg !== undefined) {
+				filteredMsgs.push(msg);
+
+				continue;
+			}
+
+			// find correspond msg
 			if (msg.sequence.toString('hex') === this.sequence.toString('hex'))
 			{
 				correspondMsg = { 
@@ -507,25 +513,25 @@ class Ripple
 					cmd: cmd,
 					data: msg.data
 				};
-
-				break;
 			}
-
-			filteredMsgs.push(msg);
+			else
+			{
+				filteredMsgs.push(msg);
+			}
 		}
 
 		// update msg buffer
 		this.msgBuffer.set(cmd, filteredMsgs);
 
 		//
-		// if (correspondMsg)
-		// {
-		// 	logger.info(`Ripple fetchMsg, address: ${correspondMsg.address.toString('hex')}, cmd: ${correspondMsg.cmd}`);
-		// }
-		// else
-		// {
-		// 	logger.info(`Ripple fetchMsg, msg with cmd ${cmd} not exist`);
-		// }
+		if (correspondMsg)
+		{
+			logger.info(`Ripple fetchMsg, address: ${correspondMsg.address.toString('hex')}, cmd: ${correspondMsg.cmd}`);
+		}
+		else
+		{
+			logger.info(`Ripple fetchMsg, msg with cmd ${cmd} not exist`);
+		}
 		return correspondMsg;
 	}
 

@@ -49,6 +49,10 @@ class PrePrepare extends LeaderStage {
 
     // node is leader
     if (this.ripple.checkLeader(process[Symbol.for("address")])) {
+      //
+      logger.info("PrePrepare run, start leader broadcast");
+
+      //
       const now = Date.now();
 
       //
