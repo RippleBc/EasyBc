@@ -102,7 +102,7 @@ class ViewChangeForTimeout {
 
     // check if msg address is correspond with connect address
     if (address !== viewChange.from.toString("hex")) {
-      logger.error(`${this.name} ViewChangeForTimeout validateAndProcessExchangeData validate, address should be ${address}, now is ${viewChange.from.toString("hex")}`);
+      logger.error(`ViewChangeForTimeout validateAndProcessExchangeData validate, address should be ${address}, now is ${viewChange.from.toString("hex")}`);
 
       this.cheatedNodes.push({
         address: address,
@@ -118,6 +118,8 @@ class ViewChangeForTimeout {
         if (type === 1) {
           viewChangeByHashDetail.count += 1;
 
+          this.trimedViewChangesByHash.set(viewChangeHash, viewChangeByHashDetail); 
+
           if (viewChangeByHashDetail.count >= this.threshould) {
             this.consensusViewChange = viewChangeByHashDetail.data;
             this.consensusViewChange.sign(privateKey);
@@ -130,29 +132,42 @@ class ViewChangeForTimeout {
           if (viewChangeByHashDetail.count === 0) {
             this.trimedViewChangesByHash.delete(viewChangeHash);
           }
+          else
+          {
+            this.trimedViewChangesByHash.set(viewChangeHash, viewChangeByHashDetail); 
+          }
         }
       }
       else {
         if (type === 1) {
-          viewChangeByHashDetail.data = viewChange;
-          viewChangeByHashDetail.count = 1;
+          this.trimedViewChangesByHash.set(viewChangeHash, {
+            data: viewChange,
+            count: 1
+          });
         }
-      }
-
-      this.trimedViewChangesByHash.set(viewChangeHash, viewChangeByHashDetail);      
+        else
+        {
+          logger.fatal(`ViewChangeForTimeout validateAndProcessExchangeData, updateTrimedViewChangesByHash, inner exception`);
+          
+          process.exit(1);
+        }
+      }     
     }
 
-    //
+    // fetch viewChange detail by address
     const fromAddress = viewChange.from.toString('hex');
     let viewChangeByAddressDetail = this.trimedViewChangesByAddress.get(fromAddress);
-    if (viewChangeByAddressDetail) {
-      updateTrimedViewChangesByHash(viewChangeByAddressDetail.data, 0)
-      updateTrimedViewChangesByHash(viewChange, 1);
 
-      this.trimedViewChangesByAddress.set(from, viewChange);
-    }
-    else {
-      this.trimedViewChangesByAddress.set(from, viewChange);
+    // record by address
+    this.trimedViewChangesByAddress.set(fromAddress, viewChange);
+
+    // record by hash(asc)
+    updateTrimedViewChangesByHash(viewChange, 1);
+
+    //
+    if (viewChangeByAddressDetail) {
+      // record by hash(desc)
+      updateTrimedViewChangesByHash(viewChangeByAddressDetail.data, 0) 
     }
   }
 
