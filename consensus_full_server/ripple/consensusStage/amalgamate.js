@@ -107,6 +107,11 @@ class Amalgamate extends LeaderStage
 
 	handler(code)
 	{
+		if(code !== STAGE_FINISH_SUCCESS)
+		{
+			logger.info(`Amalgamate handler, failed because of ${code}`);
+		}
+
 		// node is leader
 		if (this.ripple.checkLeader(process[Symbol.for("address")])) {
 			for (let localCandidate of this.candidates)
@@ -120,7 +125,7 @@ class Amalgamate extends LeaderStage
 		}
 		else
 		{
-			logger.info("Amalgamate run, clear leader timer");
+			logger.info("Amalgamate handler, clear leader timer");
 
 			this.ripple.clearLeaderTimer();
 		}

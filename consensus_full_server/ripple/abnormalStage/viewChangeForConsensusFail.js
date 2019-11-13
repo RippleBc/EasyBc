@@ -30,6 +30,12 @@ class ViewChangeForConsensusFail extends ConsensusStage {
       process.exit(1);
     }
 
+    logger.info(`ViewChangeForConsensusFail run begin, 
+		sequence: ${this.ripple.sequence.toString('hex')}, 
+		hash: ${this.ripple.hash.toString('hex')}, 
+		number: ${this.ripple.number.toString('hex')},
+    view: ${this.ripple.view.toString('hex')}`);
+
     //
     this.state = STAGE_STATE_PROCESSING;
 
@@ -80,6 +86,8 @@ class ViewChangeForConsensusFail extends ConsensusStage {
     }
     else
     {
+      logger.info(`ViewChangeForConsensusFail handler, failed because of ${code}`);
+
       if (this.ripple.consensusCandidateDigest)
       {
         // consensus success

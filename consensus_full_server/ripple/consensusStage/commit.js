@@ -70,6 +70,9 @@ class Commit extends ConsensusStage {
       this.ripple.consensusCandidateDigest = candidateDigest;
       this.ripple.consensusCandidateDigest.sign(privateKey);
     }
+    else {
+      logger.info(`Commit handler, failed because of ${code}`);
+    }
 
     //
     if (!this.ripple.consensusCandidateDigest)

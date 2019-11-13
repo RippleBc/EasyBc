@@ -522,16 +522,7 @@ class Ripple
 
 		// update msg buffer
 		this.msgBuffer.set(cmd, filteredMsgs);
-
-		//
-		if (correspondMsg)
-		{
-			logger.info(`Ripple fetchMsg, address: ${correspondMsg.address.toString('hex')}, cmd: ${correspondMsg.cmd}`);
-		}
-		else
-		{
-			logger.info(`Ripple fetchMsg, msg with cmd ${cmd} not exist`);
-		}
+		
 		return correspondMsg;
 	}
 

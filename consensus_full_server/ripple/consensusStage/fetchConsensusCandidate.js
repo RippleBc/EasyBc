@@ -47,7 +47,7 @@ class FetchConsensusCandidate
     p2p.sendAll(PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ, this.ripple.consensusCandidateDigest.serialize());
 
     this.timer = setTimeout(() => {
-      logger.fatal(`FetchConsensusCandidate run, fetch consensus candidate failed, ${process[Symbol.for("getStackInfo")]()}`);
+      logger.warn(`FetchConsensusCandidate run, fetch consensus candidate failed, ${process[Symbol.for("getStackInfo")]()}`);
 
       this.timer = undefined;
 

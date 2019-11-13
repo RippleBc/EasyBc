@@ -56,9 +56,9 @@ class Prepare extends ConsensusStage
  	}
 
 	/**
-		* @param {Number} code
-		* @param {CandidateDigest} candidateDigest
-		*/
+	 * @param {Number} code
+	 * @param {CandidateDigest} candidateDigest
+	 */
 	handler(code, candidateDigest) {
 		assert(typeof code === 'number', `Prepare handler, code should be a Number, now is ${typeof code}`);
 		
@@ -68,6 +68,10 @@ class Prepare extends ConsensusStage
 
 			this.ripple.consensusCandidateDigest = candidateDigest;
 			this.ripple.consensusCandidateDigest.sign(privateKey)
+		}
+		else
+		{
+			logger.info(`Prepare handler, failed because of ${code}`);
 		}
 
 		//

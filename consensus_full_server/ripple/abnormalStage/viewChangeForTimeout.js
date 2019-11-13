@@ -27,6 +27,12 @@ class ViewChangeForTimeout {
   }
 
   run() {
+    logger.info(`ViewChangeForTimeout run begin, 
+		sequence: ${this.ripple.sequence.toString('hex')}, 
+		hash: ${this.ripple.hash.toString('hex')}, 
+		number: ${this.ripple.number.toString('hex')},
+    view: ${this.ripple.view.toString('hex')}`);
+
     const viewChange = new ViewChange({
       sequence: this.ripple.sequence,
       blockHash: this.ripple.hash,

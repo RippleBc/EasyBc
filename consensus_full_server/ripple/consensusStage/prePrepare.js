@@ -103,9 +103,13 @@ class PrePrepare extends LeaderStage {
 
   handler(code)
   {
+    if (code !== STAGE_FINISH_SUCCESS) {
+      logger.info(`PrePrepare handler, failed because of ${code}`);
+    }
+
     // node is not leader
     if (!this.ripple.checkLeader(process[Symbol.for("address")])) {
-      logger.info("PrePrepare run, clear leader timer");
+      logger.info("PrePrepare handler, clear leader timer");
 
       this.ripple.clearLeaderTimer();
     }

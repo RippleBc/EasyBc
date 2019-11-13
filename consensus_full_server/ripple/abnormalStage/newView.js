@@ -7,7 +7,8 @@ const { RIPPLE_STATE_NEW_VIEW,
   PROTOCOL_CMD_NEW_VIEW_RES,
   STAGE_STATE_EMPTY,
   STAGE_STATE_PROCESSING,
-  RIPPLE_STATE_VIEW_CHANGE_NEW_VIEW_EXPIRATION } = require("../constants");
+  RIPPLE_STATE_VIEW_CHANGE_NEW_VIEW_EXPIRATION,
+  STAGE_FINISH_SUCCESS } = require("../constants");
 const LeaderStage = require("../stage/leaderStage");
 const Candidate = require("../data/candidate");
 
@@ -31,6 +32,12 @@ class NewView extends LeaderStage {
 
       process.exit(1);
     }
+    
+    logger.info(`NewView run begin, 
+		sequence: ${this.ripple.sequence.toString('hex')}, 
+		hash: ${this.ripple.hash.toString('hex')}, 
+		number: ${this.ripple.number.toString('hex')},
+    view: ${this.ripple.view.toString('hex')}`);
 
     //
     this.state = STAGE_STATE_PROCESSING;
@@ -83,7 +90,15 @@ class NewView extends LeaderStage {
     }
   }
 
-  handler() {
+  /**
+   * @param {Number} code 
+   */
+  handler(code) {
+    if(code !== STAGE_FINISH_SUCCESS)
+    {
+      logger.info(`NewView handler, failed because of ${code}`);
+    }
+
     // reset
     this.ripple.viewChangeForConsensusFail.reset();
     this.ripple.viewChangeForTimeout.reset();
