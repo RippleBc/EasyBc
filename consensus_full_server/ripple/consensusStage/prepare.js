@@ -33,7 +33,7 @@ class Prepare extends ConsensusStage
 		}
 
 		//
-		logger.info(`Prepare run beigin, 
+		logger.info(`Prepare run begin, 
 		sequence: ${this.ripple.sequence.toString('hex')}, 
 		hash: ${this.ripple.hash.toString('hex')}, 
 		number: ${this.ripple.number.toString('hex')},

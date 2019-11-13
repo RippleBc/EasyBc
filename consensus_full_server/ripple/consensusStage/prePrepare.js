@@ -34,7 +34,7 @@ class PrePrepare extends LeaderStage {
     }
 
     //
-    logger.info(`PrePrepare run beigin, 
+    logger.info(`PrePrepare run begin, 
 		sequence: ${this.ripple.sequence.toString('hex')}, 
 		hash: ${this.ripple.hash.toString('hex')}, 
 		number: ${this.ripple.number.toString('hex')},
@@ -91,6 +91,8 @@ class PrePrepare extends LeaderStage {
       this.validateAndProcessExchangeData(resCandidate, process[Symbol.for("address")]);
     }
     else {
+      logger.info("PrePrepare run, start leader timer");
+
       this.ripple.startLeaderTimer();
     }
   }
@@ -99,6 +101,8 @@ class PrePrepare extends LeaderStage {
   {
     // node is not leader
     if (!this.ripple.checkLeader(process[Symbol.for("address")])) {
+      logger.info("PrePrepare run, clear leader timer");
+
       this.ripple.clearLeaderTimer();
     }
     

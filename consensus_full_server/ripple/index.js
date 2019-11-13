@@ -329,11 +329,13 @@ class Ripple
 	 */
 	runNewConsensusRound()
 	{
+		//
 		this.amalgamatedTransactions.clear();
 		this.candidate = undefined;
 		this.candidateDigest = undefined;
 		this.consensusCandidateDigest = undefined;
 
+		//
 		this.amalgamate.reset();
 		this.prePrepare.reset();
 		this.prepare.reset();
@@ -341,8 +343,13 @@ class Ripple
 		this.fetchConsensusCandidate.reset();
 		this.viewChangeForConsensusFail.reset();
 
+		//
+		this.clearLeaderTimer();
+
+		//
 		this.state = RIPPLE_STATE_CONSENSUS;
 
+		//
 		this.amalgamate.run();
 	}
 
@@ -416,8 +423,11 @@ class Ripple
 
 	clearLeaderTimer()
 	{
-		this.leaderTimeout.clear();
-
+		if (this.leaderTimeout)
+		{
+			this.leaderTimeout.clear();
+		}
+		
 		this.leaderTimeout = undefined;
 	}
 

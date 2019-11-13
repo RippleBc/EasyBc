@@ -36,7 +36,7 @@ class Amalgamate extends LeaderStage
 		}
 
 		//
-		logger.info(`Amalgamate run beigin, 
+		logger.info(`Amalgamate run begin, 
 		sequence: ${this.ripple.sequence.toString('hex')}, 
 		hash: ${this.ripple.hash.toString('hex')}, 
 		number: ${this.ripple.number.toString('hex')},
@@ -97,6 +97,8 @@ class Amalgamate extends LeaderStage
 		}
 		else
 		{
+			logger.info("Amalgamate run, start leader timer");
+
 			this.ripple.startLeaderTimer();
 		}
 	}
@@ -116,6 +118,8 @@ class Amalgamate extends LeaderStage
 		}
 		else
 		{
+			logger.info("Amalgamate run, clear leader timer");
+
 			this.ripple.clearLeaderTimer();
 		}
 		

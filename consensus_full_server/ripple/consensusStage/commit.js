@@ -30,7 +30,7 @@ class Commit extends ConsensusStage {
       process.exit(1);
     }
 
-    logger.info(`Commit run beigin, 
+    logger.info(`Commit run begin, 
 		sequence: ${this.ripple.sequence.toString('hex')}, 
 		hash: ${this.ripple.hash.toString('hex')}, 
 		number: ${this.ripple.number.toString('hex')},
