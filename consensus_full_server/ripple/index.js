@@ -8,7 +8,6 @@ const ViewChangeForTimeout = require("./abnormalStage/viewChangeForTimeout");
 const FetchProcessState = require("./abnormalStage/fetchProcessState");
 const NewView = require("./abnormalStage/newView");
 const utils = require("../../depends/utils");
-
 const { STAGE_STATE_EMPTY, 
 	CHEAT_REASON_INVALID_PROTOCOL_CMD, 
 	RIPPLE_STATE_EMPTY, 
@@ -46,6 +45,7 @@ const Block = require("../../depends/block");
 const Update = require("./update");
 
 const BN = utils.BN;
+const rlp = utils.BN;
 
 const logger = process[Symbol.for("loggerConsensus")];
 const mysql = process[Symbol.for("mysql")];
@@ -127,6 +127,7 @@ class Ripple
 			case PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES:
 			case PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL:
 				{
+					//
 					const msgsDifferByCmd = this.msgBuffer.get(cmd);
 					const [sequence] = rlp.decode(data);
 
@@ -483,6 +484,9 @@ class Ripple
 
 		// update msg buffer
 		this.msgBuffer.set(cmd, filteredMsgs);
+
+		//
+		logger.info(`Ripple fetchMsg, address: ${correspondMsg.address.toString('hex')}, cmd: ${correspondMsg.cmd}`)
 
 		return correspondMsg;
 	}
