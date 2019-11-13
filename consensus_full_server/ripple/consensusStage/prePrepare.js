@@ -154,7 +154,7 @@ class PrePrepare extends LeaderStage {
           // init candidate transactions
           try {
             const decodedTransactions = rlp.decode(this.ripple.candidate.transactions);
-            this.ripple.amalgamatedTransactions = decodedTransactions.map(tx => tx.toString('hex'));
+            this.ripple.amalgamatedTransactions = new Set(decodedTransactions.map(tx => tx.toString('hex')));
           } catch (e) {
             logger.error(`PrePrepare handleMessage, address: ${address.toString('hex')}, reqCandidate's transactions ${this.ripple.candidate.transactions.toString('hex')} is invalid, ${e.toString()}`)
 
