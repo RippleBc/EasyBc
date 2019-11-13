@@ -56,7 +56,7 @@ class NewView extends LeaderStage {
 
       // 
       const newView = new NewViewData({
-        hash: this.ripple.viewChangeForTimeout.consensusViewChange.blockHash,
+        blockHash: this.ripple.viewChangeForTimeout.consensusViewChange.blockHash,
         number: this.ripple.viewChangeForTimeout.consensusViewChange.number,
         viewChanges: rlp.encode(viewChanges)
       });

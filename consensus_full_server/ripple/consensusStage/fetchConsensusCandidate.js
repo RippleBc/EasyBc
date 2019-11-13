@@ -128,7 +128,7 @@ class FetchConsensusCandidate
 
           // init candidate
           this.ripple.candidate = new Candidate({
-            hash: this.ripple.consensusCandidateDigest.hash,
+            blockHash: this.ripple.consensusCandidateDigest.hash,
             number: this.ripple.consensusCandidateDigest.number,
             timestamp: this.ripple.consensusCandidateDigest.timestamp,
             view: this.ripple.consensusCandidateDigest.view,
