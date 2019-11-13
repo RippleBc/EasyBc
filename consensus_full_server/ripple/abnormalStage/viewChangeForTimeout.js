@@ -81,7 +81,7 @@ class ViewChangeForTimeout {
     switch (cmd) {
       case PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT:
         {
-          validateAndProcessExchangeData(new ViewChange(data), address.toString('hex'));
+          this.validateAndProcessExchangeData(new ViewChange(data), address.toString('hex'));
         }
         break;
     }
