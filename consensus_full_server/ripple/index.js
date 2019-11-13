@@ -54,6 +54,9 @@ const unlManager = process[Symbol.for("unlManager")];
 const WATER_LINE_STEP_LENGTH = 19901112;
 const SYSTEM_LOOP_DELAY_TIME = 20;
 
+const SEQUENCE_MODE_MATCH = 1;
+const SEQUENCE_MODE_LARGER = 2;
+
 class Ripple
 {
 	constructor(processor)
@@ -196,7 +199,10 @@ class Ripple
 		while(1)
 		{
 			if (this.state === RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL) {
-				const msg = this.fetchMsg(PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL);
+				const msg = this.fetchMsg({
+					cmd: PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL, 
+					sequenceMode: SEQUENCE_MODE_MATCH
+				});
 
 				if (msg) {
 					this.viewChangeForConsensusFail.handleMessage(msg.address, msg.cmd, msg.data);
@@ -214,13 +220,19 @@ class Ripple
 				switch (this.stage) {
 					case STAGE_AMALGAMATE:
 						{
-							const msg1 = this.fetchMsg(PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ);
+							const msg1 = this.fetchMsg({
+								cmd: PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ, 
+								sequenceMode: SEQUENCE_MODE_LARGER
+							});
 							if(msg1)
 							{
 								this.amalgamate.handleMessage(msg1.address, msg1.cmd, msg1.data);
 							}
 
-							const msg2 = this.fetchMsg(PROTOCOL_CMD_TRANSACTION_AMALGAMATE_RES);
+							const msg2 = this.fetchMsg({
+								cmd: PROTOCOL_CMD_TRANSACTION_AMALGAMATE_RES, 
+								sequenceMode: SEQUENCE_MODE_MATCH
+							});
 							if (msg2) {
 								this.amalgamate.handleMessage(msg2.address, msg2.cmd, msg2.data);
 							}
@@ -236,12 +248,18 @@ class Ripple
 						}
 					case STAGE_PRE_PREPARE:
 						{
-							const msg1 = this.fetchMsg(PROTOCOL_CMD_PRE_PREPARE_REQ);
+							const msg1 = this.fetchMsg({
+								cmd: PROTOCOL_CMD_PRE_PREPARE_REQ, 
+								sequenceMode: SEQUENCE_MODE_MATCH
+							});
 							if (msg1) {
 								this.prePrepare.handleMessage(msg1.address, msg1.cmd, msg1.data);
 							}
 
-							const msg2 = this.fetchMsg(PROTOCOL_CMD_PRE_PREPARE_RES);
+							const msg2 = this.fetchMsg({
+								cmd: PROTOCOL_CMD_PRE_PREPARE_RES, 
+								sequenceMode: SEQUENCE_MODE_MATCH
+							});
 							if (msg2) {
 								this.prePrepare.handleMessage(msg2.address, msg2.cmd, msg2.data);
 							}
@@ -257,7 +275,10 @@ class Ripple
 						}
 					case STAGE_PREPARE:
 						{
-							const msg = this.fetchMsg(PROTOCOL_CMD_PREPARE);
+							const msg = this.fetchMsg({
+								cmd: PROTOCOL_CMD_PREPARE, 
+								sequenceMode: SEQUENCE_MODE_MATCH
+							});
 							if (msg) {
 								this.prepare.handleMessage(msg.address, msg.cmd, msg.data);
 							}
@@ -272,7 +293,10 @@ class Ripple
 						}
 					case STAGE_COMMIT:
 						{
-							const msg = this.fetchMsg(PROTOCOL_CMD_COMMIT);
+							const msg = this.fetchMsg({
+								cmd: PROTOCOL_CMD_COMMIT, 
+								sequenceMode: SEQUENCE_MODE_MATCH
+							});
 							if (msg) {
 								this.commit.handleMessage(msg.address, msg.cmd, msg.data);
 							}
@@ -286,12 +310,18 @@ class Ripple
 						}
 					case STAGE_FETCH_CANDIDATE:
 						{
-							const msg1 = this.fetchMsg(PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ);
+							const msg1 = this.fetchMsg({
+								cmd: PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ, 
+								sequenceMode: SEQUENCE_MODE_MATCH
+							});
 							if (msg1) {
 								this.fetchConsensusCandidate.handleMessage(msg1.address, msg1.cmd, msg1.data);
 							}
 
-							const msg2 = this.fetchMsg(PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES);
+							const msg2 = this.fetchMsg({
+								cmd: PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES, 
+								sequenceMode: SEQUENCE_MODE_MATCH
+							});
 							if (msg2) {
 								this.fetchConsensusCandidate.handleMessage(msg2.address, msg2.cmd, msg2.data);
 							}
@@ -482,7 +512,7 @@ class Ripple
 	 * @param {Number} cmd 
 	 * @return {Object} 
 	 */
-	fetchMsg(cmd)
+	fetchMsg({ cmd, sequenceMode })
 	{
 		assert(typeof cmd === 'number', `Ripple fetchMsg, cmd should be a Number, now is ${typeof cmd}`);
 
@@ -509,18 +539,33 @@ class Ripple
 			}
 
 			// find correspond msg
-			if (msg.sequence.toString('hex') === this.sequence.toString('hex'))
+			if(sequenceMode === SEQUENCE_MODE_MATCH)
 			{
-				correspondMsg = { 
-					address: msg.address, 
-					cmd: cmd,
-					data: msg.data
-				};
+				if (msg.sequence.toString('hex') === this.sequence.toString('hex')) {
+					correspondMsg = {
+						address: msg.address,
+						cmd: cmd,
+						data: msg.data
+					};
+				}
+				else {
+					filteredMsgs.push(msg);
+				}
 			}
-			else
+			else if (sequenceMode === SEQUENCE_MODE_LARGER)
 			{
-				filteredMsgs.push(msg);
+				if (new BN(msg.sequence).gt(new BN(this.sequence))) {
+					correspondMsg = {
+						address: msg.address,
+						cmd: cmd,
+						data: msg.data
+					};
+				}
+				else {
+					filteredMsgs.push(msg);
+				}
 			}
+			
 		}
 
 		// update msg buffer
