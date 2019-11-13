@@ -52,7 +52,7 @@ class NewView extends LeaderStage {
       const consensusViewChangeHash = this.ripple.viewChangeForTimeout.consensusViewChange.hash(false).toString("hex");
       for (let viewChange of this.ripple.viewChangeForTimeout.trimedViewChangesByAddress.values())
       {
-        if (consensusViewChangeHash === viewChanges.hash(false).toString('hex'))
+        if (consensusViewChangeHash === viewChange.hash(false).toString('hex'))
         {
           viewChanges.push(viewChange.serialize());
         }
