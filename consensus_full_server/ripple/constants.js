@@ -45,26 +45,26 @@ module.exports.PROTOCOL_CMD_PRE_PREPARE_REQ = 200;
 module.exports.PROTOCOL_CMD_PRE_PREPARE_RES = 201;
 
 // prepare
-module.exports.PROTOCOL_CMD_PREPARE = 200;
+module.exports.PROTOCOL_CMD_PREPARE = 300;
 
 // commit
-module.exports.PROTOCOL_CMD_COMMIT = 300;
+module.exports.PROTOCOL_CMD_COMMIT = 400;
 
 // fetch candidate
-module.exports.PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ = 400;
-module.exports.PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES = 401;
+module.exports.PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ = 500;
+module.exports.PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES = 501;
 
 // view change
-module.exports.PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL = 500;
-module.exports.PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT = 501;
+module.exports.PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL = 600;
+module.exports.PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT = 601;
 
 // new view
-module.exports.PROTOCOL_CMD_NEW_VIEW_REQ = 600;
-module.exports.PROTOCOL_CMD_NEW_VIEW_RES = 601;
+module.exports.PROTOCOL_CMD_NEW_VIEW_REQ = 700;
+module.exports.PROTOCOL_CMD_NEW_VIEW_RES = 701;
 
 // process state
-module.exports.PROTOCOL_CMD_PROCESS_STATE_REQ = 700;
-module.exports.PROTOCOL_CMD_PROCESS_STATE_RES = 701;
+module.exports.PROTOCOL_CMD_PROCESS_STATE_REQ = 800;
+module.exports.PROTOCOL_CMD_PROCESS_STATE_RES = 801;
 
 // cheat reason
 module.exports.CHEAT_REASON_REPEAT_DATA_EXCHANGE = 'repeatDataExchange';
