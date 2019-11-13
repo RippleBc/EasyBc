@@ -132,6 +132,9 @@ class Ripple
 						msgsDifferByCmd = [];
 					}	
 					
+					// 
+					logger.info(`Ripple handleMessage, receive msg, cmd: ${cmd}, sequence: ${sequence.toString('hex')}, address: ${address.toString('hex')}`)
+
 					// update msg buffer
 					msgsDifferByCmd.push({ sequence, address, data });
 					this.msgBuffer.set(cmd, msgsDifferByCmd);

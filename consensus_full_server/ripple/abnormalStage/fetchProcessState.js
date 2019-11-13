@@ -32,11 +32,7 @@ class FetchProcessState extends ConsensusStage {
     }
 
     //
-    logger.info(`FetchProcessState run begin, 
-		sequence: ${this.ripple.sequence.toString('hex')}, 
-		hash: ${this.ripple.hash.toString('hex')}, 
-		number: ${this.ripple.number.toString('hex')},
-    view: ${this.ripple.view.toString('hex')}`);
+    logger.info(`FetchProcessState run begin, sequence: ${this.ripple.sequence.toString('hex')}, hash: ${this.ripple.hash.toString('hex')}, number: ${this.ripple.number.toString('hex')}, view: ${this.ripple.view.toString('hex')}`);
     
     //
     this.state = STAGE_STATE_PROCESSING;

@@ -33,11 +33,7 @@ class NewView extends LeaderStage {
       process.exit(1);
     }
     
-    logger.info(`NewView run begin, 
-		sequence: ${this.ripple.sequence.toString('hex')}, 
-		hash: ${this.ripple.hash.toString('hex')}, 
-		number: ${this.ripple.number.toString('hex')},
-    view: ${this.ripple.view.toString('hex')}`);
+    logger.info(`NewView run begin, sequence: ${this.ripple.sequence.toString('hex')}, hash: ${this.ripple.hash.toString('hex')}, number: ${this.ripple.number.toString('hex')}, view: ${this.ripple.view.toString('hex')}`);
 
     //
     this.state = STAGE_STATE_PROCESSING;
