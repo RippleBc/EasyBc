@@ -412,7 +412,7 @@ class Ripple
 
 	startLeaderTimer()
 	{
-		logger.fatal(`Ripple processConsensusCandidate, throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+		logger.fatal(`Ripple processConsensusCandidate, throw exception, ${process[Symbol.for("getStackInfo")]()}`);
 
 
 		this.leaderTimeout = setTimeout(() => {
