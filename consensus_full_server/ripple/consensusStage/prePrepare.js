@@ -21,7 +21,7 @@ const privateKey = process[Symbol.for("privateKey")];
 class PrePrepare extends LeaderStage {
   constructor(ripple) {
 
-    super({ name: 'prePrepare', expiraion: STAGE_PRE_PREPARE_EXPIRATION })
+    super({ name: 'prePrepare', expiration: STAGE_PRE_PREPARE_EXPIRATION })
 
     this.ripple = ripple;
   }
@@ -33,6 +33,13 @@ class PrePrepare extends LeaderStage {
       process.exit(1);
     }
 
+    //
+    logger.info(`PrePrepare run beigin, 
+		sequence: ${this.ripple.sequence.toString('hex')}, 
+		hash: ${this.ripple.hash.toString('hex')}, 
+		number: ${this.ripple.number.toString('hex')},
+    view: ${this.ripple.view.toString('hex')}`);
+    
     //
     this.state = STAGE_STATE_PROCESSING;
 

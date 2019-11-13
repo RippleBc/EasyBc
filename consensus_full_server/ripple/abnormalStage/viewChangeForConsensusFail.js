@@ -18,7 +18,7 @@ const privateKey = process[Symbol.for("privateKey")];
 
 class ViewChangeForConsensusFail extends ConsensusStage {
   constructor(ripple) {
-    super({ name: 'viewChangeForConsensusFail', expiraion: STAGE_VIEW_CHANGE_FOR_CONSENSUS_FAIL_EXPIRATION })
+    super({ name: 'viewChangeForConsensusFail', expiration: STAGE_VIEW_CHANGE_FOR_CONSENSUS_FAIL_EXPIRATION })
 
     this.ripple = ripple;
   }

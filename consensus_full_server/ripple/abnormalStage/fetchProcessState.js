@@ -19,7 +19,7 @@ const privateKey = process[Symbol.for("privateKey")];
 
 class FetchProcessState extends ConsensusStage {
   constructor(ripple) {
-    super({ name: 'fetchProcessState', expiraion: RIPPLE_STATE_FETCH_PROCESS_STATE_EXPIRATION, threshould: parseInt(unlManager.unlFullSize / 2 + 1 )})
+    super({ name: 'fetchProcessState', expiration: RIPPLE_STATE_FETCH_PROCESS_STATE_EXPIRATION, threshould: parseInt(unlManager.unlFullSize / 2 + 1 )})
 
     this.ripple = ripple;
   }

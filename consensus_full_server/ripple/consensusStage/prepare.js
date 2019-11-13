@@ -19,7 +19,7 @@ class Prepare extends ConsensusStage
 {
 	constructor(ripple)
 	{
-		super({ name: 'prepare', expiraion: STAGE_PREPARE_EXPIRATION })
+		super({ name: 'prepare', expiration: STAGE_PREPARE_EXPIRATION })
 
 		this.ripple = ripple;
 	}
@@ -32,6 +32,13 @@ class Prepare extends ConsensusStage
 			process.exit(1);
 		}
 
+		//
+		logger.info(`Prepare run beigin, 
+		sequence: ${this.ripple.sequence.toString('hex')}, 
+		hash: ${this.ripple.hash.toString('hex')}, 
+		number: ${this.ripple.number.toString('hex')},
+		view: ${this.ripple.view.toString('hex')}`);
+			
 		//
 		this.state = STAGE_STATE_PROCESSING;
 

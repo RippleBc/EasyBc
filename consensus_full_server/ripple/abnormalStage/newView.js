@@ -20,7 +20,7 @@ const privateKey = process[Symbol.for("privateKey")];
 class NewView extends LeaderStage {
   constructor(ripple) {
 
-    super({ name: 'newView', expiraion: RIPPLE_STATE_VIEW_CHANGE_NEW_VIEW_EXPIRATION })
+    super({ name: 'newView', expiration: RIPPLE_STATE_VIEW_CHANGE_NEW_VIEW_EXPIRATION })
 
     this.ripple = ripple;
   }

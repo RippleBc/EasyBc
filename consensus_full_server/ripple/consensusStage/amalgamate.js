@@ -22,7 +22,7 @@ class Amalgamate extends LeaderStage
 {
 	constructor(ripple)
 	{
-		super({ name: 'amalgamate', expiraion: STAGE_AMALGAMATE_TRANSACTIONS_EXPIRATION})
+		super({ name: 'amalgamate', expiration: STAGE_AMALGAMATE_TRANSACTIONS_EXPIRATION})
 
 		this.ripple = ripple;
 	}
@@ -34,6 +34,13 @@ class Amalgamate extends LeaderStage
 
 			process.exit(1);
 		}
+
+		//
+		logger.info(`Amalgamate run beigin, 
+		sequence: ${this.ripple.sequence.toString('hex')}, 
+		hash: ${this.ripple.hash.toString('hex')}, 
+		number: ${this.ripple.number.toString('hex')},
+		view: ${this.ripple.view.toString('hex')}`);
 
 		//
 		this.state = STAGE_STATE_PROCESSING;
