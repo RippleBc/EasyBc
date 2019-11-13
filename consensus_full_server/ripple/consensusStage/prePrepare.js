@@ -138,13 +138,28 @@ class PrePrepare extends LeaderStage {
             return;
           }
 
+          // check req candidate
+          const reqCandidate = new Candidate(data);
+          if (!reqCandidate.validate()) {
+            logger.error(`PrePrepare handleMessage, address: ${address.toString('hex')}, reqCandidate validate failed`)
+
+            return;
+          }
+
           // init candidate
-          this.ripple.candidate = new Candidate(data);
+          this.ripple.candidate = reqCandidate;
           this.ripple.candidate.sign(privateKey);
 
           // init candidate transactions
-          const decodedTransactions = rlp.decode(this.ripple.candidate.transactions);
-          this.ripple.amalgamatedTransactions = decodedTransactions.map(tx => tx.toString('hex'));
+          try {
+            const decodedTransactions = rlp.decode(this.ripple.candidate.transactions);
+            this.ripple.amalgamatedTransactions = decodedTransactions.map(tx => tx.toString('hex'));
+          } catch (e) {
+            logger.error(`PrePrepare handleMessage, address: ${address.toString('hex')}, reqCandidate's transactions ${this.ripple.candidate.transactions.toString('hex')} is invalid, ${e.toString()}`)
+
+            return;
+          }
+          
 
           // init candidateDigest
           this.ripple.candiateDigest = new CandidateDigest({
