@@ -164,8 +164,8 @@ class PrePrepare extends LeaderStage {
 
           // init candidateDigest
           this.ripple.candidateDigest = new CandidateDigest({
-            sequence: this.ripple.sequence,
-            blockHash: this.ripple.candidate.hash,
+            sequence: this.ripple.candidate.sequence,
+            blockHash: this.ripple.candidate.blockHash,
             number: this.ripple.candidate.number,
             timestamp: this.ripple.candidate.timestamp,
             view: this.ripple.candidate.view,
