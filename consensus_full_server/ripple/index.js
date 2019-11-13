@@ -126,6 +126,12 @@ class Ripple
 					const msgsDifferByCmd = this.msgBuffer.get(cmd);
 					const [sequence] = rlp.decode(data);
 
+					//
+					if (!msgsDifferByCmd)
+					{
+						msgsDifferByCmd = [];
+					}	
+					
 					// update msg buffer
 					msgsDifferByCmd.push({ sequence, address, data });
 					this.msgBuffer.set(cmd, msgsDifferByCmd);
@@ -446,6 +452,10 @@ class Ripple
 				return Buffer.from(node.address, 'hex');
 			}
 		}
+
+		logger.fatal(`Ripple nextViewLeaderAddress, nextViewLeaderIndex: ${nextViewLeaderIndex}, not exist`);
+		
+		process.exit(1);
 	}
 
 	get threshould() 
