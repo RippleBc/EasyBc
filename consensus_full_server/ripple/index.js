@@ -455,7 +455,7 @@ class Ripple
 			}
 		}
 
-		logger.fatal(`Ripple nextViewLeaderAddress, nextViewLeaderIndex: ${nextViewLeaderIndex}, not exist`);
+		logger.fatal(`Ripple nextViewLeaderAddress, nextViewLeaderIndex: ${nextViewLeaderIndex}, not exist, ${process[Symbol.for("getStackInfo")]}`);
 		
 		process.exit(1);
 	}
