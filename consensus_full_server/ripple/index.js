@@ -45,7 +45,7 @@ const Block = require("../../depends/block");
 const Update = require("./update");
 
 const BN = utils.BN;
-const rlp = utils.BN;
+const rlp = utils.rlp;
 
 const logger = process[Symbol.for("loggerConsensus")];
 const mysql = process[Symbol.for("mysql")];
@@ -493,14 +493,14 @@ class Ripple
 		this.msgBuffer.set(cmd, filteredMsgs);
 
 		//
-		if (correspondMsg)
-		{
-			logger.info(`Ripple fetchMsg, address: ${correspondMsg.address.toString('hex')}, cmd: ${correspondMsg.cmd}`);
-		}
-		else
-		{
-			logger.info(`Ripple fetchMsg, msg with cmd ${cmd} not exist`);
-		}
+		// if (correspondMsg)
+		// {
+		// 	logger.info(`Ripple fetchMsg, address: ${correspondMsg.address.toString('hex')}, cmd: ${correspondMsg.cmd}`);
+		// }
+		// else
+		// {
+		// 	logger.info(`Ripple fetchMsg, msg with cmd ${cmd} not exist`);
+		// }
 		return correspondMsg;
 	}
 
