@@ -158,7 +158,7 @@ class Ripple
 					if (this.hash === undefined || this.number === undefined) {
 						return;
 					}
-					
+
 					this.fetchProcessState.handleMessage(address, cmd, data);
 
 					return;
@@ -493,8 +493,14 @@ class Ripple
 		this.msgBuffer.set(cmd, filteredMsgs);
 
 		//
-		logger.info(`Ripple fetchMsg, address: ${correspondMsg.address.toString('hex')}, cmd: ${correspondMsg.cmd}`)
-
+		if (correspondMsg)
+		{
+			logger.info(`Ripple fetchMsg, address: ${correspondMsg.address.toString('hex')}, cmd: ${correspondMsg.cmd}`);
+		}
+		else
+		{
+			logger.info(`Ripple fetchMsg, msg with cmd ${cmd} not exist`);
+		}
 		return correspondMsg;
 	}
 
