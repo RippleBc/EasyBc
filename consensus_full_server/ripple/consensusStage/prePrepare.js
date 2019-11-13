@@ -8,7 +8,8 @@ const { STAGE_PRE_PREPARE,
   STAGE_STATE_EMPTY,
   STAGE_STATE_PROCESSING,
   STAGE_PRE_PREPARE_EXPIRATION,
-  STAGE_FINISH_SUCCESS } = require("../constants");
+  STAGE_FINISH_SUCCESS,
+  STAGE_STATE_FINISH } = require("../constants");
 const LeaderStage = require("../stage/leaderStage");
 
 const rlp = utils.rlp;
