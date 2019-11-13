@@ -150,9 +150,8 @@ class Ripple
 					}
 
 					this.viewChangeForTimeout.handleMessage(address, cmd, data);
-
-					return;
 				}
+				break;
 			case PROTOCOL_CMD_NEW_VIEW_REQ:
 			case PROTOCOL_CMD_NEW_VIEW_RES:
 				{
@@ -161,9 +160,8 @@ class Ripple
 					}
 
 					this.newView.handleMessage(address, cmd, data);
-
-					return;
 				}
+				break;
 			case PROTOCOL_CMD_PROCESS_STATE_REQ:
 			case PROTOCOL_CMD_PROCESS_STATE_RES:
 				{
@@ -172,17 +170,14 @@ class Ripple
 					}
 
 					this.fetchProcessState.handleMessage(address, cmd, data);
-
-					return;
 				}
+				break;
 			default:
 				{
 					this.cheatedNodes.push({
 						address: address.toString('hex'),
 						reason: CHEAT_REASON_INVALID_PROTOCOL_CMD
 					});
-
-					return;
 				}
 		}
 	}
@@ -246,6 +241,7 @@ class Ripple
 								});
 							}
 						}
+						break;
 					case STAGE_PRE_PREPARE:
 						{
 							const msg1 = this.fetchMsg({
@@ -273,6 +269,7 @@ class Ripple
 								});
 							}
 						}
+						break;
 					case STAGE_PREPARE:
 						{
 							const msg = this.fetchMsg({
@@ -291,6 +288,7 @@ class Ripple
 								});
 							}
 						}
+						break;
 					case STAGE_COMMIT:
 						{
 							const msg = this.fetchMsg({
@@ -308,6 +306,7 @@ class Ripple
 								});
 							}
 						}
+						break;
 					case STAGE_FETCH_CANDIDATE:
 						{
 							const msg1 = this.fetchMsg({
@@ -335,6 +334,7 @@ class Ripple
 								});
 							}
 						}
+						break;
 					case STAGE_PROCESS_CONSENSUS_CANDIDATE:
 						{
 							await new Promise(resolve => {
@@ -344,6 +344,12 @@ class Ripple
 							});
 						}
 						break;
+					default: 
+						{
+							logger.fatal(`Ripple run, invalid RIPPLE_STATE_CONSENSUS cmd ${cmd}`);
+
+							process.exit(1);
+						}
 				}
 			}
 			else
