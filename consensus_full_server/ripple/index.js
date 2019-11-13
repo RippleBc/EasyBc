@@ -412,6 +412,9 @@ class Ripple
 
 	startLeaderTimer()
 	{
+		logger.fatal(`Ripple processConsensusCandidate, throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+
+
 		this.leaderTimeout = setTimeout(() => {
 			// try to view change
 			this.viewChangeForTimeout.run();
