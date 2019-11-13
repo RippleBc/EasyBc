@@ -162,19 +162,20 @@ class ViewChangeForTimeout {
 
     // fetch viewChange detail by address
     const fromAddress = viewChange.from.toString('hex');
-    let viewChangeByAddressDetail = this.trimedViewChangesByAddress.get(fromAddress);
+    let viewChangeByAddress = this.trimedViewChangesByAddress.get(fromAddress);
 
     // record by address
     this.trimedViewChangesByAddress.set(fromAddress, viewChange);
 
+    //
+    if (viewChangeByAddress) {
+      // record by hash(desc)
+      updateTrimedViewChangesByHash(viewChangeByAddress, 0)
+    }
+    
     // record by hash(asc)
     updateTrimedViewChangesByHash(viewChange, 1);
 
-    //
-    if (viewChangeByAddressDetail) {
-      // record by hash(desc)
-      updateTrimedViewChangesByHash(viewChangeByAddressDetail.data, 0) 
-    }
   }
 
   reset() {
