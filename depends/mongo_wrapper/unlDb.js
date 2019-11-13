@@ -17,7 +17,7 @@ class UnlDb
       this.Unl.find({
         
       }, 
-      'address host queryPort p2pPort state', 
+      'address host queryPort p2pPort state index', 
       { 
         lean: true 
       }, 
@@ -60,8 +60,8 @@ class UnlDb
         host: node.host,
         queryPort: node.queryPort,
         p2pPort: node.p2pPort,
+        state: 1,
         index: node.index,
-        state: 1
       }
     })
 
@@ -95,6 +95,9 @@ class UnlDb
       }
       if (undefined !== node.state) {
         updateField.state = node.state
+      }
+      if (undefined !== node.index) {
+        updateField.index = node.index
       }
 
       const promise = new Promise((resolve, reject) => {
