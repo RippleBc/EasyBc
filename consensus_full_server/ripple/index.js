@@ -425,7 +425,7 @@ class Ripple
 	{
 		if (this.leaderTimeout)
 		{
-			this.leaderTimeout.clear();
+			clearTimeout(this.leaderTimeout);
 		}
 		
 		this.leaderTimeout = undefined;
