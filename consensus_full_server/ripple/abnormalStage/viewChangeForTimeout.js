@@ -3,7 +3,8 @@ const utils = require("../../../depends/utils");
 const assert = require("assert");
 const { PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT,
   CHEAT_REASON_INVALID_SIG,
-  CHEAT_REASON_INVALID_ADDRESS } = require("../constants");
+  CHEAT_REASON_INVALID_ADDRESS,
+  RIPPLE_STATE_NEW_VIEW } = require("../constants");
 
 const Buffer = utils.Buffer;
 const BN = utils.BN;
