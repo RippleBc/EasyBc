@@ -119,7 +119,28 @@ class NewView extends LeaderStage {
       case PROTOCOL_CMD_NEW_VIEW_REQ:
         {
           const newView = new NewViewData(data);
-          
+
+          //
+          if(!newView.validate())
+          {
+            logger.error(`NewView handleMessage, address: ${address.toString('hex')}, validate failed`)
+          }
+
+          // check hash
+          if (newView.blockHash.toString('hex') !== this.ripple.hash.toString('hex'))
+          {
+            logger.error(`NewView handleMessage, address: ${address.toString('hex')}, blockHash should be ${this.ripple.hash.toString('hex')}, now is ${newView.blockHash.toString('hex')}`)
+
+            return;
+          }
+
+          // check number
+          if (newView.number.toString('hex') !== this.ripple.number.toString('hex')) {
+            logger.error(`NewView handleMessage, address: ${address.toString('hex')}, number should be ${this.ripple.number.toString('hex')}, now is ${newView.number.toString('hex')}`)
+
+            return;
+          }
+
           const viewChanges = rlp.decode(newView.viewChanges).map(viewChange => new ViewChange(viewChange));
 
           // check size
@@ -175,6 +196,14 @@ class NewView extends LeaderStage {
           if (newViewBN.lte(new BN(this.ripple.view)))
           {
             logger.info(`NewView handleMessage, address: ${address.toString('hex')}, view should largger or equal to ${this.ripple.view.toString('hex')}, now is ${viewChanges[0].view.toString('hex')}`);
+
+            return;
+          }
+
+          // check if sequence is valid
+          if (this.ripple.sequence.toString('hex') !== viewChanges[0].sequence.toString('hex'))
+          {
+            logger.error(`NewView handleMessage, address: ${address.toString('hex')}, sequence should be ${this.ripple.sequence.toString('hex')}, now is ${newView.sequence.toString('hex')}`)
 
             return;
           }
