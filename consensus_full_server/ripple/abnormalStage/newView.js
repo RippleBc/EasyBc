@@ -13,6 +13,7 @@ const LeaderStage = require("../stage/leaderStage");
 const Candidate = require("../data/candidate");
 
 const rlp = utils.rlp;
+const BN = utils.BN;
 
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
