@@ -177,7 +177,7 @@ class Update
 			if(sortedBlocks[0])
 			{
 				const [majorityBlock, count] = sortedBlocks[0];
-				if (unlManager.unlFullSize < FULL_BLOCK_CHAIN_UNL_SCALE_LIMIT || count > parseInt(unlManager.unlFullSize / 2 + 1))
+				if (unlManager.unlFullSize < FULL_BLOCK_CHAIN_UNL_SCALE_LIMIT || count >= parseInt(unlManager.unlFullSize / 3 + 1))
 				{
 					const result = await this.blockChain.runBlockChain({
 						block: new Block(Buffer.from(majorityBlock, 'hex'))

@@ -18,7 +18,7 @@ const privateKey = process[Symbol.for("privateKey")];
 
 class Commit extends ConsensusStage {
   constructor(ripple) {
-    super({ name: 'commit', expiration: STAGE_COMMIT_EXPIRATION, threshould: parseInt(unlManager.unlFullSize / 2 + 1) })
+    super({ name: 'commit', expiration: STAGE_COMMIT_EXPIRATION, threshould: parseInt(unlManager.unlFullSize / 3 + 1) })
 
     this.ripple = ripple;
   }
