@@ -111,6 +111,11 @@ class Update
 			throw new Error(`Update init, blockChain.getBlockByNumber(${this.blockChainHeight.toString("hex")}) should not return undefined`);
 		}
 
+		// 
+		this.lastestBlockHash = lastestBlock.hash();
+		this.lastestBlockNumber = lastestBlock.header.number;
+
+		//
 		this.blockChain = new BlockChain({
 			receiptMptDb: mongo.generateReceiptMptDb(),
 			mptDb: mongo.generateMptDb(),
