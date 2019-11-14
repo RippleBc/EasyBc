@@ -114,12 +114,6 @@ class NewView extends LeaderStage {
     assert(typeof cmd === "number", `NewView handleMessage, cmd should be a Number, now is ${typeof cmd}`);
     assert(Buffer.isBuffer(data), `NewView handleMessage, data should be an Buffer, now is ${typeof data}`);
 
-    if (this.state !== STAGE_STATE_PROCESSING) {
-      logger.info(`NewView handleMessage, state should be ${STAGE_STATE_PROCESSING}, now is ${this.state}`);
-
-      return;
-    }
-
     switch (cmd) {
       case PROTOCOL_CMD_NEW_VIEW_REQ:
         {
@@ -206,6 +200,12 @@ class NewView extends LeaderStage {
         break;
       case PROTOCOL_CMD_NEW_VIEW_RES:
         {
+          if (this.state !== STAGE_STATE_PROCESSING) {
+            logger.info(`NewView handleMessage, state should be ${STAGE_STATE_PROCESSING}, now is ${this.state}`);
+
+            return;
+          }
+
           if (this.ripple.checkLeader(process[Symbol.for("address")])) {
             this.validateAndProcessExchangeData(new Candidate(data), address.toString('hex'));
           }
