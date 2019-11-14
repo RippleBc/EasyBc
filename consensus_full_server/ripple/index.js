@@ -496,8 +496,6 @@ class Ripple
 		let nextViewLeaderIndex = new BN(this.view).addn(1).modn(unlManager.unlFullSize);
 		for (let node of unlManager.unlIncludeSelf)
 		{
-			logger.info(`Ripple nextViewLeaderAddress, index: ${node.index}, address: ${node.address}`);
-
 			if (node.index === nextViewLeaderIndex)
 			{
 				return Buffer.from(node.address, 'hex');
