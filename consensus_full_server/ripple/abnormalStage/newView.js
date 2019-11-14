@@ -206,7 +206,7 @@ class NewView extends LeaderStage {
 
           p2p.send(address, PROTOCOL_CMD_NEW_VIEW_RES, resCandidate.serialize());
 
-          this.handler()
+          this.handler(STAGE_FINISH_SUCCESS)
         }
         break;
       case PROTOCOL_CMD_NEW_VIEW_RES:
