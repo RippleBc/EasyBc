@@ -8,7 +8,18 @@ const { RIPPLE_STATE_NEW_VIEW,
   STAGE_STATE_EMPTY,
   STAGE_STATE_PROCESSING,
   RIPPLE_STATE_VIEW_CHANGE_NEW_VIEW_EXPIRATION,
-  STAGE_FINISH_SUCCESS } = require("../constants");
+  STAGE_FINISH_SUCCESS,
+
+  STAGE_AMALGAMATE,
+  STAGE_PRE_PREPARE,
+  STAGE_PREPARE,
+  STAGE_COMMIT,
+  STAGE_FETCH_CANDIDATE,
+  STAGE_PROCESS_CONSENSUS_CANDIDATE,
+
+  RIPPLE_STATE_CONSENSUS,
+  RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL,
+  RIPPLE_STATE_FETCH_PROCESS_STATE } = require("../constants");
 const LeaderStage = require("../stage/leaderStage");
 const Candidate = require("../data/candidate");
 
@@ -44,6 +55,18 @@ class NewView extends LeaderStage {
 
     // node is leader
     if (this.ripple.checkLeader(process[Symbol.for("address")])) {
+
+      // check state
+      if (this.ripple.state === RIPPLE_STATE_CONSENSUS) {
+        this.ripple.clearStateConsensus();
+      }
+      else if (this.ripple.state === RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL) {
+        this.ripple.viewChangeForConsensusFail.reset();
+      }
+      else if (this.ripple.state === RIPPLE_STATE_FETCH_PROCESS_STATE) {
+        this.ripple.fetchConsensusState.reset();
+      }
+
       // encode view changes
       const viewChanges = [];
       const consensusViewChangeHash = this.ripple.viewChangeForTimeout.consensusViewChange.hash(false).toString("hex");
@@ -96,8 +119,22 @@ class NewView extends LeaderStage {
       logger.info(`NewView handler, failed because of ${code}`);
     }
 
+    // node is not leader
+    if (!this.ripple.checkLeader(process[Symbol.for("address")])) {
+
+      // check state
+      if (this.ripple.state === RIPPLE_STATE_CONSENSUS) {
+        this.ripple.clearStateConsensus();
+      }
+      else if (this.ripple.state === RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL) {
+        this.ripple.viewChangeForConsensusFail.reset();
+      }
+      else if (this.ripple.state === RIPPLE_STATE_FETCH_PROCESS_STATE) {
+        this.ripple.fetchConsensusState.reset();
+      }
+    }
+
     // reset
-    this.ripple.viewChangeForConsensusFail.reset();
     this.ripple.viewChangeForTimeout.reset();
     this.ripple.newView.reset();
 

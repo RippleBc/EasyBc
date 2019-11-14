@@ -28,12 +28,6 @@ class ViewChangeForTimeout {
   }
 
   run() {
-    if (this.ripple.state === RIPPLE_STATE_NEW_VIEW) {
-      // newView has begun, 
-      // do not accept repeated view change message
-      return;
-    }
-
     logger.info(`ViewChangeForTimeout run begin, sequence: ${this.ripple.sequence.toString('hex')}, hash: ${this.ripple.hash.toString('hex')}, number: ${this.ripple.number.toString('hex')}, view: ${this.ripple.view.toString('hex')}`);
 
     const viewChange = new ViewChange({
@@ -47,6 +41,12 @@ class ViewChangeForTimeout {
     //
     if (this.ripple.nextViewLeaderAddress.toString('hex') === process[Symbol.for("address")])
     {
+      if (this.ripple.state === RIPPLE_STATE_NEW_VIEW) {
+        // newView has begun, 
+        // do not accept repeated view change message
+        return;
+      }
+      
       // node is new leader
       this.validateAndProcessExchangeData(viewChange, process[Symbol.for("address")]);
     }

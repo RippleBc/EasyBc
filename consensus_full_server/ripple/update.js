@@ -30,6 +30,9 @@ class Update
 		this.blockChainHeight = undefined;
 		this.blockChain = undefined;
 		this.state = STAGE_STATE_EMPTY;
+
+		this.lastestBlockNumber = undefined;
+		this.lastestBlockHash = undefined;
 	}
 
 	async run()
@@ -189,7 +192,11 @@ class Update
 						process.exit(1);
 					}
 
+					// 
+					this.lastestBlockHash = majorityBlock.hash();
+					this.lastestBlockNumber = majorityBlock.header.number;
 
+					//
 					blockNumberBn.iaddn(1);
 				}
 				else

@@ -376,6 +376,17 @@ class Ripple
 	runNewConsensusRound()
 	{
 		//
+		this.clearStateConsensus();
+
+		//
+		this.state = RIPPLE_STATE_CONSENSUS;
+
+		//
+		this.amalgamate.run();
+	}
+
+	clearStateConsensus()
+	{
 		this.amalgamatedTransactions.clear();
 		this.candidate = undefined;
 		this.candidateDigest = undefined;
@@ -391,24 +402,21 @@ class Ripple
 
 		//
 		this.clearLeaderTimer();
-
-		//
-		this.state = RIPPLE_STATE_CONSENSUS;
-
-		//
-		this.amalgamate.run();
 	}
 
 	async syncProcessState()
 	{
+		// 
+		this.ripple.state = RIPPLE_STATE_FETCH_PROCESS_STATE;
+
 		// update block chain
 		await this.update.run();
 
 		// init number
-		this.number = await this.update.blockChain.getBlockChainHeight(); 
+		this.number = this.update.lastestBlockNumber; 
 
 		// init hash
-		this.hash = await this.update.blockChain.getBlockHashByNumber(this.number);
+		this.hash = this.update.lastestBlockHash;
 
 		// update process state
 		this.fetchProcessState.run();
