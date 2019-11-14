@@ -124,7 +124,6 @@ class ViewChangeForTimeout {
 
           if (viewChangeByHashDetail.count >= this.threshould) {
             this.consensusViewChange = viewChangeByHashDetail.data;
-            this.consensusViewChange.sign(privateKey);
 
             this.handler();
           }

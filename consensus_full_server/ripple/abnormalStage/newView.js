@@ -68,15 +68,15 @@ class NewView extends LeaderStage {
       this.startTimer();
 
       //
-      let candidate = new Candidate({
+      let resCandidate = new Candidate({
         blockHash: this.ripple.hash,
         number: this.ripple.number,
         view: this.ripple.view
       });
-      candidate.sign(privateKey);
+      resCandidate.sign(privateKey);
 
       //
-      this.validateAndProcessExchangeData(candidate, process[Symbol.for("address")]);
+      this.validateAndProcessExchangeData(resCandidate, process[Symbol.for("address")]);
     }
     else
     {
@@ -124,7 +124,7 @@ class NewView extends LeaderStage {
           // check size
           if (viewChanges.length < this.ripple.threshould)
           {
-            logger.info(`NewView handleMessage, invalid newView msg, address: ${address.toString('hex')}`);
+            logger.info(`NewView handleMessage, invalid newView msg, not reach threshould, address: ${address.toString('hex')}`);
 
             return;
           }
@@ -194,16 +194,16 @@ class NewView extends LeaderStage {
           this.ripple.sequence = this.ripple.lowWaterLine.toBuffer();
 
           //
-          let candidate = new Candidate({
+          let resCandidate = new Candidate({
             blockHash: this.ripple.hash,
             number: this.ripple.number,
             view: this.ripple.view
           });
 
           //
-          candidate.sign(privateKey);
+          resCandidate.sign(privateKey);
 
-          p2p.send(address, PROTOCOL_CMD_NEW_VIEW_RES, candidate.serialize());
+          p2p.send(address, PROTOCOL_CMD_NEW_VIEW_RES, resCandidate.serialize());
 
           this.handler()
         }
