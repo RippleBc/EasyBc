@@ -106,6 +106,11 @@ class Ripple
 		return new BN(this.lowWaterLine).addn(WATER_LINE_STEP_LENGTH);
 	}
 
+	get newLowWaterLine()
+	{
+		return new BN(this.lowWaterLine).muln(WATER_LINE_STEP_LENGTH);
+	}
+
 	/**
 	 * @param {Buffer} address
 	 * @param {Number} cmd

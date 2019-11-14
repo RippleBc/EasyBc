@@ -72,7 +72,7 @@ class ViewChangeForConsensusFail extends ConsensusStage {
       this.ripple.view = new BN(viewChange.view).addn(1).toBuffer();
 
       // update water line
-      this.ripple.lowWaterLine = this.ripple.highWaterLine;
+      this.ripple.lowWaterLine = this.ripple.newLowWaterLine;
 
       // update sequence
       this.ripple.sequence = this.ripple.lowWaterLine.toBuffer();

@@ -48,7 +48,9 @@ class Amalgamate extends LeaderStage
 		const sequenceBN = new BN(this.ripple.sequence);
 		if (sequenceBN.lt(this.ripple.lowWaterLine))
 		{
-			return;
+			logger.fatal(`Amalgamate run, sequence should largger or equal to ${this.ripple.lowWaterLine.toString('hex')}, now is ${this.ripple.sequence.toString('hex')}`);
+			
+			process.exit(1);
 		}
 		if (sequenceBN.gte(this.ripple.highWaterLine))
 		{
