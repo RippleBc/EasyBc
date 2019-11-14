@@ -407,7 +407,7 @@ class Ripple
 	async syncProcessState()
 	{
 		// 
-		this.ripple.state = RIPPLE_STATE_FETCH_PROCESS_STATE;
+		this.state = RIPPLE_STATE_FETCH_PROCESS_STATE;
 
 		// update block chain
 		await this.update.run();
