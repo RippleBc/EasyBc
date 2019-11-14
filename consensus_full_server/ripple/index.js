@@ -40,6 +40,8 @@ const { STAGE_STATE_EMPTY,
 	PROTOCOL_CMD_NEW_VIEW_RES,
 	PROTOCOL_CMD_PROCESS_STATE_REQ,
 	PROTOCOL_CMD_PROCESS_STATE_RES } = require("./constants");
+const { PROCESS_BLOCK_SUCCESS, PROCESS_BLOCK_PARENT_BLOCK_NOT_EXIST } = require("../constants");
+
 const assert = require("assert");
 const Block = require("../../depends/block");
 const Update = require("./update");
@@ -424,21 +426,31 @@ class Ripple
 		this.state = STAGE_PROCESS_CONSENSUS_CANDIDATE;
 
 		(async () => {
-
-			// update hash and number
-			this.hash = consensusBlock.hash();
-			this.number = consensusBlock.header.number;
-
 			// process block
-			await this.processor.processBlock({
+			const result = await this.processor.processBlock({
 				block: consensusBlock
 			});
+			
+			// block chain out of data
+			if (result === PROCESS_BLOCK_PARENT_BLOCK_NOT_EXIST) {
+				await this.consensus.syncProcessState();
+
+				return;
+			}
 
 			//
-			await this.deleteTransactions();
+			if (result === PROCESS_BLOCK_SUCCESS)
+			{
+				// update hash and number
+				this.hash = consensusBlock.hash();
+				this.number = consensusBlock.header.number;
 
-			// fetch new txs
-			({ transactions: this.localTransactions, deleteTransactions: this.deleteTransactions} = await mysql.getRawTransactions(MAX_PROCESS_TRANSACTIONS_SIZE));
+				//
+				await this.deleteTransactions();
+
+				// fetch new txs
+				({ transactions: this.localTransactions, deleteTransactions: this.deleteTransactions } = await mysql.getRawTransactions(MAX_PROCESS_TRANSACTIONS_SIZE));
+			}
 
 			// notice view may have been changed
 			this.runNewConsensusRound();

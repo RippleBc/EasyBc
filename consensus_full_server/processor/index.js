@@ -4,6 +4,13 @@ const utils = require("../../depends/utils");
 const Consensus = require("../ripple");
 const assert = require("assert");
 const Message = require("../../depends/fly/net/message");
+const { RUN_BLOCK_CHAIN_SUCCESS,
+	RUN_BLOCK_CHAIN_SOME_TRANSACTIONS_INVALID,
+	RUN_BLOCK_CHAIN_PARENT_BLOCK_NOT_EXIST,
+	RUN_BLOCK_CHAIN_VALIDATE_FAILED } = require("../../depends/block_chain/constants");
+const { PROCESS_BLOCK_SUCCESS,
+	PROCESS_BLOCK_NO_TRANSACTIONS,
+	PROCESS_BLOCK_PARENT_BLOCK_NOT_EXIST } = require("../constants");
 
 const loggerConsensus = process[Symbol.for("loggerConsensus")];
 const mongo = process[Symbol.for("mongo")];
@@ -60,6 +67,7 @@ class Processor
 	 * @param {Object} opts
 	 * @prop {Block} block
 	 * @prop {Boolean} generate
+	 * @return {Number} 
 	 */
 	async processBlock(opts)
 	{
@@ -79,9 +87,11 @@ class Processor
 		{
 			if(block.transactions.length === 0)
 			{
-				loggerConsensus.warn(`Processor processBlock, block ${block.hash().toString("hex")} has no transaction`);
+				loggerConsensus.warn(`Processor processBlock, block ${block.hash().toString("hex")} has no valid transaction`);
 				
-				break;
+				ifProcessingBlock = false;
+
+				return PROCESS_BLOCK_NO_TRANSACTIONS;
 			}
 
 			const { state, msg, transactions } = await this.blockChain.runBlockChain({
@@ -89,13 +99,17 @@ class Processor
 				generate: generate
 			});
 
-			if(state === 0)
+			if (state === RUN_BLOCK_CHAIN_SUCCESS)
 			{
-				break;
+				loggerConsensus.info(`Processor processBlock, block ${block.hash().toString("hex")} success`);
+
+				ifProcessingBlock = false;
+
+				return PROCESS_BLOCK_SUCCESS;
 			}
-			else if(state === 1)
+			else if (state === RUN_BLOCK_CHAIN_SOME_TRANSACTIONS_INVALID)
 			{
-				loggerConsensus.error(`Processor processBlock, throw exception, ${msg}`)
+				loggerConsensus.error(`Processor processBlock, throw exception, ${msg}`);
 
 				for(let i = 0; i < transactions.length; i++)
 				{
@@ -106,16 +120,15 @@ class Processor
 				// del invalid transactions
 				block.delInvalidTransactions(transactions);
 			}
-			else if(state === 2)
+			else if (state === RUN_BLOCK_CHAIN_PARENT_BLOCK_NOT_EXIST)
 			{
-				this.consensus.syncProcessState().then(() => {
-					loggerConsensus.info("Processor processBlock, syncProcessState is success");
-				}).catch(e => {
-					loggerConsensus.fatal(`Processor processBlock, syncProcessState throw exception, ${process[Symbol.for("getStackInfo")](e)}`)
-				});
-				break;
+				loggerConsensus.error(`Processor processBlock, parent block is not exist, ${msg}`);
+				
+				ifProcessingBlock = false;
+
+				return PROCESS_BLOCK_PARENT_BLOCK_NOT_EXIST;
 			}
-			else if(state === 3)
+			else if (state === RUN_BLOCK_CHAIN_VALIDATE_FAILED)
 			{
 				loggerConsensus.fatal(`Processor processBlock, block is invalid, ${msg}, ${process[Symbol.for("getStackInfo")]()}`);
 				process.exit(1);
@@ -127,8 +140,6 @@ class Processor
 			}
 		}
 		while(true);
-
-		ifProcessingBlock = false;
 	}
 }
 
