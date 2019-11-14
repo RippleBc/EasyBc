@@ -124,6 +124,8 @@ class NewView extends LeaderStage {
           // check size
           if (viewChanges.length < this.ripple.threshould)
           {
+            logger.info(`NewView handleMessage, invalid newView msg, address: ${address.toString('hex')}`);
+
             return;
           }
 
@@ -134,6 +136,8 @@ class NewView extends LeaderStage {
           {
             //
             if (!viewChange.validate()) {
+              logger.info(`NewView handleMessage, invalid viewChange of newView, address: ${address.toString('hex')}`);
+
               return;
             }
 
@@ -146,6 +150,8 @@ class NewView extends LeaderStage {
             {
               if (viewChangeHash !== viewChange.hash(false).toString('hex'))
               {
+                logger.info(`NewView handleMessage, address: ${address.toString('hex')}, viewChange's hash should be ${viewChangeHash}, now is ${viewChange.hash(false).toString('hex')}`);
+
                 return;
               }
             }
@@ -154,6 +160,8 @@ class NewView extends LeaderStage {
             const fromAddress = viewChange.from.toString('hex');
             if (trimedViewChangesByAddress.has(fromAddress))
             {
+              logger.info(`NewView handleMessage, address: ${address.toString('hex')}, repeated address: ${fromAddress}`);
+
               return;
             }
 
@@ -165,6 +173,8 @@ class NewView extends LeaderStage {
           const newViewBN = new BN(viewChanges[0].view).addn(1)
           if (newViewBN.lte(new BN(this.ripple.view)))
           {
+            logger.info(`NewView handleMessage, address: ${address.toString('hex')}, view should largger or equal to ${this.ripple.view.toString('hex')}, now is ${viewChanges[0].view.toString('hex')}`);
+
             return;
           }
 
