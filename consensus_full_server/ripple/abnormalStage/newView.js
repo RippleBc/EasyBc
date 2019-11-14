@@ -29,9 +29,9 @@ class NewView extends LeaderStage {
 
   run() {
     if (this.state !== STAGE_STATE_EMPTY) {
-      logger.fatal(`NewView run, state should be ${STAGE_STATE_EMPTY}, now is ${this.state}, ${process[Symbol.for("getStackInfo")]()}`);
+      logger.error(`NewView run, state should be ${STAGE_STATE_EMPTY}, now is ${this.state}`);
 
-      process.exit(1);
+      return;
     }
     
     logger.info(`NewView run begin, sequence: ${this.ripple.sequence.toString('hex')}, hash: ${this.ripple.hash.toString('hex')}, number: ${this.ripple.number.toString('hex')}, view: ${this.ripple.view.toString('hex')}`);
