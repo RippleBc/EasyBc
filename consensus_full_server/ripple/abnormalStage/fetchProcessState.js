@@ -74,9 +74,6 @@ class FetchProcessState extends ConsensusStage {
       // update view
       this.ripple.view = candidate.view;
 
-      // update water line
-      this.ripple.lowWaterLine = this.ripple.newLowWaterLine;
-
       // sequence
       this.ripple.sequence = candidate.sequence;
 

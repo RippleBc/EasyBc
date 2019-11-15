@@ -95,9 +95,6 @@ class Ripple
 		this.number = undefined;
 		this.view = Buffer.alloc(0);
 
-		// 
-		this.lowWaterLine = new BN();
-
 		//
 		this.update = new Update();
 	}
@@ -107,9 +104,9 @@ class Ripple
 		return this.lowWaterLine.addn(WATER_LINE_STEP_LENGTH);
 	}
 
-	get newLowWaterLine()
+	get lowWaterLine()
 	{
-		return this.lowWaterLine.addn(1).muln(WATER_LINE_STEP_LENGTH);
+		return new BN(this.view).muln(WATER_LINE_STEP_LENGTH);
 	}
 
 	/**
