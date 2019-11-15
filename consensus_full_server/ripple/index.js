@@ -222,7 +222,7 @@ class Ripple
 				cmd: PROTOCOL_CMD_NEW_VIEW_REQ
 			});
 			if (msgNewViewReq) {
-				this.fetchProcessState.handleMessage(msgNewViewReq.address, msgNewViewReq.cmd, msgNewViewReq.data);
+				this.newView.handleMessage(msgNewViewReq.address, msgNewViewReq.cmd, msgNewViewReq.data);
 
 				continue;
 			}
@@ -241,7 +241,7 @@ class Ripple
 					cmd: PROTOCOL_CMD_NEW_VIEW_RES
 				});
 				if (msg) {
-					this.fetchProcessState.handleMessage(msg.address, msg.cmd, msg.data);
+					this.newView.handleMessage(msg.address, msg.cmd, msg.data);
 
 					continue;
 				}
