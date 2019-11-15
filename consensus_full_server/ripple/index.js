@@ -157,7 +157,10 @@ class Ripple
 				break;
 			case PROTOCOL_CMD_PROCESS_STATE_REQ:
 				{
-					this.fetchProcessState.handleMessage(address, cmd, data);
+					if(this.hash !== undefined || this.number !== undefined)
+					{
+						this.fetchProcessState.handleMessage(address, cmd, data);
+					}
 				}
 				break;
 			default:
