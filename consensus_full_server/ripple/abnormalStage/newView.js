@@ -64,7 +64,8 @@ class NewView extends LeaderStage {
         number: this.ripple.viewChangeForTimeout.consensusViewChange.number,
         viewChanges: rlp.encode(viewChanges)
       });
-
+      newView.sign(privateKey);
+      
       // broadcast amalgamated transactions
       p2p.sendAll(PROTOCOL_CMD_NEW_VIEW_REQ, newView.serialize());
 

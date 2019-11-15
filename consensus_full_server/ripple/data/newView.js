@@ -3,9 +3,9 @@ const utils = require("../../../depends/utils");
 
 const Buffer = utils.Buffer;
 
-class ViewChange extends Base {
+class NewView extends Base {
   constructor(data) {
-    super({ name: 'viewChange' });
+    super({ name: 'newView' });
 
     data = data || {};
 
@@ -49,4 +49,4 @@ class ViewChange extends Base {
   }
 }
 
-module.exports = ViewChange;
+module.exports = NewView;
