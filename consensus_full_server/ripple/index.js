@@ -177,7 +177,7 @@ class Ripple
 		//
 		while(1)
 		{
-			/*********************** first hanle process state sync msgs **********************/
+			/*********************** first handle process state sync msgs **********************/
 			if(this.state === RIPPLE_STATE_FETCH_BLOCK_CHAIN)
 			{
 				await new Promise(resolve => {
@@ -195,7 +195,7 @@ class Ripple
 					cmd: PROTOCOL_CMD_PROCESS_STATE_REQ
 				});
 				if (msg1) {
-					this.fetchProcessState.handleMessage(msg1);
+					this.fetchProcessState.handleMessage(msg1.address, msg1.cmd, msg1.data);
 
 					continue;
 				}
@@ -204,7 +204,7 @@ class Ripple
 					cmd: PROTOCOL_CMD_PROCESS_STATE_RES
 				});
 				if (msg2) {
-					this.fetchProcessState.handleMessage(msg2);
+					this.fetchProcessState.handleMessage(msg2.address, msg2.cmd, msg2.data);
 
 					continue;
 				}
@@ -224,7 +224,7 @@ class Ripple
 				cmd: PROTOCOL_CMD_NEW_VIEW_REQ
 			});
 			if (msgNewViewReq) {
-				this.fetchProcessState.handleMessage(msgNewViewReq);
+				this.fetchProcessState.handleMessage(msgNewViewReq.address, msgNewViewReq.cmd, msgNewViewReq.data);
 
 				continue;
 			}
@@ -235,7 +235,7 @@ class Ripple
 			});
 			if(msgViewChangeForTimeout)
 			{
-				this.viewChangeForTimeout.handleMessage(msgViewChangeForTimeout);
+				this.viewChangeForTimeout.handleMessage(msgViewChangeForTimeout.address, msgViewChangeForTimeout.cmd, msgViewChangeForTimeout.data);
 			}
 			if(this.state === RIPPLE_STATE_NEW_VIEW)
 			{	
@@ -243,7 +243,7 @@ class Ripple
 					cmd: PROTOCOL_CMD_NEW_VIEW_RES
 				});
 				if (msg) {
-					this.fetchProcessState.handleMessage(msg);
+					this.fetchProcessState.handleMessage(msg.address, msg.cmd, msg.data);
 
 					continue;
 				}
