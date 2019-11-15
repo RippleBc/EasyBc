@@ -38,6 +38,9 @@ class Amalgamate extends LeaderStage
 		//
 		logger.info(`Amalgamate run begin, sequence: ${this.ripple.sequence.toString('hex')}, hash: ${this.ripple.hash.toString('hex')}, number: ${this.ripple.number.toString('hex')}, view: ${this.ripple.view.toString('hex')}, lowWaterLine: ${this.ripple.lowWaterLine.toBuffer().toString('hex')}, highWaterLine: ${this.ripple.highWaterLine.toBuffer().toString('hex')}`);
 
+		//
+		this.ripple.stage = STAGE_AMALGAMATE;
+		
 		// check sequence
 		const sequenceBN = new BN(this.ripple.sequence);
 		if (sequenceBN.lt(this.ripple.lowWaterLine)) {
@@ -53,9 +56,6 @@ class Amalgamate extends LeaderStage
 
 		//
 		this.state = STAGE_STATE_PROCESSING;
-
-		//
-		this.ripple.stage = STAGE_AMALGAMATE;
 		
 
 		// node is leader

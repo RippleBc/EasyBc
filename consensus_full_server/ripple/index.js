@@ -366,7 +366,7 @@ class Ripple
 						break;
 					default: 
 						{
-							logger.fatal(`Ripple run, invalid RIPPLE_STATE_CONSENSUS cmd ${cmd}`);
+							logger.fatal(`Ripple run, invalid RIPPLE_STATE_CONSENSUS stage ${this.stage}`);
 
 							process.exit(1);
 						}
