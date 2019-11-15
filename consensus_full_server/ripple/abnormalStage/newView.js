@@ -205,7 +205,7 @@ class NewView extends LeaderStage {
           // check if sequence is valid
           if (this.ripple.sequence.toString('hex') !== viewChanges[0].sequence.toString('hex'))
           {
-            logger.error(`NewView handleMessage, address: ${address.toString('hex')}, sequence should be ${this.ripple.sequence.toString('hex')}, now is ${newView.sequence.toString('hex')}`)
+            logger.error(`NewView handleMessage, address: ${address.toString('hex')}, sequence should be ${this.ripple.sequence.toString('hex')}, now is ${viewChanges[0].sequence.toString('hex')}`)
 
             return;
           }
