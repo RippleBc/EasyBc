@@ -71,9 +71,14 @@ class FetchProcessState extends ConsensusStage {
     {
       assert(candidate instanceof Candidate, `FetchProcessState handler, candidate should be an instanceof Candidate, now is ${typeof candidate}`);
       
-      // update sequence and view
-      this.ripple.sequence = candidate.sequence;
+      // update view
       this.ripple.view = candidate.view;
+
+      // update water line
+      this.ripple.lowWaterLine = this.ripple.newLowWaterLine;
+
+      // sequence
+      this.ripple.sequence = candidate.sequence;
 
       // check hash and number
       if (this.ripple.hash.toString('hex') === candidate.blockHash.toString('hex')
