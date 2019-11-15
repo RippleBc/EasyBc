@@ -191,7 +191,7 @@ class Ripple
 
 			if(this.state === RIPPLE_STATE_FETCH_PROCESS_STATE)
 			{
-				const msg1 = this.fetchMsgWioutSequence({
+				const msg1 = this.fetchMsgWithoutSequence({
 					cmd: PROTOCOL_CMD_PROCESS_STATE_REQ
 				});
 				if (msg1) {
@@ -200,7 +200,7 @@ class Ripple
 					continue;
 				}
 
-				const msg2 = this.fetchMsgWioutSequence({
+				const msg2 = this.fetchMsgWithoutSequence({
 					cmd: PROTOCOL_CMD_PROCESS_STATE_RES
 				});
 				if (msg2) {
@@ -220,7 +220,7 @@ class Ripple
 			}
 
 			/*********************** hanle new view msgs, lead to view change action **********************/
-			let msgNewViewReq = this.fetchMsgWioutSequence({
+			let msgNewViewReq = this.fetchMsgWithoutSequence({
 				cmd: PROTOCOL_CMD_NEW_VIEW_REQ
 			});
 			if (msgNewViewReq) {
@@ -230,7 +230,7 @@ class Ripple
 			}
 
 			/*********************** handle view change for timeout, this may lead to view change action **********************/
-			let msgViewChangeForTimeout = this.fetchMsgWioutSequence({
+			let msgViewChangeForTimeout = this.fetchMsgWithoutSequence({
 				cmd: PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT
 			});
 			if(msgViewChangeForTimeout)
@@ -239,7 +239,7 @@ class Ripple
 			}
 			if(this.state === RIPPLE_STATE_NEW_VIEW)
 			{	
-				const msg = this.fetchMsgWioutSequence({
+				const msg = this.fetchMsgWithoutSequence({
 					cmd: PROTOCOL_CMD_NEW_VIEW_RES
 				});
 				if (msg) {
@@ -556,13 +556,20 @@ class Ripple
 	 * @param {Number} cmd
 	 * @return {Object}
 	 */
-	fetchMsgWioutSequence({ cmd })
+	fetchMsgWithoutSequence({ cmd })
 	{
-		assert(typeof cmd === 'number', `Ripple fetchMsgWioutSequence, cmd should be a Number, now is ${typeof cmd}`);
+		assert(typeof cmd === 'number', `Ripple fetchMsgWithoutSequence, cmd should be a Number, now is ${typeof cmd}`);
 
 		const msgsDifferByCmd = this.msgBuffer.get(cmd) || [];
 
-		return msgsDifferByCmd[0];
+		if (msgsDifferByCmd[0])
+		{
+			return {
+				address: msgsDifferByCmd[0].address,
+				cmd: cmd,
+				data: msgsDifferByCmd[0].data
+			};
+		}
 	}
 
 	/**
