@@ -17,7 +17,8 @@ module.exports.STAGE_PRE_PREPARE = 2;
 module.exports.STAGE_PREPARE = 3;
 module.exports.STAGE_COMMIT = 4;
 module.exports.STAGE_FETCH_CANDIDATE = 5;
-module.exports.STAGE_PROCESS_CONSENSUS_CANDIDATE = 3;
+module.exports.STAGE_PROCESS_CONSENSUS_CANDIDATE = 6;
+module.exports.STAGE_VIEW_CHANGE_FOR_CONSENSUS_FAIL = 7;
 
 module.exports.STAGE_STATE_EMPTY = 1;
 module.exports.STAGE_STATE_PROCESSING = 2;
@@ -30,9 +31,9 @@ module.exports.STAGE_FINISH_SUCCESS = 3;
 // ripple
 module.exports.RIPPLE_STATE_EMPTY = 1;
 module.exports.RIPPLE_STATE_CONSENSUS = 2;
-module.exports.RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL = 3;
-module.exports.RIPPLE_STATE_NEW_VIEW = 4;
-module.exports.RIPPLE_STATE_FETCH_PROCESS_STATE = 5;
+module.exports.RIPPLE_STATE_NEW_VIEW = 3;
+module.exports.RIPPLE_STATE_FETCH_PROCESS_STATE = 4;
+module.exports.RIPPLE_STATE_FETCH_BLOCK_CHAIN = 5;
 
 module.exports.RIPPLE_LEADER_EXPIRATION = 10000;
 

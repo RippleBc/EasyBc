@@ -20,11 +20,12 @@ const { STAGE_STATE_EMPTY,
 	STAGE_COMMIT, 
 	STAGE_FETCH_CANDIDATE, 
 	STAGE_PROCESS_CONSENSUS_CANDIDATE,
+	STAGE_VIEW_CHANGE_FOR_CONSENSUS_FAIL,
 
 	RIPPLE_STATE_CONSENSUS,
-	RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL,
 	RIPPLE_STATE_NEW_VIEW,
 	RIPPLE_STATE_FETCH_PROCESS_STATE,
+	RIPPLE_STATE_FETCH_BLOCK_CHAIN,
 
 	PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ,
 	PROTOCOL_CMD_TRANSACTION_AMALGAMATE_RES,
@@ -131,6 +132,11 @@ class Ripple
 			case PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ:
 			case PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES:
 			case PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL:
+			case PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT:
+			case PROTOCOL_CMD_NEW_VIEW_REQ:
+			case PROTOCOL_CMD_NEW_VIEW_RES:
+			case PROTOCOL_CMD_PROCESS_STATE_REQ:
+			case PROTOCOL_CMD_PROCESS_STATE_RES:
 				{
 					//
 					let msgsDifferByCmd = this.msgBuffer.get(cmd);
@@ -148,35 +154,6 @@ class Ripple
 					// update msg buffer
 					msgsDifferByCmd.push({ sequence, address, data });
 					this.msgBuffer.set(cmd, msgsDifferByCmd);
-				}
-				break;
-			case PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT:
-				{
-					if (this.hash === undefined || this.number === undefined) {
-						return;
-					}
-
-					this.viewChangeForTimeout.handleMessage(address, cmd, data);
-				}
-				break;
-			case PROTOCOL_CMD_NEW_VIEW_REQ:
-			case PROTOCOL_CMD_NEW_VIEW_RES:
-				{
-					if (this.hash === undefined || this.number === undefined) {
-						return;
-					}
-
-					this.newView.handleMessage(address, cmd, data);
-				}
-				break;
-			case PROTOCOL_CMD_PROCESS_STATE_REQ:
-			case PROTOCOL_CMD_PROCESS_STATE_RES:
-				{
-					if (this.hash === undefined || this.number === undefined) {
-						return;
-					}
-
-					this.fetchProcessState.handleMessage(address, cmd, data);
 				}
 				break;
 			default:
@@ -200,155 +177,196 @@ class Ripple
 		//
 		while(1)
 		{
-			if (this.state === RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL) {
-				const msg = this.fetchMsg({
-					cmd: PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL, 
-					sequenceMode: SEQUENCE_MODE_MATCH
+			if(this.state === RIPPLE_STATE_FETCH_BLOCK_CHAIN)
+			{
+				await new Promise(resolve => {
+					setTimeout(() => {
+						resolve();
+					}, SYSTEM_LOOP_DELAY_TIME);
 				});
 
-				if (msg) {
-					this.viewChangeForConsensusFail.handleMessage(msg.address, msg.cmd, msg.data);
+				continue;
+			}
+
+			if(this.state === RIPPLE_STATE_FETCH_PROCESS_STATE)
+			{
+				const msg1 = this.fetchMsgWioutSequence({
+					cmd: PROTOCOL_CMD_PROCESS_STATE_REQ
+				});
+				if (msg1) {
+					this.fetchProcessState.handleMessage(msg1);
+
+					continue;
 				}
-				else
+
+				const msg2 = this.fetchMsgWioutSequence({
+					cmd: PROTOCOL_CMD_PROCESS_STATE_RES
+				});
+				if (msg2) {
+					this.fetchProcessState.handleMessage(msg2);
+
+					continue;
+				}
+
+				//
+				await new Promise(resolve => {
+					setTimeout(() => {
+						resolve();
+					}, SYSTEM_LOOP_DELAY_TIME);
+				});
+
+				continue;
+			}
+
+			//
+			const msg = this.fetchMsgWioutSequence({
+				cmd: PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT
+			});
+			if(msg)
+			{
+				this.viewChangeForTimeout.handleMessage(msg);
+
+				continue;
+			}
+			
+			//
+			if(this.state === RIPPLE_STATE_NEW_VIEW)
+			{
+				const msg1 = this.fetchMsgWioutSequence({
+					cmd: PROTOCOL_CMD_NEW_VIEW_REQ
+				});
+				if(msg1)
 				{
-					await new Promise(resolve => {
-						setTimeout(() => {
-							resolve();
-						}, SYSTEM_LOOP_DELAY_TIME);
-					});
+					this.fetchProcessState.handleMessage(msg);
+
+					continue;
+				}
+				
+				const msg2 = this.fetchMsgWioutSequence({
+					cmd: PROTOCOL_CMD_NEW_VIEW_RES
+				});
+				if (msg2) {
+					this.fetchProcessState.handleMessage(msg);
+
+					continue;
 				}
 			}
-			else if (this.state === RIPPLE_STATE_CONSENSUS) {
+			
+			if (this.state === RIPPLE_STATE_CONSENSUS) {
 				switch (this.stage) {
 					case STAGE_AMALGAMATE:
 						{
-							const msg1 = this.fetchMsg({
+							const msg1 = this.fetchMsgWithSequence({
 								cmd: PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ, 
 								sequenceMode: SEQUENCE_MODE_LARGER
 							});
 							if(msg1)
 							{
 								this.amalgamate.handleMessage(msg1.address, msg1.cmd, msg1.data);
+
+								continue;
 							}
 
-							const msg2 = this.fetchMsg({
+							const msg2 = this.fetchMsgWithSequence({
 								cmd: PROTOCOL_CMD_TRANSACTION_AMALGAMATE_RES, 
 								sequenceMode: SEQUENCE_MODE_MATCH
 							});
 							if (msg2) {
 								this.amalgamate.handleMessage(msg2.address, msg2.cmd, msg2.data);
-							}
-							
-							//
-							if (!msg1 && !msg2) {
-								await new Promise(resolve => {
-									setTimeout(() => {
-										resolve();
-									}, SYSTEM_LOOP_DELAY_TIME);
-								});
+
+								continue;
 							}
 						}
 						break;
 					case STAGE_PRE_PREPARE:
 						{
-							const msg1 = this.fetchMsg({
+							const msg1 = this.fetchMsgWithSequence({
 								cmd: PROTOCOL_CMD_PRE_PREPARE_REQ, 
 								sequenceMode: SEQUENCE_MODE_MATCH
 							});
 							if (msg1) {
 								this.prePrepare.handleMessage(msg1.address, msg1.cmd, msg1.data);
+
+								continue;
 							}
 
-							const msg2 = this.fetchMsg({
+							const msg2 = this.fetchMsgWithSequence({
 								cmd: PROTOCOL_CMD_PRE_PREPARE_RES, 
 								sequenceMode: SEQUENCE_MODE_MATCH
 							});
 							if (msg2) {
 								this.prePrepare.handleMessage(msg2.address, msg2.cmd, msg2.data);
-							}
 
-							//
-							if (!msg1 && !msg2) {
-								await new Promise(resolve => {
-									setTimeout(() => {
-										resolve();
-									}, SYSTEM_LOOP_DELAY_TIME);
-								});
+								continue;
 							}
 						}
 						break;
 					case STAGE_PREPARE:
 						{
-							const msg = this.fetchMsg({
+							const msg = this.fetchMsgWithSequence({
 								cmd: PROTOCOL_CMD_PREPARE, 
 								sequenceMode: SEQUENCE_MODE_MATCH
 							});
 							if (msg) {
 								this.prepare.handleMessage(msg.address, msg.cmd, msg.data);
-							}
-							else
-							{
-								await new Promise(resolve => {
-									setTimeout(() => {
-										resolve();
-									}, SYSTEM_LOOP_DELAY_TIME);
-								});
+
+								continue;
 							}
 						}
 						break;
 					case STAGE_COMMIT:
 						{
-							const msg = this.fetchMsg({
+							const msg = this.fetchMsgWithSequence({
 								cmd: PROTOCOL_CMD_COMMIT, 
 								sequenceMode: SEQUENCE_MODE_MATCH
 							});
 							if (msg) {
 								this.commit.handleMessage(msg.address, msg.cmd, msg.data);
-							}
-							else {
-								await new Promise(resolve => {
-									setTimeout(() => {
-										resolve();
-									}, SYSTEM_LOOP_DELAY_TIME);
-								});
+
+								continue;
 							}
 						}
 						break;
 					case STAGE_FETCH_CANDIDATE:
 						{
-							const msg1 = this.fetchMsg({
+							const msg1 = this.fetchMsgWithSequence({
 								cmd: PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ, 
 								sequenceMode: SEQUENCE_MODE_MATCH
 							});
 							if (msg1) {
 								this.fetchConsensusCandidate.handleMessage(msg1.address, msg1.cmd, msg1.data);
+							
+								continue;
 							}
 
-							const msg2 = this.fetchMsg({
+							const msg2 = this.fetchMsgWithSequence({
 								cmd: PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES, 
 								sequenceMode: SEQUENCE_MODE_MATCH
 							});
 							if (msg2) {
 								this.fetchConsensusCandidate.handleMessage(msg2.address, msg2.cmd, msg2.data);
-							}
-
-							//
-							if (!msg1 && !msg2) {
-								await new Promise(resolve => {
-									setTimeout(() => {
-										resolve();
-									}, SYSTEM_LOOP_DELAY_TIME);
-								});
+							
+								continue;
 							}
 						}
 						break;
 					case STAGE_PROCESS_CONSENSUS_CANDIDATE:
 						{
-							await new Promise(resolve => {
-								setTimeout(() => {
-									resolve();
-								}, SYSTEM_LOOP_DELAY_TIME);
+							
+						}
+						break;
+					case STAGE_VIEW_CHANGE_FOR_CONSENSUS_FAIL:
+						{
+							const msg = this.fetchMsgWithSequence({
+								cmd: PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL,
+								sequenceMode: SEQUENCE_MODE_MATCH
 							});
+
+							if (msg) {
+								this.viewChangeForConsensusFail.handleMessage(msg.address, msg.cmd, msg.data);
+								
+								continue;
+							}
 						}
 						break;
 					default: 
@@ -359,14 +377,12 @@ class Ripple
 						}
 				}
 			}
-			else
-			{
-				await new Promise(resolve => {
-					setTimeout(() => {
-						resolve();
-					}, SYSTEM_LOOP_DELAY_TIME);
-				});
-			}
+			
+			await new Promise(resolve => {
+				setTimeout(() => {
+					resolve();
+				}, SYSTEM_LOOP_DELAY_TIME);
+			});
 		}
 	}
 
@@ -406,17 +422,20 @@ class Ripple
 
 	async syncProcessState()
 	{
+		this.state === RIPPLE_STATE_FETCH_BLOCK_CHAIN;
+
 		// update block chain
 		await this.update.run();
-
+	
 		// init number
-		this.number = this.update.lastestBlockNumber; 
+		this.number = this.update.lastestBlockNumber;
 
 		// init hash
 		this.hash = this.update.lastestBlockHash;
 
 		// update process state
 		this.fetchProcessState.run();
+		
 	}
 
 	/**
@@ -535,12 +554,27 @@ class Ripple
 	}
 
 	/**
+	 * @param {Number} cmd
+	 * @return {Object}
+	 */
+	fetchMsgWioutSequence({ cmd })
+	{
+		assert(typeof cmd === 'number', `Ripple fetchMsgWioutSequence, cmd should be a Number, now is ${typeof cmd}`);
+
+		const msgsDifferByCmd = this.msgBuffer.get(cmd) || [];
+
+		return msgsDifferByCmd[0];
+	}
+
+	/**
 	 * @param {Number} cmd 
+	 * @param {NUmber} sequenceMode
 	 * @return {Object} 
 	 */
-	fetchMsg({ cmd, sequenceMode })
+	fetchMsgWithSequence({ cmd, sequenceMode })
 	{
-		assert(typeof cmd === 'number', `Ripple fetchMsg, cmd should be a Number, now is ${typeof cmd}`);
+		assert(typeof cmd === 'number', `Ripple fetchMsgWithSequence, cmd should be a Number, now is ${typeof cmd}`);
+		assert(typeof sequenceMode === 'number', `Ripple fetchMsgWithSequence, sequenceMode should be a Number, now is ${typeof sequenceMode}`);
 
 		const msgsDifferByCmd = this.msgBuffer.get(cmd) || [];
 

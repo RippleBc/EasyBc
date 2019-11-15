@@ -10,15 +10,7 @@ const { RIPPLE_STATE_NEW_VIEW,
   RIPPLE_STATE_VIEW_CHANGE_NEW_VIEW_EXPIRATION,
   STAGE_FINISH_SUCCESS,
 
-  STAGE_AMALGAMATE,
-  STAGE_PRE_PREPARE,
-  STAGE_PREPARE,
-  STAGE_COMMIT,
-  STAGE_FETCH_CANDIDATE,
-  STAGE_PROCESS_CONSENSUS_CANDIDATE,
-
   RIPPLE_STATE_CONSENSUS,
-  RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL,
   RIPPLE_STATE_FETCH_PROCESS_STATE } = require("../constants");
 const LeaderStage = require("../stage/leaderStage");
 const Candidate = require("../data/candidate");
@@ -278,9 +270,6 @@ class NewView extends LeaderStage {
     // check state
     if (this.ripple.state === RIPPLE_STATE_CONSENSUS) {
       this.ripple.clearStateConsensus();
-    }
-    else if (this.ripple.state === RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL) {
-      this.ripple.viewChangeForConsensusFail.reset();
     }
     else if (this.ripple.state === RIPPLE_STATE_FETCH_PROCESS_STATE) {
       this.ripple.fetchConsensusState.reset();
