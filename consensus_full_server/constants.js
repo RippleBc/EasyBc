@@ -1,3 +1,5 @@
 module.exports.PROCESS_BLOCK_SUCCESS = 0;
 module.exports.PROCESS_BLOCK_NO_TRANSACTIONS = 1;
 module.exports.PROCESS_BLOCK_PARENT_BLOCK_NOT_EXIST = 2;
+
+module.exports.PROTOCOL_HEART_BEAT = 0;

@@ -2,14 +2,14 @@ const { tcp } = require("../config.json");
 const utils = require("../../depends/utils");
 const { createClient, createServer, connectionsManager } = require("../../depends/fly");
 const assert = require("assert");
-
+const { PROTOCOL_HEART_BEAT } = require("../constant")
 const Buffer = utils.Buffer;
 
 const loggerP2p = process[Symbol.for("loggerP2p")];
 const loggerNet = process[Symbol.for("loggerNet")];
 const unlManager = process[Symbol.for("unlManager")];
 
-const CHECK_CONNECT_INTERVAL = 10 * 1000;
+const CHECK_CONNECT_INTERVAL = 5 * 1000;
 
 class P2p
 {
@@ -91,6 +91,8 @@ class P2p
 			// try to reconnect other nodes
 			this.reconnectAll();
 
+			// broadcast  heartbeat
+			this.sendAll(PROTOCOL_HEART_BEAT)
 		}, CHECK_CONNECT_INTERVAL);
 	}
 
@@ -184,7 +186,7 @@ class P2p
 
 					loggerP2p.error(`P2p reconnectAll, connect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort}, ${process[Symbol.for("getStackInfo")](e)}`);
 				}
-			}	
+			}
 		}
 	}
 

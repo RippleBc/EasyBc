@@ -10,7 +10,8 @@ const { RUN_BLOCK_CHAIN_SUCCESS,
 	RUN_BLOCK_CHAIN_VALIDATE_FAILED } = require("../../depends/block_chain/constants");
 const { PROCESS_BLOCK_SUCCESS,
 	PROCESS_BLOCK_NO_TRANSACTIONS,
-	PROCESS_BLOCK_PARENT_BLOCK_NOT_EXIST } = require("../constants");
+	PROCESS_BLOCK_PARENT_BLOCK_NOT_EXIST,
+	PROTOCOL_HEART_BEAT } = require("../constants");
 
 const loggerConsensus = process[Symbol.for("loggerConsensus")];
 const mongo = process[Symbol.for("mongo")];
@@ -53,13 +54,19 @@ class Processor
 	 */
 	handleMessage(address, message)
 	{
-		assert(Buffer.isBuffer(address), `Processor handleMessages, address should be an Buffer, now is ${typeof message}`);
-		assert(message instanceof Message, `Processor handleMessages, message should be a Message Object, now is ${typeof message}`);
+		assert(Buffer.isBuffer(address), `Processor handleMessage, address should be an Buffer, now is ${typeof message}`);
+		assert(message instanceof Message, `Processor handleMessage, message should be a Message Object, now is ${typeof message}`);
 
 		const cmd = bufferToInt(message.cmd);
 		const data = message.data;
 
-		//
+		// 
+		if (PROTOCOL_HEART_BEAT === cmd)
+		{
+			return;
+		}
+
+		// 
 		this.consensus.handleMessage({ address, cmd, data });
 	}
 
