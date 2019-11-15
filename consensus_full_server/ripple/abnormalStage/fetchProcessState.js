@@ -37,6 +37,9 @@ class FetchProcessState extends ConsensusStage {
     //
     this.state = STAGE_STATE_PROCESSING;
 
+    // 
+    this.ripple.state = RIPPLE_STATE_FETCH_PROCESS_STATE;
+
     //
     const reqCandidate = new Candidate({
       sequence: this.ripple.sequence,

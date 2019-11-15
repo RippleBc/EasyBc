@@ -406,9 +406,6 @@ class Ripple
 
 	async syncProcessState()
 	{
-		// 
-		this.state = RIPPLE_STATE_FETCH_PROCESS_STATE;
-
 		// update block chain
 		await this.update.run();
 
@@ -446,9 +443,9 @@ class Ripple
 			
 			// block chain out of data
 			if (result === PROCESS_BLOCK_PARENT_BLOCK_NOT_EXIST) {
-				await this.consensus.syncProcessState();
+				logger.fatal(`Ripple processConsensusCandidate, parent block is not exist, there may be a bifurcate, please cleat storage`);
 
-				return;
+				process.exit(1);
 			}
 
 			//

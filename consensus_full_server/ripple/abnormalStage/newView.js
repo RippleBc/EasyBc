@@ -56,16 +56,8 @@ class NewView extends LeaderStage {
     // node is leader
     if (this.ripple.checkLeader(process[Symbol.for("address")])) {
 
-      // check state
-      if (this.ripple.state === RIPPLE_STATE_CONSENSUS) {
-        this.ripple.clearStateConsensus();
-      }
-      else if (this.ripple.state === RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL) {
-        this.ripple.viewChangeForConsensusFail.reset();
-      }
-      else if (this.ripple.state === RIPPLE_STATE_FETCH_PROCESS_STATE) {
-        this.ripple.fetchConsensusState.reset();
-      }
+      //
+      this.clearOtherStateForNewViewBegin();
 
       // encode view changes
       const viewChanges = [];
@@ -121,17 +113,7 @@ class NewView extends LeaderStage {
 
     // node is not leader
     if (!this.ripple.checkLeader(process[Symbol.for("address")])) {
-
-      // check state
-      if (this.ripple.state === RIPPLE_STATE_CONSENSUS) {
-        this.ripple.clearStateConsensus();
-      }
-      else if (this.ripple.state === RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL) {
-        this.ripple.viewChangeForConsensusFail.reset();
-      }
-      else if (this.ripple.state === RIPPLE_STATE_FETCH_PROCESS_STATE) {
-        this.ripple.fetchConsensusState.reset();
-      }
+      this.clearOtherStateForNewViewBegin();
     }
 
     // reset
@@ -288,6 +270,20 @@ class NewView extends LeaderStage {
           }
         }
         break;
+    }
+  }
+
+  clearOtherStateForNewViewBegin()
+  {
+    // check state
+    if (this.ripple.state === RIPPLE_STATE_CONSENSUS) {
+      this.ripple.clearStateConsensus();
+    }
+    else if (this.ripple.state === RIPPLE_STATE_VIEW_CHANGE_FOR_CONSENSUS_FAIL) {
+      this.ripple.viewChangeForConsensusFail.reset();
+    }
+    else if (this.ripple.state === RIPPLE_STATE_FETCH_PROCESS_STATE) {
+      this.ripple.fetchConsensusState.reset();
     }
   }
 }
