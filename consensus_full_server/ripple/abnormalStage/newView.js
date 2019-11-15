@@ -198,7 +198,7 @@ class NewView extends LeaderStage {
           const newViewBN = new BN(viewChanges[0].view).addn(1)
           if (newViewBN.lte(new BN(this.ripple.view)))
           {
-            logger.info(`NewView handleMessage, address: ${address.toString('hex')}, view should largger or equal to ${this.ripple.view.toString('hex')}, now is ${viewChanges[0].view.toString('hex')}`);
+            logger.info(`NewView handleMessage, address: ${address.toString('hex')}, view should largger than ${this.ripple.view.toString('hex')}, now is ${newViewBN.toBuffer().toString('hex')}`);
 
             return;
           }
