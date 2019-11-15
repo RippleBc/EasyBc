@@ -2,7 +2,7 @@ const { tcp } = require("../config.json");
 const utils = require("../../depends/utils");
 const { createClient, createServer, connectionsManager } = require("../../depends/fly");
 const assert = require("assert");
-const { PROTOCOL_HEART_BEAT } = require("../constant")
+const { PROTOCOL_HEART_BEAT } = require("../constants")
 const Buffer = utils.Buffer;
 
 const loggerP2p = process[Symbol.for("loggerP2p")];
