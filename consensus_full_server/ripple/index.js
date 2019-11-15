@@ -177,6 +177,7 @@ class Ripple
 		//
 		while(1)
 		{
+			/*********************** first hanle process state sync msgs **********************/
 			if(this.state === RIPPLE_STATE_FETCH_BLOCK_CHAIN)
 			{
 				await new Promise(resolve => {
@@ -218,34 +219,30 @@ class Ripple
 				continue;
 			}
 
-			//
-			const msg = this.fetchMsgWioutSequence({
-				cmd: PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT
+			/*********************** hanle new view msgs, lead to view change action **********************/
+			let msgNewViewReq = this.fetchMsgWioutSequence({
+				cmd: PROTOCOL_CMD_NEW_VIEW_REQ
 			});
-			if(msg)
-			{
-				this.viewChangeForTimeout.handleMessage(msg);
+			if (msgNewViewReq) {
+				this.fetchProcessState.handleMessage(msgNewViewReq);
 
 				continue;
 			}
-			
-			//
-			if(this.state === RIPPLE_STATE_NEW_VIEW)
-			{
-				const msg1 = this.fetchMsgWioutSequence({
-					cmd: PROTOCOL_CMD_NEW_VIEW_REQ
-				});
-				if(msg1)
-				{
-					this.fetchProcessState.handleMessage(msg);
 
-					continue;
-				}
-				
-				const msg2 = this.fetchMsgWioutSequence({
+			/*********************** handle view change for timeout, this may lead to view change action **********************/
+			let msgViewChangeForTimeout = this.fetchMsgWioutSequence({
+				cmd: PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT
+			});
+			if(msgViewChangeForTimeout)
+			{
+				this.viewChangeForTimeout.handleMessage(msgViewChangeForTimeout);
+			}
+			if(this.state === RIPPLE_STATE_NEW_VIEW)
+			{	
+				const msg = this.fetchMsgWioutSequence({
 					cmd: PROTOCOL_CMD_NEW_VIEW_RES
 				});
-				if (msg2) {
+				if (msg) {
 					this.fetchProcessState.handleMessage(msg);
 
 					continue;
@@ -417,7 +414,7 @@ class Ripple
 
 	async syncProcessState()
 	{
-		this.state === RIPPLE_STATE_FETCH_BLOCK_CHAIN;
+		this.state = RIPPLE_STATE_FETCH_BLOCK_CHAIN;
 
 		// update block chain
 		await this.update.run();
@@ -447,7 +444,7 @@ class Ripple
 			transactions: this.candidate.transactions
 		});
 
-		this.state = STAGE_PROCESS_CONSENSUS_CANDIDATE;
+		this.stage = STAGE_PROCESS_CONSENSUS_CANDIDATE;
 
 		(async () => {
 			// process block
