@@ -34,9 +34,22 @@ class Amalgamate extends LeaderStage
 
 			process.exit(1);
 		}
-
+		
 		//
-		logger.info(`Amalgamate run begin, sequence: ${this.ripple.sequence.toString('hex')}, hash: ${this.ripple.hash.toString('hex')}, number: ${this.ripple.number.toString('hex')}, view: ${this.ripple.view.toString('hex')}`);
+		logger.info(`Amalgamate run begin, sequence: ${this.ripple.sequence.toString('hex')}, hash: ${this.ripple.hash.toString('hex')}, number: ${this.ripple.number.toString('hex')}, view: ${this.ripple.view.toString('hex')}, lowWaterLine: ${this.ripple.lowWaterLine.toBuffer().toString('hex')}, highWaterLine: ${this.ripple.highWaterLine.toBuffer().toString('hex')}`);
+
+		// check sequence
+		const sequenceBN = new BN(this.ripple.sequence);
+		if (sequenceBN.lt(this.ripple.lowWaterLine)) {
+			logger.fatal(`Amalgamate run, sequence should largger or equal to ${this.ripple.lowWaterLine.toBuffer().toString('hex')}, now is ${this.ripple.sequence.toString('hex')}`);
+
+			process.exit(1);
+		}
+		if (sequenceBN.gte(this.ripple.highWaterLine)) {
+			this.ripple.viewChangeForTimeout.run();
+
+			return;
+		}
 
 		//
 		this.state = STAGE_STATE_PROCESSING;
@@ -44,20 +57,6 @@ class Amalgamate extends LeaderStage
 		//
 		this.ripple.stage = STAGE_AMALGAMATE;
 		
-		// check sequence
-		const sequenceBN = new BN(this.ripple.sequence);
-		if (sequenceBN.lt(this.ripple.lowWaterLine))
-		{
-			logger.fatal(`Amalgamate run, sequence should largger or equal to ${this.ripple.lowWaterLine.toBuffer().toString('hex')}, now is ${this.ripple.sequence.toString('hex')}`);
-			
-			process.exit(1);
-		}
-		if (sequenceBN.gte(this.ripple.highWaterLine))
-		{
-			this.ripple.viewChangeForTimeout.run();
-
-			return;
-		}
 
 		// node is leader
 		if (this.ripple.checkLeader(process[Symbol.for("address")]))
