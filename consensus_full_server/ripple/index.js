@@ -135,7 +135,6 @@ class Ripple
 			case PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT:
 			case PROTOCOL_CMD_NEW_VIEW_REQ:
 			case PROTOCOL_CMD_NEW_VIEW_RES:
-			case PROTOCOL_CMD_PROCESS_STATE_REQ:
 			case PROTOCOL_CMD_PROCESS_STATE_RES:
 				{
 					//
@@ -154,6 +153,11 @@ class Ripple
 					// update msg buffer
 					msgsDifferByCmd.push({ sequence, address, data });
 					this.msgBuffer.set(cmd, msgsDifferByCmd);
+				}
+				break;
+			case PROTOCOL_CMD_PROCESS_STATE_REQ:
+				{
+					this.fetchProcessState.handleMessage(address, cmd, data);
 				}
 				break;
 			default:
@@ -191,20 +195,11 @@ class Ripple
 
 			if(this.state === RIPPLE_STATE_FETCH_PROCESS_STATE)
 			{
-				const msg1 = this.fetchMsgWithoutSequence({
-					cmd: PROTOCOL_CMD_PROCESS_STATE_REQ
-				});
-				if (msg1) {
-					this.fetchProcessState.handleMessage(msg1.address, msg1.cmd, msg1.data);
-
-					continue;
-				}
-
-				const msg2 = this.fetchMsgWithoutSequence({
+				const msg = this.fetchMsgWithoutSequence({
 					cmd: PROTOCOL_CMD_PROCESS_STATE_RES
 				});
-				if (msg2) {
-					this.fetchProcessState.handleMessage(msg2.address, msg2.cmd, msg2.data);
+				if (msg) {
+					this.fetchProcessState.handleMessage(msg.address, msg.cmd, msg.data);
 
 					continue;
 				}
@@ -562,12 +557,13 @@ class Ripple
 
 		const msgsDifferByCmd = this.msgBuffer.get(cmd) || [];
 
-		if (msgsDifferByCmd[0])
+		const msg = msgsDifferByCmd.shift();
+		if (msg)
 		{
 			return {
-				address: msgsDifferByCmd[0].address,
+				address: msg.address,
 				cmd: cmd,
-				data: msgsDifferByCmd[0].data
+				data: msg.data
 			};
 		}
 	}
