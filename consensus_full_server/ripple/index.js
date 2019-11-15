@@ -103,12 +103,12 @@ class Ripple
 
 	get highWaterLine()
 	{
-		return new BN(this.lowWaterLine).addn(WATER_LINE_STEP_LENGTH);
+		return this.lowWaterLine.addn(WATER_LINE_STEP_LENGTH);
 	}
 
 	get newLowWaterLine()
 	{
-		return new BN(this.lowWaterLine).muln(WATER_LINE_STEP_LENGTH);
+		return this.lowWaterLine.addn(1).muln(WATER_LINE_STEP_LENGTH);
 	}
 
 	/**
