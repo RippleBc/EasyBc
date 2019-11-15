@@ -392,17 +392,6 @@ class Ripple
 	runNewConsensusRound()
 	{
 		//
-		this.clearStateConsensus();
-
-		//
-		this.state = RIPPLE_STATE_CONSENSUS;
-
-		//
-		this.amalgamate.run();
-	}
-
-	clearStateConsensus()
-	{
 		this.amalgamatedTransactions.clear();
 		this.candidate = undefined;
 		this.candidateDigest = undefined;
@@ -418,6 +407,12 @@ class Ripple
 
 		//
 		this.clearLeaderTimer();
+
+		//
+		this.state = RIPPLE_STATE_CONSENSUS;
+
+		//
+		this.amalgamate.run();
 	}
 
 	async syncProcessState()

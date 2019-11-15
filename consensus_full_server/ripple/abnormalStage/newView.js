@@ -8,10 +8,7 @@ const { RIPPLE_STATE_NEW_VIEW,
   STAGE_STATE_EMPTY,
   STAGE_STATE_PROCESSING,
   RIPPLE_STATE_VIEW_CHANGE_NEW_VIEW_EXPIRATION,
-  STAGE_FINISH_SUCCESS,
-
-  RIPPLE_STATE_CONSENSUS,
-  RIPPLE_STATE_FETCH_PROCESS_STATE } = require("../constants");
+  STAGE_FINISH_SUCCESS } = require("../constants");
 const LeaderStage = require("../stage/leaderStage");
 const Candidate = require("../data/candidate");
 
@@ -47,9 +44,8 @@ class NewView extends LeaderStage {
 
     // node is leader
     if (this.ripple.checkLeader(process[Symbol.for("address")])) {
-
       //
-      this.clearOtherStateForNewViewBegin();
+      this.ripple.clearLeaderTimer();
 
       // encode view changes
       const viewChanges = [];
@@ -101,11 +97,6 @@ class NewView extends LeaderStage {
     if(code !== STAGE_FINISH_SUCCESS)
     {
       logger.info(`NewView handler, failed because of ${code}`);
-    }
-
-    // node is not leader
-    if (!this.ripple.checkLeader(process[Symbol.for("address")])) {
-      this.clearOtherStateForNewViewBegin();
     }
 
     // reset
@@ -262,17 +253,6 @@ class NewView extends LeaderStage {
           }
         }
         break;
-    }
-  }
-
-  clearOtherStateForNewViewBegin()
-  {
-    // check state
-    if (this.ripple.state === RIPPLE_STATE_CONSENSUS) {
-      this.ripple.clearStateConsensus();
-    }
-    else if (this.ripple.state === RIPPLE_STATE_FETCH_PROCESS_STATE) {
-      this.ripple.fetchConsensusState.reset();
     }
   }
 }
