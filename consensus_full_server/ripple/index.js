@@ -414,6 +414,13 @@ class Ripple
 
 	async syncProcessState()
 	{
+		if(this.state === RIPPLE_STATE_NEW_VIEW)
+		{
+			logger.info("Ripple syncProcessState, current state can not be RIPPLE_STATE_NEW_VIEW");
+
+			return;
+		}
+
 		this.state = RIPPLE_STATE_FETCH_BLOCK_CHAIN;
 
 		// update block chain
