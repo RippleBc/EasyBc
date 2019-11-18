@@ -27,14 +27,19 @@ class ViewChangeForTimeout {
     this.consensusViewChange = undefined;
   }
 
-  run() {
-    logger.info(`ViewChangeForTimeout run begin, sequence: ${this.ripple.sequence.toString('hex')}, hash: ${this.ripple.hash.toString('hex')}, number: ${this.ripple.number.toString('hex')}, view: ${this.ripple.view.toString('hex')}`);
+  /**
+   * @param {Buffer} view 
+   */
+  run(view = this.ripple.view) {
+    assert(Buffer.isBuffer(view), `ViewChangeForTimeout run, view should be a Buffer, now is ${typeof view}`);
+
+    logger.info(`ViewChangeForTimeout run begin, sequence: ${this.ripple.sequence.toString('hex')}, hash: ${this.ripple.hash.toString('hex')}, number: ${this.ripple.number.toString('hex')}, view: ${view.toString('hex')}`);
 
     const viewChange = new ViewChange({
       sequence: this.ripple.sequence,
       blockHash: this.ripple.hash,
       number: this.ripple.number,
-      view: this.ripple.view
+      view: view
     });
     viewChange.sign(privateKey);
 

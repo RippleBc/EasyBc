@@ -521,13 +521,11 @@ class Ripple
 
 			/**************** new view failed, try to enter next view ****************/
 			
-			// update view
-			this.view = new BN(this.view).addn(1).toBuffer();
-
-			// do not update sequence, do this can differ normal and abnormal newViewForInvalidSequence
+			//
+			this.newViewForInvalidSequenceTimes += 1;
 			
-			// try to change view
-			this.viewChangeForTimeout.run();
+			// try to change to next view
+			this.viewChangeForTimeout.run(new BN(this.view).addn(this.newViewForInvalidSequenceTimes).toBuffer());
 
 			// wait new leader is on position
 			// if failed, try to sync process state
