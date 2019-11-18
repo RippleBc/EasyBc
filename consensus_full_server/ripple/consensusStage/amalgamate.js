@@ -48,8 +48,15 @@ class Amalgamate extends LeaderStage
 
 			process.exit(1);
 		}
+
+		// check if it is the time to change view
 		if (sequenceBN.gte(this.ripple.highWaterLine)) {
+			// try to change view
 			this.ripple.viewChangeForTimeout.run();
+
+			// wait new leader is on position
+			// if failed, try to sync process state
+			this.startLeaderTimer();
 
 			return;
 		}
