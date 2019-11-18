@@ -439,7 +439,7 @@ class Ripple
 	{
 		const consensusBlock = new Block({
 			header: {
-				number: this.candidate.number,
+				number: new BN(this.candidate.number).addn(1),
 				parentHash: this.candidate.blockHash,
 				timestamp: this.candidate.timestamp
 			},
