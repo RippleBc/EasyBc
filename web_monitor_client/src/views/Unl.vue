@@ -137,38 +137,6 @@
                 <el-button type="primary" @click="saveBatchDelete">确 定</el-button>
             </span>
         </el-dialog>
-
-        <!-- 毁灭节点提示框 -->
-        <el-dialog title="毁灭节点" :visible.sync="perishVisible" width="30%" center>
-            <el-form :model="currentHandleNode" label-width="90px">
-                <el-form-item label="公钥">
-                   <strong style="padding: 20px;">{{currentHandleNode.address}}</strong>
-                </el-form-item>
-                <el-form-item label="密钥">
-                    <el-input v-model="privateKey"></el-input>
-                </el-form-item>
-            </el-form>
-            <span slot="footer" class="dialog-footer">
-                <el-button @click="perishVisible=false">取 消</el-button>
-                <el-button type="primary" @click="savePerish">确 定</el-button>
-            </span>
-        </el-dialog>
-
-        <!-- 原谅节点提示框 -->
-        <el-dialog title="原谅节点" :visible.sync="pardonVisible" width="30%" center>
-            <el-form :model="currentHandleNode" label-width="90px">
-                <el-form-item label="公钥">
-                   <strong style="padding: 20px;">{{currentHandleNode.address}}</strong>
-                </el-form-item>
-                <el-form-item label="密钥">
-                    <el-input v-model="privateKey"></el-input>
-                </el-form-item>
-            </el-form>
-            <span slot="footer" class="dialog-footer">
-                <el-button @click="pardonVisible=false">取 消</el-button>
-                <el-button type="primary" @click="savePardon">确 定</el-button>
-            </span>
-        </el-dialog>
     </div>
 </template>
 
@@ -190,8 +158,6 @@
                 addVisible: false,
                 editVisible: false,
                 delVisible: false,
-                perishVisible: false,
-                pardonVisible: false,
                 batchDelVisible: false,
                 currentHandleNode: {
                     address: '',
@@ -276,16 +242,6 @@
             },
             handleCurrentChange(page) {
                 this.cur_page = page;
-            },
-            handlePerish(row) {
-                Object.assign(this.currentHandleNode, row);
-
-                this.perishVisible = true;
-            },
-            handlePardon(row) {
-                Object.assign(this.currentHandleNode, row);
-
-                this.pardonVisible = true;
             },
             handleEdit(row) {
                 Object.assign(this.currentHandleNode, row);
@@ -400,52 +356,6 @@
                     else
                     {
                         this.$message.success('删除成功');
-
-                        this.getAllData();
-                    }
-                }).catch(err => {
-                    this.$message.error(err);
-                });
-            },
-            savePerish()
-            {
-                this.perishVisible = false;
-
-                this.$axios.post('/perishNode', {
-                    url: `${this.currentNode.host}:${this.currentNode.port}`,
-                    data: this.currentHandleNode.address,
-                    privateKey: this.privateKey
-                }).then(res => {
-                    if(res.code !== 0)
-                    {
-                        this.$message.error(res.msg);
-                    }
-                    else
-                    {
-                        this.$message.success('毁灭提交成功');
-
-                        this.getAllData();
-                    }
-                }).catch(err => {
-                    this.$message.error(err);
-                });
-            },
-            savePardon()
-            {
-                this.delVisible = false;
-
-                this.$axios.post('/pardonNodes', {
-                    url: `${this.currentNode.host}:${this.currentNode.port}`,
-                    data: [this.currentHandleNode.address],
-                    privateKey: this.privateKey
-                }).then(res => {
-                    if(res.code !== 0)
-                    {
-                        this.$message.error(res.msg);
-                    }
-                    else
-                    {
-                        this.$message.success('原谅节点成功');
 
                         this.getAllData();
                     }

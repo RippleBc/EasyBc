@@ -47,24 +47,17 @@ log4js.configure({
             filename: "consensus_full_server/logs/stageConsensus_log/",
             pattern: "stageConsensus-yyyy-MM-dd hh:mm.log",
             alwaysIncludePattern: true
-        },
-        perishNode: {
-            type: "dateFile",
-            filename: "consensus_full_server/logs/perishNode_log/",
-            pattern: "perishNode-yyyy-MM-dd hh:mm.log",
-            alwaysIncludePattern: true
         }
     },
     categories: {
-        default: { appenders: ["stdout", "consensus"], level: "info" },
+        default: { appenders: ["stdout", "consensus"], level: "error" },
         command: { appenders: ["stdout", "command"], level: "info" },
-        consensus: { appenders: ["stdout", "consensus"], level: "info" },
+        consensus: { appenders: ["stdout", "consensus"], level: "error" },
         p2p: { appenders: ["stdout", "p2p"], level: "info" },
         net: { appenders: ["stdout", "net"], level: "info" },
-        mysql: { appenders: ["stdout", "mysql"], level: "info" },
-        update: { appenders: ["stdout", "update"], level: "info" },
-        stageConsensus: { appenders: ["stdout", "stageConsensus"], level: "info" },
-        perishNode: { appenders: ["stdout", "perishNode"], level: "info" }
+        mysql: { appenders: ["stdout", "mysql"], level: "error" },
+        update: { appenders: ["stdout", "update"], level: "error" },
+        stageConsensus: { appenders: ["stdout", "stageConsensus"], level: "error" }
     }
 })
  

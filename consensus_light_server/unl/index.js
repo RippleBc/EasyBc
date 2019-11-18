@@ -68,9 +68,7 @@ app.post("/unl", (req, res) => {
 app.use((req, res, next) => {
     if (req.url.includes("addNodes")
         || req.url.includes("updateNodes")
-        || req.url.includes("deleteNodes")
-        || req.url.includes("perishNode")
-        || req.url.includes("pardonNodes")) {
+        || req.url.includes("deleteNodes")) {
 
         if (!req.body.data) {
             return res.send({
@@ -114,14 +112,6 @@ app.use((req, res, next) => {
         if (req.url.includes("addNodes") || req.url.includes("updateNodes") || req.url.includes("deleteNodes"))
         {
             options.body.nodes = req.body.data
-        }
-        else if(req.url.includes("perishNode"))
-        {
-            options.body.address = req.body.data
-        }
-        else if(req.url.includes("pardonNodes"))
-        {
-            options.body.addresses = req.body.data
         }
 
         rp(options).then(response => {

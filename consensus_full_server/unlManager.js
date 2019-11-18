@@ -84,44 +84,6 @@ class UnlManager
     }
 
     /**
-     * @param {Array/String} addresses
-     */
-    async setNodesMalicious(addresses)
-    {
-        assert(Array.isArray(addresses), `UnlManager setNodesMalicious, addresses should be an Array, now is ${typeof addresses}`)
-
-        const nodes = addresses.map(address => {
-            return {
-                address: address,
-                state: 2
-            }
-        });
-
-        await this.updateNodes({
-            nodes: nodes
-        });
-    }
-
-    /**
-     * @param {Array/String} addresses
-     */
-    async setNodesRighteous(addresses)
-    {
-        assert(Array.isArray(addresses), `UnlManager setNodesRighteous, addresses should be an Array, now is ${typeof addresses}`)
-
-        const nodes = addresses.map(address => {
-            return {
-                address: address,
-                state: 1
-            }
-        });
-
-        await this.updateNodes({
-            nodes: nodes
-        });
-    }
-
-    /**
 	 * @param {Array} nodes 
 	 */
     async addNodes(nodes)

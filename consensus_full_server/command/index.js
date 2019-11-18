@@ -21,50 +21,6 @@ const server = app.listen(port, host, function () {
 
 log4js.useLogger(app, logger);
 
-app.post("/perishNode", (req, res) => {
-  if (!req.body.address) {
-    return res.send({
-      code: PARAM_ERR,
-      msg: "param error, need address"
-    });
-  }
-
-  if(processor.consensus.perishNode(Buffer.from(req.body.address, 'hex')))
-  {
-    res.json({
-      code: SUCCESS
-    })
-  }
-  else
-  {
-    res.json({
-      code: PARAM_ERR,
-      msg: "perish is processing"
-    })
-  }
-});
-
-app.post("/pardonNodes", (req, res) => {
-  if (!req.body.addresses) {
-    return res.send({
-      code: PARAM_ERR,
-      msg: "param error, need address"
-    });
-  }
-
-  processor.consensus.pardonNodes(req.body.addresses).then(() => {
-    res.json({
-      code: SUCCESS
-    })
-  }).catch(e => {
-    res.json({
-      code: OTH_ERR,
-      msg: e.toString()
-    })
-  })
-});
-
-
 app.post("/addNodes", (req, res) => {
   if(!req.body.nodes)
   {

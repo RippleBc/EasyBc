@@ -150,27 +150,6 @@ class Mysql
   }
 
   /**
-   * @param {String} hash
-   */
-  async checkIfPerishRepeated(hash)
-  {
-    assert(typeof hash === 'string', `Mysql checkIfPerishRepeated, hash should be a String, now is ${typeof hash}`);
-
-    const [, created] = await this.PerishHash.findOrCreate({
-      where: {
-        hash: hash
-      }
-    });
-    
-    if(created)
-    {
-      return false;
-    }
-    
-    return true;
-  }
-
-  /**
    * @param {Buffer} chainCode 
    * @param {Buffer} address 
    * @return {Array} [sideChainConstract, created]

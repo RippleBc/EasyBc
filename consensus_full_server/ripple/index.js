@@ -55,7 +55,7 @@ const logger = process[Symbol.for("loggerConsensus")];
 const mysql = process[Symbol.for("mysql")];
 const unlManager = process[Symbol.for("unlManager")];
 
-const WATER_LINE_STEP_LENGTH = 20;
+const WATER_LINE_STEP_LENGTH = 1111 + 926;
 const SYSTEM_LOOP_DELAY_TIME = 20;
 
 const SEQUENCE_MODE_MATCH = 1;
@@ -711,32 +711,6 @@ class Ripple
 				process.exit(1);
 			});
 		});
-	}
-
-	/**
-	 * @param {Buffer} address
-	 * @return {Boolean}
-	 */
-	perishNode(address) {
-		if (this.perish.state !== STAGE_STATE_EMPTY) {
-			return false;
-		}
-		else {
-			this.perish.startPerishNodeSpreadMode({
-				address: address
-			});
-
-			return true;
-		}
-	}
-
-	/**
-	 * @param {Array/String} address
-	 */
-	async pardonNodes(addresses) {
-		assert(Array.isArray(addresses), `Ripple pardonNodes, addresses should be an Array, now is ${typeof addresses}`)
-
-		await unlManager.setNodesRighteous(addresses)
 	}
 
 	/**
