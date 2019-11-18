@@ -40,6 +40,7 @@ module.exports = async (urls, range, total) => {
 
   const traverseAddressNum = keyPiar.length > total ? total : keyPiar.length;
 
+  // send token from super account to other accounts
   const mainChild = fork(path.join(__dirname, "./startProfile"));
   mainChildArgs = {
     urls: urls,
@@ -72,6 +73,7 @@ module.exports = async (urls, range, total) => {
   });
   console.info('process main begin')
 
+  // random send token
   for (let i = 0; i < traverseAddressNum; i += range) {
     const child = fork(path.join(__dirname, "./startProfile"));
     const childArgs = {

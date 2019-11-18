@@ -5,7 +5,7 @@ const profile = require("./profile");
 
 // node toolkit/index.js profile -u http://123.157.68.243:10011,http://123.157.68.243:10051,http://115.233.227.46:35003,http://115.233.227.46:35008 -r 50 -t 200
 // node toolkit/index.js profile -u http://localhost:8081 -r 50 -t 200
-// node toolkit/index.js profile -u http://localhost:8081,http://localhost:8181,http://localhost:8281 -r 50 -t 200
+// node toolkit/index.js profile -u http://localhost:8081,http://localhost:8181,http://localhost:8281,http://localhost:8381,http://localhost:8481 -r 50 -t 200
 // node toolkit/index.js profile -u http://123.157.68.243:10011,http://123.157.68.243:10051,http://115.233.227.46:35003  -r 50 -t 200
 program
   .version("0.1.0")

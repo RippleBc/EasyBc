@@ -184,11 +184,14 @@ class Update
 			const sortedBlocks = _.sortBy([...blocks], ele => -ele[1]);
 			if(sortedBlocks[0])
 			{
-				const [majorityBlock, count] = sortedBlocks[0];
+				const [majorityBlockDataRaw, count] = sortedBlocks[0];
 				if (unlManager.unlFullSize < FULL_BLOCK_CHAIN_UNL_SCALE_LIMIT || count >= parseInt(unlManager.unlFullSize / 3 + 1))
 				{
+
+					const majorityBlock = new Block(Buffer.from(majorityBlockDataRaw, 'hex'));
+
 					const result = await this.blockChain.runBlockChain({
-						block: new Block(Buffer.from(majorityBlock, 'hex'))
+						block: majorityBlock
 					});
 					if(result.state !== 0)
 					{
