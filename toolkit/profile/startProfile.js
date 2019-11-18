@@ -7,57 +7,38 @@ const { getAccountInfo,
   generateSpecifiedTx,
   generateRandomTx,
   getRandomIndex } = require("./utils");
-const { randomBytes } = require("crypto");
 
 const BN = utils.BN;
 
 var g_accounts = [];
 
-var g_urls;
 var g_selfKeyPairs;
 var g_targetKeyPairs;
 var g_value;
 
-var g_lastInitAccountTime = 0;
-var g_initAccountsInterval = 0;
+/**
+ * @param {String} url 
+ * @param {Array} keyPairs 
+ */
 async function initAccounts(url, keyPairs)
 {
   assert(typeof url === 'string', `initAccounts, url should be a String, now is ${typeof url}`);
   assert(Array.isArray(keyPairs), `initAccounts, keyPairs should be an Array, now is ${typeof keyPairs}`);
 
-  const now = Date.now();
-  const canSendTxAccountNum = g_accounts.filter(el => {
+  // check if there is enough accounts can send txs
+  if (g_accounts.filter(el => {
     return new BN(el.balance).gt(new BN(g_value));
-  }).length;
-
-  // 
-  if (now < g_lastInitAccountTime + g_initAccountsInterval 
-    && canSendTxAccountNum > Math.round(g_accounts.length / 2)) {
+  }).length > Math.round(g_accounts.length / 2)) {
     return;
   }
 
-  //
-  if (g_initAccountsInterval < 10000) {
-    g_initAccountsInterval += 10;
-  }
-  g_lastInitAccountTime = now;
-
   // update accounts
   const getAccountInfoPromises = [];
-  for (let [index, { address }] of keyPairs.entries()) {
-    if (g_accounts[index] && new BN(g_accounts[index].balance).gt(new BN(g_value).muln(4)))
-    {
-      getAccountInfoPromises.push(new Promise(resolve => {
-        resolve(g_accounts[index]);
-      }))
-    }
-    else
-    {
-      getAccountInfoPromises.push(getAccountInfo(url, address));
-    }
+  for (let { address } of keyPairs) {
+    getAccountInfoPromises.push(getAccountInfo(url, address));
   }
 
-  g_accounts = await Promise.all(getAccountInfoPromises)
+  g_accounts = await Promise.all(getAccountInfoPromises);
 }
 
 /**
@@ -124,7 +105,7 @@ async function runProfile(url)
     await new Promise(resolve => {
       setTimeout(() => {
         resolve();
-      }, 2000)
+      }, 2000);
     });
 
     i++;
@@ -138,42 +119,46 @@ async function runProfile(url)
 }
 
 /**
- * @param {Array} urls
+ * @param {String} url
  * @param {Array} selfKeyPairs
  * @param {Array} targetKeyPairs
  * @param {Number} value
  */
-process.on('message', ({ urls, selfKeyPairs, targetKeyPairs, value }) => {
-  assert(Array.isArray(urls), `startProfile, urls should be an Array, now is ${typeof urls}`);
+process.on('message', ({ url, selfKeyPairs, targetKeyPairs, value }) => {
+  assert(typeof url === 'string', `startProfile, url should be a String, now is ${typeof url}`);
   assert(Array.isArray(selfKeyPairs), `startProfile, selfKeyPairs should be an Array, now is ${typeof selfKeyPairs}`);
   assert(Array.isArray(targetKeyPairs), `startProfile, targetKeyPairs should be an Array, now is ${typeof targetKeyPairs}`);
   assert(typeof value === 'string', `startProfile, value should be an String, now is ${typeof value}`)
   
-  g_urls = urls;
   g_selfKeyPairs = selfKeyPairs;
   g_targetKeyPairs = targetKeyPairs;
   g_value = Buffer.from(value, 'hex');
 
-  
+  let beginTime;
   (async () => {
-    while (true) {
-      // init url
-      const url = g_urls[getRandomIndex(g_urls.length)]
-
+    while (true)  {
+      // update account cache
       await initAccounts(url, g_selfKeyPairs);
 
+      //
+      beginTime = parseInt(Date.now() / 1000);
+
+      // send txs and valid
       const processedTxNum = await runProfile(url);
 
+      //
       if (processedTxNum > 0)
       {
         process.send({
-          processedTxNum: processedTxNum
+          processedTxNum: processedTxNum,
+          consumedTime: parseInt(Date.now() / 1000) - beginTime
         });
       }
     }
   })().catch(e => {
-    process.send({ 
-      err: e.stack ? e.stack : e
+    process.send({
+      err: e.stack ? e.stack : e,
+      consumedTime: parseInt(Date.now() / 1000) - beginTime
     })
 
     process.exit(1);
