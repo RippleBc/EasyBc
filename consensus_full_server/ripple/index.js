@@ -54,7 +54,7 @@ const logger = process[Symbol.for("loggerConsensus")];
 const mysql = process[Symbol.for("mysql")];
 const unlManager = process[Symbol.for("unlManager")];
 
-const WATER_LINE_STEP_LENGTH = 5000;
+const WATER_LINE_STEP_LENGTH = 200;
 const SYSTEM_LOOP_DELAY_TIME = 20;
 
 const SEQUENCE_MODE_MATCH = 1;
