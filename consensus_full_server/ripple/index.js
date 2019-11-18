@@ -583,11 +583,14 @@ class Ripple
 	}
 
 	/**
+	 * @param {Buffer} view
 	 * @return {Buffer} address
 	 */
-	get nextViewLeaderAddress()
+	nextViewLeaderAddress(view = this.view)
 	{
-		let nextViewLeaderIndex = new BN(this.view).addn(1).modn(unlManager.unlFullSize);
+		assert(Buffer.isBuffer(view), `Ripple nextViewLeaderAddress, view should be a Buffer, now is ${typeof view}`);
+
+		let nextViewLeaderIndex = new BN(view).addn(1).modn(unlManager.unlFullSize);
 		for (let node of unlManager.unlIncludeSelf)
 		{
 			if (node.index === nextViewLeaderIndex)

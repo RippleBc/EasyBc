@@ -44,7 +44,7 @@ class ViewChangeForTimeout {
     viewChange.sign(privateKey);
 
     //
-    if (this.ripple.nextViewLeaderAddress.toString('hex') === process[Symbol.for("address")])
+    if (this.ripple.nextViewLeaderAddress(view).toString('hex') === process[Symbol.for("address")])
     {
       if (this.ripple.state === RIPPLE_STATE_NEW_VIEW) {
         // newView has begun, 
@@ -58,7 +58,7 @@ class ViewChangeForTimeout {
     else
     {
       // send to new leader
-      p2p.send(this.ripple.nextViewLeaderAddress, PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT, viewChange.serialize());
+      p2p.send(this.ripple.nextViewLeaderAddress(view), PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT, viewChange.serialize());
     }
   }
 
