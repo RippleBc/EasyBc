@@ -4,7 +4,6 @@ const assert = require("assert");
 const rawTransactionModelConfig = require('../../depends/mysql_model/rawTransaction');
 const timeConsumeModelConfig = require('../../depends/mysql_model/timeConsume');
 const abnormalNodeModelConfig = require('../../depends/mysql_model/abnormalNode');
-const perishHashModelConfig = require('../../depends/mysql_model/perishHash');
 const sideChainConstractModelConfig = require('../../depends/mysql_model/sideChainConstract');
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
@@ -39,7 +38,6 @@ class Mysql
     this.RawTransaction = this.sequelize.define(...rawTransactionModelConfig);
     this.TimeConsume = this.sequelize.define(...timeConsumeModelConfig);
     this.AbnormalNode = this.sequelize.define(...abnormalNodeModelConfig);
-    this.PerishHash = this.sequelize.define(...perishHashModelConfig);
     this.SideChainConstract = this.sequelize.define(...sideChainConstractModelConfig);
 
     await this.sequelize.authenticate();
