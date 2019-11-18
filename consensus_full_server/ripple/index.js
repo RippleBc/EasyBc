@@ -41,7 +41,7 @@ const { STAGE_STATE_EMPTY,
 	PROTOCOL_CMD_NEW_VIEW_RES,
 	PROTOCOL_CMD_PROCESS_STATE_REQ,
 	PROTOCOL_CMD_PROCESS_STATE_RES } = require("./constants");
-const { PROCESS_BLOCK_SUCCESS, PROCESS_BLOCK_PARENT_BLOCK_NOT_EXIST } = require("../constants");
+const { PROCESS_BLOCK_SUCCESS, PROCESS_BLOCK_PARENT_BLOCK_NOT_EXIST, PROCESS_BLOCK_NO_TRANSACTIONS } = require("../constants");
 
 const assert = require("assert");
 const Block = require("../../depends/block");
@@ -468,6 +468,15 @@ class Ripple
 				this.hash = consensusBlock.hash();
 				this.number = consensusBlock.header.number;
 
+				//
+				await this.deleteTransactions();
+
+				// fetch new txs
+				({ transactions: this.localTransactions, deleteTransactions: this.deleteTransactions } = await mysql.getRawTransactions(MAX_PROCESS_TRANSACTIONS_SIZE));
+			}
+
+			if (result === PROCESS_BLOCK_NO_TRANSACTIONS)
+			{
 				//
 				await this.deleteTransactions();
 
