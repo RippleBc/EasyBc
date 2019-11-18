@@ -13,6 +13,7 @@ const { STAGE_STATE_EMPTY,
 	RIPPLE_STATE_EMPTY, 
 	MAX_PROCESS_TRANSACTIONS_SIZE,
 	RIPPLE_LEADER_EXPIRATION,
+	RIPPLE_NEW_VIEW_FOR_INVALID_SEQUENCE_EXPIRATION,
 
 	STAGE_AMALGAMATE, 
 	STAGE_PRE_PREPARE, 
@@ -97,6 +98,9 @@ class Ripple
 
 		//
 		this.update = new Update();
+
+		//
+		this.newViewForInvalidSequenceTimes = 0;
 	}
 
 	get highWaterLine()
@@ -401,6 +405,9 @@ class Ripple
 		this.clearLeaderTimer();
 
 		//
+		this.clearNewViewTimerForInvalidSequence();
+
+		//
 		this.state = RIPPLE_STATE_CONSENSUS;
 
 		//
@@ -491,6 +498,51 @@ class Ripple
 
 			process.exit(1);
 		});
+	}
+
+	startNewViewForInvalidSequenceTimer()
+	{
+		this.newViewForInvalidSequenceTimer = setTimeout(() => {
+			//
+			if (this.state === RIPPLE_STATE_NEW_VIEW) {
+				logger.info("Ripple startNewViewForInvalidSequenceTimer, current state can not be RIPPLE_STATE_NEW_VIEW");
+
+				return;
+			}
+
+			if (this.newViewForInvalidSequenceTimes >= unlManager.unlFullSize)
+			{
+				logger.info("Ripple startNewViewForInvalidSequenceTimer, try time threshould is reach");
+
+				this.syncProcessState();
+
+				return;
+			}
+
+			/**************** new view failed, try to enter next view ****************/
+			
+			// update view
+			this.view = new BN(this.view).addn(1).toBuffer();
+
+			// do not update sequence, do this can differ normal and abnormal newViewForInvalidSequence
+			
+			// try to change view
+			this.viewChangeForTimeout.run();
+
+			// wait new leader is on position
+			// if failed, try to sync process state
+			this.startNewViewForInvalidSequenceTimer();
+		}, RIPPLE_NEW_VIEW_FOR_INVALID_SEQUENCE_EXPIRATION);
+	}
+
+	clearNewViewTimerForInvalidSequence()
+	{
+		if (this.newViewForInvalidSequenceTimer) {
+			clearTimeout(this.newViewForInvalidSequenceTimer);
+		}
+
+		this.newViewForInvalidSequenceTimer = undefined;
+		this.newViewForInvalidSequenceTimes = 0;
 	}
 
 	startLeaderTimer()

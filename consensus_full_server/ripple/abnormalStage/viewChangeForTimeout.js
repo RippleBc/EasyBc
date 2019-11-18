@@ -63,7 +63,7 @@ class ViewChangeForTimeout {
 
     // update sequence
     this.ripple.sequence = this.ripple.lowWaterLine.toBuffer();
-    
+
     //
     this.ripple.newView.run();
   }

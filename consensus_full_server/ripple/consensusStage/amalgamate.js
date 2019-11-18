@@ -55,8 +55,7 @@ class Amalgamate extends LeaderStage
 			this.ripple.viewChangeForTimeout.run();
 
 			// wait new leader is on position
-			// if failed, try to sync process state
-			this.startLeaderTimer();
+			this.startNewViewForInvalidSequenceTimer();
 
 			return;
 		}
