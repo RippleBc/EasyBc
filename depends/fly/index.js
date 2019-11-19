@@ -16,6 +16,7 @@ exports.createClient = async function(opts)
 
 	const dispatcher = opts.dispatcher;
 	const privateKey = opts.privateKey;
+	const auth = opts.auth || true;
 
 	assert(typeof dispatcher === "function", `fly createClient, dispatcher should be a function, now is ${typeof dispatcher}`);
 	assert(Buffer.isBuffer(privateKey), `fly createClient, privateKey should be a Buffer, now is ${typeof privateKey}`);
@@ -55,42 +56,39 @@ exports.createClient = async function(opts)
 	})();
 	
 	logger.info(`fly createClient, create an connection to host: ${client.remoteAddress}, port: ${client.remotePort}`);
+	
+	if (auth) {
+		try {
+			await connection.authorize();
+		}
+		catch (errCode) {
+			if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT) {
+				logger.error(`fly createClient, authorize failed because of timeout, host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
 
-	try
-	{
-		await connection.authorize();
+				connection.close();
+			}
+			else if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_OTHER_INVALID_SIGNATURE) {
+				logger.error(`fly createClient, authorize failed because of other invalid signature, me do not trust host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
+
+				connection.close();
+			}
+			else if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_SELF_INVALID_SIGNATURE) {
+				logger.error(`fly createClient, authorize failed because of invalid signature, host: ${socket.remoteAddress}, port: ${socket.remotePort} do not trust me`)
+
+				connection.close();
+			}
+			else {
+				logger.fatal(`fly createClient, authorize throw unexpected err, host: ${socket.remoteAddress}, port: ${socket.remotePort}, ${process[Symbol.for("getStackInfo")](errCode)}`);
+
+				connection.close();
+			}
+
+			return;
+		}
+
+		logger.trace(`fly createClient, authorize successed, host: ${client.remoteAddress}, port: ${client.remotePort}`);
 	}
-	catch(errCode)
-	{
-		if(errCode === AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT)
-		{
-			logger.error(`fly createClient, authorize failed because of timeout, host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
-
-			connection.close();
-		}
-		else if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_OTHER_INVALID_SIGNATURE)
-		{
-			logger.error(`fly createClient, authorize failed because of other invalid signature, me do not trust host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
-
-			connection.close();
-		}
-		else if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_SELF_INVALID_SIGNATURE) {
-			logger.error(`fly createClient, authorize failed because of invalid signature, host: ${socket.remoteAddress}, port: ${socket.remotePort} do not trust me`)
-
-			connection.close();
-		}
-		else
-		{
-			logger.fatal(`fly createClient, authorize throw unexpected err, host: ${socket.remoteAddress}, port: ${socket.remotePort}, ${process[Symbol.for("getStackInfo")](errCode)}`);
-
-			connection.close();
-		}
-
-		return;
-	}
-
-	logger.trace(`fly createClient, authorize successed, host: ${client.remoteAddress}, port: ${client.remotePort}`);
-
+	
 	try {
 		exports.connectionsManager.push(connection);
 	}
@@ -111,6 +109,7 @@ exports.createServer = function(opts)
 	
 	const dispatcher = opts.dispatcher;
 	const privateKey = opts.privateKey;
+	const auth = opts.auth || true;
 
 	assert(typeof dispatcher === "function", `fly createServer, dispatcher should be a function, now is ${typeof dispatcher}`);
 	assert(Buffer.isBuffer(privateKey), `fly createServer, privateKey should be a Buffer, now is ${typeof privateKey}`);
@@ -134,43 +133,42 @@ exports.createServer = function(opts)
 
 		logger.info(`fly createServer, receive an connection, host: ${socket.remoteAddress}, port: ${socket.remotePort}`);
 
-		connection.authorize().then(() => {
-			logger.info(`fly createServer, authorize successed, host: ${socket.remoteAddress}, port: ${socket.remotePort}`);
-			
-			try
-			{
-				exports.connectionsManager.push(connection);
-			}
-			catch(e)
-			{
-				logger.fatal(`fly createServer, connectionsManager.push throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+		if(auth)
+		{
+			connection.authorize().then(() => {
+				logger.info(`fly createServer, authorize successed, host: ${socket.remoteAddress}, port: ${socket.remotePort}`);
 
-				process.exit(1)
-			}
-		}).catch(errCode => {
-			if(errCode === AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT)
-			{
-				logger.error(`fly createServer, authorize failed because of timeout, host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
+				try {
+					exports.connectionsManager.push(connection);
+				}
+				catch (e) {
+					logger.fatal(`fly createServer, connectionsManager.push throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 
-				connection.close();
-			}
-			else if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_OTHER_INVALID_SIGNATURE) {
-				logger.error(`fly createServer, authorize failed because of other invalid signature, me do not trust host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
+					process.exit(1)
+				}
+			}).catch(errCode => {
+				if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT) {
+					logger.error(`fly createServer, authorize failed because of timeout, host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
 
-				connection.close();
-			}
-			else if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_SELF_INVALID_SIGNATURE) {
-				logger.error(`fly createServer, authorize failed because of invalid signature, host: ${socket.remoteAddress}, port: ${socket.remotePort} do not trust me`)
+					connection.close();
+				}
+				else if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_OTHER_INVALID_SIGNATURE) {
+					logger.error(`fly createServer, authorize failed because of other invalid signature, me do not trust host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
 
-				connection.close();
-			}
-			else
-			{
-				logger.fatal(`fly createServer, authorize throw unexpected err, host: ${socket.remoteAddress}, port: ${socket.remotePort}, ${process[Symbol.for("getStackInfo")](errCode)}`);
+					connection.close();
+				}
+				else if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_SELF_INVALID_SIGNATURE) {
+					logger.error(`fly createServer, authorize failed because of invalid signature, host: ${socket.remoteAddress}, port: ${socket.remotePort} do not trust me`)
 
-				connection.close();
-			}
-		});
+					connection.close();
+				}
+				else {
+					logger.fatal(`fly createServer, authorize throw unexpected err, host: ${socket.remoteAddress}, port: ${socket.remotePort}, ${process[Symbol.for("getStackInfo")](errCode)}`);
+
+					connection.close();
+				}
+			});
+		}
 	});
 
 	server.on("close", () => {

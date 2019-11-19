@@ -31,11 +31,11 @@ class Connection extends AsyncEventEmitter
 	{
 		super();
 
-		assert(opts.socket instanceof Socket, `Connection	constructor, opts.socket should be a Socket Object, now is ${typeof opts.socket}`);
+		assert(opts.socket instanceof Socket, `Connection constructor, opts.socket should be a Socket Object, now is ${typeof opts.socket}`);
 		assert(typeof opts.dispatcher	=== "function", `Connection	constructor, opts.dispatcher should be a Function, now is ${typeof opts.dispatcher}`);
-		assert(typeof opts.logger	=== "object", `Connection	constructor, opts.logger should be an Object, now is ${typeof opts.logger}`);
-		assert(Buffer.isBuffer(opts.privateKey), `Connection	constructor, opts.privateKey should be an Object, now is ${typeof opts.privateKey}`)
-		
+		assert(typeof opts.logger	=== "object", `Connection constructor, opts.logger should be an Object, now is ${typeof opts.logger}`);
+		assert(Buffer.isBuffer(opts.privateKey), `Connection constructor, opts.privateKey should be an Object, now is ${typeof opts.privateKey}`)
+
 		//
 		id ++;
 		if (id > MAX_CONNECTION_ID)

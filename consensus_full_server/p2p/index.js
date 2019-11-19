@@ -70,9 +70,13 @@ class P2p
 					port: node.p2pPort,
 					dispatcher: this.dispatcher,
 					logger: loggerNet,
-					address: Buffer.from(node.address, "hex"),
 					privatekey: process[Symbol.for("privateKey")]
 				});
+
+				if (connection.address.toString('hex') !== node.address)
+				{
+					connection.close();
+				}
 			}
 			catch(e)
 			{
@@ -176,11 +180,18 @@ class P2p
 						port: node.p2pPort,
 						dispatcher: this.dispatcher,
 						logger: loggerNet,
-						address: Buffer.from(node.address, "hex"),
 						privatekey: process[Symbol.for("privateKey")]
 					});
 
-					loggerP2p.info(`P2p reconnectAll, connect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort}, successed`);
+					if (connection.address.toString('hex') !== node.address)
+					{
+						connection.close();
+					}
+					else
+					{
+						loggerP2p.info(`P2p reconnectAll, connect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort}, successed`);
+				
+					}
 				}
 				catch(e)
 				{
