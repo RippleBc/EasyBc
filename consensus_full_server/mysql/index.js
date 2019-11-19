@@ -2,7 +2,6 @@ const mysqlConfig = require("../config.json").mysql;
 const utils = require("../../depends/utils");
 const assert = require("assert");
 const rawTransactionModelConfig = require('../../depends/mysql_model/rawTransaction');
-const timeConsumeModelConfig = require('../../depends/mysql_model/timeConsume');
 const abnormalNodeModelConfig = require('../../depends/mysql_model/abnormalNode');
 const sideChainConstractModelConfig = require('../../depends/mysql_model/sideChainConstract');
 const Sequelize = require('sequelize');
@@ -36,7 +35,6 @@ class Mysql
   async init()
   {
     this.RawTransaction = this.sequelize.define(...rawTransactionModelConfig);
-    this.TimeConsume = this.sequelize.define(...timeConsumeModelConfig);
     this.AbnormalNode = this.sequelize.define(...abnormalNodeModelConfig);
     this.SideChainConstract = this.sequelize.define(...sideChainConstractModelConfig);
 
@@ -97,22 +95,6 @@ class Mysql
         ifDeletingRawTransactions = false;
       }
     };
-  }
-  
-  /**
-   * @param {Number} stage
-   * @param {Number} timeConsume
-   */
-  async saveDataExchangeTimeConsume(stage, timeConsume)
-  {
-    assert(typeof stage === 'number', `Mysql saveDataExchangeTimeConsume, stage should be a Number, now is ${typeof stage}`);
-    assert(typeof timeConsume === 'number', `Mysql saveDataExchangeTimeConsume, timeConsume should be a Number, now is ${typeof timeConsume}`);
-
-    await this.TimeConsume.create({ 
-      stage: stage, 
-      type: 1,
-      data: timeConsume 
-    });
   }
 
   /**

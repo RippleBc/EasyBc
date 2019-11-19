@@ -29,34 +29,7 @@ describe("processor state check", function() {
     }).catch(e => {
         done(e.toString());
     });
-  })
-
-  it("check timeConsume", done => {
-  	const options = {
-        method: "POST",
-        uri: `${TEST_URL}/timeConsume`,
-        body: {
-          offset: 0,
-          limit: 10,
-          beginTime: 0,
-          endTime: Date.now()
-        },
-        json: true // Automatically stringifies the body to JSON
-    };
-    
-    rp(options).then(response => {
-        if(response.code !== SUCCESS)
-        {
-        	return done(response.msg)
-        }
-
-        assert.equal(response.data.length, 10)
-
-        done();
-    }).catch(e => {
-        done(e.toString());
-    });
-  })
+  });
 
   it("check abnormalNodes", done => {
   	const options = {

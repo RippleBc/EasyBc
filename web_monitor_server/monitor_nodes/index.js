@@ -225,7 +225,6 @@ app.post('/deleteMonitorNode', (req, res) => {
 
 app.use((req, res, next) => {
   if (req.url.includes("logs")
-    || req.url.includes("timeConsume")
     || req.url.includes("abnormalNodes"))
   { 
     if (!req.body.url) {

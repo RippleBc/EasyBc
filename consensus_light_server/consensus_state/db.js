@@ -54,53 +54,6 @@ const getLogs = async function({ offset, limit, type, title, beginTime, endTime 
  * @param {Number} offset
  * @param {Number} limit
  * @param {String} type
- * @param {String} stage
- * @param {Number} beginTime
- * @param {Number} endTime
- */
-const getTimeConsume = async function({ offset, limit, type, stage, beginTime, endTime })
-{
-  assert(typeof offset === 'number', `ConsensusState getTimeConsume, offset should be an Number, now is ${typeof offset}`);
-  assert(typeof limit === 'number', `ConsensusState getTimeConsume, limit should be an Number, now is ${typeof limit}`);
-
-  if (type !== undefined) {
-    assert(typeof type === 'number', `ConsensusState getTimeConsume, type should be an Number, now is ${typeof type}`);
-  }
-  if (stage) {
-    assert(typeof stage === 'number', `ConsensusState getTimeConsume, stage should be an Number, now is ${typeof stage}`);
-  }
-  if (beginTime !== undefined) {
-    assert(typeof beginTime === 'number', `ConsensusState getTimeConsume, beginTime should be an Number, now is ${typeof beginTime}`);
-  }
-  if (endTime !== undefined) {
-    assert(typeof endTime === 'number', `ConsensusState getTimeConsume, endTime should be an Number, now is ${typeof endTime}`);
-  }
-
-  const now = new Date()
-  const where = {
-    createdAt: {
-      [Op.gt]: beginTime !== undefined ? new Date(beginTime) : new Date(now - 24 * 60 * 60 * 1000),
-      [Op.lt]: endTime !== undefined ? new Date(endTime) : now,
-    }
-  };
-  if (type) {
-    where.type = type;
-  }
-  if (stage) {
-    where.stage = stage;
-  }
-  return await mysql.TimeConsume.findAll({
-    where: where,
-    limit: limit,
-    offset: offset,
-    order: [['id', 'DESC']]
-  });
-}
-
-/**
- * @param {Number} offset
- * @param {Number} limit
- * @param {String} type
  * @param {Number} beginTime
  * @param {Number} endTime
  */
@@ -140,6 +93,5 @@ const getAbnormalNodes = async function({ offset, limit, type, beginTime, endTim
 
 module.exports = {
   getLogs,
-  getTimeConsume,
   getAbnormalNodes
 }

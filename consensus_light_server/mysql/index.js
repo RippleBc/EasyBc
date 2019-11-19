@@ -2,7 +2,6 @@ const mysqlConfig = require("../config.json").mysql;
 const transactionModelConfig = require('../../depends/mysql_model/transaction');
 const rawTransactionModelConfig = require('../../depends/mysql_model/rawTransaction');
 const logModelConfig = require('../../depends/mysql_model/log');
-const timeConsumeModelConfig = require('../../depends/mysql_model/timeConsume');
 const abnormalNodeModelConfig = require('../../depends/mysql_model/abnormalNode');
 const sideChainModelConfig = require('../../depends/mysql_model/sideChain');
 const receivedSpvModelConfig = require('../../depends/mysql_model/receivedSpv');
@@ -39,7 +38,6 @@ class Mysql
     this.Transaction = this.sequelize.define(...transactionModelConfig);
     this.Log = this.sequelize.define(...logModelConfig);
     this.RawTransaction = this.sequelize.define(...rawTransactionModelConfig);
-    this.TimeConsume = this.sequelize.define(...timeConsumeModelConfig);
     this.AbnormalNode = this.sequelize.define(...abnormalNodeModelConfig);
     this.SideChain = this.sequelize.define(...sideChainModelConfig)
     this.ReceivedSpv = this.sequelize.define(...receivedSpvModelConfig);
