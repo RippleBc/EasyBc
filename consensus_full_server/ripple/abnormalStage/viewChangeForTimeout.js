@@ -115,6 +115,8 @@ class ViewChangeForTimeout {
         address: address,
         reason: CHEAT_REASON_INVALID_SIG
       });
+
+      return;
     }
 
     // check if msg address is correspond with connect address
@@ -125,6 +127,8 @@ class ViewChangeForTimeout {
         address: address,
         reason: CHEAT_REASON_INVALID_ADDRESS
       });
+
+      return;
     }
 
     //

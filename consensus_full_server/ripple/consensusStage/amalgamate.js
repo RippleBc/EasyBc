@@ -166,10 +166,7 @@ class Amalgamate extends LeaderStage
 
 				// check req candidate
 				const reqCandidate = new Candidate(data);
-				if(!reqCandidate.validate())
-				{
-					logger.error(`Amalgamate handleMessage, address: ${address.toString('hex')}, reqCandidate validate failed`)
-
+				if (!this.validateReqData(reqCandidate)) {
 					return;
 				}
 

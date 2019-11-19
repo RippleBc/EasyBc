@@ -127,10 +127,9 @@ class NewView extends LeaderStage {
         {
           const newView = new NewViewData(data);
 
-          //
-          if(!newView.validate())
-          {
-            logger.error(`NewView handleMessage, address: ${address.toString('hex')}, validate failed`)
+          // check req candidate
+          if (!this.validateReqData(newView)) {
+            return;
           }
 
           // check hash

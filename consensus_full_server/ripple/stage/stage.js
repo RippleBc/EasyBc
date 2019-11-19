@@ -38,20 +38,58 @@ class Stage {
     }, this.expiration)
   }
 
+
+  /**
+   * @param {Base} candidate
+   * @param {String} address
+   * @return {Boolean}
+   */
+  validateReqData(candidate, address)
+  {
+    assert(candidate instanceof Base, `${this.name} Stage validateReqData, candidate should be an instance of Base, now is ${typeof candidate}`);
+    assert(typeof address === 'string', `${this.name} Stage validateReqData, address should be a String, now is ${typeof address}`);
+
+    // check sig
+    if (!candidate.validate()) {
+      logger.error(`${this.name} Stage validateReqData, address: ${address}, validate failed`);
+
+      this.cheatedNodes.push({
+        address: address,
+        reason: CHEAT_REASON_INVALID_SIG
+      });
+
+      return false;
+    }
+
+    // check if msg address is correspond with connect address
+    if (address !== candidate.from.toString("hex")) {
+      logger.error(`${this.name} Stage validateReqData, address should be ${address}, now is ${candidate.from.toString("hex")}`);
+
+      this.cheatedNodes.push({
+        address: address,
+        reason: CHEAT_REASON_INVALID_ADDRESS
+      });
+
+      return false;
+    }
+
+    return true;
+  }
+
   /**
 	 * @param {Base} candidate
 	 * @param {String} address
 	 */
   validateAndProcessExchangeData(candidate, address) {
-    assert(candidate instanceof Base, `${this.name} Stage, candidate should be an instance of Base, now is ${typeof candidate}`);
-    assert(typeof address === 'string', `${this.name} Stage, address should be a String, now is ${typeof address}`);
+    assert(candidate instanceof Base, `${this.name} Stage validateAndProcessExchangeData, candidate should be an instance of Base, now is ${typeof candidate}`);
+    assert(typeof address === 'string', `${this.name} Stage validateAndProcessExchangeData, address should be a String, now is ${typeof address}`);
 
     // check if repeated recieve
     if (this.finishedNodes.has(address)) {
-      logger.error(`${name} Stage, repeated receive, address ${address}`);
+      logger.error(`${name} Stage validateAndProcessExchangeData, repeated receive, address ${address}`);
 
       this.cheatedNodes.push({
-        address: toString('hex'),
+        address: address,
         reason: CHEAT_REASON_REPEAT_DATA_EXCHANGE
       });
 
@@ -67,7 +105,7 @@ class Stage {
     
     // check sig
     if (!candidateValidateResult) {
-      logger.error(`${this.name} Stage validate, address: ${address}, validate failed`);
+      logger.error(`${this.name} Stage validateAndProcessExchangeData, address: ${address}, validate failed`);
 
       this.cheatedNodes.push({
         address: address,
@@ -78,7 +116,7 @@ class Stage {
     // check if msg address is correspond with connect address
     if (!addressValidateResult)
     {
-      logger.error(`${this.name} Stage validate, address should be ${address}, now is ${candidate.from.toString("hex")}`);
+      logger.error(`${this.name} Stage validateAndProcessExchangeData, address should be ${address}, now is ${candidate.from.toString("hex")}`);
 
       this.cheatedNodes.push({
         address: address,

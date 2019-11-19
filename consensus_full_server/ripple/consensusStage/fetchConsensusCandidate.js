@@ -4,7 +4,9 @@ const { STAGE_STATE_EMPTY,
   PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ, 
   PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES,
   STAGE_FETCH_CANDIDATE,
-  RIPPLE_STATE_FETCH_CONSENSUS_CANDIDATE_EXPIRATION } = require("../constants");
+  RIPPLE_STATE_FETCH_CONSENSUS_CANDIDATE_EXPIRATION,
+  CHEAT_REASON_INVALID_SIG,
+  CHEAT_REASON_INVALID_ADDRESS } = require("../constants");
 const CandidateDigest = require("../data/candidateDigest");
 const Candidate = require("../data/candidate");
 const utils = require("../../../depends/utils");
@@ -74,13 +76,25 @@ class FetchConsensusCandidate
       {
           const consensusCandidateDigest = new CandidateDigest(data);
 
-          if (!consensusCandidateDigest.validate())
-          {
-            logger.error(`FetchConsensusCandidate handleMessage validate, address: ${address.toString('hex')}, validate failed`);
+          // check sig
+          if (!consensusCandidateDigest.validate()) {
+            logger.error(`FetchConsensusCandidate handleMessage, address: ${address.toString('hex')}, validate failed`);
 
             this.cheatedNodes.push({
               address: address.toString('hex'),
               reason: CHEAT_REASON_INVALID_SIG
+            });
+
+            return;
+          }
+
+          // check if msg address is correspond with connect address
+          if (address.toString('hex') !== consensusCandidateDigest.from.toString("hex")) {
+            logger.error(`FetchConsensusCandidate handleMessage, address should be ${address.toString('hex')}, now is ${consensusCandidateDigest.from.toString("hex")}`);
+
+            this.cheatedNodes.push({
+              address: address,
+              reason: CHEAT_REASON_INVALID_ADDRESS
             });
 
             return;
@@ -108,12 +122,25 @@ class FetchConsensusCandidate
 
           const candidate = new Candidate(data);
 
+          // check sig
           if (!candidate.validate()) {
             logger.error(`FetchConsensusCandidate handleMessage validate, address: ${address.toString('hex')}, validate failed`);
 
             this.cheatedNodes.push({
               address: address.toString('hex'),
               reason: CHEAT_REASON_INVALID_SIG
+            });
+
+            return;
+          }
+
+          // check if msg address is correspond with connect address
+          if (address.toString('hex') !== candidate.from.toString("hex")) {
+            logger.error(`${this.name} Stage validateReqData, address should be ${address.toString('hex')}, now is ${candidate.from.toString("hex")}`);
+
+            this.cheatedNodes.push({
+              address: address,
+              reason: CHEAT_REASON_INVALID_ADDRESS
             });
 
             return;

@@ -141,9 +141,7 @@ class PrePrepare extends LeaderStage {
 
           // check req candidate
           const reqCandidate = new Candidate(data);
-          if (!reqCandidate.validate()) {
-            logger.error(`PrePrepare handleMessage, address: ${address.toString('hex')}, reqCandidate validate failed`)
-
+          if (!this.validateReqData(reqCandidate)) {
             return;
           }
 
