@@ -90,9 +90,6 @@
     "dev_monitor_client": "webpack-dev-server --progress --config ./web_monitor_client/build/webpack.dev.js",
     "build_monitor_client": "webpack --config ./web_monitor_client/build/webpack.prod.js",
     "monitor_server": "pm2 start ./web_monitor_server/index.js --name=monitor",
-    "dev_browser_client": "webpack-dev-server --progress --config ./browser_client/build/webpack.dev.js",
-    "build_browser_client": "webpack --config ./browser_client/build/webpack.prod.js",
-    "browser_server": "pm2 start ./browser_server/index.js --name=browser",
     "test": "mocha depends/test/account.js && mocha depends/test/transaction.js && mocha depends/test/block.js && mocha depends/test/cache.js && mocha depends/test/stateManager.js && mocha depends/test/runBlockChain.js && mocha depends/test/net.js"
   },
   "keywords": [
