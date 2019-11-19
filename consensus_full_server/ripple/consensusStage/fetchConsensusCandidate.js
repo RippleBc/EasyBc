@@ -24,8 +24,6 @@ class FetchConsensusCandidate
     this.ripple = ripple;
 
     this.state = STAGE_STATE_EMPTY;
-
-    this.cheatedNodes = [];
   }
 
   /**
@@ -80,7 +78,7 @@ class FetchConsensusCandidate
           if (!consensusCandidateDigest.validate()) {
             logger.error(`FetchConsensusCandidate handleMessage, address: ${address.toString('hex')}, validate failed`);
 
-            this.cheatedNodes.push({
+            this.ripple.cheatedNodes.push({
               address: address.toString('hex'),
               reason: CHEAT_REASON_INVALID_SIG
             });
@@ -92,7 +90,7 @@ class FetchConsensusCandidate
           if (address.toString('hex') !== consensusCandidateDigest.from.toString("hex")) {
             logger.error(`FetchConsensusCandidate handleMessage, address should be ${address.toString('hex')}, now is ${consensusCandidateDigest.from.toString("hex")}`);
 
-            this.cheatedNodes.push({
+            this.ripple.cheatedNodes.push({
               address: address,
               reason: CHEAT_REASON_INVALID_ADDRESS
             });
@@ -126,7 +124,7 @@ class FetchConsensusCandidate
           if (!candidate.validate()) {
             logger.error(`FetchConsensusCandidate handleMessage validate, address: ${address.toString('hex')}, validate failed`);
 
-            this.cheatedNodes.push({
+            this.ripple.cheatedNodes.push({
               address: address.toString('hex'),
               reason: CHEAT_REASON_INVALID_SIG
             });
@@ -138,7 +136,7 @@ class FetchConsensusCandidate
           if (address.toString('hex') !== candidate.from.toString("hex")) {
             logger.error(`${this.name} Stage validateReqData, address should be ${address.toString('hex')}, now is ${candidate.from.toString("hex")}`);
 
-            this.cheatedNodes.push({
+            this.ripple.cheatedNodes.push({
               address: address,
               reason: CHEAT_REASON_INVALID_ADDRESS
             });
@@ -178,8 +176,6 @@ class FetchConsensusCandidate
   reset()
   {
     this.state = STAGE_STATE_EMPTY;
-
-    this.cheatedNodes = [];
 
     if (this.timer)
     {

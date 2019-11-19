@@ -19,8 +19,6 @@ class ViewChangeForTimeout {
 
     this.threshould = this.ripple.threshould;
 
-    this.cheatedNodes = [];
-
     this.trimedViewChangesByAddress = new Map();
     this.trimedViewChangesByHash = new Map();
 
@@ -111,7 +109,7 @@ class ViewChangeForTimeout {
     if (!viewChange.validate()) {
       logger.error(`ViewChangeForTimeout validateAndProcessExchangeData validate, address: ${address}, validate failed`);
 
-      this.cheatedNodes.push({
+      this.ripple.cheatedNodes.push({
         address: address,
         reason: CHEAT_REASON_INVALID_SIG
       });
@@ -123,7 +121,7 @@ class ViewChangeForTimeout {
     if (address !== viewChange.from.toString("hex")) {
       logger.error(`ViewChangeForTimeout validateAndProcessExchangeData validate, address should be ${address}, now is ${viewChange.from.toString("hex")}`);
 
-      this.cheatedNodes.push({
+      this.ripple.cheatedNodes.push({
         address: address,
         reason: CHEAT_REASON_INVALID_ADDRESS
       });
@@ -193,8 +191,6 @@ class ViewChangeForTimeout {
   }
 
   reset() {
-    this.cheatedNodes = [];
-
     this.trimedViewChangesByAddress.clear();
     this.trimedViewChangesByHash.clear();
 

@@ -22,8 +22,6 @@ class Stage {
 
     this.finishedNodes = new Set();
     this.candidates = [];
-
-    this.cheatedNodes = [];
   }
 
   startTimer() {
@@ -53,7 +51,7 @@ class Stage {
     if (!candidate.validate()) {
       logger.error(`${this.name} Stage validateReqData, address: ${address}, validate failed`);
 
-      this.cheatedNodes.push({
+      this.ripple.cheatedNodes.push({
         address: address,
         reason: CHEAT_REASON_INVALID_SIG
       });
@@ -65,7 +63,7 @@ class Stage {
     if (address !== candidate.from.toString("hex")) {
       logger.error(`${this.name} Stage validateReqData, address should be ${address}, now is ${candidate.from.toString("hex")}`);
 
-      this.cheatedNodes.push({
+      this.ripple.cheatedNodes.push({
         address: address,
         reason: CHEAT_REASON_INVALID_ADDRESS
       });
@@ -88,7 +86,7 @@ class Stage {
     if (this.finishedNodes.has(address)) {
       logger.error(`${name} Stage validateAndProcessExchangeData, repeated receive, address ${address}`);
 
-      this.cheatedNodes.push({
+      this.ripple.cheatedNodes.push({
         address: address,
         reason: CHEAT_REASON_REPEAT_DATA_EXCHANGE
       });
@@ -107,7 +105,7 @@ class Stage {
     if (!candidateValidateResult) {
       logger.error(`${this.name} Stage validateAndProcessExchangeData, address: ${address}, validate failed`);
 
-      this.cheatedNodes.push({
+      this.ripple.cheatedNodes.push({
         address: address,
         reason: CHEAT_REASON_INVALID_SIG
       });
@@ -118,7 +116,7 @@ class Stage {
     {
       logger.error(`${this.name} Stage validateAndProcessExchangeData, address should be ${address}, now is ${candidate.from.toString("hex")}`);
 
-      this.cheatedNodes.push({
+      this.ripple.cheatedNodes.push({
         address: address,
         reason: CHEAT_REASON_INVALID_ADDRESS
       });
@@ -151,8 +149,6 @@ class Stage {
 
     this.finishedNodes.clear();
     this.candidates = [];
-
-    this.cheatedNodes = [];
 
     if (this.timer) {
       clearTimeout(this.timer);

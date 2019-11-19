@@ -61,6 +61,8 @@ const SYSTEM_LOOP_DELAY_TIME = 20;
 const SEQUENCE_MODE_MATCH = 1;
 const SEQUENCE_MODE_LARGER = 2;
 
+const FLUSH_CHEATED_NODES_INTERVAL = 60 * 1000;
+
 class Ripple
 {
 	constructor(processor)
@@ -101,6 +103,9 @@ class Ripple
 
 		//
 		this.newViewForInvalidSequenceTimes = 0;
+
+		//
+		this.cheatedNodes = [];
 	}
 
 	get highWaterLine()
@@ -176,6 +181,17 @@ class Ripple
 
 	async run()
 	{
+		//
+		this.flushCheatedNodesTimer = setTimeout(() => {
+			for (let { address, reason } of this.cheatedNodes) {
+				mysql.saveCheatedNode(address, reason).catch(e => {
+					logger.fatal(`Ripple flush cheated nodes, saveCheatedNode throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+
+					process.exit(1);
+				});
+			}
+		}, FLUSH_CHEATED_NODES_INTERVAL);
+
 		// fetch new txs
 		({ transactions: this.localTransactions, deleteTransactions: this.deleteTransactions } = await mysql.getRawTransactions(MAX_PROCESS_TRANSACTIONS_SIZE));
 
@@ -696,21 +712,6 @@ class Ripple
 		this.msgBuffer.set(cmd, filteredMsgs);
 		
 		return correspondMsg;
-	}
-
-	/**
-	 * @param {Array} cheatedNodes
-	 */
-	handleCheatedNodes(cheatedNodes) {
-		assert(Array.isArray(cheatedNodes), `Ripple handleCheatedNodes, cheatedNodes should be an Buffer, now is ${typeof cheatedNodes}`);
-
-		cheatedNodes.forEach(cheatedNode => {
-			mysql.saveCheatedNode(cheatedNode.address, cheatedNode.reason).catch(e => {
-				logger.fatal(`Ripple handleCheatedNodes, saveCheatedNode throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
-
-				process.exit(1);
-			});
-		});
 	}
 
 	/**
