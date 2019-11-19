@@ -236,14 +236,12 @@ class Ripple
 				continue;
 			}
 
-			/*********************** hanlde new view msgs, lead to view change action **********************/
+			/*********************** hanlde new view msgs, this may be lead to view change action **********************/
 			let msgNewViewReq = this.fetchMsgWithoutSequence({
 				cmd: PROTOCOL_CMD_NEW_VIEW_REQ
 			});
 			if (msgNewViewReq) {
 				this.newView.handleMessage(msgNewViewReq.address, msgNewViewReq.cmd, msgNewViewReq.data);
-
-				continue;
 			}
 
 			/*********************** handle view change for timeout, this may lead to view change action **********************/
