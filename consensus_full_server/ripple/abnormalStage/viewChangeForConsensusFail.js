@@ -74,6 +74,10 @@ class ViewChangeForConsensusFail extends ConsensusStage {
       // update sequence
       this.ripple.sequence = this.ripple.lowWaterLine.toBuffer();
 
+      // reset
+      this.ripple.viewChangeForTimeout.reset();
+      this.ripple.newView.reset();
+      
       //
       this.ripple.runNewConsensusRound();
     }

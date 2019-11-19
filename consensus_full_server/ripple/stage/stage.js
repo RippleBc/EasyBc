@@ -84,7 +84,7 @@ class Stage {
 
     // check if repeated recieve
     if (this.finishedNodes.has(address)) {
-      logger.error(`${name} Stage validateAndProcessExchangeData, repeated receive, address ${address}`);
+      logger.error(`${this.name} Stage validateAndProcessExchangeData, repeated receive, address ${address}`);
 
       this.ripple.cheatedNodes.push({
         address: address,
