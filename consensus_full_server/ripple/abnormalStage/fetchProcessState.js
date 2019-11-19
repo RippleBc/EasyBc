@@ -123,7 +123,7 @@ class FetchProcessState extends ConsensusStage {
         {
           // check req candidate
           const reqCandidate = new Candidate(data);
-          if (!this.validateReqData(reqCandidate)) {
+          if (!this.validateReqData(reqCandidate, address.toString('hex'))) {
             return;
           }
 

@@ -128,7 +128,7 @@ class NewView extends LeaderStage {
           const newView = new NewViewData(data);
 
           // check req candidate
-          if (!this.validateReqData(newView)) {
+          if (!this.validateReqData(newView, address.toString('hex'))) {
             return;
           }
 
