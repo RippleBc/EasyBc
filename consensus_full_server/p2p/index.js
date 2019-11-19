@@ -55,7 +55,7 @@ class P2p
 			port: tcp.port,
 			dispatcher: this.dispatcher,
 			logger: loggerNet,
-			privatekey: process[Symbol.for("privateKey")]
+			privateKey: process[Symbol.for("privateKey")]
 		});
 
 		// init conn
@@ -70,7 +70,7 @@ class P2p
 					port: node.p2pPort,
 					dispatcher: this.dispatcher,
 					logger: loggerNet,
-					privatekey: process[Symbol.for("privateKey")]
+					privateKey: process[Symbol.for("privateKey")]
 				});
 
 				if (connection.address.toString('hex') !== node.address)
@@ -180,7 +180,7 @@ class P2p
 						port: node.p2pPort,
 						dispatcher: this.dispatcher,
 						logger: loggerNet,
-						privatekey: process[Symbol.for("privateKey")]
+						privateKey: process[Symbol.for("privateKey")]
 					});
 
 					if (connection.address.toString('hex') !== node.address)
