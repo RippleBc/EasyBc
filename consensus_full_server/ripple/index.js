@@ -665,7 +665,7 @@ class Ripple
 		const filteredMsgs = [];
 		for (let msg of msgsDifferByCmd)
 		{
-			// filter msg with invalid seuqnce 
+			// filter msg with invalid seuqnce
 			if(new BN(msg.sequence).lt(new BN(this.sequence)))
 			{
 				continue;
@@ -707,16 +707,11 @@ class Ripple
 			}
 			else if (sequenceMode === SEQUENCE_MODE_MATCH_OR_LARGER)
 			{
-				if (new BN(msg.sequence).gte(new BN(this.sequence))) {
-					correspondMsg = {
-						address: msg.address,
-						cmd: cmd,
-						data: msg.data
-					};
-				}
-				else {
-					filteredMsgs.push(msg);
-				}
+				correspondMsg = {
+					address: msg.address,
+					cmd: cmd,
+					data: msg.data
+				};
 			}
 			else
 			{
