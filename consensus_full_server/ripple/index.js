@@ -60,6 +60,7 @@ const SYSTEM_LOOP_DELAY_TIME = 20;
 
 const SEQUENCE_MODE_MATCH = 1;
 const SEQUENCE_MODE_LARGER = 2;
+const SEQUENCE_MODE_MATCH_OR_LARGER = 3;
 
 const FLUSH_CHEATED_NODES_INTERVAL = 60 * 1000;
 
@@ -215,8 +216,9 @@ class Ripple
 
 			if(this.state === RIPPLE_STATE_FETCH_PROCESS_STATE)
 			{
-				const msg = this.fetchMsgWithoutSequence({
-					cmd: PROTOCOL_CMD_PROCESS_STATE_RES
+				const msg = this.fetchMsgWithSequence({
+					cmd: PROTOCOL_CMD_PROCESS_STATE_RES,
+					sequenceMode: SEQUENCE_MODE_MATCH_OR_LARGER
 				});
 				if (msg) {
 					this.fetchProcessState.handleMessage(msg.address, msg.cmd, msg.data);
@@ -234,7 +236,7 @@ class Ripple
 				continue;
 			}
 
-			/*********************** hanle new view msgs, lead to view change action **********************/
+			/*********************** hanlde new view msgs, lead to view change action **********************/
 			let msgNewViewReq = this.fetchMsgWithoutSequence({
 				cmd: PROTOCOL_CMD_NEW_VIEW_REQ
 			});
@@ -704,6 +706,25 @@ class Ripple
 				else {
 					filteredMsgs.push(msg);
 				}
+			}
+			else if (sequenceMode === SEQUENCE_MODE_MATCH_OR_LARGER)
+			{
+				if (new BN(msg.sequence).gte(new BN(this.sequence))) {
+					correspondMsg = {
+						address: msg.address,
+						cmd: cmd,
+						data: msg.data
+					};
+				}
+				else {
+					filteredMsgs.push(msg);
+				}
+			}
+			else
+			{
+				logger.fatal(`Ripple fetchMsgWithSequence, invalid sequenceMode ${sequenceMode}`);
+				
+				process.exit(1);
 			}
 			
 		}
