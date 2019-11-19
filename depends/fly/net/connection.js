@@ -34,7 +34,8 @@ class Connection extends AsyncEventEmitter
 		assert(opts.socket instanceof Socket, `Connection	constructor, opts.socket should be a Socket Object, now is ${typeof opts.socket}`);
 		assert(typeof opts.dispatcher	=== "function", `Connection	constructor, opts.dispatcher should be a Function, now is ${typeof opts.dispatcher}`);
 		assert(typeof opts.logger	=== "object", `Connection	constructor, opts.logger should be an Object, now is ${typeof opts.logger}`);
-
+		assert(Buffer.isBuffer(opts.privateKey), `Connection	constructor, opts.privateKey should be an Object, now is ${typeof opts.privateKey}`)
+		
 		//
 		id ++;
 		if (id > MAX_CONNECTION_ID)
@@ -47,6 +48,7 @@ class Connection extends AsyncEventEmitter
 		this.socket = opts.socket;
 		this.dispatcher = opts.dispatcher;
 		this.logger = opts.logger;
+		this.privateKey = opts.privateKey;
 
 		this.nonce = crypto.randomBytes(32);
 
@@ -296,8 +298,6 @@ class Connection extends AsyncEventEmitter
 			{
 				case AUTHORIZE_REQ_CMD:
 				{
-					const privateKey = process[Symbol.for("privateKey")];
-
 					let token;
 					try
 					{
@@ -316,7 +316,7 @@ class Connection extends AsyncEventEmitter
 						return;
 					}
 				
-					token.sign(privateKey);
+					token.sign(this.privateKey);
 
 					this.write(AUTHORIZE_RES_CMD, token.serialize());
 				}

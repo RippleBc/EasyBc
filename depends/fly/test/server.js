@@ -7,7 +7,7 @@ const toBuffer = utils.toBuffer;
 const bufferToInt = utils.bufferToInt;
 const Buffer = utils.Buffer;
 
-process[Symbol.for("privateKey")] = Buffer.from("7a82f175255e14747eb2eb6442da96d11b60147a5e1f1c864ae333105b7be6f6", "hex");
+const privateKey = Buffer.from("7a82f175255e14747eb2eb6442da96d11b60147a5e1f1c864ae333105b7be6f6", "hex");
 
 let testJSON = {
 	"cmd": 1,
@@ -29,5 +29,6 @@ const server = createServer({
 		assert.equal(message.data.toString(), "walker", `data.name should be walker, now is ${message.data.toString()}`);
 		
 		this.write(10, "walker");
-	}
+	},
+	privateKey: privateKey
 });

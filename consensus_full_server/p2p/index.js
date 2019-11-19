@@ -54,7 +54,8 @@ class P2p
 			host: tcp.host,
 			port: tcp.port,
 			dispatcher: this.dispatcher,
-			logger: loggerNet
+			logger: loggerNet,
+			privatekey: process[Symbol.for("privateKey")]
 		});
 
 		// init conn
@@ -69,7 +70,8 @@ class P2p
 					port: node.p2pPort,
 					dispatcher: this.dispatcher,
 					logger: loggerNet,
-					address: Buffer.from(node.address, "hex")
+					address: Buffer.from(node.address, "hex"),
+					privatekey: process[Symbol.for("privateKey")]
 				});
 			}
 			catch(e)
@@ -174,7 +176,8 @@ class P2p
 						port: node.p2pPort,
 						dispatcher: this.dispatcher,
 						logger: loggerNet,
-						address: Buffer.from(node.address, "hex")
+						address: Buffer.from(node.address, "hex"),
+						privatekey: process[Symbol.for("privateKey")]
 					});
 
 					loggerP2p.info(`P2p reconnectAll, connect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort}, successed`);

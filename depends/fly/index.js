@@ -15,9 +15,11 @@ exports.createClient = async function(opts)
 	const logger = opts.logger || { trace: console.info, debug: console.info, info: console.info, warn: console.warn, error: console.error, fatal: console.error };
 
 	const dispatcher = opts.dispatcher;
+	const privateKey = opts.privateKey;
 
-	assert(typeof dispatcher === "function", `fly createServer, dispatcher should be a function, now is ${typeof dispatcher}`);
-
+	assert(typeof dispatcher === "function", `fly createClient, dispatcher should be a function, now is ${typeof dispatcher}`);
+	assert(Buffer.isBuffer(privateKey), `fly createClient, privateKey should be a Buffer, now is ${typeof privateKey}`);
+	
 	const client = net.createConnection({ 
 		allowHalfOpen: true,
 		host: host,
@@ -31,7 +33,8 @@ exports.createClient = async function(opts)
 				const connection = new Connection({
 					socket: client,
 					dispatcher: dispatcher,
-					logger: logger
+					logger: logger,
+					privateKey: privateKey
 				});
 
 				resolve(connection);
@@ -105,9 +108,12 @@ exports.createServer = function(opts)
 	const host = opts.host || "localhost";
 	const port = opts.port || 8080;
 	const logger = opts.logger || { trace: console.info, debug: console.info, info: console.info, warn: console.warn, error: console.error, fatal: console.error };
+	
 	const dispatcher = opts.dispatcher;
+	const privateKey = opts.privateKey;
 
 	assert(typeof dispatcher === "function", `fly createServer, dispatcher should be a function, now is ${typeof dispatcher}`);
+	assert(Buffer.isBuffer(privateKey), `fly createServer, privateKey should be a Buffer, now is ${typeof privateKey}`);
 
 	const server = net.createServer({
 		allowHalfOpen: true
@@ -122,7 +128,8 @@ exports.createServer = function(opts)
 		const connection = new Connection({
 			socket: socket,
 			dispatcher: dispatcher,
-			logger: logger
+			logger: logger,
+			privateKey: privateKey
 		});
 
 		logger.info(`fly createServer, receive an connection, host: ${socket.remoteAddress}, port: ${socket.remotePort}`);

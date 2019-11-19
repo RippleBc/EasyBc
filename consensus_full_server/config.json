@@ -24,5 +24,12 @@
 		"user": "blockChain",
 		"password": "blockChain",
 		"dbName": "blockChain"
+	},
+	"p2p": {
+		"mode": "proxy"
+	},
+	"proxy": {
+		"host": "localhost",
+		"port": 7070
 	}
 }
