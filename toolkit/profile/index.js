@@ -21,16 +21,9 @@ const printInfo = () => {
   const elapsedSecondsBN = new BN().addn(Math.round((Date.now() - now) / 1000));
   const tps = g_totalProcessedTxNumBN.divRound(elapsedSecondsBN);
 
-  slog(`total txs: ${g_totalProcessedTxNumBN.toString('hex')}\ntx num per second: ${tps}\nchild processed tx num:\n${g_childProcessedTxNumBNArray.map((el, index) => {
-    if (index === 0) {
-      return `main: ${el.txNum.toString('hex')}, ${el.consumedTime}\n`
-    }
-    else {
-      return `child ${index}: ${el.txNum.toString('hex')}, ${el.consumedTime}\n`
-    }
-  }).join('')}exited child process:\n${g_exitedProcess.map(el => {
-    return `index: ${el.index}, consumedTime: ${el.consumedTime}, err: ${el.err}\n`
-  }).join('')}`);
+  const info = `total txs: ${ g_totalProcessedTxNumBN.toString('hex') }\ntx num per second: ${ tps }\nchild processed tx num: \n${ g_childProcessedTxNumBNArray.map((el, index) => `process ${index}, url: ${el.url} num: ${el.txNum.toString('hex')}, time: ${el.consumedTime}\n`).join('')}exited child process: \n${g_exitedProcess.map(el => `index: ${el.index}, consumedTime: ${el.consumedTime}, err: ${el.err}\n`).join('')}`
+
+  slog(info);
 }
 
 /**
@@ -69,6 +62,14 @@ module.exports = async (urls, range, total) => {
   // fork child process
   for(let i = 0; i < allProcessArgs.length; i++)
   {
+    //
+    g_childProcessedTxNumBNArray[i] = {
+      txNum: new BN(),
+      consumedTime: 0,
+      url: allProcessArgs[i].url
+    };
+
+    //
     const child = fork(path.join(__dirname, "./startProfile"));
     
     child.send(allProcessArgs[i]);
@@ -82,13 +83,6 @@ module.exports = async (urls, range, total) => {
       }
 
       if (processedTxNum) {
-        //
-        if (!g_childProcessedTxNumBNArray[i]) {
-          g_childProcessedTxNumBNArray[i] = {
-            txNum: new BN(),
-            consumedTime: 0
-          };
-        }
         g_childProcessedTxNumBNArray[i].txNum.iaddn(processedTxNum);
         g_childProcessedTxNumBNArray[i].consumedTime = consumedTime;
 
@@ -98,8 +92,5 @@ module.exports = async (urls, range, total) => {
 
       printInfo();
     });
-
-    //
-    console.info(`child process ${i} begin`);
   }
 }
