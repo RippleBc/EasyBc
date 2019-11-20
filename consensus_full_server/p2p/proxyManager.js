@@ -22,7 +22,7 @@ class ProxyConnectionsManager extends ConnectionsManager {
         // find correspond conn by host and port
         for (let connection of this.connections) {
             if (connection.host === node.host
-                && connection.port === node.port) {
+                && connection.port === node.p2pPort) {
                 return connection;
             }
         }
