@@ -1,6 +1,7 @@
 const log4js= require("./logConfig");
 const logger = log4js.getLogger("consensus");
 const mongoConfig = require("./config").mongo;
+const { p2pProxy } = require("../globalConfig");
 
 process[Symbol.for("loggerConsensus")] = logger;
 process[Symbol.for("loggerP2p")] = log4js.getLogger("p2p");
@@ -82,7 +83,16 @@ process.on("uncaughtException", function(err) {
     /************************************** p2p **************************************/
     const P2p = require("./p2p");
     const p2p = process[Symbol.for("p2p")] = new P2p(function(message) {
-        processor.handleMessage(this.address, message);
+        if (p2pProxy.open)
+        {
+            const [address, msg] = utils.decode(message);
+
+            processor.handleMessage(address, msg);
+        }
+        else
+        {
+            processor.handleMessage(this.address, message);
+        }
     });
 
     /************************************** consensus **************************************/
