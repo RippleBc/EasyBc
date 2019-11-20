@@ -24,7 +24,7 @@ class ConnectionsManager extends AsyncEventEmitter
 			this.emit("addressClosed", newConnection.address.toString("hex"));
 
 			// clear
-			for (let [index, connection] of this.connections) {
+			for (let [index, connection] of this.connections.entries()) {
 
 				if (connection.id.toString('hex') === newConnection.id.toString('hex')) {
 
@@ -36,7 +36,7 @@ class ConnectionsManager extends AsyncEventEmitter
 		});
 
 		// 
-		for(let [index, connection] of this.connections)
+		for(let [index, connection] of this.connections.entries())
 		{
 			if (connection.address.toString("hex") !== newConnection.address.toString("hex"))
 			{
@@ -75,7 +75,7 @@ class ConnectionsManager extends AsyncEventEmitter
 
 	closeAll()
 	{
-		for(let connnection of this.connections)
+		for(let connnection of this.connections.entries())
 		{
 			connnection.logger.warn(`ConnectionsManager closeAll, address ${connnection.address.toString('hex')}`);
 
