@@ -112,10 +112,10 @@ class Fly {
 
 		// manage success connection
 		try {
-			this.connectionsManager.push(connection);
+			this.connectionsManager.pushConnection(connection);
 		}
 		catch (e) {
-			this.logger.fatal(`Fly createClient, connectionsManager.push throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+			this.logger.fatal(`Fly createClient, connectionsManager.pushConnection throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 
 			process.exit(1)
 		}
@@ -163,10 +163,10 @@ class Fly {
 
 					// manage success connection
 					try {
-						this.connectionsManager.push(connection);
+						this.connectionsManager.pushConnection(connection);
 					}
 					catch (e) {
-						this.logger.fatal(`Fly createServer, connectionsManager.push throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+						this.logger.fatal(`Fly createServer, connectionsManager.pushConnection throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 
 						process.exit(1)
 					}
@@ -197,10 +197,10 @@ class Fly {
 			{
 				// manage success connection
 				try {
-					this.connectionsManager.push(connection);
+					this.connectionsManager.pushConnection(connection);
 				}
 				catch (e) {
-					this.logger.fatal(`Fly createServer, connectionsManager.push throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+					this.logger.fatal(`Fly createServer, connectionsManager.pushConnection throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 
 					process.exit(1);
 				}

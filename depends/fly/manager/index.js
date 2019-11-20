@@ -14,9 +14,9 @@ class ConnectionsManager extends AsyncEventEmitter
 	/**
 	 * @param {Connection} newConnection
 	 */
-	push(newConnection)
+	pushConnection(newConnection)
 	{
-		assert(newConnection instanceof Connection, `ConnectionsManager push, newConnection should be an instance of Connection, now is ${typeof newConnection}`);
+		assert(newConnection instanceof Connection, `ConnectionsManager pushConnection, newConnection should be an instance of Connection, now is ${typeof newConnection}`);
 
 		// add listener
 		newConnection.once("connectionClosed", () => {
@@ -28,7 +28,7 @@ class ConnectionsManager extends AsyncEventEmitter
 
 				if (connection.id.toString('hex') === newConnection.id.toString('hex')) {
 
-					newConnection.logger.info(`ConnectionsManager push, delete connection, id: ${newConnection.id.toString('hex')}, address: ${newConnection.address.toString("hex")}, url:${newConnection.socket.remoteAddress}:${newConnection.socket.remotePort}`)
+					newConnection.logger.info(`ConnectionsManager pushConnection, delete connection, id: ${newConnection.id.toString('hex')}, address: ${newConnection.address.toString("hex")}, url:${newConnection.socket.remoteAddress}:${newConnection.socket.remotePort}`)
 
 					this.connections.splice(index, 1);
 				}
@@ -44,7 +44,7 @@ class ConnectionsManager extends AsyncEventEmitter
 			}
 
 			if (connection.checkIfClosed()) {
-				connection.logger.info(`ConnectionsManager push, address ${newConnection.address.toString("hex")}, url: ${newConnection.socket.remoteAddress}:${newConnection.socket.remotePort} has closed, replace with new connection, url: ${newConnection.socket.remoteAddress}:${newConnection.socket.remotePort}`);
+				connection.logger.info(`ConnectionsManager pushConnection, address ${newConnection.address.toString("hex")}, url: ${newConnection.socket.remoteAddress}:${newConnection.socket.remotePort} has closed, replace with new connection, url: ${newConnection.socket.remoteAddress}:${newConnection.socket.remotePort}`);
 
 				// replace closed collection
 				this.connection[index] = newConnection;
@@ -52,7 +52,7 @@ class ConnectionsManager extends AsyncEventEmitter
 				this.emit("addressConnected", newConnection.address.toString("hex"));
 			}
 			else {
-				newConnection.logger.error(`ConnectionsManager push, address ${newConnection.address.toString("hex")} has connected, close the same connection`);
+				newConnection.logger.error(`ConnectionsManager pushConnection, address ${newConnection.address.toString("hex")} has connected, close the same connection`);
 
 				newConnection.removeAllListeners("connectionClosed");
 
@@ -63,7 +63,7 @@ class ConnectionsManager extends AsyncEventEmitter
 		}
 		
 		// connection with new address
-		newConnection.logger.info(`ConnectionsManager push, new address ${newConnection.address.toString("hex")}, url: ${newConnection.socket.remoteAddress}:${newConnection.socket.remotePort}`);
+		newConnection.logger.info(`ConnectionsManager pushConnection, new address ${newConnection.address.toString("hex")}, url: ${newConnection.socket.remoteAddress}:${newConnection.socket.remotePort}`);
 
 		// add new connection
 		this.connections.push(newConnection);
