@@ -144,24 +144,6 @@ class P2p
 		}
 	}
 
-	/**
-	 * @param {Buffer} address
-	 * @return {Boolean}
-	 */
-	checkIfConnectionIsOpen(address)
-	{
-		assert(Buffer.isBuffer(address), `P2p checkIfConnectionIsOpen, address should be an Buffer, now is ${typeof address}`);
-
-		const connection = connectionsManager.get(address);
-
-		if(!connection || connection.checkIfClosed())
-		{
-			return false;
-		}
-
-		return true;
-	}
-
 	async reconnectAll()
 	{
 		const unlNotIncludeSelf = unlManager.unlNotIncludeSelf;
@@ -202,14 +184,6 @@ class P2p
 				}
 			}
 		}
-	}
-
-	/**
-	 * @return {Array}
-	 */
-	getAllConnections()
-	{
-		return connectionsManager.getAllConnections();
 	}
 }
 

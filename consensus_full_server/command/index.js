@@ -81,11 +81,4 @@ app.post("/deleteNodes", (req, res) => {
       msg: e.toString()
     })
   })
-})
-
-app.post("/getAllConnections", (req, res) => {
-  res.send({
-    code: SUCCESS,
-    data: p2p.getAllConnections()
-  })
-})
+});
