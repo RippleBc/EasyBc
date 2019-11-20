@@ -10,6 +10,7 @@ const utils = require("../../utils");
 const { AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT, AUTHORIZE_FAILED_BECAUSE_OF_OTHER_INVALID_SIGNATURE, AUTHORIZE_FAILED_BECAUSE_OF_SELF_INVALID_SIGNATURE } = require("../constant");
 
 const Buffer = utils.Buffer;
+const BN = utils.BN;
 
 const END_CLEAR_SEND_BUFFER_TIME_DEAY = 1000 * 5;
 const HEART_BEAT_TIME = 1000 * 10;
