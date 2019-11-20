@@ -1,8 +1,10 @@
 const { tcp } = require("../config.json");
 const utils = require("../../depends/utils");
-const { createClient, createServer, connectionsManager } = require("../../depends/fly");
+const Fly = require("../../depends/fly");
 const assert = require("assert");
-const { PROTOCOL_HEART_BEAT } = require("../constants")
+const { PROTOCOL_HEART_BEAT } = require("../constants");
+const ConnectionsManager = require("./manager");
+
 const Buffer = utils.Buffer;
 
 const loggerP2p = process[Symbol.for("loggerP2p")];
@@ -21,10 +23,14 @@ class P2p
 		assert(typeof dispatcher === "function", `P2p constructor, dispatcher should be a Function, now is ${typeof dispatcher}`)
 		assert(typeof tcp.host === "string", `P2p constructor, tcp.host should be a String, now is ${typeof tcp.host}`);
 		assert(typeof tcp.port === "number", `P2p constructor, tcp.port should be a Number, now is ${typeof tcp.port}`);
+		
+		this.fly = new Fly({
+			dispatcher: dispatcher,
+			logger: loggerNet,
+			connectionsManager: new ConnectionsManager()
+		})
 
-		this.dispatcher = dispatcher;
-
-		connectionsManager.on("addressConnected", address => {
+		this.fly.connectionsManager.on("addressConnected", address => {
 			assert(typeof address === 'string', `addressConnected handler, address shoule be an Array, now is ${typeof address}`)
 
 			if(unlManager.unlNotIncludeSelf.find(node => node.address === address))
@@ -34,7 +40,7 @@ class P2p
 			
 		});
 
-		connectionsManager.on("addressClosed", address => {
+		this.fly.connectionsManager.on("addressClosed", address => {
 
 			assert(typeof address === 'string', `addressClosed handler, address shoule be an Array, now is ${typeof address}`)
 
@@ -50,11 +56,9 @@ class P2p
 		const unlNotIncludeSelf = unlManager.unlNotIncludeSelf;
 
 		// init server
-		const server = await createServer({
+		const server = await this.fly.createServer({
 			host: tcp.host,
 			port: tcp.port,
-			dispatcher: this.dispatcher,
-			logger: loggerNet,
 			privateKey: process[Symbol.for("privateKey")]
 		});
 
@@ -65,11 +69,9 @@ class P2p
 
 			try
 			{
-				const connection = await createClient({
+				const connection = await this.fly.createClient({
 					host: node.host,
 					port: node.p2pPort,
-					dispatcher: this.dispatcher,
-					logger: loggerNet,
 					privateKey: process[Symbol.for("privateKey")]
 				});
 
@@ -102,7 +104,7 @@ class P2p
 		assert(typeof cmd === "number", `P2p send, cmd should be a Number, now is ${typeof cmd}`);
 		assert(Buffer.isBuffer(address), `P2p send, data should be an Buffer, now is ${typeof address}`);
 		
-		const connection = connectionsManager.get(address);
+		const connection = this.fly.connectionsManager.get(address);
 		if(connection && connection.checkIfCanWrite())
 		{
 			try
@@ -124,7 +126,7 @@ class P2p
 		
 		for(let i = 0; i < unlOnline.length; i++)
 		{
-			const connection = connectionsManager.get(Buffer.from(unlOnline[i].address, "hex"));
+			const connection = this.fly.connectionsManager.get(Buffer.from(unlOnline[i].address, "hex"));
 			if(connection && connection.checkIfCanWrite())
 			{
 				try
@@ -146,17 +148,15 @@ class P2p
 		for(let i = 0; i < unlNotIncludeSelf.length; i++)
 		{
 			const node = unlNotIncludeSelf[i];
-			const connection = connectionsManager.get(Buffer.from(node.address, "hex"));
+			const connection = this.fly.connectionsManager.get(Buffer.from(node.address, "hex"));
 
 			if(!connection || connection.checkIfClosed())
 			{
 				try
 				{
-					const connection = await createClient({
+					const connection = await this.fly.createClient({
 						host: node.host,
 						port: node.p2pPort,
-						dispatcher: this.dispatcher,
-						logger: loggerNet,
 						privateKey: process[Symbol.for("privateKey")]
 					});
 

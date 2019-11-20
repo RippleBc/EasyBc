@@ -1,40 +1,61 @@
 const net = require("net");
 const assert = require("assert");
 const Connection = require("./net/connection");
-const ConnectionsManager =require("./manager");
 const { AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT, AUTHORIZE_FAILED_BECAUSE_OF_OTHER_INVALID_SIGNATURE, AUTHORIZE_FAILED_BECAUSE_OF_SELF_INVALID_SIGNATURE  } = require("./constant");
-
-exports.connectionsManager = new ConnectionsManager();
+const ConnectionsManager = require("./manager");
 
 const CONNECT_TIMEOUT = 5 * 1000;
 
-exports.createClient = async function(opts)
-{
-	const host = opts.host || "localhost";
-	const port = opts.port || 8080;
-	const logger = opts.logger || { trace: console.info, debug: console.info, info: console.info, warn: console.warn, error: console.error, fatal: console.error };
 
-	const dispatcher = opts.dispatcher;
-	const privateKey = opts.privateKey;
-	const auth = opts.auth || true;
+class Fly {
+	constructor({
+		dispatcher, 
+		auth = true, 
+		connectionsManager = new ConnectionsManager(),
+		logger = {
+			trace: console.info,
+			debug: console.info,
+			info: console.info,
+			warn: console.warn,
+			error: console.error,
+			fatal: console.error
+		}
+	}) {
+		assert(typeof dispatcher === "function", `Fly constructor, dispatcher should be a function, now is ${typeof dispatcher}`);
+		assert(typeof auth === 'boolean', `Fly constructor, auth should be a Boolean, now is ${typeof auth}`);
+		assert(connectionsManager instanceof ConnectionsManager, `Fly constructor, connectionsManager should be an instance of ConnectionsManager, now is ${typeof connectionsManager}`);
 
-	assert(typeof dispatcher === "function", `fly createClient, dispatcher should be a function, now is ${typeof dispatcher}`);
-	assert(Buffer.isBuffer(privateKey), `fly createClient, privateKey should be a Buffer, now is ${typeof privateKey}`);
-	
-	const client = net.createConnection({ 
-		allowHalfOpen: true,
-		host: host,
-	  	port: port
-	});
+		this.dispatcher = dispatcher;
+		this.auth = auth;
+		this.connectionsManager = connectionsManager;
+		this.logger = logger;
+	}
 
-	const connection = await (async function() {
-		const promise = new Promise((resolve, reject) => {
+	/**
+	 * @param {String} host 
+	 * @param {Number} port
+	 * @param {Buffer} privateKey
+	 * @return {Connection}
+	 */
+	async createClient({ host, port, privateKey }) {
+		assert(typeof host === 'string', `Fly createClient, host should be a String, now is ${typeof host}`);
+		assert(typeof port === 'number', `Fly createClient, port should be a Number, now is ${typeof port}`);
+		assert(Buffer.isBuffer(privateKey), `Fly createClient, privateKey should be a Buffer, now is ${typeof privateKey}`);
+
+		const client = net.createConnection({
+			allowHalfOpen: true,
+			host: host,
+			port: port
+		});
+
+		// try to connect
+		const connection = await new Promise((resolve, reject) => {
 			client.on("connect", () => {
 				// manage connection
 				const connection = new Connection({
 					socket: client,
-					dispatcher: dispatcher,
-					logger: logger,
+					dispatcher: this.dispatcher,
+					logger: this.logger,
 					privateKey: privateKey
 				});
 
@@ -42,152 +63,172 @@ exports.createClient = async function(opts)
 			});
 
 			client.on("error", e => {
-				reject(`fly onConnect, client connected to host: ${client.remoteAddress}, port: ${client.remotePort}, failed, ${e}`);
+				reject(`Fly createClient, client connected to host: ${client.remoteAddress}, port: ${client.remotePort}, failed, ${e}`);
 			});
 
 			const timeout = setTimeout(() => {
-				reject(`fly onConnect, client connected to host: ${client.remoteAddress}, port: ${client.remotePort}, timeout`);
+				reject(`Fly createClient, client connected to host: ${client.remoteAddress}, port: ${client.remotePort}, timeout`);
 			}, CONNECT_TIMEOUT);
 
 			timeout.unref();
 		});
 
-		return promise;
-	})();
-	
-	logger.info(`fly createClient, create an connection to host: ${client.remoteAddress}, port: ${client.remotePort}`);
-	
-	if (auth) {
-		try {
-			await connection.authorize();
-		}
-		catch (errCode) {
-			if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT) {
-				logger.error(`fly createClient, authorize failed because of timeout, host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
+		//
+		this.logger.info(`Fly createClient, create an connection to host: ${client.remoteAddress}, port: ${client.remotePort}`);
 
-				connection.close();
+		//
+		if (this.auth) {
+			try {
+				// try to auth
+				await connection.authorize();
 			}
-			else if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_OTHER_INVALID_SIGNATURE) {
-				logger.error(`fly createClient, authorize failed because of other invalid signature, me do not trust host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
-
-				connection.close();
-			}
-			else if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_SELF_INVALID_SIGNATURE) {
-				logger.error(`fly createClient, authorize failed because of invalid signature, host: ${socket.remoteAddress}, port: ${socket.remotePort} do not trust me`)
-
-				connection.close();
-			}
-			else {
-				logger.fatal(`fly createClient, authorize throw unexpected err, host: ${socket.remoteAddress}, port: ${socket.remotePort}, ${process[Symbol.for("getStackInfo")](errCode)}`);
-
-				connection.close();
-			}
-
-			return;
-		}
-
-		logger.trace(`fly createClient, authorize successed, host: ${client.remoteAddress}, port: ${client.remotePort}`);
-	}
-	
-	try {
-		exports.connectionsManager.push(connection);
-	}
-	catch (e) {
-		logger.fatal(`fly createClient, connectionsManager.push throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
-
-		process.exit(1)
-	}
-
-	return connection;
-}
-
-exports.createServer = function(opts)
-{
-	const host = opts.host || "localhost";
-	const port = opts.port || 8080;
-	const logger = opts.logger || { trace: console.info, debug: console.info, info: console.info, warn: console.warn, error: console.error, fatal: console.error };
-	
-	const dispatcher = opts.dispatcher;
-	const privateKey = opts.privateKey;
-	const auth = opts.auth || true;
-
-	assert(typeof dispatcher === "function", `fly createServer, dispatcher should be a function, now is ${typeof dispatcher}`);
-	assert(Buffer.isBuffer(privateKey), `fly createServer, privateKey should be a Buffer, now is ${typeof privateKey}`);
-
-	const server = net.createServer({
-		allowHalfOpen: true
-	});
-
-	server.on("listening", () => {
-		logger.trace(`fly createServer, host: ${host}, port: ${port}`);
-	});
-
-	server.on("connection", socket => {
-		// manage connection
-		const connection = new Connection({
-			socket: socket,
-			dispatcher: dispatcher,
-			logger: logger,
-			privateKey: privateKey
-		});
-
-		logger.info(`fly createServer, receive an connection, host: ${socket.remoteAddress}, port: ${socket.remotePort}`);
-
-		if(auth)
-		{
-			connection.authorize().then(() => {
-				logger.info(`fly createServer, authorize successed, host: ${socket.remoteAddress}, port: ${socket.remotePort}`);
-
-				try {
-					exports.connectionsManager.push(connection);
-				}
-				catch (e) {
-					logger.fatal(`fly createServer, connectionsManager.push throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
-
-					process.exit(1)
-				}
-			}).catch(errCode => {
+			catch (errCode) {
 				if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT) {
-					logger.error(`fly createServer, authorize failed because of timeout, host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
+					this.logger.error(`Fly createClient, authorize failed because of timeout, host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
 
 					connection.close();
 				}
 				else if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_OTHER_INVALID_SIGNATURE) {
-					logger.error(`fly createServer, authorize failed because of other invalid signature, me do not trust host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
+					this.logger.error(`Fly createClient, authorize failed because of other invalid signature, me do not trust host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
 
 					connection.close();
 				}
 				else if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_SELF_INVALID_SIGNATURE) {
-					logger.error(`fly createServer, authorize failed because of invalid signature, host: ${socket.remoteAddress}, port: ${socket.remotePort} do not trust me`)
+					this.logger.error(`Fly createClient, authorize failed because of invalid signature, host: ${socket.remoteAddress}, port: ${socket.remotePort} do not trust me`)
 
 					connection.close();
 				}
 				else {
-					logger.fatal(`fly createServer, authorize throw unexpected err, host: ${socket.remoteAddress}, port: ${socket.remotePort}, ${process[Symbol.for("getStackInfo")](errCode)}`);
+					this.logger.fatal(`Fly createClient, authorize throw unexpected err, host: ${socket.remoteAddress}, port: ${socket.remotePort}, ${process[Symbol.for("getStackInfo")](errCode)}`);
 
 					connection.close();
 				}
-			});
+
+				return;
+			}
+
+			this.logger.info(`Fly createClient, authorize successed, host: ${client.remoteAddress}, port: ${client.remotePort}`);
 		}
-	});
 
-	server.on("close", () => {
-		logger.trace("fly createServer, server close");
-	});
+		// manage success connection
+		try {
+			this.connectionsManager.push(connection);
+		}
+		catch (e) {
+			this.logger.fatal(`Fly createClient, connectionsManager.push throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 
-	server.on("error", e => {
-		logger.error(`fly createServer, server throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+			process.exit(1)
+		}
 
-		server.close();
+		return connection;
+	}
 
-		exports.connectionsManager.closeAll();
-	});
+	
+	/**
+	 * @param {String} host
+	 * @param {Number} port
+	 * @param {Buffer} privateKey
+	 * @return {}
+	 */
+	createServer({ host, port, privateKey }) {
+		assert(typeof host === 'string', `Fly createServer, host should be a String, now is ${typeof host}`);
+		assert(typeof port === 'number', `Fly createServer, port should be a Number, now is ${typeof port}`);
+		assert(Buffer.isBuffer(privateKey), `Fly createServer, privateKey should be a Buffer, now is ${typeof privateKey}`);
 
-	server.listen({
-		host: host,
-	  port: port,
-	  exclusive: true
-	});
+		const server = net.createServer({
+			allowHalfOpen: true
+		});
 
-	return server;
+		server.on("listening", () => {
+			this.logger.info(`Fly createServer, host: ${host}, port: ${port}`);
+		});
+
+		server.on("connection", socket => {
+			// new connection
+			const connection = new Connection({
+				socket: socket,
+				dispatcher: this.dispatcher,
+				logger: this.logger,
+				privateKey: privateKey
+			});
+
+			//
+			this.logger.info(`Fly createServer, receive an connection, host: ${socket.remoteAddress}, port: ${socket.remotePort}`);
+
+			//
+			if (this.auth) {
+				// try to auth
+				connection.authorize().then(() => {
+					this.logger.info(`Fly createServer, authorize successed, host: ${socket.remoteAddress}, port: ${socket.remotePort}`);
+
+					// manage success connection
+					try {
+						this.connectionsManager.push(connection);
+					}
+					catch (e) {
+						this.logger.fatal(`Fly createServer, connectionsManager.push throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+
+						process.exit(1)
+					}
+				}).catch(errCode => {
+					if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT) {
+						this.logger.error(`Fly createServer, authorize failed because of timeout, host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
+
+						connection.close();
+					}
+					else if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_OTHER_INVALID_SIGNATURE) {
+						this.logger.error(`Fly createServer, authorize failed because of other invalid signature, me do not trust host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
+
+						connection.close();
+					}
+					else if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_SELF_INVALID_SIGNATURE) {
+						this.logger.error(`Fly createServer, authorize failed because of invalid signature, host: ${socket.remoteAddress}, port: ${socket.remotePort} do not trust me`)
+
+						connection.close();
+					}
+					else {
+						this.logger.fatal(`Fly createServer, authorize throw unexpected err, host: ${socket.remoteAddress}, port: ${socket.remotePort}, ${process[Symbol.for("getStackInfo")](errCode)}`);
+
+						connection.close();
+					}
+				});
+			}
+			else
+			{
+				// manage success connection
+				try {
+					this.connectionsManager.push(connection);
+				}
+				catch (e) {
+					this.logger.fatal(`Fly createServer, connectionsManager.push throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+
+					process.exit(1);
+				}
+			}
+		});
+
+		server.on("close", () => {
+			this.logger.fatal("Fly createServer, server close");
+
+			process.exit(1);
+		});
+
+		server.on("error", e => {
+			this.logger.error(`Fly createServer, server throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+
+			server.close();
+
+			this.connectionsManager.closeAll();
+		});
+
+		server.listen({
+			host: host,
+			port: port,
+			exclusive: true
+		});
+
+		return server;
+	}
 }
+
+module.exports = Fly;
