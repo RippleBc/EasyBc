@@ -54,6 +54,8 @@ class Fly {
 				// manage connection
 				const connection = new Connection({
 					socket: client,
+					host: host,
+					port: port,
 					dispatcher: this.dispatcher,
 					logger: this.logger,
 					privateKey: privateKey
@@ -147,6 +149,8 @@ class Fly {
 			// new connection
 			const connection = new Connection({
 				socket: socket,
+				host: connection.remoteAddress,
+				port: connection.remotePort,
 				dispatcher: this.dispatcher,
 				logger: this.logger,
 				privateKey: privateKey

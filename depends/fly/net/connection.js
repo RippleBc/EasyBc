@@ -23,24 +23,26 @@ const AUTHORIZE_FAILED_CMD = 4;
 
 class Connection extends AsyncEventEmitter
 {
-	constructor(opts)
+	constructor({ socket, host, port, dispatcher, logger, privateKey})
 	{
 		super();
 
-		assert(opts.socket instanceof Socket, `Connection constructor, opts.socket should be a Socket Object, now is ${typeof opts.socket}`);
-		assert(typeof opts.dispatcher	=== "function", `Connection	constructor, opts.dispatcher should be a Function, now is ${typeof opts.dispatcher}`);
-		assert(typeof opts.logger	=== "object", `Connection constructor, opts.logger should be an Object, now is ${typeof opts.logger}`);
-		assert(Buffer.isBuffer(opts.privateKey), `Connection constructor, opts.privateKey should be an Object, now is ${typeof opts.privateKey}`)
+		assert(socket instanceof Socket, `Connection constructor, socket should be a Socket Object, now is ${typeof socket}`);
+		assert(typeof host === 'string', `Connection constructor, host should be a String, now is ${typeof host}`);
+		assert(typeof port === 'number', `Connection constructor, port should be a Number, now is ${typeof port}`)
+		assert(typeof dispatcher	=== "function", `Connection	constructor, dispatcher should be a Function, now is ${typeof dispatcher}`);
+		assert(typeof logger	=== "object", `Connection constructor, logger should be an Object, now is ${typeof logger}`);
+		assert(Buffer.isBuffer(privateKey), `Connection constructor, privateKey should be an Object, now is ${typeof privateKey}`)
 
 		//
 		const nowBuffer = utils.toBuffer(Date.now());
 		this.id = new BN(crypto.randomBytes(16)).add(new BN(nowBuffer)).toBuffer();
 
 		//
-		this.socket = opts.socket;
-		this.dispatcher = opts.dispatcher;
-		this.logger = opts.logger;
-		this.privateKey = opts.privateKey;
+		this.socket = socket;
+		this.dispatcher = dispatcher;
+		this.logger = logger;
+		this.privateKey = privateKey;
 
 		//
 		this.nonce = crypto.randomBytes(32);
