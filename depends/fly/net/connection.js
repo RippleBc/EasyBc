@@ -33,7 +33,8 @@ class Connection extends AsyncEventEmitter
 		assert(Buffer.isBuffer(opts.privateKey), `Connection constructor, opts.privateKey should be an Object, now is ${typeof opts.privateKey}`)
 
 		//
-		this.id = new BN(crypto.randomBytes(16)).addn(Date.now()).toBuffer();
+		const nowBuffer = utils.toBuffer(Date.now());
+		this.id = new BN(crypto.randomBytes(16)).add(new BN(nowBuffer)).toBuffer();
 
 		//
 		this.socket = opts.socket;
