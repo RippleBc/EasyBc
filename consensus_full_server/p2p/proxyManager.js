@@ -2,6 +2,9 @@ const Connection = require("../../depends/fly/net/connection");
 const assert = require("assert");
 const ConnectionsManager = require("../../depends/fly/manager");
 
+const unlManager = process[Symbol.for("unlManager")];
+const loggerP2p = process[Symbol.for("loggerP2p")];
+
 class ProxyConnectionsManager extends ConnectionsManager {
     constructor() {
         super();
@@ -13,9 +16,14 @@ class ProxyConnectionsManager extends ConnectionsManager {
     get(address) {
         assert(Buffer.isBuffer(address), `ProxyConnectionsManager get, address should be an Buffer, now is ${typeof address}`);
 
-        for (let i = 0; i < this.connections.length; i++) {
-            if (this.connections[i].address.toString("hex") === address.toString("hex")) {
-                return this.connections[i];
+        // find correspond node by address
+        const node = unlManager.unlNotIncludeSelf.find(node => node.address === address.toString('hex'));
+
+        // find correspond conn by host and port
+        for (let connection of this.connections) {
+            if (connection.host === node.host
+                && connection.port === node.port) {
+                return connection;
             }
         }
 
@@ -32,8 +40,6 @@ class ProxyConnectionsManager extends ConnectionsManager {
 		// add listener
 		newConnection.once("connectionClosed", () => {
 
-			this.emit("addressClosed", newConnection.address.toString("hex"));
-
 			// clear
 			for (let [index, connection] of this.connections.entries()) {
 
@@ -47,12 +53,10 @@ class ProxyConnectionsManager extends ConnectionsManager {
 		});
 		
 		// connection with new address
-		newConnection.logger.info(`ProxyConnectionsManager pushConnection, new address ${newConnection.address.toString("hex")}, url: ${newConnection.socket.remoteAddress}:${newConnection.socket.remotePort}`);
+        loggerP2p.info(`ProxyConnectionsManager pushConnection, url: ${newConnection.host}:${newConnection.port}`);
 
 		// add new connection
 		this.connections.push(newConnection);
-		
-		this.emit("addressConnected", newConnection.address.toString("hex"));
     }
     
 	/**
