@@ -145,21 +145,17 @@ class P2p
 	{
 		assert(typeof cmd === "number", `P2p sendAll, cmd should be a Number, now is ${typeof cmd}`);
 		
-		for (let node of unlManager.unlOnline)
+		for (let connection of this.connectionsManager.connections)
 		{
-			const connection = this.connectionsManager.get(Buffer.from(node.address, "hex"));
-			if(connection && connection.checkIfCanWrite())
-			{
-				try
-				{
+			if (connection.checkIfCanWrite()) {
+				try {
 					connection.write(cmd, data);
 				}
-				catch(e)
-				{
+				catch (e) {
 					loggerP2p.error(`P2p sendAll, send msg to address: ${connection.address}, host: ${connection.host}, port: ${connection.port}, ${process[Symbol.for("getStackInfo")](e)}`);
 				}
 			}
-		}
+		}			
 	}
 
 	async reconnectAll()

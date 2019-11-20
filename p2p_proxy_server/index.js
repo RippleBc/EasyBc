@@ -66,7 +66,7 @@ process.on("uncaughtException", function (err) {
     /************************************** p2p **************************************/
     const P2p = require("./p2p");
     const p2p = process[Symbol.for("p2p")] = new P2p(function (message) {
-        processor.handleMessage(this.host, this.port, message);
+        processor.handleMessage(message);
     });
 
     /************************************** consensus **************************************/

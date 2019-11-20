@@ -23,6 +23,7 @@ const utils = require("../depends/utils");
 const rlp = utils.rlp;
 
 const p2p = process[Symbol.for("p2p")]
+const logger = process[Symbol.for("loggerProxy")];
 
 class Processor {
     constructor()
@@ -31,19 +32,16 @@ class Processor {
     }
 
     /**
-     * 
-     * @param {String} host 
-     * @param {Number} port 
      * @param {Message} data 
      */
-    handleMessage(host, port, message)
+    handleMessage(message)
     {
-        assert(typeof host === 'string', `Processor handleMessage, host should be a String, now is ${typeof host}`);
-        assert(typeof prot === 'number', `Porcessor handleMessage, port should be a Number, now is ${typeof port}`);
         assert(message instanceof Message, `Processor handleMessage, message should be a Message Object, now is ${typeof message}`);
 
         const cmd = bufferToInt(message.cmd);
         const data = message.data;
+
+        logger.info(`Processor handleMessage, cmd ${cmd}`);
 
         switch(cmd)
         {
