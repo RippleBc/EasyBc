@@ -13,7 +13,7 @@
   },
   "p2pProxy":
   {
-    "oepn": true,    
+    "open": true,    
     "host": "localhost",
     "port": 7070
   }
