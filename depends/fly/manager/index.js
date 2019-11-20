@@ -12,187 +12,79 @@ class ConnectionsManager extends AsyncEventEmitter
 	}
 
 	/**
-	 * @param {Connection} connection
+	 * @param {Connection} newConnection
 	 */
-	push(connection)
+	push(newConnection)
 	{
-		assert(connection instanceof Connection, `ConnectionsManager push, connection should be an Connection Object, now is ${typeof connection}`);
+		assert(newConnection instanceof Connection, `ConnectionsManager push, newConnection should be an instance of Connection, now is ${typeof newConnection}`);
 
-		let i;
-		for(i = 0; i < this.connections.length; i++)
-		{
-			if(this.connections[i].address.toString("hex") === connection.address.toString("hex"))
-			{
-				break;
-			}
-		}
-		
-		if(i === this.connections.length)
-		{
-			// add new connection
-			this.connections.push(connection);
-			
-			connection.logger.info(`ConnectionsManager push, new address ${connection.address.toString("hex")}, url: ${connection.socket.remoteAddress}:${connection.socket.remotePort}`);
+		// add listener
+		newConnection.once("connectionClosed", () => {
 
-			this.emit("addressConnected", connection.address.toString("hex"));
+			this.emit("addressClosed", newConnection.address.toString("hex"));
 
-			connection.once("connectionClosed", () => {
+			// clear
+			for (let [index, connection] of this.connections) {
 
-				this.emit("addressClosed", connection.address.toString("hex"));
+				if (connection.id.toString('hex') === newConnection.id.toString('hex')) {
 
-				// delete
-				for (let i = 0; i < this.connections.length; i++) {
-					const ele = this.connections[i];
+					newConnection.logger.info(`ConnectionsManager push, delete connection, id: ${newConnection.id.toString('hex')}, address: ${newConnection.address.toString("hex")}, url:${newConnection.socket.remoteAddress}:${newConnection.socket.remotePort}`)
 
-					if (ele.id === connection.id
-						&& ele.address.toString("hex") === connection.address.toString("hex")
-						&& ele.socket.remoteAddress === connection.socket.remoteAddress
-						&& ele.socket.remotePort === connection.socket.remotePort
-						&& ele.checkIfClosed()) {
-
-						connection.logger.info(`ConnectionsManager delete connection from this.connections, id: ${connection.id}, address: ${connection.address.toString("hex")}, url:${connection.socket.remoteAddress}:${connection.socket.remotePort}`)
-						
-						this.connections.splice(i, 1);
-
-						break;
-					}
+					this.connections.splice(index, 1);
 				}
-			})
-		}
-		else
-		{
-			if(this.connections[i].checkIfClosed())
-			{
-				// delete connectionClosed event listeners
-				this.connections[i].removeAllListeners("connectionClosed")
+			}
+		});
 
-				connection.logger.info(`ConnectionsManager push, address ${this.connections[i].address.toString("hex")}, url: ${this.connections[i].socket.remoteAddress}:${this.connections[i].socket.remotePort} has closed, replace with new connection, url: ${connection.socket.remoteAddress}:${connection.socket.remotePort}`);
+		// 
+		for(let [index, connection] of this.connections)
+		{
+			if (connection.address.toString("hex") !== newConnection.address.toString("hex"))
+			{
+				continue;
+			}
+
+			if (connection.checkIfClosed()) {
+				connection.logger.info(`ConnectionsManager push, address ${newConnection.address.toString("hex")}, url: ${newConnection.socket.remoteAddress}:${newConnection.socket.remotePort} has closed, replace with new connection, url: ${newConnection.socket.remoteAddress}:${newConnection.socket.remotePort}`);
 
 				// replace closed collection
-				this.connections[i] = connection
-				
-				this.emit("addressConnected", connection.address.toString("hex"))
+				this.connection[index] = newConnection;
 
-				connection.once("connectionClosed", () => {
-
-					this.emit("addressClosed", connection.address.toString("hex"))
-
-					// delete
-					for (let i = 0; i < this.connections.length; i++) {
-						const ele = this.connections[i];
-
-						if (ele.id === connection.id
-							&& ele.address.toString("hex") === connection.address.toString("hex")
-							&& ele.socket.remoteAddress === connection.socket.remoteAddress
-							&& ele.socket.remotePort === connection.socket.remotePort
-							&& ele.checkIfClosed()) {
-
-							connection.logger.info(`ConnectionsManager delete connection from this.connections, id: ${connection.id}, address: ${connection.address.toString("hex")}, url:${connection.socket.remoteAddress}:${connection.socket.remotePort}`)
-
-							this.connections.splice(i, 1);
-
-							break;
-						}
-					}
-				})
+				this.emit("addressConnected", newConnection.address.toString("hex"));
 			}
-			else
-			{
-				this.connections[i].logger.error(`ConnectionsManager push, address ${connection.address.toString("hex")} has connected, close the same connection`);
+			else {
+				newConnection.logger.error(`ConnectionsManager push, address ${newConnection.address.toString("hex")} has connected, close the same connection`);
 
-				connection.close();
+				newConnection.removeAllListeners("connectionClosed");
+
+				newConnection.close();
 			}
+
+			return;
 		}
-	}
+		
+		// connection with new address
+		newConnection.logger.info(`ConnectionsManager push, new address ${newConnection.address.toString("hex")}, url: ${newConnection.socket.remoteAddress}:${newConnection.socket.remotePort}`);
 
-	/**
-	 * @param {Buffer} address
-	 */
-	get(address)
-	{
-		assert(Buffer.isBuffer(address), `ConnectionsManager get, address should be an Buffer, now is ${typeof address}`);
+		// add new connection
+		this.connections.push(newConnection);
+		
+		this.emit("addressConnected", newConnection.address.toString("hex"));
 
-		for(let i = 0; i < this.connections.length; i++)
-		{
-			if(this.connections[i].address.toString("hex") === address.toString("hex"))
-			{
-				return this.connections[i];
-			}
-		}
-
-		return undefined;
-	}
-
-	getAll()
-	{
-		return this.connections;
-	}
-
-	/**
-	 * @param {String} address
-	 */
-	close(address)
-	{
-		assert(typeof address === "string", `ConnectionsManager close, address should be an String, now is ${typeof address}`);
-
-		for(let i = 0; i < this.connections.length; i++)
-		{
-			if(this.connections[i].address.toString("hex") === address)
-			{
-				this.connections[i].logger.warn(`ConnectionsManager close, address ${address}`)
-
-				this.emit("addressClosed", address)
-
-				// delete connectionClosed event listeners
-				this.connections[i].removeAllListeners("connectionClosed")
-
-				this.connections[i].close();
-
-				this.connections.splice(i, 1);
-
-				break;
-			}
-		}
+		
 	}
 
 	closeAll()
 	{
-		for(let i = 0; i < this.connections.length; i++)
+		for(let connnection of this.connections)
 		{
-			this.connections[i].logger.warn(`ConnectionsManager closeAll, address ${this.connections[i].address.toString('hex')}`)
+			connnection.logger.warn(`ConnectionsManager closeAll, address ${connnection.address.toString('hex')}`);
 
-			this.emit("addressClosed", this.connections[i].address.toString("hex"))
+			this.emit("addressClosed", connnection.address.toString("hex"));
 
-			// delete connectionClosed event listeners
-			this.connections[i].removeAllListeners("connectionClosed")
-
-			this.connections[i].close();
+			connnection.close();
 		}
 
 		this.connections = [];
-	}
-
-	/**
-	 * @return {Array}
-	 */
-	getAllConnections()
-	{
-		const connectionsInfo = [];
-
-		for(let connection of this.connections)
-		{
-			connectionsInfo.push({
-				address: connection.address ? connection.address.toString("hex") : 'undefined',
-				url: connection.socket ? `${connection.socket.remoteAddress}:${connection.socket.remotePort}` : 'undefined',
-				readChannelClosed: connection.readChannelClosed,
-				writeChannelClosed: connection.writeChannelClosed,
-				allChannelClosed: connection.allChannelClosed,
-				stopWriteToBuffer: connection.stopWriteToBuffer,
-				ifAuthorizeSuccess: connection.ifAuthorizeSuccess
-			});
-		}
-
-		return connectionsInfo;
 	}
 }
 

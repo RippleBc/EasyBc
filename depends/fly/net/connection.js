@@ -1,6 +1,5 @@
 const assert = require("assert");
 const Message = require("./message");
-const MessageChunk = require("./message_chunk");
 const MessageChunkQueue = require("./message_chunk_queue");
 const Socket = require("net").Socket;
 const Token = require("../manager/token");
@@ -21,10 +20,6 @@ const AUTHORIZE_RES_CMD = 2;
 const AUTHORIZE_SUCCESS_CMD = 3;
 const AUTHORIZE_FAILED_CMD = 4;
 
-const MAX_CONNECTION_ID = 19901112;
-
-let id = 0;
-
 class Connection extends AsyncEventEmitter
 {
 	constructor(opts)
@@ -37,19 +32,15 @@ class Connection extends AsyncEventEmitter
 		assert(Buffer.isBuffer(opts.privateKey), `Connection constructor, opts.privateKey should be an Object, now is ${typeof opts.privateKey}`)
 
 		//
-		id ++;
-		if (id > MAX_CONNECTION_ID)
-		{
-			id = 0;
-		}
+		this.id = new BN(crypto.randomBytes(16)).addn(Date.now()).toBuffer();
 
-		this.id = id;
-
+		//
 		this.socket = opts.socket;
 		this.dispatcher = opts.dispatcher;
 		this.logger = opts.logger;
 		this.privateKey = opts.privateKey;
 
+		//
 		this.nonce = crypto.randomBytes(32);
 
 		// if other end's write channel is closed
