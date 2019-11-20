@@ -113,6 +113,11 @@ class P2p
 		}, CHECK_CONNECT_INTERVAL);
 	}
 
+	/**
+	 * @param {Buffer} address 
+	 * @param {Number} cmd 
+	 * @param {*} data 
+	 */
 	send(address, cmd, data)
 	{
 		assert(typeof cmd === "number", `P2p send, cmd should be a Number, now is ${typeof cmd}`);
@@ -127,11 +132,15 @@ class P2p
 			}
 			catch(e)
 			{
-				loggerP2p.error(`P2p send, send msg to address: ${connection.address}, host: ${connection.address().address}, port: ${connection.address().port}, ${process[Symbol.for("getStackInfo")](e)}`);
+				loggerP2p.error(`P2p send, send msg to address: ${connection.address}, host: ${connection.host}, port: ${connection.port}, ${process[Symbol.for("getStackInfo")](e)}`);
 			}
 		}
 	}
 
+	/**
+	 * @param {Number} cmd 
+	 * @param {*} data 
+	 */
 	sendAll(cmd, data)
 	{
 		assert(typeof cmd === "number", `P2p sendAll, cmd should be a Number, now is ${typeof cmd}`);
@@ -147,7 +156,7 @@ class P2p
 				}
 				catch(e)
 				{
-					loggerP2p.error(`P2p sendAll, send msg to address: ${connection.address}, host: ${connection.address().address}, port: ${connection.address().port}, ${process[Symbol.for("getStackInfo")](e)}`);
+					loggerP2p.error(`P2p sendAll, send msg to address: ${connection.address}, host: ${connection.host}, port: ${connection.port}, ${process[Symbol.for("getStackInfo")](e)}`);
 				}
 			}
 		}

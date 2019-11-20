@@ -40,6 +40,8 @@ class Connection extends AsyncEventEmitter
 
 		//
 		this.socket = socket;
+		this.host = host;
+		this.port = port;
 		this.dispatcher = dispatcher;
 		this.logger = logger;
 		this.privateKey = privateKey;
