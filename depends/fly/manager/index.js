@@ -173,35 +173,6 @@ class ConnectionsManager extends AsyncEventEmitter
 	}
 
 	/**
-	 * @param {Array/String} addresses - connection addresses should be keeped
-	 */
-	clearInvalidConnections(addresses)
-	{
-		assert(Array.isArray(addresses), `ConnectionManager clearInvalidConnections, addresses should be an Array, now is ${typeof addresses}`)
-		
-		const originConnections = this.connections;
-		this.connections = []
-
-		for(let i = 0; i < originConnections.length; i++)
-		{
-			if(undefined !== addresses.find(address => address === originConnections[i].address.toString("hex")))
-			{
-				this.connections.push(originConnections[i]);
-			}
-			else
-			{
-				this.emit("addressClosed", originConnections[i].address.toString("hex"))
-
-				originConnections[i].removeAllListeners("connectionClosed");
-
-				originConnections[i].close();
-
-				originConnections[i].logger.warn(`ConnectionManager clearInvalidConnections, close address ${originConnections[i].address.toString("hex")}`)
-			}
-		}
-	}
-
-	/**
 	 * @return {Array}
 	 */
 	getAllConnections()

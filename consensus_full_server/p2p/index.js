@@ -89,11 +89,6 @@ class P2p
 
 		// check connections
 		setInterval(() => {
-			const unlNotIncludeSelf = unlManager.unlNotIncludeSelf;
-
-			// clear invalid connections
-			connectionsManager.clearInvalidConnections(unlNotIncludeSelf.map(node => node.address))
-
 			// try to reconnect other nodes
 			this.reconnectAll();
 
