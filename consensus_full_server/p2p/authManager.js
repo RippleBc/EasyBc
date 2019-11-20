@@ -1,6 +1,9 @@
 const Connection = require("../../depends/fly/net/connection");
 const assert = require("assert");
 const ConnectionsManager = require("../../depends/fly/manager");
+const unlManager = process[Symbol.for("unlManager")];
+
+const loggerP2p = process[Symbol.for("loggerP2p")];
 
 class AuthConnectionsManager extends ConnectionsManager {
     constructor() {
@@ -20,6 +23,19 @@ class AuthConnectionsManager extends ConnectionsManager {
         }
 
         return undefined;
+    }
+    /**
+	 * @param {Connection} newConnection
+	 */
+    pushConnection(newConnection) {
+        if (unlManager.unlNotIncludeSelf.find(node => node.address === newConnection.address.toString('hex'))) {
+            super.pushConnection(newConnection);
+
+            return;
+        }
+
+        loggerP2p.error(`AuthConnectionsManager pushConnection, invalid address ${newConnection.address.toString('hex')}`)
+        
     }
 
 	/**
