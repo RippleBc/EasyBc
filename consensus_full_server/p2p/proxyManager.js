@@ -1,17 +1,28 @@
-const Connection = require("../net/connection");
+const Connection = require("../../depends/fly/net/connection");
 const assert = require("assert");
-const AsyncEventEmitter = require("async-eventemitter");
+const ConnectionsManager = require("../../depends/fly/manager");
 
-class ConnectionsManager extends AsyncEventEmitter
-{
-	constructor()
-	{
-		super();
-
-		this.connections = [];
-	}
+class ProxyConnectionsManager extends ConnectionsManager {
+    constructor() {
+        super();
+    }
 
 	/**
+	 * @param {Buffer} address
+	 */
+    get(address) {
+        assert(Buffer.isBuffer(address), `ProxyConnectionsManager get, address should be an Buffer, now is ${typeof address}`);
+
+        for (let i = 0; i < this.connections.length; i++) {
+            if (this.connections[i].address.toString("hex") === address.toString("hex")) {
+                return this.connections[i];
+            }
+        }
+
+        return undefined;
+    }
+
+    /**
 	 * @param {Connection} newConnection
 	 */
 	pushConnection(newConnection)
@@ -69,21 +80,28 @@ class ConnectionsManager extends AsyncEventEmitter
 		this.connections.push(newConnection);
 		
 		this.emit("addressConnected", newConnection.address.toString("hex"));
-	}
+    }
+    
+	/**
+	 * @return {Array}
+	 */
+    getAllConnections() {
+        const connectionsInfo = [];
 
-	closeAll()
-	{
-		for(let connnection of this.connections.entries())
-		{
-			connnection.logger.warn(`ConnectionsManager closeAll, address ${connnection.address.toString('hex')}`);
+        for (let connection of this.connections) {
+            connectionsInfo.push({
+                address: connection.address ? connection.address.toString("hex") : 'undefined',
+                url: connection.socket ? `${connection.socket.remoteAddress}:${connection.socket.remotePort}` : 'undefined',
+                readChannelClosed: connection.readChannelClosed,
+                writeChannelClosed: connection.writeChannelClosed,
+                allChannelClosed: connection.allChannelClosed,
+                stopWriteToBuffer: connection.stopWriteToBuffer,
+                ifAuthorizeSuccess: connection.ifAuthorizeSuccess
+            });
+        }
 
-			this.emit("addressClosed", connnection.address.toString("hex"));
-
-			connnection.close();
-		}
-
-		this.connections = [];
-	}
+        return connectionsInfo;
+    }
 }
 
-module.exports = ConnectionsManager; 
+module.exports = ProxyConnectionsManager; 

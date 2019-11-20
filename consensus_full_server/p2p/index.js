@@ -3,7 +3,9 @@ const utils = require("../../depends/utils");
 const Fly = require("../../depends/fly");
 const assert = require("assert");
 const { PROTOCOL_HEART_BEAT } = require("../constants");
-const ConnectionsManager = require("./manager");
+const AuthConnectionsManager = require("./authManager");
+const ProxyConnectionsManager = require("./proxyManager");
+const { p2pProxy } = require("../../globalConfig.json");
 
 const Buffer = utils.Buffer;
 
@@ -24,10 +26,21 @@ class P2p
 		assert(typeof tcp.host === "string", `P2p constructor, tcp.host should be a String, now is ${typeof tcp.host}`);
 		assert(typeof tcp.port === "number", `P2p constructor, tcp.port should be a Number, now is ${typeof tcp.port}`);
 		
+		let connectionsManager;
+
+		if(p2pProxy.open)
+		{
+			connectionsManager = new ProxyConnectionsManager()
+		}
+		else
+		{
+			connectionsManager = new AuthConnectionsManager()
+		}
+
 		this.fly = new Fly({
 			dispatcher: dispatcher,
 			logger: loggerNet,
-			connectionsManager: new ConnectionsManager()
+			connectionsManager: connectionsManager
 		})
 
 		this.fly.connectionsManager.on("addressConnected", address => {

@@ -10,5 +10,11 @@
         "balance": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
       }
     ]
+  },
+  "p2pProxy":
+  {
+    "oepn": true,    
+    "host": "localhost",
+    "port": 7070
   }
 }
