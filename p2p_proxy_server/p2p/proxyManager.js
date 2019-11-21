@@ -24,7 +24,7 @@ class ProxyConnectionsManager extends ConnectionsManager {
 
 				if (connection.id.toString('hex') === newConnection.id.toString('hex')) {
 
-					newConnection.logger.warn(`ProxyConnectionsManager pushConnection, delete connection, id: ${newConnection.id.toString('hex')}, address: ${newConnection.address.toString("hex")}, url:${newConnection.socket.remoteAddress}:${newConnection.socket.remotePort}`)
+					newConnection.logger.warn(`ProxyConnectionsManager pushConnection, delete connection, id: ${newConnection.id.toString('hex')}, host: ${newConnection.host}, port: ${newConnection.port}`)
 
 					this.connections.splice(index, 1);
 				}
@@ -32,7 +32,7 @@ class ProxyConnectionsManager extends ConnectionsManager {
 		});
 		
 		// connection with new address
-        loggerP2p.info(`ProxyConnectionsManager pushConnection, url: ${newConnection.host}:${newConnection.port}`);
+        loggerP2p.info(`ProxyConnectionsManager pushConnection, host: ${newConnection.host}, port: ${newConnection.port}`);
 
 		// add new connection
 		this.connections.push(newConnection);
