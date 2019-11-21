@@ -82,3 +82,15 @@ app.post("/deleteNodes", (req, res) => {
     })
   })
 });
+
+app.post("/processState", (req, res) => {
+  res.json({
+    code: SUCCESS,
+    data: {
+      sequence: processor.consensus.sequence.toString('hex'),
+      view: processor.consensus.view.toString('hex'),
+      hash: processor.consensus.hash.toString('hex'),
+      number: processor.consensus.number.toString('hex'),
+    }
+  });
+})

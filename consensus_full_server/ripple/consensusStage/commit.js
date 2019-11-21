@@ -63,7 +63,7 @@ class Commit extends ConsensusStage {
     if (code === STAGE_FINISH_SUCCESS) {
       assert(candidateDigest instanceof CandidateDigest, `Commit handler, data should be an instanceof CandidateDigest, now is ${typeof candidateDigest}`);
 
-      this.ripple.consensusCandidateDigest = candidateDigest;
+      this.ripple.consensusCandidateDigest = new CandidateDigest(candidateDigest.serialize());
       this.ripple.consensusCandidateDigest.sign(privateKey);
     }
     else {

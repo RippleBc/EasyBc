@@ -19,7 +19,7 @@ const logger = process[Symbol.for("loggerConsensus")];
 
 class FetchConsensusCandidate
 {
-  handleMessage(ripple)
+  constructor(ripple)
   {
     this.ripple = ripple;
 
@@ -36,6 +36,9 @@ class FetchConsensusCandidate
 
       process.exit(1);
     }
+
+    logger.info(`FetchConsensusCandidate run begin, sequence: ${this.ripple.sequence.toString('hex')}, hash: ${this.ripple.hash.toString('hex')}, number: ${this.ripple.number.toString('hex')}, view: ${this.ripple.view.toString('hex')}`);
+
 
     this.state = STAGE_STATE_PROCESSING;
 

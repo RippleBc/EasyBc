@@ -104,7 +104,7 @@ class Stage {
     // check sig
     if (!candidateValidateResult) {
       logger.error(`${this.name} Stage validateAndProcessExchangeData, address: ${address}, validate failed`);
-
+      
       this.ripple.cheatedNodes.push({
         address: address,
         reason: CHEAT_REASON_INVALID_SIG
