@@ -59,8 +59,8 @@ class P2p
 
 		// check connection
 		setInterval(() => {
-			//
-			if (this.fullServerConnection.checkIfClosed())
+			// 
+			if (!this.fullServerConnection || this.fullServerConnection.checkIfClosed())
 			{
 				this.fly.createClient({
 					host: fullConsensusHost,
