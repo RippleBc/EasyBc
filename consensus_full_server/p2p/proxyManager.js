@@ -18,6 +18,12 @@ class ProxyConnectionsManager extends ConnectionsManager {
 
         // find correspond node by address
         const node = unlManager.unlNotIncludeSelf.find(node => node.address === address.toString('hex'));
+        if(!node)
+        {
+            loggerP2p.error(`ProxyConnectionsManager get, address ${address.toString('hex')} is invalid`);
+
+            return;
+        }
 
         // find correspond conn by host and port
         for (let connection of this.connections) {
@@ -27,7 +33,7 @@ class ProxyConnectionsManager extends ConnectionsManager {
             }
         }
 
-        return undefined;
+        return;
     }
 
     /**

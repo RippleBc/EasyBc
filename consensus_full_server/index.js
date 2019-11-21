@@ -85,9 +85,15 @@ process.on("uncaughtException", function(err) {
     const p2p = process[Symbol.for("p2p")] = new P2p(function(message) {
         if (p2pProxy.open)
         {
-            const [address, msg] = utils.decode(message);
+            let address;
 
-            processor.handleMessage(address, msg);
+            if (message.data)
+            {
+                ([address, data] = utils.rlp.decode(message.data));
+                message.data = data;
+            }
+
+            processor.handleMessage(address, message);
         }
         else
         {

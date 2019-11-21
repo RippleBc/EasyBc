@@ -55,7 +55,7 @@ class Processor {
                 {
                     const candidate = new Candidate(data);
 
-                    p2p.send(cmd, rlp.encode([candidate.from, data]));
+                    data = rlp.encode([candidate.from, data]);
                 }
                 break;
             case PROTOCOL_CMD_PREPARE:
@@ -64,7 +64,7 @@ class Processor {
                 {
                     const candidateDigest = new CandidateDigest(data);
 
-                    p2p.send(cmd, rlp.encode([candidateDigest.from, data]));
+                    data = rlp.encode([candidateDigest.from, data]);
                 }
                 break;
             case PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL:
@@ -72,19 +72,19 @@ class Processor {
                 {
                     const viewChange = new ViewChange(data);
 
-                    p2p.send(cmd, rlp.encode([viewChange.from, data]));
+                    data = rlp.encode([viewChange.from, data]);
                 }
                 break;
             case PROTOCOL_CMD_NEW_VIEW_REQ:
                 {
                     const newView = new NewView(data);
 
-                    p2p.send(cmd, rlp.encode([newView.from, data]));
+                    data = rlp.encode([newView.from, data]);
                 }
                 break;
-            
-               
         }
+
+        p2p.send(cmd, data);
     }
 }
 
