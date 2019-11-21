@@ -26,47 +26,44 @@ class P2p
 		assert(typeof tcp.host === "string", `P2p constructor, tcp.host should be a String, now is ${typeof tcp.host}`);
 		assert(typeof tcp.port === "number", `P2p constructor, tcp.port should be a Number, now is ${typeof tcp.port}`);
 
+		let auth;
 		if(p2pProxy.open)
 		{
 			this.connectionsManager = new ProxyConnectionsManager();
 
-			this.auth = false;
+			auth = false;
 		}
 		else
 		{
 			this.connectionsManager = new AuthConnectionsManager();
 
-			this.auth = true;
+			auth = true;
 		}
 
 		this.fly = new Fly({
 			dispatcher: dispatcher,
 			logger: loggerNet,
 			connectionsManager: this.connectionsManager,
-			auth: this.auth
-		})
+			auth: auth
+		});	
 
-		if(this.auth)
-		{
-			this.connectionsManager.on("addressConnected", address => {
-				assert(typeof address === 'string', `addressConnected handler, address shoule be an Array, now is ${typeof address}`)
+		this.connectionsManager.on("addressConnected", address => {
+			assert(typeof address === 'string', `P2p constructor, addressConnected handler, address shoule be an Array, now is ${typeof address}`)
 
-				if (unlManager.unlNotIncludeSelf.find(node => node.address === address)) {
-					unlManager.setNodesOnline([address])
-				}
+			if (unlManager.unlNotIncludeSelf.find(node => node.address === address)) {
+				unlManager.setNodesOnline([address])
+			}
 
-			});
+		});
 
-			this.connectionsManager.on("addressClosed", address => {
+		this.connectionsManager.on("addressClosed", address => {
 
-				assert(typeof address === 'string', `addressClosed handler, address shoule be an Array, now is ${typeof address}`)
+			assert(typeof address === 'string', `P2p constructor, addressClosed handler, address shoule be an Array, now is ${typeof address}`)
 
-				if (unlManager.unlNotIncludeSelf.find(node => node.address === address)) {
-					unlManager.setNodesOffline([address])
-				}
-			});
-		}
-		
+			if (unlManager.unlNotIncludeSelf.find(node => node.address === address)) {
+				unlManager.setNodesOffline([address])
+			}
+		});	
 	}
 
 	async init()
@@ -94,10 +91,7 @@ class P2p
 			catch(e)
 			{
 				// 
-				if(this.auth)
-				{
-					unlManager.setNodesOffline([node.address])
-				}
+				unlManager.setNodesOffline([node.address])
 
 				loggerP2p.error(`P2p init, connect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort}, ${process[Symbol.for("getStackInfo")](e)}`);
 			}
@@ -144,18 +138,8 @@ class P2p
 	sendAll(cmd, data)
 	{
 		assert(typeof cmd === "number", `P2p sendAll, cmd should be a Number, now is ${typeof cmd}`);
-		
-		for (let connection of this.connectionsManager.connections)
-		{
-			if (connection.checkIfCanWrite()) {
-				try {
-					connection.write(cmd, data);
-				}
-				catch (e) {
-					loggerP2p.error(`P2p sendAll, send msg to address: ${connection.address}, host: ${connection.host}, port: ${connection.port}, ${process[Symbol.for("getStackInfo")](e)}`);
-				}
-			}
-		}			
+
+		this.connectionsManager.sendAll(cmd, data);
 	}
 
 	async reconnectAll()
@@ -180,9 +164,7 @@ class P2p
 				catch(e)
 				{
 					// 
-					if (this.auth) { 
-						unlManager.setNodesOffline([node.address]);
-					}
+					unlManager.setNodesOffline([node.address]);
 
 					loggerP2p.error(`P2p reconnectAll, connect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort}, ${process[Symbol.for("getStackInfo")](e)}`);
 				}

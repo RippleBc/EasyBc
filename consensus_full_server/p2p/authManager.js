@@ -38,6 +38,25 @@ class AuthConnectionsManager extends ConnectionsManager {
         
     }
 
+    /**
+	 * @param {Number} cmd 
+	 * @param {*} data 
+	 */
+    sendAll(cmd, data) {
+        assert(typeof cmd === "number", `AuthConnectionsManager sendAll, cmd should be a Number, now is ${typeof cmd}`);
+
+        for (let connection of this.connections) {
+            if (connection.checkIfCanWrite()) {
+                try {
+                    connection.write(cmd, data);
+                }
+                catch (e) {
+                    loggerP2p.error(`AuthConnectionsManager sendAll, send msg to address: ${connection.address}, host: ${connection.host}, port: ${connection.port}, ${process[Symbol.for("getStackInfo")](e)}`);
+                }
+            }
+        }
+    }
+
 	/**
 	 * @return {Array}
 	 */
