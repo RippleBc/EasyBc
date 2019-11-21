@@ -65,18 +65,18 @@ class Fly {
 			});
 
 			client.on("error", e => {
-				reject(`Fly createClient, client connected to host: ${client.remoteAddress}, port: ${client.remotePort}, failed, ${e}`);
+				reject(`Fly createClient, client connected to host: ${host}, port: ${port}, failed, ${e}`);
 			});
 
 			const timeout = setTimeout(() => {
-				reject(`Fly createClient, client connected to host: ${client.remoteAddress}, port: ${client.remotePort}, timeout`);
+				reject(`Fly createClient, client connected to host: ${host}, port: ${port}, timeout`);
 			}, CONNECT_TIMEOUT);
 
 			timeout.unref();
 		});
 
 		//
-		this.logger.info(`Fly createClient, create an connection to host: ${client.remoteAddress}, port: ${client.remotePort}`);
+		this.logger.info(`Fly createClient, create an connection to host: ${host}, port: ${port}`);
 
 		//
 		if (this.auth) {
@@ -86,22 +86,22 @@ class Fly {
 			}
 			catch (errCode) {
 				if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT) {
-					this.logger.error(`Fly createClient, authorize failed because of timeout, host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
+					this.logger.error(`Fly createClient, authorize failed because of timeout, host: ${host}, port: ${port}`)
 
 					connection.close();
 				}
 				else if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_OTHER_INVALID_SIGNATURE) {
-					this.logger.error(`Fly createClient, authorize failed because of other invalid signature, me do not trust host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
+					this.logger.error(`Fly createClient, authorize failed because of other invalid signature, me do not trust host: ${host}, port: ${port}`)
 
 					connection.close();
 				}
 				else if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_SELF_INVALID_SIGNATURE) {
-					this.logger.error(`Fly createClient, authorize failed because of invalid signature, host: ${socket.remoteAddress}, port: ${socket.remotePort} do not trust me`)
+					this.logger.error(`Fly createClient, authorize failed because of invalid signature, host: ${host}, port: ${port} do not trust me`)
 
 					connection.close();
 				}
 				else {
-					this.logger.fatal(`Fly createClient, authorize throw unexpected err, host: ${socket.remoteAddress}, port: ${socket.remotePort}, ${process[Symbol.for("getStackInfo")](errCode)}`);
+					this.logger.fatal(`Fly createClient, authorize throw unexpected err, host: ${host}, port: ${port}, ${process[Symbol.for("getStackInfo")](errCode)}`);
 
 					connection.close();
 				}
@@ -109,7 +109,7 @@ class Fly {
 				return;
 			}
 
-			this.logger.info(`Fly createClient, authorize successed, host: ${client.remoteAddress}, port: ${client.remotePort}`);
+			this.logger.info(`Fly createClient, authorize successed, host: ${client.host}, port: ${client.port}`);
 		}
 
 		// manage success connection

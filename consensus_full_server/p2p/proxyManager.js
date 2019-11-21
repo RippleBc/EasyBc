@@ -53,7 +53,7 @@ class ProxyConnectionsManager extends ConnectionsManager {
 		});
 		
 		// connection with new address
-        loggerP2p.info(`ProxyConnectionsManager pushConnection, url: ${newConnection.host}:${newConnection.port}`);
+        loggerP2p.info(`ProxyConnectionsManager pushConnection, host: ${newConnection.host}, port: ${newConnection.port}`);
 
 		// add new connection
 		this.connections.push(newConnection);
@@ -68,7 +68,7 @@ class ProxyConnectionsManager extends ConnectionsManager {
         for (let connection of this.connections) {
             connectionsInfo.push({
                 address: connection.address ? connection.address.toString("hex") : 'undefined',
-                url: connection.socket ? `${connection.socket.remoteAddress}:${connection.socket.remotePort}` : 'undefined',
+                url: connection.socket ? `${connection.host}:${connection.port}` : 'undefined',
                 readChannelClosed: connection.readChannelClosed,
                 writeChannelClosed: connection.writeChannelClosed,
                 allChannelClosed: connection.allChannelClosed,
