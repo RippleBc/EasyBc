@@ -40,7 +40,7 @@ class Processor {
         assert(message instanceof Message, `Processor handleMessage, message should be a Message Object, now is ${typeof message}`);
 
         const cmd = bufferToInt(message.cmd);
-        const data = message.data;
+        let data = message.data;
 
         switch(cmd)
         {
