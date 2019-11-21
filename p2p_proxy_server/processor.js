@@ -21,6 +21,7 @@ const ViewChange = require("../consensus_full_server/ripple/data/viewChange");
 const utils = require("../depends/utils");
 
 const rlp = utils.rlp;
+const bufferToInt = utils.bufferToInt;
 
 const p2p = process[Symbol.for("p2p")]
 const logger = process[Symbol.for("loggerProxy")];
@@ -40,8 +41,6 @@ class Processor {
 
         const cmd = bufferToInt(message.cmd);
         const data = message.data;
-
-        logger.info(`Processor handleMessage, cmd ${cmd}`);
 
         switch(cmd)
         {

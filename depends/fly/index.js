@@ -58,7 +58,8 @@ class Fly {
 					port: port,
 					dispatcher: this.dispatcher,
 					logger: this.logger,
-					privateKey: privateKey
+					privateKey: privateKey,
+					auth: this.auth
 				});
 
 				resolve(connection);
@@ -153,7 +154,8 @@ class Fly {
 				port: socket.remotePort,
 				dispatcher: this.dispatcher,
 				logger: this.logger,
-				privateKey: privateKey
+				privateKey: privateKey,
+				auth: this.auth
 			});
 
 			//

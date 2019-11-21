@@ -23,7 +23,7 @@ const AUTHORIZE_FAILED_CMD = 4;
 
 class Connection extends AsyncEventEmitter
 {
-	constructor({ socket, host, port, dispatcher, logger, privateKey})
+	constructor({ socket, host, port, dispatcher, logger, privateKey, auth })
 	{
 		super();
 
@@ -33,6 +33,7 @@ class Connection extends AsyncEventEmitter
 		assert(typeof dispatcher	=== "function", `Connection	constructor, dispatcher should be a Function, now is ${typeof dispatcher}`);
 		assert(typeof logger	=== "object", `Connection constructor, logger should be an Object, now is ${typeof logger}`);
 		assert(Buffer.isBuffer(privateKey), `Connection constructor, privateKey should be an Object, now is ${typeof privateKey}`)
+		assert(typeof auth === "boolean", `Connection constructor, auth should be a Number, now is ${typeof auth}`);
 
 		//
 		const nowBuffer = utils.toBuffer(Date.now());
@@ -45,6 +46,7 @@ class Connection extends AsyncEventEmitter
 		this.dispatcher = dispatcher;
 		this.logger = logger;
 		this.privateKey = privateKey;
+		this.auth = auth;
 
 		//
 		this.nonce = crypto.randomBytes(32);
@@ -366,7 +368,7 @@ class Connection extends AsyncEventEmitter
 
 				default: 
 				{
-					if (this.ifAuthorizeSuccess)
+					if (!this.auth || this.ifAuthorizeSuccess)
 					{
 						this.dispatcher(message);
 					}
