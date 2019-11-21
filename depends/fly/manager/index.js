@@ -28,7 +28,7 @@ class ConnectionsManager extends AsyncEventEmitter
 
 				if (connection.id.toString('hex') === newConnection.id.toString('hex')) {
 
-					newConnection.logger.info(`ConnectionsManager pushConnection, delete connection, id: ${newConnection.id.toString('hex')}, address: ${newConnection.address.toString("hex")}, url:${newConnection.socket.remoteAddress}:${newConnection.socket.remotePort}`)
+					newConnection.logger.warn(`ConnectionsManager pushConnection, delete connection, id: ${newConnection.id.toString('hex')}, address: ${newConnection.address.toString("hex")}, url:${newConnection.socket.remoteAddress}:${newConnection.socket.remotePort}`);
 
 					this.connections.splice(index, 1);
 				}
@@ -44,10 +44,10 @@ class ConnectionsManager extends AsyncEventEmitter
 			}
 
 			if (connection.checkIfClosed()) {
-				connection.logger.info(`ConnectionsManager pushConnection, address ${newConnection.address.toString("hex")}, url: ${newConnection.socket.remoteAddress}:${newConnection.socket.remotePort} has closed, replace with new connection, url: ${newConnection.socket.remoteAddress}:${newConnection.socket.remotePort}`);
+				connection.logger.info(`ConnectionsManager pushConnection, address ${connection.address.toString("hex")}, url: ${connection.socket.remoteAddress}:${connection.socket.remotePort} has closed, replace with new connection, url: ${newConnection.socket.remoteAddress}:${newConnection.socket.remotePort}`);
 
 				// replace closed collection
-				this.connection[index] = newConnection;
+				this.connections[index] = newConnection;
 
 				this.emit("addressConnected", newConnection.address.toString("hex"));
 			}
@@ -78,6 +78,8 @@ class ConnectionsManager extends AsyncEventEmitter
 			connnection.logger.warn(`ConnectionsManager closeAll, address ${connnection.address.toString('hex')}`);
 
 			this.emit("addressClosed", connnection.address.toString("hex"));
+
+			connnection.removeAllListeners("connectionClosed");
 
 			connnection.close();
 		}
