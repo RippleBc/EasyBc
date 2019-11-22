@@ -21,12 +21,12 @@ const configs = {
     ],
     "consensus_transaction_parser/config.json": [
         ["mysql", "dbName"],
-        ["mongo", "dbName"],
+        ["mongo", "dbName"]
     ],
     "globalConfig.json": [
         ["index"],
         ["blockChain", "privateKey"],
-        ["p2pProxy", "open"]
+        ["p2pProxy", "open"],
         ["p2pProxy", "port"]
     ],
     "p2p_proxy_server/config.json": [
@@ -71,6 +71,9 @@ module.exports = options => {
 }
 
 const changeConfig = (filename, items, handler) => {
+
+    console.info(`\nfilename: ${filename}, items: ${items}\n`);
+
     let configFd = fs.openSync(path.join(__dirname, "../../", filename), "r");
 
     //read

@@ -5,7 +5,7 @@ module.exports = async (options) => {
 
     switchConfig(options);
 
-    await switchPort(options.proxy);
+    await switchPort(options.p2pProxyOpen);
 
     process.exit(1);
 }
