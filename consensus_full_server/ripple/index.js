@@ -265,6 +265,17 @@ class Ripple
 			}
 			
 			if (this.state === RIPPLE_STATE_CONSENSUS) {
+
+				//
+				const msg = this.fetchMsgWithSequence({
+					cmd: PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ,
+					sequenceMode: SEQUENCE_MODE_MATCH
+				});
+				if (msg) {
+					this.fetchConsensusCandidate.handleMessage(msg.address, msg.cmd, msg.data);
+				}
+
+				//
 				switch (this.stage) {
 					case STAGE_AMALGAMATE:
 						{
@@ -341,22 +352,12 @@ class Ripple
 						break;
 					case STAGE_FETCH_CANDIDATE:
 						{
-							const msg1 = this.fetchMsgWithSequence({
-								cmd: PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ, 
-								sequenceMode: SEQUENCE_MODE_MATCH
-							});
-							if (msg1) {
-								this.fetchConsensusCandidate.handleMessage(msg1.address, msg1.cmd, msg1.data);
-							
-								continue;
-							}
-
-							const msg2 = this.fetchMsgWithSequence({
+							const msg = this.fetchMsgWithSequence({
 								cmd: PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES, 
 								sequenceMode: SEQUENCE_MODE_MATCH
 							});
-							if (msg2) {
-								this.fetchConsensusCandidate.handleMessage(msg2.address, msg2.cmd, msg2.data);
+							if (msg) {
+								this.fetchConsensusCandidate.handleMessage(msg.address, msg.cmd, msg.data);
 							
 								continue;
 							}
