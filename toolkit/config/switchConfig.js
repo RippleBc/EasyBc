@@ -40,32 +40,42 @@ module.exports = options => {
     for (let filename in configs)
     {
         changeConfig(filename, configs[filename], (field, item) => {
-            if (field === 'port' && options.index)
+            if (field === 'port' && options.dbIndex)
             {
-                item[field] = item[field] + 100 * options.index;
+                console.log(`change port, ${filename} => ${configs[filename]}, ${options.dbIndex}`);
+                item[field] = item[field] + 100 * options.dbIndex;
             }
 
-            if (field === 'dbName' && options.index)
+            if (field === 'dbName' && options.dbIndex)
             {
-                item[field] = `${item[field]}${options.index}`
+                console.log(`change dbName, ${filename} => ${configs[filename]}, ${options.dbIndex}`);
+                item[field] = `${item[field]}${options.dbIndex}`
+            }
+
+            if (field === 'index' && options.processIndex)
+            {
+                console.log(`change processIndex, ${filename} => ${configs[filename]}, ${options.processIndex}`);
+                item[field] = options.processIndex;
             }
 
             if (field === 'open')
             {
                 if (options.p2pProxyOpen)
                 {
-                    console.log("\nopen proxy p2p\n")
+                    console.log("open proxy p2p")
                     item[field] = true
                 }
                 else
                 {
-                    console.log("\nclose proxy p2p\n")
+                    console.log("close proxy p2p")
                     item[field] = false
                 }
             }
 
             if (field === 'privateKey' && options.privateKey)
             {
+                console.log(`change privateKey, ${filename} => ${configs[filename]}, ${options.privateKey}`)
+
                 item[field] = options.privateKey
             }
         })
