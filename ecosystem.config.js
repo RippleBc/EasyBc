@@ -1,6 +1,8 @@
+const { index: processIndex } = require("./globalConfig");
+
 module.exports = {
   apps : [{
-    name: 'fullConsensus',
+    name: `fullConsensus${processIndex}`,
     script: 'consensus_full_server/index.js',
     args: '',
     node_args: '--abort-on-uncaught-exception',
@@ -19,7 +21,7 @@ module.exports = {
       NODE_ENV: 'production'
     }
   }, {
-    name: 'p2pProxyServer',
+    name: `p2pProxyServer${processIndex}`,
     script: 'p2p_proxy_server/index.js',
     args: '',
     node_args: '--abort-on-uncaught-exception',
@@ -38,7 +40,7 @@ module.exports = {
       NODE_ENV: 'production'
     }
   },{
-    name: 'lightConsensus',
+    name: `lightConsensus${processIndex}`,
     script: 'consensus_light_server/index.js',
     args: '',
     node_args: '--abort-on-uncaught-exception',
@@ -57,7 +59,7 @@ module.exports = {
       NODE_ENV: 'production'
     }
   },{
-    name: 'consensusLogParser',
+    name: `consensusLogParser${processIndex}`,
     script: 'consensus_log_parser/index.js',
     args: '',
     node_args: '--abort-on-uncaught-exception',
@@ -76,7 +78,7 @@ module.exports = {
       NODE_ENV: 'production'
     }
   },{
-    name: 'transactionParser',
+    name: `transactionParser${processIndex}`,
     script: 'consensus_transaction_parser/index.js',
     args: '',
     node_args: '--abort-on-uncaught-exception',
