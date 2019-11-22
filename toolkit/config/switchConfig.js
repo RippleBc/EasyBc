@@ -54,10 +54,12 @@ module.exports = options => {
             {
                 if (options.p2pProxyOpen)
                 {
+                    console.log("\nopen proxy p2p\n")
                     item[field] = true
                 }
                 else
                 {
+                    console.log("\nclose proxy p2p\n")
                     item[field] = false
                 }
             }
@@ -71,9 +73,6 @@ module.exports = options => {
 }
 
 const changeConfig = (filename, items, handler) => {
-
-    console.info(`\nfilename: ${filename}, items: ${items}\n`);
-
     let configFd = fs.openSync(path.join(__dirname, "../../", filename), "r");
 
     //read
