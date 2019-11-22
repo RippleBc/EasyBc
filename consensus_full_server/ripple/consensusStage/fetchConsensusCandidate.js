@@ -10,6 +10,7 @@ const { STAGE_STATE_EMPTY,
 const CandidateDigest = require("../data/candidateDigest");
 const Candidate = require("../data/candidate");
 const utils = require("../../../depends/utils");
+const assert = require("assert");
 
 const sha256 = utils.sha256;
 
