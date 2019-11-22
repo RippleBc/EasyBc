@@ -102,8 +102,16 @@ class FetchConsensusCandidate
             return;
           }
 
-          // 
-          if (this.ripple.candidateDigest && this.ripple.candidateDigest.hash(false).toString('hex') !== consensusCandidateDigest.hash(false).toString('hex'))
+          // check if has enter next round
+          if (!this.ripple.candidateDigest)
+          {
+            logger.info(`FetchConsensusCandidate handleMessage, sequence ${consensusCandidateDigest.sequence.toString('hex')}, round has finished`);
+
+            return;
+          }
+
+          // check if in the same round
+          if (this.ripple.candidateDigest.hash(false).toString('hex') !== consensusCandidateDigest.hash(false).toString('hex'))
           {
             logger.error(`FetchConsensusCandidate handleMessage, candidateDigest should be ${this.ripple.candidateDigest.hash(false).toString('hex')}, now is ${consensusCandidateDigest.hash(false).toString('hex')}`);
 
@@ -148,7 +156,7 @@ class FetchConsensusCandidate
             return;
           }
 
-          // 
+          // check transactions digest
           if (this.ripple.consensusCandidateDigest.digest.toString('hex') !== sha256(candidate.transactions).toString('hex')) {
             logger.error(`FetchConsensusCandidate handleMessage, txs digest should be ${this.ripple.consensusCandidateDigest.digest.toString('hex')}, now is ${sha256(candidate.transactions).toString('hex')}`);
             
@@ -157,7 +165,8 @@ class FetchConsensusCandidate
 
           // init candidate
           this.ripple.candidate = new Candidate({
-            blockHash: this.ripple.consensusCandidateDigest.hash,
+            sequence: this.ripple.consensusCandidateDigest.sequence,
+            blockHash: this.ripple.consensusCandidateDigest.blockHash,
             number: this.ripple.consensusCandidateDigest.number,
             timestamp: this.ripple.consensusCandidateDigest.timestamp,
             view: this.ripple.consensusCandidateDigest.view,
