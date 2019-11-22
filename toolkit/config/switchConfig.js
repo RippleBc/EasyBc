@@ -92,16 +92,14 @@ const changeConfig = (filename, items, handler) => {
         let i = 0;
         for (; i < item.length - 1; i ++)
         {
-            const field = item[i];
-
-            configItem = configItem[field];
+            configItem = configItem[item[i]];
         }
         
         handler(item[i], configItem);
     }
 
     // write
-    configFd = fs.openSync(path.join(__dirname, "../../globalConfig.json"), "w");
+    configFd = fs.openSync(path.join(__dirname, "../../", filename), "w");
 
     const newConfigBuffer = Buffer.from(JSON.stringify(configJson, null, '\t'));
 
