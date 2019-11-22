@@ -40,14 +40,14 @@ module.exports = options => {
     for (let filename in configs)
     {
         changeConfig(filename, configs[filename], (field, item) => {
-            if (field === 'port' && options.index)
+            if (field === 'port' && options.index !== undefined)
             {
                 item[field] = item[field] + 100 * options.index;
             }
 
-            if (field === 'dbName' && options.index)
+            if (field === 'dbName' && options.index !== undefined)
             {
-                item[field] = `${item[field].slice(0, -1)}${options.index}`
+                item[field] = `${item[field]}${options.index}`
             }
 
             if (field === 'open')
