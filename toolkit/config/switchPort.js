@@ -1,6 +1,6 @@
 const mongoConfig = require("../../consensus_full_server/config").mongo;
 
-module.exports = async function (mode) {
+module.exports = async function (options) {
     // init mongo
     process[Symbol.for("mongo")] = require("../../depends/mongo_wrapper");
     await process[Symbol.for("mongo")].initBaseDb(mongoConfig.host, mongoConfig.port, mongoConfig.user, mongoConfig.password, mongoConfig.dbName);
@@ -13,7 +13,7 @@ module.exports = async function (mode) {
     //
     for (let node of unlManager._unl)
     {
-        if(mode === 'proxy')
+        if(options.p2pProxyOpen)
         {
             if (node.p2pPort > 9000 && node.p2pPort < 10000)
             {

@@ -6,12 +6,12 @@ const config = require("./config");
 // node toolkit/index.js config -m proxy
 program
     .version("0.1.0")
-    .option("-m, --mode <mode>", "config mode")
+    .option("-c, --command <mode>", "command")
     .action(options => {
 
-        console.info(`mode: ${options.mode}`);
+        const commandJSON = JSON.parse(options.command.replace(/(\r\n)|\r|\n|\t|\s/g, ''));
 
-        config(options.mode);
+        config(commandJSON);
     });
 
 program.parse(process.argv);

@@ -1,10 +1,11 @@
 const switchConfig = require("./switchConfig");
 const switchPort = require("./switchPort");
 
-module.exports = async (mode) => {
-    switchConfig(mode);
+module.exports = async (options) => {
 
-    await switchPort(mode);
+    switchConfig(options);
+
+    await switchPort(options.proxy);
 
     process.exit(1);
 }
