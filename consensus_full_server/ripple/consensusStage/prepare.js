@@ -62,7 +62,14 @@ class Prepare extends ConsensusStage
 		if (code === STAGE_FINISH_SUCCESS) {
 			assert(candidateDigest instanceof CandidateDigest, `Prepare handler, data should be an instanceof CandidateDigest, now is ${typeof candidateDigest}`);
 
-			this.ripple.consensusCandidateDigest = new CandidateDigest(candidateDigest.serialize());
+			this.ripple.consensusCandidateDigest = new CandidateDigest({
+				sequence: candidateDigest.sequence,
+				blockHash: candidateDigest.blockHash,
+				number: candidateDigest.number,
+				timestamp: candidateDigest.timestamp,
+				view: candidateDigest.view,
+				digest: candidateDigest.digest,
+			});
 			this.ripple.consensusCandidateDigest.sign(privateKey);
 		}
 		else

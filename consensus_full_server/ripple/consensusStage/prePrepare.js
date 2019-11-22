@@ -146,7 +146,14 @@ class PrePrepare extends LeaderStage {
           }
 
           // init candidate
-          this.ripple.candidate = reqCandidate;
+          this.ripple.candidate = new Candidate({
+            sequence: reqCandidate.sequence,
+            blockHash: reqCandidate.blockHash,
+            number: reqCandidate.number,
+            timestamp: reqCandidate.timestamp,
+            view: reqCandidate.view,
+            transactions: reqCandidate.transactions,
+          });
           this.ripple.candidate.sign(privateKey);
 
           // init candidate transactions
