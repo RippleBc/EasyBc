@@ -105,3 +105,13 @@ app.post("/repealMaliciousLeaderRejectServe", (req, res) => {
         code: SUCCESS
     });
 });
+
+app.post("/processState", (req, res) => {
+    res.send({
+        code: SUCCESS,
+        data: {
+            maliciousLeaderCandidate: processor.maliciousLeaderCandidate,
+            maliciousLeaderRejectServe: processor.maliciousLeaderRejectServe
+        }
+    });
+})
