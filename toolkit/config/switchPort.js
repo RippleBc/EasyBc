@@ -15,11 +15,17 @@ module.exports = async function (mode) {
     {
         if(mode === 'proxy')
         {
-            node.p2pPort -= 2020;
+            if (node.p2pPort > 9000 && node.p2pPort < 10000)
+            {
+                node.p2pPort -= 2020;
+            }
         }
         else
         {
-            node.p2pPort += 2020;
+            if (node.p2pPort > 7000 && node.p2pPort < 8000)
+            {
+                node.p2pPort += 2020;
+            }   
         }
     }
 
