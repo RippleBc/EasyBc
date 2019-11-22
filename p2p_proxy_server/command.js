@@ -27,6 +27,14 @@ const server = app.listen(port, host, function () {
 log4js.useLogger(app, logger);
 
 app.post("/setMaliciousLeaderCandidate", (req, res) => {
+
+    if (!req.body.type) {
+        return res.send({
+            code: PARAM_ERR,
+            msg: "param error, need type"
+        });
+    }
+
     rp({
         method: "POST",
         uri: `http://${fullConsensusHost}:${fullConsensusPort}/processState`,
@@ -37,7 +45,7 @@ app.post("/setMaliciousLeaderCandidate", (req, res) => {
     }).then(({ code, msg, data }) => {
         if(code === SUCCESS)
         {
-            processor.setMaliciousLeaderCandidate(data);
+            processor.setMaliciousLeaderCandidate(data, req.body.type);
 
             res.send({
                 code: SUCCESS
@@ -60,7 +68,14 @@ app.post("/setMaliciousLeaderCandidate", (req, res) => {
 
 app.post("/repealMaliciousLeaderCandidate", (req, res) => {
     
-    processor.repealMaliciousLeaderCandidate();
+    if (!req.body.type) {
+        return res.send({
+            code: PARAM_ERR,
+            msg: "param error, need type"
+        });
+    }
+
+    processor.repealMaliciousLeaderCandidate(req.body.type);
     
     res.send({
         code: SUCCESS

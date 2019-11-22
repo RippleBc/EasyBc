@@ -49,7 +49,8 @@ function getPrivateKeyByAddress(address)
 class Processor {
     constructor()
     {
-        this.maliciousLeaderCandidate = false;
+        this.maliciousLeaderCandidateInvalidBlock = false;
+        this.maliciousLeaderCandidateInvalidTransactions = false;
         this.maliciousLeaderRejectServe = false;
         this.privateKey = createPrivateKey();
     }
@@ -59,14 +60,34 @@ class Processor {
      * @param {String} sequence
      * @param {String} sequence
      * @param {String} sequence
+     * @param {Number} type
      */
-    setMaliciousLeaderCandidate({ sequence, view, hash, number })
+    setMaliciousLeaderCandidate({ sequence, view, hash, number }, type)
     {
-        this.maliciousLeaderCandidate = true;
+        assert(typeof type === 'number', `Processor setMaliciousLeaderCandidate, type should be a Number, now is ${typeof type}`);
+
+        if(type === 1)
+        {
+            this.maliciousLeaderCandidateInvalidBlock = true;
+        }
+        else
+        {
+            this.maliciousLeaderCandidateInvalidTransactions = true;
+        }
     }
 
-    repealMaliciousLeaderCandidate() {
-        this.maliciousLeaderCandidate = false;
+    /**
+     * @param {Number} type
+     */
+    repealMaliciousLeaderCandidate(type) {
+        assert(typeof type === 'number', `Processor repealMaliciousLeaderCandidate, type should be a Number, now is ${typeof type}`);
+
+        if (type === 1) {
+            this.maliciousLeaderCandidateInvalidBlock = false;
+        }
+        else {
+            this.maliciousLeaderCandidateInvalidTransactions = false;
+        }
     }
 
     /**
@@ -115,23 +136,32 @@ class Processor {
                     const candidate = new Candidate(data);
 
                     // leader send malicious candidate
-                    if (cmd === PROTOCOL_CMD_PRE_PREPARE_REQ
-                        && this.maliciousLeaderCandidate)
+                    if (cmd === PROTOCOL_CMD_PRE_PREPARE_REQ)
                     {
                         // get from address
                         const fromAddress = candidate.from;
 
-                        // init a random tx
-                        const tx = new Transaction({
-                            nonce: randomBytes(1),
-                            timestamp: Date.now(),
-                            to: randomBytes(20),
-                            value: randomBytes(32)
-                        });
-                        tx.sign(this.privateKey);
+                        if (this.maliciousLeaderCandidateInvalidTransactions)
+                        {
+                            // init a random tx
+                            const tx = new Transaction({
+                                nonce: randomBytes(1),
+                                timestamp: Date.now(),
+                                to: randomBytes(20),
+                                value: randomBytes(32)
+                            });
+                            tx.sign(this.privateKey);
 
-                        // reconstruct transactions
-                        candidate.transactions = rlp.encode([tx.serialize()]);
+                            // reconstruct transactions
+                            candidate.transactions = rlp.encode([tx.serialize()]);
+                        }
+                        
+                        if (this.maliciousLeaderCandidateInvalidBlock)
+                        {
+                            // reconstruct block info
+                            candidate.blockHash = Buffer.from("e29f99d13a92f788e46cec235ffbde9e64360bd1bd9e68e18ecac2e433fd6fce", 'hex');
+                            candidate.number = 19901112;
+                        }
 
                         // sign again
                         const privateKey = getPrivateKeyByAddress(fromAddress.toString('hex'));
