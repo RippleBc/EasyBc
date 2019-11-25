@@ -7,7 +7,6 @@ const Buffer = utils.Buffer;
 const rlp = utils.rlp;
 
 /**
- * 
  * @param {JSON Object} data 
  * @param {Buffer} privateKey 
  */
