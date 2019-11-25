@@ -3,7 +3,7 @@ const Fly = require("../../depends/fly");
 const assert = require("assert");
 const { PROTOCOL_HEART_BEAT } = require("../../consensus_full_server/constants");
 const ProxyConnectionsManager = require("./proxyManager");
-const { p2pProxy } = require("../../globalConfig.json");
+const { p2pProxy } = require("../../p2p_proxy_server/config.json");
 const {
 	host: fullConsensusHost,
 	port: fullConsensusPort

@@ -1,7 +1,7 @@
 const log4js= require("./logConfig");
 const logger = log4js.getLogger("consensus");
 const mongoConfig = require("./config").mongo;
-const { p2pProxy } = require("../globalConfig");
+const { p2pProxy } = require("../p2p_proxy_server/config.json");
 
 process[Symbol.for("loggerConsensus")] = logger;
 process[Symbol.for("loggerP2p")] = log4js.getLogger("p2p");

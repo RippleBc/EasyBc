@@ -10,10 +10,5 @@
 				"balance": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
 			}
 		]
-	},
-	"p2pProxy": {
-		"open": true,
-		"host": "localhost",
-		"port": 7070
 	}
 }

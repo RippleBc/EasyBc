@@ -5,7 +5,7 @@ const assert = require("assert");
 const { PROTOCOL_HEART_BEAT } = require("../constants");
 const AuthConnectionsManager = require("./authManager");
 const ProxyConnectionsManager = require("./proxyManager");
-const { p2pProxy } = require("../../globalConfig.json");
+const { p2pProxy } = require("../../p2p_proxy_server/config.json");
 
 const Buffer = utils.Buffer;
 
