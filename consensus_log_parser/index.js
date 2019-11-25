@@ -197,5 +197,3 @@ const run = async function(dir, logsBufferMaxSize)
 		}
 	}
 }
-
-console.log("process.pid: " + process.pid)

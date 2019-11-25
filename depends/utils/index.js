@@ -648,3 +648,35 @@ exports.delDir = function(path)
     fs.rmdirSync(path);
   }
 };
+
+//
+exports.getStackInfo = function (e) {
+  let err;
+
+  if (e) {
+    err = e
+  }
+  else {
+    try {
+      throw new Error('call stack')
+    }
+    catch (e) {
+      err = e;
+    }
+  }
+
+
+  if (err.stack) {
+    if (err.stack.split('\r\n').length > 1) {
+      // for linux
+      return err.stack.split('\r\n').join('');
+    }
+    else {
+      // for windows
+      return err.stack.split('\n').join('');
+    }
+  }
+  else {
+    return err
+  }
+}

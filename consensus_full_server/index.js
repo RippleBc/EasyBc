@@ -15,44 +15,7 @@ const Mysql = require("./mysql");
 
 process[Symbol.for("mysql")] = new Mysql();
 process[Symbol.for("mongo")] = require("../depends/mongo_wrapper");
-process[Symbol.for("getStackInfo")] = function(e) {
-
-    let err;
-
-    if(e)
-    {
-        err = e
-    } 
-    else
-    {
-        try
-        {
-            throw new Error('call stack')
-        }
-        catch(e)
-        {
-            err = e;
-        }
-    }
-    
-
-    if(err.stack)
-    {
-        if(err.stack.split('\r\n').length > 1)
-        {
-            return err.stack.split('\r\n').join('');
-        }
-        else
-        {
-            return err.stack.split('\n').join('');
-        }
-    }
-    else
-    {
-        return err
-    }
-    
-}
+process[Symbol.for("getStackInfo")] = utils.getStackInfo;
 
 //
 process.on("uncaughtException", function(err) {
