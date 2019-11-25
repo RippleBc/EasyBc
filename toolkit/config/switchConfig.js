@@ -47,14 +47,14 @@ module.exports = options => {
             if (lastField === 'port' 
             && options.dbIndex)
             {
-                console.log(`change port, ${filename} => ${configs[filename]}, ${options.dbIndex}`);
+                console.log(`change port, ${filename} => ${fields}, ${options.dbIndex}`);
                 lastItem[lastField] = lastItem[lastField] + 100 * options.dbIndex;
             }
 
             if (lastField === 'dbName' 
             && options.dbIndex)
             {
-                console.log(`change dbName, ${filename} => ${configs[filename]}, ${options.dbIndex}`);
+                console.log(`change dbName, ${filename} => ${fields}, ${options.dbIndex}`);
                 lastItem[lastField] = `${lastItem[lastField]}${options.dbIndex}`
             }
 
@@ -63,7 +63,7 @@ module.exports = options => {
             && lastField === 'index' 
             && options.processIndex)
             {
-                console.log(`change processIndex, ${filename} => ${configs[filename]}, ${options.processIndex}`);
+                console.log(`change processIndex, ${filename} => ${fields}, ${options.processIndex}`);
                 lastItem[lastField] = options.processIndex;
             }
 
@@ -72,7 +72,7 @@ module.exports = options => {
             && fields[0] === 'blockChain'
             && lastField === 'privateKey' 
             && options.privateKey) {
-                console.log(`change privateKey, ${filename} => ${configs[filename]}, ${options.privateKey}`)
+                console.log(`change privateKey, ${filename} => ${fields}, ${options.privateKey}`)
 
                 lastItem[lastField] = options.privateKey
             }

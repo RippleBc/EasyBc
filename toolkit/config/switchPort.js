@@ -11,6 +11,7 @@ module.exports = async function (p2pProxyOpen) {
     await unlManager.init( );
 
     //
+    let needUpdateMongodb = false;
     for (let node of unlManager._unl)
     {
         if(p2pProxyOpen)
@@ -18,6 +19,8 @@ module.exports = async function (p2pProxyOpen) {
             if (node.p2pPort > 9000 && node.p2pPort < 10000)
             {
                 node.p2pPort -= 2020;
+
+                needUpdateMongodb = true;
             }
         }
         else
@@ -25,12 +28,17 @@ module.exports = async function (p2pProxyOpen) {
             if (node.p2pPort > 7000 && node.p2pPort < 8000)
             {
                 node.p2pPort += 2020;
+
+                needUpdateMongodb = true;
             }   
         }
     }
 
-    //
-    await unlManager.updateNodes({nodes: unlManager._unl});
+
+    if (needUpdateMongodb)
+    {
+        await unlManager.updateNodes({ nodes: unlManager._unl });
+    }
 
     //
     for (let node of unlManager._unl) {
