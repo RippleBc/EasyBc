@@ -25,12 +25,12 @@ const configs = {
     ],
     "globalConfig.json": [
         ["index"],
-        ["blockChain", "privateKey"],
-        ["p2pProxy", "open"],
-        ["p2pProxy", "port"]
+        ["blockChain", "privateKey"]
     ],
     "p2p_proxy_server/config.json": [
-        ["http", "port"]
+        ["http", "port"],
+        ["p2pProxy", "open"],
+        ["p2pProxy", "port"]
     ]
 }
 
@@ -39,44 +39,59 @@ module.exports = options => {
     
     for (let filename in configs)
     {
-        changeConfig(filename, configs[filename], (field, item) => {
-            if (field === 'port' && options.dbIndex)
+        changeConfig(filename, configs[filename], (fields, lastItem) => {
+            const lastFieldIndex = fields.length - 1;
+            const lastField = fields[lastFieldIndex];
+
+
+            if (lastField === 'port' 
+            && options.dbIndex)
             {
                 console.log(`change port, ${filename} => ${configs[filename]}, ${options.dbIndex}`);
-                item[field] = item[field] + 100 * options.dbIndex;
+                lastItem[lastField] = lastItem[lastField] + 100 * options.dbIndex;
             }
 
-            if (field === 'dbName' && options.dbIndex)
+            if (lastField === 'dbName' 
+            && options.dbIndex)
             {
                 console.log(`change dbName, ${filename} => ${configs[filename]}, ${options.dbIndex}`);
-                item[field] = `${item[field]}${options.dbIndex}`
+                lastItem[lastField] = `${lastItem[lastField]}${options.dbIndex}`
             }
 
-            if (field === 'index' && options.processIndex)
+            // switch process index
+            if (filename === 'globalConfig.json' 
+            && lastField === 'index' 
+            && options.processIndex)
             {
                 console.log(`change processIndex, ${filename} => ${configs[filename]}, ${options.processIndex}`);
-                item[field] = options.processIndex;
+                lastItem[lastField] = options.processIndex;
             }
 
-            if (field === 'open')
+            // switch privateKey
+            if (filename === 'globalConfig.json' 
+            && fields[0] === 'blockChain'
+            && lastField === 'privateKey' 
+            && options.privateKey) {
+                console.log(`change privateKey, ${filename} => ${configs[filename]}, ${options.privateKey}`)
+
+                lastItem[lastField] = options.privateKey
+            }
+
+            // switch p2p mode
+            if (filename === 'p2p_proxy_server/config.json' 
+            && fields[0] === 'p2pProxy' 
+            && lastField === 'open')
             {
                 if (options.p2pProxyOpen)
                 {
                     console.log("open proxy p2p")
-                    item[field] = true
+                    lastItem[lastField] = true
                 }
                 else
                 {
                     console.log("close proxy p2p")
-                    item[field] = false
+                    lastItem[lastField] = false
                 }
-            }
-
-            if (field === 'privateKey' && options.privateKey)
-            {
-                console.log(`change privateKey, ${filename} => ${configs[filename]}, ${options.privateKey}`)
-
-                item[field] = options.privateKey
             }
         })
     }
@@ -107,7 +122,7 @@ const changeConfig = (filename, items, handler) => {
             configItem = configItem[item[i]];
         }
         
-        handler(item[i], configItem);
+        handler(item, configItem);
     }
 
     // write
