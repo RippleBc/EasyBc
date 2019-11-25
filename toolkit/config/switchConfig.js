@@ -47,7 +47,14 @@ module.exports = options => {
             if (lastField === 'port' 
             && options.dbIndex)
             {
-                console.log(`change port, ${filename} => ${fields}, ${options.dbIndex}`);
+                console.log(`change port, ${filename} => ${fields.map((index, field) => {
+                    if (index === lastFieldIndex)
+                    {
+                        return `${field} => `
+                    }
+
+                    return field;
+                })}, ${options.dbIndex}`);
                 lastItem[lastField] = lastItem[lastField] + 100 * options.dbIndex;
             }
 
