@@ -3,6 +3,8 @@ const { index: processIndex } = require("../globalConfig.json")
 
 const mongo = process[Symbol.for("mongo")];
 
+const FLUSH_UNL_TO_DB_INTERVAL = 10000;
+
 class UnlManager
 {
     constructor()
@@ -14,6 +16,11 @@ class UnlManager
     async init()
     {
         this._unl = await this.unlDb.getUnl();
+
+        // 
+        this.timer = setInterval(() => {
+            this.unlDb.updateNodes(this._unl);
+        }, FLUSH_UNL_TO_DB_INTERVAL)
     }
 
     get unlIncludeSelf()
@@ -58,8 +65,7 @@ class UnlManager
         });
 
         await this.updateNodes({
-            nodes: nodes,
-            firstUpdateMemory: true
+            nodes: nodes
         });
     }
 
@@ -78,8 +84,7 @@ class UnlManager
         });
 
         await this.updateNodes({
-            nodes: nodes,
-            firstUpdateMemory: true
+            nodes: nodes
         });
     }
 
@@ -120,92 +125,48 @@ class UnlManager
     /**
 	 * @param {Array} nodes 
 	 */
-    async updateNodes({nodes, firstUpdateMemory = false}) {
+    async updateNodes({nodes}) {
         assert(Array.isArray(nodes), `UnlManager updateNodes, nodes should be an Array, now is ${typeof nodes}`);
 
-        if(firstUpdateMemory)
-        {
-            for (let node of nodes) {
-                const existNode = this._unl.find(_node => _node.address === node.address)
+        for (let node of nodes) {
+            const existNode = this._unl.find(_node => _node.address === node.address)
 
-                if (existNode) {
-                    // update unl in memory
-                    if (undefined !== node.host) {
-                        assert(typeof node.host === 'string', `UnlManager updateNodes, node.host should be a String, now is ${typeof node.host}`);
+            if (existNode) {
+                // update unl in memory
+                if (undefined !== node.host) {
+                    assert(typeof node.host === 'string', `UnlManager updateNodes, node.host should be a String, now is ${typeof node.host}`);
 
-                        existNode.host = node.host;
-                    }
+                    existNode.host = node.host;
+                }
 
-                    if (undefined !== node.queryPort) {
-                        assert(typeof node.queryPort === 'number', `UnlManager updateNodes, node.queryPort should be a Number, now is ${typeof node.queryPort}`);
+                if (undefined !== node.queryPort) {
+                    assert(typeof node.queryPort === 'number', `UnlManager updateNodes, node.queryPort should be a Number, now is ${typeof node.queryPort}`);
 
-                        existNode.queryPort = node.queryPort;
-                    }
+                    existNode.queryPort = node.queryPort;
+                }
 
-                    if (undefined !== node.p2pPort) {
-                        assert(typeof node.p2pPort === 'number', `UnlManager updateNodes, node.p2pPort should be a Number, now is ${typeof node.p2pPort}`);
+                if (undefined !== node.p2pPort) {
+                    assert(typeof node.p2pPort === 'number', `UnlManager updateNodes, node.p2pPort should be a Number, now is ${typeof node.p2pPort}`);
 
-                        existNode.p2pPort = node.p2pPort;
-                    }
+                    existNode.p2pPort = node.p2pPort;
+                }
 
-                    if (undefined !== node.index) {
-                        assert(typeof node.index === 'number', `UnlManager updateNodes, node.index should be a Number, now is ${typeof node.index}`);
+                if (undefined !== node.index) {
+                    assert(typeof node.index === 'number', `UnlManager updateNodes, node.index should be a Number, now is ${typeof node.index}`);
 
-                        existNode.index = node.index;
-                    }
+                    existNode.index = node.index;
+                }
 
-                    if (undefined !== node.state) {
-                        assert(typeof node.state === 'number', `UnlManager updateNodes, node.state should be a Number, now is ${typeof node.state}`);
+                if (undefined !== node.state) {
+                    assert(typeof node.state === 'number', `UnlManager updateNodes, node.state should be a Number, now is ${typeof node.state}`);
 
-                        existNode.state = node.state;
-                    }
+                    existNode.state = node.state;
                 }
             }
         }
 
+        //
         await this.unlDb.updateNodes(nodes);
-
-        if(!firstUpdateMemory)
-        {
-            for (let node of nodes) 
-            {
-                const existNode = this._unl.find(_node => _node.address === node.address)
-
-                if (existNode) 
-                {
-                    // update unl in memory
-                    if (undefined !== node.host) {
-                        assert(typeof node.host === 'string', `UnlManager updateNodes, node.host should be a String, now is ${typeof node.host}`);
-
-                        existNode.host = node.host;
-                    }
-
-                    if (undefined !== node.queryPort) {
-                        assert(typeof node.queryPort === 'number', `UnlManager updateNodes, node.queryPort should be a Number, now is ${typeof node.queryPort}`);
-
-                        existNode.queryPort = node.queryPort;
-                    }
-
-                    if (undefined !== node.p2pPort) {
-                        assert(typeof node.p2pPort === 'number', `UnlManager updateNodes, node.p2pPort should be a Number, now is ${typeof node.p2pPort}`);
-
-                        existNode.p2pPort = node.p2pPort;
-                    }
-
-                    if (undefined !== node.index) {
-                        assert(typeof node.index === 'number', `UnlManager updateNodes, node.index should be a Number, now is ${typeof node.index}`);
-
-                        existNode.index = node.index;
-                    }
-
-                    if (undefined !== node.state) {
-                        assert(typeof node.state === 'number', `UnlManager updateNodes, node.state should be a Number, now is ${typeof node.state}`);
-
-                        existNode.state = node.state;
-                    }
-                }
-            }
-        }
     }
 
     /**
