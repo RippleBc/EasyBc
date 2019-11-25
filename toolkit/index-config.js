@@ -14,7 +14,7 @@ program
 
         const commandJSON = JSON.parse(options.command.replace(/(\r\n)|\r|\n|\t|\s/g, ''));
 
-        console.log(`command: ${JSON.stringify(commandJSON, null, '\t')}`);
+        console.log(`command: ${JSON.stringify(commandJSON, null, '\t')}\n`);
 
         config(commandJSON);
     });

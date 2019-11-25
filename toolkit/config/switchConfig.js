@@ -39,29 +39,36 @@ module.exports = options => {
     
     for (let filename in configs)
     {
+        console.log(`change ${filename} begin`);
         changeConfig(filename, configs[filename], (fields, lastItem) => {
             const lastFieldIndex = fields.length - 1;
             const lastField = fields[lastFieldIndex];
 
-
             if (lastField === 'port' 
             && options.dbIndex)
             {
-                console.log(`change port, ${filename} => ${fields.map((index, field) => {
+                console.log(`\tchange port => ${fields.map((field, index) => {
                     if (index === lastFieldIndex)
                     {
-                        return `${field} => `
+                        return field; 
                     }
 
-                    return field;
-                })}, ${options.dbIndex}`);
+                    return `${field} => `
+                }).join('')}, ${options.dbIndex}`);
                 lastItem[lastField] = lastItem[lastField] + 100 * options.dbIndex;
             }
 
             if (lastField === 'dbName' 
             && options.dbIndex)
             {
-                console.log(`change dbName, ${filename} => ${fields}, ${options.dbIndex}`);
+                console.log(`\tchange dbName => ${fields.map((field, index) => {
+                    if (index === lastFieldIndex)
+                    {
+                        return field; 
+                    }
+
+                    return `${field} => `
+                }).join('')}, ${options.dbIndex}`);
                 lastItem[lastField] = `${lastItem[lastField]}${options.dbIndex}`
             }
 
@@ -70,7 +77,14 @@ module.exports = options => {
             && lastField === 'index' 
             && options.processIndex)
             {
-                console.log(`change processIndex, ${filename} => ${fields}, ${options.processIndex}`);
+                console.log(`\tchange processIndex => ${fields.map((field, index) => {
+                    if (index === lastFieldIndex)
+                    {
+                        return field; 
+                    }
+
+                    return `${field} => `
+                }).join('')}, ${options.processIndex}`);
                 lastItem[lastField] = options.processIndex;
             }
 
@@ -79,7 +93,14 @@ module.exports = options => {
             && fields[0] === 'blockChain'
             && lastField === 'privateKey' 
             && options.privateKey) {
-                console.log(`change privateKey, ${filename} => ${fields}, ${options.privateKey}`)
+                console.log(`\tchange privateKey => ${fields.map((field, index) => {
+                    if (index === lastFieldIndex)
+                    {
+                        return field; 
+                    }
+
+                    return `${field} => `
+                }).join('')}, ${options.privateKey}`)
 
                 lastItem[lastField] = options.privateKey
             }
@@ -91,16 +112,18 @@ module.exports = options => {
             {
                 if (options.p2pProxyOpen)
                 {
-                    console.log("open proxy p2p")
+                    console.log("\topen proxy p2p")
                     lastItem[lastField] = true
                 }
                 else
                 {
-                    console.log("close proxy p2p")
+                    console.log("\tclose proxy p2p")
                     lastItem[lastField] = false
                 }
             }
-        })
+        });
+
+        console.log(`change ${filename} end\n`);
     }
 }
 
