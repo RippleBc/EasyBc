@@ -32,12 +32,12 @@
                 </el-table-column>
                 <el-table-column prop="p2pPort" label="点对点端口">
                 </el-table-column>
-                <el-table-column prop="state" label="状态码">
+                <el-table-column prop="state" label="状态码, 0 is online, 1 is offline, 2 is invalid">
+                </el-table-column>
+                <el-table-column prop="index" label="processIndex">
                 </el-table-column>
                 <el-table-column label="操作" width="240" align="center">
                     <template slot-scope="scope">
-                        <el-button type="text" @click="handlePerish(scope.row)">自爆</el-button>
-                        <el-button type="text" @click="handlePardon(scope.row)">原谅</el-button>
                         <el-button type="text" @click="handleEdit(scope.row)">编辑</el-button>
                         <el-button type="text" class="red" @click="handleDelete(scope.row)">删除</el-button>
                     </template>
@@ -67,6 +67,9 @@
                 <el-form-item label="点对点端口">
                     <el-input v-model="currentHandleNode.p2pPort"></el-input>
                 </el-form-item>
+                <el-form-item label="processIndex">
+                    <el-input v-model="currentHandleNode.index"></el-input>
+                </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="addVisible = false">取 消</el-button>
@@ -94,6 +97,9 @@
                 </el-form-item>
                 <el-form-item label="状态码">
                     <el-input v-model="currentHandleNode.state"></el-input>
+                </el-form-item>
+                <el-form-item label="processIndex">
+                    <el-input v-model="currentHandleNode.index"></el-input>
                 </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
@@ -164,7 +170,8 @@
                     host: '',
                     queryPort: '',
                     p2pPort: '',
-                    state: ''
+                    state: '',
+                    index: 0
                 }
             }
         },
@@ -293,7 +300,8 @@
                         address: this.currentHandleNode.address,
                         host: this.currentHandleNode.host,
                         queryPort: parseInt(this.currentHandleNode.queryPort),
-                        p2pPort: parseInt(this.currentHandleNode.p2pPort)
+                        p2pPort: parseInt(this.currentHandleNode.p2pPort),
+                        index: parseInt(this.currentHandleNode.index)
                     }],
                     privateKey: this.privateKey
                 }).then(res => {
@@ -321,7 +329,8 @@
                         host: this.currentHandleNode.host,
                         queryPort: parseInt(this.currentHandleNode.queryPort),
                         p2pPort: parseInt(this.currentHandleNode.p2pPort),
-                        state: parseInt(this.currentHandleNode.state)
+                        state: parseInt(this.currentHandleNode.state),
+                        index: parseInt(this.currentHandleNode.index)
                     }],
                     privateKey: this.privateKey
                 }).then(res => {
