@@ -11,23 +11,32 @@ const printErrorStack = process[Symbol.for("printErrorStack")]
 const checkProcessExcept = new CheckProcessExcept()
 
 app.post('/fetchCheckProcessExceptionState', (req, res) => {
-  res.json({
-    code: SUCCESS,
-    data: checkProcessExcept.state
-  });
-});
+  const address = req.body.address;
 
-app.post('/switchCheckProcessExceptionState', (req, res) => {
-  const state = req.body.state;
-
-  if (!!!state) {
+  if (!!!address) {
     return res.json({
       code: OTH_ERR,
-      msg: 'invalid state'
+      msg: 'invalid address'
     });
   }
 
-  checkProcessExcept.state = state;
+  res.json({
+    code: SUCCESS,
+    data: checkProcessExcept.getState(address)
+  });
+});
+
+app.post('/openCheckProcessException', (req, res) => {
+  const address = req.body.address;
+
+  if (!!!address) {
+    return res.json({
+      code: OTH_ERR,
+      msg: 'invalid address'
+    });
+  }
+
+  checkProcessExcept.openCheckProcessException(address);
 
   res.json({
     code: SUCCESS
