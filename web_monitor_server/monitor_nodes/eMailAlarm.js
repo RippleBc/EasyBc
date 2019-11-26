@@ -19,18 +19,21 @@ class EMailAlarm {
       }
     });
 
+    this.verifyClient();
+  }
+
+  verifyClient() {
     this.transporter.verify((error, success) => {
       if (error) {
         this.clientIsValid = false;
         logger.warn(`${this.host}, ${this.user}, 邮件客户端初始化连接失败，将在10s后重试`);
-        setTimeout(verifyClient, 1000 * 10);
+        setTimeout(this.verifyClient.bind(this), 1000 * 10);
       } else {
         this.clientIsValid = true;
         logger.info(`${this.host}, ${this.user}, 邮件客户端初始化连接成功，随时可发送邮件`);
       }
     });
   }
-
 
   sendMail({ from = '565828928@qq.com', to = 'zsdswalker@163.com', subject = 'Message', text = 'I hope this message gets read!' }) {
     if (!this.clientIsValid) {

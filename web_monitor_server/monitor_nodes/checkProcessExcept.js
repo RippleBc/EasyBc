@@ -180,13 +180,13 @@ class CheckAllProcessExcept
     }
 
     //
-    if (checkProcessExceptErrorInstance.state === CHECK_PROCESS_EXCEPTION_STATE_CHECKED)
+    if (checkProcessExceptErrorInstance.state === CHECK_PROCESS_EXCEPTION_STATE_CLOSE)
     {
       checkProcessExceptErrorInstance.reset();
     }
 
     //
-    if (checkProcessExceptErrorInstance.state === CHECK_PROCESS_EXCEPTION_STATE_CHECKED) {
+    if (checkProcessExceptErrorInstance.state === CHECK_PROCESS_EXCEPTION_STATE_CLOSE) {
       checkProcessExceptErrorInstance.reset();
     }
   }
