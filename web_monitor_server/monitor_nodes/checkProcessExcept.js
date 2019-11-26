@@ -6,7 +6,7 @@ const assert = require("assert");
 const logger = process[Symbol.for('logger')];
 const { Node } = process[Symbol.for('models')]
 
-const CHECK_PROCESS_EXCEPTION_INTERVAL = 30000;
+const CHECK_PROCESS_EXCEPTION_INTERVAL = 10000;
 
 const CHECK_PROCESS_EXCEPTION_STATE_CLOSE = 1;
 const CHECK_PROCESS_EXCEPTION_STATE_CHECKING = 2;
@@ -53,7 +53,7 @@ class CheckProcessExcept {
     try {
       ({ data: { logs } } = await rp({
         method: "POST",
-        uri: `${this.host}${this.port}/logs`,
+        uri: `${this.host}:${this.port}/logs`,
         body: {
           offset: 0,
           limit: 5,
@@ -98,7 +98,7 @@ class CheckProcessExcept {
       // 
       for (let log of logs) {
         if (log.id > this.localLastestLogIndex) {
-          this.exceptLogs.push(log)
+          this.exceptLogs.push(`title: ${log.title}, data: ${log.data}`);
         }
       }
 
@@ -125,7 +125,7 @@ class CheckAllProcessExcept
     this.init().then(() => {
       logger.info(`CheckAllProcessExcept, ${[...this.checkers.values()].map(val => val.address).join('\n')}`)
 
-      setInterval(this.checkProcessException, CHECK_PROCESS_EXCEPTION_INTERVAL);
+      setInterval(this.checkProcessException.bind(this), CHECK_PROCESS_EXCEPTION_INTERVAL);
     });
   }
 
@@ -200,9 +200,9 @@ class CheckAllProcessExcept
     for (let checkProcessExceptInstance of this.checkers.values()) {
       await checkProcessExceptInstance.fetchLastestLogs();
 
-      if(checkProcessExceptInstance.state = CHECK_PROCESS_EXCEPTION_STATE_CHECKED)
+      if(checkProcessExceptInstance.state === CHECK_PROCESS_EXCEPTION_STATE_CHECKED)
       {
-        exceptInfo.push(`name: ${checkProcessExceptInstance.name}, address: ${checkProcessExceptInstance.address}, host: ${checkProcessExceptInstance.host}, port: ${checkProcessExceptInstance.port}, remarks: ${checkProcessExceptInstance.remarks}, type: ${checkProcessExceptInstance.type}, exceptLogs: ${exceptLogs}`);
+        exceptInfo.push(`name: ${checkProcessExceptInstance.name}, address: ${checkProcessExceptInstance.address}, host: ${checkProcessExceptInstance.host}, port: ${checkProcessExceptInstance.port}, remarks: ${checkProcessExceptInstance.remarks}, type: ${checkProcessExceptInstance.type}, exceptLogs: ${checkProcessExceptInstance.exceptLogs.join(";")}`);
         
 
         // close
@@ -214,8 +214,8 @@ class CheckAllProcessExcept
     {
       const text = exceptInfo.join("\n");
       console.log(text);
-      sendEMailAlarm(text);
 
+      // sendEMailAlarm(text);
       // sendSMSAlarm();
     }
   }
