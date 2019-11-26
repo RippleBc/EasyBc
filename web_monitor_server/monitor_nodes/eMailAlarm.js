@@ -1,6 +1,6 @@
 const nodemailer = require('nodemailer');
 
-class EMail
+class EMailAlarm
 {
   constructor({ host, user, pass})
   {
@@ -50,20 +50,20 @@ class EMail
   }
 }
 
-const qq = new EMail({
+const qq = new EMailAlarm({
   host: 'smtp.qq.com',
   user: "565828928@qq.com",
   pass: "isciykforjpsbecc"
 });
 
-const w163 = new EMail({
+const w163 = new EMailAlarm({
   host: 'smtp.163.com',
   user: 'zsdswalker@163.com',
   pass: "123456asdfgh"
 });
 
 
-module.exports.sendMail = text => {
+module.exports = ({ text }) => {
   (async () => {
     while (!w163.clientIsValid)
     {

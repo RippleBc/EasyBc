@@ -1,30 +1,38 @@
 const { SUCCESS, PARAM_ERR, OTH_ERR } = require('../../constant')
 const rp = require("request-promise");
 const assert = require("assert");
+const CheckProcessExcept = require("./checkProcessExcept");
 
 const app = process[Symbol.for('app')]
 const { Node } = process[Symbol.for('models')]
 const logger = process[Symbol.for('logger')];
 const printErrorStack = process[Symbol.for("printErrorStack")]
 
-const CHECK_PROCESS_EXCEPTION_INTERVAL = 10000;
+const checkProcessExcept = new CheckProcessExcept()
 
-const checkProcessException = () => {
-  rp({
-      method: "POST",
-      uri: `${req.body.url}${req.url}`,
-      body: req.body,
-      json: true
-  }).then(response => {
-    
-  }).catch(e => {
-    printErrorStack(e);
-
-    
+app.post('/fetchCheckProcessExceptionState', (req, res) => {
+  res.json({
+    code: SUCCESS,
+    data: checkProcessExcept.state
   });
-}
+});
 
-setInterval(checkProcessException, CHECK_PROCESS_EXCEPTION_INTERVAL);
+app.post('/switchCheckProcessExceptionState', (req, res) => {
+  const state = req.body.state;
+
+  if (!!!state) {
+    return res.json({
+      code: OTH_ERR,
+      msg: 'invalid state'
+    });
+  }
+
+  checkProcessExcept.state = state;
+
+  res.json({
+    code: SUCCESS
+  });
+})
 
 app.post('/monitorNodes', (req, res) => {
 	Node.findAll().then(nodes => {
