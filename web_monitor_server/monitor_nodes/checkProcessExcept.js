@@ -128,20 +128,20 @@ class CheckAllProcessExcept
 
   async init()
   {
-    Node.findAll().then(nodes => {
-      //
-      for (let { name, address, host, port, remarks } of nodes) {
-        this.checkers.set(`${node.address}-ERROR`, new CheckProcessExcept({ name, address, host, port, remarks, type = 'ERROR' }));
-        this.checkers.set(`${node.address}-FATAL`, new CheckProcessExcept({ name, address, host, port, remarks, type = 'FATAL' }));
-      }
+    const nodes = await Node.findAll();
+    
+    //
+    for (let { name, address, host, port, remarks } of nodes) {
+      this.checkers.set(`${node.address}-ERROR`, new CheckProcessExcept({ name, address, host, port, remarks, type = 'ERROR' }));
+      this.checkers.set(`${node.address}-FATAL`, new CheckProcessExcept({ name, address, host, port, remarks, type = 'FATAL' }));
+    }
 
-      //
-      for (let checkProcessExceptInstance of this.checkers.values())
-      {
-        checkProcessExceptInstance.open(); 
-        checkProcessExceptInstance.fetchLastestLogs();
-      }
-    });
+    //
+    for (let checkProcessExceptInstance of this.checkers.values())
+    {
+      checkProcessExceptInstance.open(); 
+      await checkProcessExceptInstance.fetchLastestLogs();
+    }
   }
 
   /**
