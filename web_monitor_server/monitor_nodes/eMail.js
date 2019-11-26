@@ -97,5 +97,3 @@ module.exports.sendMail = text => {
     })
   })();
 };
-
-module.exports.sendMail();

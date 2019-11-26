@@ -1,4 +1,3 @@
-// 必须引入crypto
 const crypto = require('crypto');
 const rp = require("request-promise");
 const urlencode = require('urlencode');
@@ -21,25 +20,27 @@ class SMSAlarm {
         const ts = Date.now();
         const sign = crypto.createHash('md5').update(`${SMS_USERID}${ts}${SMS_APIKEY}`).digest('hex');
 
-        const url = `http://118.31.170.102:8081/api/sms/send?userid=${SMS_USERID}&ts=${ts}&sign=${sign}&mobile=${mobile}&msgcontent=${urlencode(content)}&time=&extnum=`;
+        const url = `http://118.31.170.102:8081/api/sms/send?userid=${SMS_USERID}&ts=${ts}&sign=${sign}&mobile=${mobile}&msgcontent=${"%e3%80%90"}${urlencode("我能")}${"%e3%80%91"}${urlencode(content)}&time=&extnum=`;
 
-        console.warn(url);
+        logger.warn(url);
 
         rp({
             method: "GET",
             uri: url
         }).then(response => {
-            console.log(response)
+            logger.info(response)
         }).catch(e => {
-            console.log(e);
+            logger.error(e);
         });
     }
 
 }
 
-module.exports = SMSAlarm;
+const smsInstance = new SMSAlarm();
+
+module.exports = ({ mobile, content }) => {
+    smsInstance.sendSms({ mobile, content });
+}
 
 
-const testInstantce = new SMSAlarm();
 
-testInstantce.sendSms({content: "[我能] 123456789"});

@@ -7,6 +7,25 @@ const { Node } = process[Symbol.for('models')]
 const logger = process[Symbol.for('logger')];
 const printErrorStack = process[Symbol.for("printErrorStack")]
 
+const CHECK_PROCESS_EXCEPTION_INTERVAL = 10000;
+
+const checkProcessException = () => {
+  rp({
+      method: "POST",
+      uri: `${req.body.url}${req.url}`,
+      body: req.body,
+      json: true
+  }).then(response => {
+    
+  }).catch(e => {
+    printErrorStack(e);
+
+    
+  });
+}
+
+setInterval(checkProcessException, CHECK_PROCESS_EXCEPTION_INTERVAL);
+
 app.post('/monitorNodes', (req, res) => {
 	Node.findAll().then(nodes => {
 		res.json({
