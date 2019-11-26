@@ -1,6 +1,7 @@
 const rp = require("request-promise");
 const sendSMSAlarm = require("./smsAlarm");
 const sendEMailAlarm = require("./eMailAlarm");
+const assert = require("assert");
 
 const logger = process[Symbol.for('logger')];
 const { Node } = process[Symbol.for('models')]
@@ -64,13 +65,13 @@ class CheckProcessExcept {
     catch (e) {
 
       if (this.state !== CHECK_PROCESS_EXCEPTION_STATE_CHECKING) {
-        this.logger.error(`CheckProcessExcept fetchLastestLogs, fetch log from light server, ${e}`);
+        logger.error(`CheckProcessExcept fetchLastestLogs, fetch log from light server, ${e}`);
 
         return;
       }
 
       //
-      this.logs.push(`can not connect to ${this.name}, ${this.address}, ${this.host}, ${this.port}, ${this.remarks}`);
+      this.exceptLogs.push(`can not connect to ${this.name}, ${this.address}, ${this.host}, ${this.port}, ${this.remarks}`);
 
       //
       this.state = CHECK_PROCESS_EXCEPTION_STATE_CHECKED;
@@ -122,6 +123,8 @@ class CheckAllProcessExcept
 
     // init
     this.init().then(() => {
+      logger.info(`CheckAllProcessExcept, ${[...this.checkers.values()].map(val => val.address).join('\n')}`)
+
       setInterval(this.checkProcessException, CHECK_PROCESS_EXCEPTION_INTERVAL);
     });
   }
@@ -132,8 +135,8 @@ class CheckAllProcessExcept
     
     //
     for (let { name, address, host, port, remarks } of nodes) {
-      this.checkers.set(`${node.address}-ERROR`, new CheckProcessExcept({ name, address, host, port, remarks, type = 'ERROR' }));
-      this.checkers.set(`${node.address}-FATAL`, new CheckProcessExcept({ name, address, host, port, remarks, type = 'FATAL' }));
+      this.checkers.set(`${address}-ERROR`, new CheckProcessExcept({ name, address, host, port, remarks, type: 'ERROR' }));
+      this.checkers.set(`${address}-FATAL`, new CheckProcessExcept({ name, address, host, port, remarks, type: 'FATAL' }));
     }
 
     //
@@ -210,7 +213,7 @@ class CheckAllProcessExcept
     if (exceptInfo.length > 0)
     {
       const text = exceptInfo.join("\n");
-
+      console.log(text);
       sendEMailAlarm(text);
 
       // sendSMSAlarm();
