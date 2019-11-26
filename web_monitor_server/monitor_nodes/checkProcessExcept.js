@@ -123,7 +123,7 @@ class CheckAllProcessExcept
 
     // init
     this.init().then(() => {
-      logger.info(`CheckAllProcessExcept, ${[...this.checkers.values()].map(val => val.address).join('\n')}`)
+      logger.info(`CheckAllProcessExcept:\n${[...this.checkers.values()].map(val => `name: ${val.name}, address: ${val.address}, type: ${val.type}`).join('\n')}`)
 
       setInterval(this.checkProcessException.bind(this), CHECK_PROCESS_EXCEPTION_INTERVAL);
     });
