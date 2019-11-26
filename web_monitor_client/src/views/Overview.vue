@@ -1,6 +1,19 @@
 <template>
     <div>
+        <div>
+            <template v-for="(process, index) in processesState">
+                <div style="display: flex;" :key="index">
+                    <span>{{process.name}}</span>
+                    <span>{{process.host}}</span>
+                    <span>{{process.port}}</span>
+                    <span>{{process.address}}</span>
+                    <span>{{process.state}}</span>
+                    <el-button @click="openCheckProcessException(process.address)"></el-button>
+                </div>
+            </template>
+        </div>
         <el-col>
+            
             <el-row v-for="(node, index) in nodes" :key="index" style="margin-bottom:20px;">
                 <el-card>
                     <div style="margin-bottom:20px;">
@@ -76,7 +89,8 @@
         name: 'overview',
         data(){
             return {
-                nodes: []
+                nodes: [],
+                processesState: []
             }
         },
         computed: {
@@ -84,14 +98,30 @@
         },
         watch: {
             unl: function() {
-                this.getNodesBlocksInfo()
+                this.getNodesInfo()
             }
         },
         created() {
-            this.getNodesBlocksInfo()
+            this.getNodesInfo()
         },
         methods: {
-            getNodesBlocksInfo() {
+
+            openCheckProcessException(address) {
+                this.$axios.post('/openCheckProcessException', {
+                    address: address
+                }).then(res => {
+                    if(res.code !== 0)
+                    {
+                        this.$message.error(res.msg);
+                    }
+                    else
+                    {
+                       this.$message.success("sucess")
+                    }
+                });
+            },
+
+            getNodesInfo() {
                 const nodeInfoSet = [];
             
                 for(let node of this.unl)
@@ -120,6 +150,26 @@
                             nodeInfoSet.push(nodeInfo);
 
                             this.nodes = nodeInfoSet;
+                        }
+                    });
+
+                    this.$axios.post('/fetchCheckProcessExceptionState', {
+                        address: node.address
+                    }).then(res => {
+                        if(res.code !== 0)
+                        {
+                            this.$message.error(res.msg);
+                        }
+                        else
+                        {
+                            this.processesState.push({
+                                id: node.id,
+                                name: node.name,
+                                host: node.host,
+                                port: node.port,
+                                address: node.address,
+                                state: res.data
+                            });
                         }
                     });
                 } 

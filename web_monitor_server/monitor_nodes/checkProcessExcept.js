@@ -155,21 +155,19 @@ class CheckAllProcessExcept
     assert(typeof address === 'string', `CheckAllProcessExcept getState, address should be a String, now is ${typeof address}`);
     
     return {
-      error: this.checkers[`${address}-ERROR`].state,
-      fatal: this.checkers[`${address}-FATAL`].state
+      error: this.checkers.get(`${address}-ERROR`).state,
+      fatal: this.checkers.get(`${address}-FATAL`).state
     }
   }
 
   /**
    * @param {String} address
-   * @param {Number} val
    */
   openCheckProcessException(address) {
     assert(typeof address === 'string', `CheckAllProcessExcept openCheckProcessException, address should be a String, now is ${typeof address}`);
-    assert(typeof val === 'number', `CheckAllProcessExcept openCheckProcessException, val should be a Number, now is ${typeof val}`);
 
-    const checkProcessExceptErrorInstance = this.checkers[`${address}-ERROR`];
-    const checkProcessExceptFatalInstance = this.checkers[`${address}-FATAL`];
+    const checkProcessExceptErrorInstance = this.checkers.get(`${address}-ERROR`);
+    const checkProcessExceptFatalInstance = this.checkers.get(`${address}-FATAL`);
 
     if (!checkProcessExceptErrorInstance)
     {
