@@ -63,7 +63,53 @@ app.get("/sendTransaction", function (req, res) {
   })
 });
 
+app.post("/batchSendTransactions", (req, res) => {
+  if (!req.body.url) {
+    return res.send({
+      code: PARAM_ERR,
+      msg: "param error, need url"
+    });
+  }
 
+  if (!req.body.txs) {
+    return res.send({
+      code: PARAM_ERR,
+      msg: "param error, need txs"
+    });
+  }
+
+  let returnData = [];
+
+  (async () => {
+    for (let tx of req.body.txs) {
+      // reconstruct data
+      let data;
+      if (tx.data) {
+        data = utils.rlp([toBuffer(COMMAND_TX), Buffer.from(tx.data)]).toString("hex");
+      }
+
+      // send tx
+      const txHash = await module.exports.sendTransaction(req.body.url, tx.from, tx.to, tx.value, data, tx.privateKey);
+
+      // record
+      returnData.push({
+        form: tx.from,
+        to: tx.to,
+        value: tx.value,
+        data: req.body.data,
+        privateKey: req.body.privateKey,
+        txHash: txHash
+      });
+    }
+  })().catch(e => {
+    printErrorStack(e);
+  }).finally(() => {
+    res.json({
+      code: SUCCESS,
+      data: returnData
+    })
+  })
+});
 
 /**
  * @param {String} url
