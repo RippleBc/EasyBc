@@ -50,14 +50,14 @@ log4js.configure({
         }
     },
     categories: {
-        default: { appenders: ["stdout", "consensus"], level: "warn" },
-        command: { appenders: ["stdout", "command"], level: "warn" },
-        consensus: { appenders: ["stdout", "consensus"], level: "warn" },
-        p2p: { appenders: ["stdout", "p2p"], level: "warn" },
-        net: { appenders: ["stdout", "net"], level: "warn" },
-        mysql: { appenders: ["stdout", "mysql"], level: "warn" },
-        update: { appenders: ["stdout", "update"], level: "warn" },
-        stageConsensus: { appenders: ["stdout", "stageConsensus"], level: "warn" }
+        default: { appenders: ["stdout", "consensus"], level: "error" },
+        command: { appenders: ["stdout", "command"], level: "error" },
+        consensus: { appenders: ["stdout", "consensus"], level: "error" },
+        p2p: { appenders: ["stdout", "p2p"], level: "error" },
+        net: { appenders: ["stdout", "net"], level: "error" },
+        mysql: { appenders: ["stdout", "mysql"], level: "error" },
+        update: { appenders: ["stdout", "update"], level: "error" },
+        stageConsensus: { appenders: ["stdout", "stageConsensus"], level: "error" }
     }
 })
  
