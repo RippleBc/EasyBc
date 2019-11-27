@@ -192,7 +192,7 @@ export default {
   methods: {
     search: function() {
       axios.get("getCrowdFundConstract", {
-        url: this.currentNode.url,
+        url: `${this.currentNode.host}:${this.currentNode.port}`,
         address: this.constractAddress
       }).then(({ code, data, msg }) => {
         if(code === 0)
@@ -217,7 +217,7 @@ export default {
     },
     create: function() {
       axios.get("createCrowdFundConstract", Object.assign({
-        url: this.currentNode.url,
+        url: `${this.currentNode.host}:${this.currentNode.port}`,
         privateKey: this.privateKey,
         value: 10,
       }, this.createConstractDetail)).then(({ code, data, msg }) => {
@@ -257,7 +257,7 @@ export default {
       }
 
       axios.get("fundCrowdFundConstract", {
-        url: this.currentNode.url,
+        url: `${this.currentNode.host}:${this.currentNode.port}`,
         to: this.constractAddress,
         privateKey: this.privateKey,
         value: this.fundValue
@@ -297,7 +297,7 @@ export default {
       }
       
       axios.get("reFundCrowdFundConstract", {
-        url: this.currentNode.url,
+        url: `${this.currentNode.host}:${this.currentNode.port}`,
         to: this.constractAddress,
         privateKey: this.privateKey,
         value: 10
@@ -336,7 +336,7 @@ export default {
       }
 
       axios.get("receiveCrowdFundConstract", {
-        url: this.currentNode.url,
+        url: `${this.currentNode.host}:${this.currentNode.port}`,
         to: this.constractAddress,
         privateKey: this.privateKey,
         value: 10

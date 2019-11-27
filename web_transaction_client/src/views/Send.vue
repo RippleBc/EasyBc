@@ -251,7 +251,7 @@ const TRANSACTION_STATE_PACKED = 3;
 
       sendTransaction: function () {
         axios.get('sendTransaction', {
-        	url: this.currentNode.url,
+        	url: `${this.currentNode.host}:${this.currentNode.port}`,
         	from: this.from,
         	to: this.to,
         	value: this.value
@@ -273,7 +273,7 @@ const TRANSACTION_STATE_PACKED = 3;
       
       getTransactionState: function () {
         axios.get('getTransactionState', {
-        	url: this.currentNode.url,
+        	url: `${this.currentNode.host}:${this.currentNode.port}`,
         	hash: this.transactionHash
         }).then(response => {
           if (response.code === 0) {
@@ -312,7 +312,7 @@ const TRANSACTION_STATE_PACKED = 3;
 
       getAccountInfo: function (address) {
         axios.get('getAccountInfo', {
-        	url: this.currentNode.url,
+        	url: `${this.currentNode.host}:${this.currentNode.port}`,
         	address: address
         }).then(response => {
           if (response.code === 0) {
