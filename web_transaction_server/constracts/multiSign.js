@@ -1,5 +1,5 @@
 const utils = require("../../depends/utils");
-const { sendTransaction } = require("../local");
+const { sendTransaction } = require("../local/tx");
 const assert = require("assert");
 const { SUCCESS, OTH_ERR, PARAM_ERR } = require("../../constant");
 const MultiSignConstract = require("../../consensus_constracts/multiSignConstract");
