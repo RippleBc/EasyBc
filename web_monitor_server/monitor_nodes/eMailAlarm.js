@@ -26,11 +26,14 @@ class EMailAlarm {
     this.transporter.verify((error, success) => {
       if (error) {
         this.clientIsValid = false;
-        logger.warn(`${this.host}, ${this.user}, 邮件客户端初始化连接失败，将在10s后重试`);
+
+        logger.warn(`${this.host}, ${this.user}, 邮件客户端校验成功失败，将在10s后重试`);
+
         setTimeout(this.verifyClient.bind(this), 1000 * 10);
       } else {
         this.clientIsValid = true;
-        logger.info(`${this.host}, ${this.user}, 邮件客户端初始化连接成功，随时可发送邮件`);
+
+        logger.info(`${this.host}, ${this.user}, 邮件客户端校验成功成功，随时可发送邮件`);
       }
     });
   }
@@ -38,6 +41,7 @@ class EMailAlarm {
   sendMail({ from = '565828928@qq.com', to = 'zsdswalker@163.com', subject = 'Message', text = 'I hope this message gets read!' }) {
     if (!this.clientIsValid) {
       logger.warn(`${this.host}, ${this.user}, 由于未初始化成功，邮件客户端发送被拒绝`);
+
       return false;
     }
 
@@ -47,7 +51,11 @@ class EMailAlarm {
       subject,
       text
     }, (error, info) => {
-      if (error) return logger.warn(`${this.host}, ${this.user}, 邮件发送失败`, error);
+      if (error) 
+      {
+        return logger.warn(`${this.host}, ${this.user}, 邮件发送失败`, error);
+      }
+
       logger.info(`${this.host}, ${this.user}, 邮件发送成功`, info.messageId, info.response);
     });
   }
@@ -56,7 +64,7 @@ class EMailAlarm {
 const qq = new EMailAlarm({
   host: 'smtp.qq.com',
   user: "565828928@qq.com",
-  pass: "isciykforjpsbecc"
+  pass: "tflhsboubtjxbbfe"
 });
 
 const w163 = new EMailAlarm({
@@ -66,7 +74,7 @@ const w163 = new EMailAlarm({
 });
 
 
-module.exports = ({ text }) => {
+module.exports = ({ subject, text }) => {
   (async () => {
     while (!w163.clientIsValid) {
       await new Promise((resolve) => {
@@ -79,6 +87,7 @@ module.exports = ({ text }) => {
     w163.sendMail({
       from: 'zsdswalker@163.com',
       to: "565828928@qq.com",
+      subject,
       text
     });
   })();
@@ -95,6 +104,7 @@ module.exports = ({ text }) => {
     qq.sendMail({
       from: "565828928@qq.com",
       to: 'zsdswalker@163.com',
+      subject,
       text
     })
   })();

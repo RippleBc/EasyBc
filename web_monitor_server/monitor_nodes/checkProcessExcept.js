@@ -2,6 +2,7 @@ const rp = require("request-promise");
 const sendSMSAlarm = require("./smsAlarm");
 const sendEMailAlarm = require("./eMailAlarm");
 const assert = require("assert");
+const schedule = require('node-schedule');
 
 const logger = process[Symbol.for('logger')];
 const { Node } = process[Symbol.for('models')]
@@ -123,7 +124,38 @@ class CheckAllProcessExcept
     this.init().then(() => {
       logger.info(`CheckAllProcessExcept:\n${[...this.checkers.values()].map(val => `name: ${val.name}, address: ${val.address}, type: ${val.type}`).join('\n')}`)
 
+      // 
       setInterval(this.checkProcessException.bind(this), CHECK_PROCESS_EXCEPTION_INTERVAL);
+
+      // send a email every 7:30 am to notify every thing is ok
+      this.reporterSchedule = schedule.scheduleJob('30 7 * * *', () => {
+        sendEMailAlarm({
+          subject: '监控进程运行正常',
+          text: [...this.checkers.values()].map(checker => {
+            return `address: ${checker.address}, state: ${checker.state}`;
+          }).join('\n')
+        })
+      });
+
+      // send a email every 6:30 pm to notify every thing is ok
+      this.reporterSchedule = schedule.scheduleJob('30 18 * * *', () => {
+        sendEMailAlarm({
+          subject: '监控进程运行正常',
+          text: [...this.checkers.values()].map(checker => {
+            return `address: ${checker.address}, state: ${checker.state}`;
+          }).join('\n')
+        })
+      });
+
+      // notify monitor has begun
+      setTimeout(() => {
+        sendEMailAlarm({
+          subject: '监控进程开始运行',
+          text: [...this.checkers.values()].map(checker => {
+            return `address: ${checker.address}, state: ${checker.state}`;
+          }).join('\n')
+        })
+      }, 20000);
     });
   }
 
@@ -252,7 +284,7 @@ class CheckAllProcessExcept
 
       logger.info(`sendEMailAlarm, ${text}`)
 
-      sendEMailAlarm({text});
+      sendEMailAlarm({ subject: 'EasyBc错误', text });
     }
 
     if(fatalExceptInfo.length > 0)
@@ -261,7 +293,9 @@ class CheckAllProcessExcept
 
       logger.info(`sendSMSAlarm, ${text}`)
 
-      sendSMSAlarm({text});
+      sendEMailAlarm({ subject: 'EasyBc奔溃', text });
+
+      sendSMSAlarm({ text });
     }
   }
 }
