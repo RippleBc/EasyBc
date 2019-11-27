@@ -169,7 +169,7 @@ class CheckAllProcessExcept
     const errorExceptInfo = [];
     const fatalExceptInfo = [];
 
-    for (let [key, checkProcessExceptInstance] of this.checkers.entiries()) {
+    for (let [key, checkProcessExceptInstance] of this.checkers.entries()) {
       //
       if (checkProcessExceptInstance.state === CHECK_PROCESS_EXCEPTION_STATE_CLOSE
         || checkProcessExceptInstance.state === CHECK_PROCESS_EXCEPTION_STATE_CHECKED)

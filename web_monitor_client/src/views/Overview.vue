@@ -1,19 +1,6 @@
 <template>
     <div>
-        <div>
-            <template v-for="(process, index) in processesState">
-                <div style="display: flex;" :key="index">
-                    <span>{{process.name}}</span>
-                    <span>{{process.host}}</span>
-                    <span>{{process.port}}</span>
-                    <span>{{process.address}}</span>
-                    <span>{{process.state}}</span>
-                    <el-button @click="openCheckProcessException(process.address)"></el-button>
-                </div>
-            </template>
-        </div>
-        <el-col>
-            
+        <el-col>   
             <el-row v-for="(node, index) in nodes" :key="index" style="margin-bottom:20px;">
                 <el-card>
                     <div style="margin-bottom:20px;">
@@ -31,6 +18,11 @@
                                 </el-breadcrumb-item>
                             </el-breadcrumb>
                         </div>
+                    </div>
+                    <div style="display: flex">
+                        <span style="margin: 10px;">error monitor state</span><span style="margin: 10px;">{{node.state.error}}</span>
+                        <span style="margin: 10px;">fatal monitor state</span><span style="margin: 10px;">{{node.state.fatal}}</span>
+                        <el-button type="primary" @click = "openCheckProcessException(node.address)">open process monitor</el-button>
                     </div>
                     <div style="display: flex;">
                         <template v-for="(block, index) in node.blocks">
@@ -89,8 +81,7 @@
         name: 'overview',
         data(){
             return {
-                nodes: [],
-                processesState: []
+                nodes: []
             }
         },
         computed: {
@@ -122,7 +113,7 @@
             },
 
             getNodesInfo() {
-                const nodeInfoSet = [];
+                const nodesInfo = new Map;
             
                 for(let node of this.unl)
                 {
@@ -135,21 +126,33 @@
                         }
                         else
                         {
+                            // add show filed
                             for(let index of res.data.keys())
                             {
                                 res.data[index].show = false;
                             }
 
-                            let nodeInfo = {...{
-                                id: node.id,
-                                name: node.name,
-                                host: node.host,
-                                port: node.port
-                            }, ...{blocks: res.data}}
+                            // get nodeInfo
+                            let nodeInfo = nodesInfo.get(node.address);
+                            if(!nodeInfo)
+                            {
+                                nodeInfo = {
+                                    id: node.id,
+                                    address: node.address,
+                                    name: node.name,
+                                    host: node.host,
+                                    port: node.port
+                                }
+                            }
 
-                            nodeInfoSet.push(nodeInfo);
+                            // add block info
+                            Object.assign(nodeInfo, {blocks: res.data});
 
-                            this.nodes = nodeInfoSet;
+                            // 
+                            nodesInfo.set(node.address, nodeInfo);
+
+                            //
+                            this.nodes = nodesInfo.values();
                         }
                     });
 
@@ -162,14 +165,27 @@
                         }
                         else
                         {
-                            this.processesState.push({
-                                id: node.id,
-                                name: node.name,
-                                host: node.host,
-                                port: node.port,
-                                address: node.address,
-                                state: res.data
-                            });
+                            // get nodeInfo
+                            let nodeInfo = nodesInfo.get(node.address);
+                            if(!nodeInfo)
+                            {
+                                nodeInfo = {
+                                    id: node.id,
+                                    address: node.address,
+                                    name: node.name,
+                                    host: node.host,
+                                    port: node.port
+                                }
+                            }
+
+                            // add process state
+                            Object.assign(nodeInfo, {state: res.data});
+
+                            // 
+                            nodesInfo.set(node.address, nodeInfo);
+
+                            //
+                            this.nodes = nodesInfo.values();
                         }
                     });
                 } 
