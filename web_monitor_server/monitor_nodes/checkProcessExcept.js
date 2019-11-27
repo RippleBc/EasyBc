@@ -11,7 +11,7 @@ const CHECK_PROCESS_EXCEPTION_INTERVAL = 10000;
 const CHECK_PROCESS_EXCEPTION_STATE_CLOSE = 1;
 const CHECK_PROCESS_EXCEPTION_STATE_CHECKING = 2;
 const CHECK_PROCESS_EXCEPTION_STATE_CHECKED = 3;
-const CHECK_PROCESS_EXCEPTION_STATE_CHECKED_ALARMED = 4;
+const CHECK_PROCESS_EXCEPTION_STATE_ALARMED = 4;
 
 class CheckProcessExcept {
   constructor({ name, address, host, port, remarks, type }) {
@@ -36,13 +36,13 @@ class CheckProcessExcept {
   }
 
   close() {
-    this.state = CHECK_PROCESS_EXCEPTION_STATE_CHECKED_ALARMED;
+    this.state = CHECK_PROCESS_EXCEPTION_STATE_ALARMED;
   }
 
   async fetchLastestLogs() {
     if (this.state === CHECK_PROCESS_EXCEPTION_STATE_CLOSE
       || this.state === CHECK_PROCESS_EXCEPTION_STATE_CHECKED
-      || this.state === CHECK_PROCESS_EXCEPTION_STATE_CHECKED_ALARMED) {
+      || this.state === CHECK_PROCESS_EXCEPTION_STATE_ALARMED) {
       return;
     }
 
@@ -150,7 +150,7 @@ class CheckAllProcessExcept
     // begin to monit process error exception
     if (checkProcessExceptErrorInstance.state === CHECK_PROCESS_EXCEPTION_STATE_CLOSE
       || checkProcessExceptErrorInstance.state === CHECK_PROCESS_EXCEPTION_STATE_CHECKED
-      || checkProcessExceptErrorInstance.state === CHECK_PROCESS_EXCEPTION_STATE_CHECKED_ALARMED)
+      || checkProcessExceptErrorInstance.state === CHECK_PROCESS_EXCEPTION_STATE_ALARMED)
     {
       checkProcessExceptErrorInstance.reset();
     }
@@ -163,7 +163,7 @@ class CheckAllProcessExcept
     // begin to monit process fatal exception
     if (checkProcessExceptFatalInstance.state === CHECK_PROCESS_EXCEPTION_STATE_CLOSE
       || checkProcessExceptFatalInstance.state === CHECK_PROCESS_EXCEPTION_STATE_CHECKED
-      || checkProcessExceptErrorInstance.state === CHECK_PROCESS_EXCEPTION_STATE_CHECKED_ALARMED) {
+      || checkProcessExceptErrorInstance.state === CHECK_PROCESS_EXCEPTION_STATE_ALARMED) {
       checkProcessExceptFatalInstance.reset();
     }
   }
