@@ -36,7 +36,8 @@
                             <span v-else class="monitorState">已经报警</span>
                         </div>
                         
-                        <el-button type="primary" @click = "openCheckProcessException(node.address)">开始/重置 监控</el-button>
+                        <el-button type="primary" @click = "openCheckProcessException(node.address)" style="margin-right: 20px;">开始/重置 监控</el-button>
+                        <el-button type="primary" @click = "closeCheckProcessException(node.address)">关闭监控</el-button>
                     </div>
                     <div style="display: flex;">
                         <template v-for="(block, index) in node.blocks">
@@ -113,6 +114,22 @@
 
             openCheckProcessException(address) {
                 this.$axios.post('/openCheckProcessException', {
+                    address: address
+                }).then(res => {
+                    if(res.code !== 0)
+                    {
+                        this.$message.error(res.msg);
+                    }
+                    else
+                    {
+                       this.$message.success("sucess")
+                    }
+                });
+            },
+
+            closeCheckProcessException(address)
+            {
+                this.$axios.post('/closeCheckProcessException', {
                     address: address
                 }).then(res => {
                     if(res.code !== 0)

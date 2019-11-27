@@ -41,7 +41,24 @@ app.post('/openCheckProcessException', (req, res) => {
   res.json({
     code: SUCCESS
   });
-})
+});
+
+app.post('/closeCheckProcessException', (req, res) => {
+  const address = req.body.address;
+
+  if (!!!address) {
+    return res.json({
+      code: OTH_ERR,
+      msg: 'invalid address'
+    });
+  }
+
+  checkProcessExcept.closeCheckProcessException(address);
+
+  res.json({
+    code: SUCCESS
+  });
+});
 
 app.post('/monitorNodes', (req, res) => {
 	Node.findAll().then(nodes => {

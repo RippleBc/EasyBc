@@ -38,8 +38,8 @@ class SMSAlarm {
 
 const smsInstance = new SMSAlarm();
 
-module.exports = ({ mobile, content }) => {
-    smsInstance.sendSms({ mobile, content });
+module.exports = ({ mobile, text }) => {
+    smsInstance.sendSms({ mobile, text });
 }
 
 

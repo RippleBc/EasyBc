@@ -47,8 +47,8 @@ class EMailAlarm {
       subject,
       text
     }, (error, info) => {
-      if (error) return logger.warn('${this.host}, ${this.user}, 邮件发送失败', error);
-      logger.info('${this.host}, ${this.user}, 邮件发送成功', info.messageId, info.response);
+      if (error) return logger.warn(`${this.host}, ${this.user}, 邮件发送失败`, error);
+      logger.info(`${this.host}, ${this.user}, 邮件发送成功`, info.messageId, info.response);
     });
   }
 }
