@@ -3,6 +3,7 @@ const process = require('process');
 const Sequelize = require('sequelize');
 const accountModelConfig = require('./account');
 const transactionsHistoryModelConfig = require('./transactionsHistory');
+const nodeModelConfig = require("./node.js");
 
 const logger = process[Symbol.for('dbLogger')] || console
 
@@ -28,6 +29,7 @@ class Model
   {
     this.Account = this.sequelize.define(...accountModelConfig);
     this.TransactionsHistory = this.sequelize.define(...transactionsHistoryModelConfig);
+    this.Node = this.sequelize.define(...nodeModelConfig);
 
     await this.sequelize.authenticate();
     await this.sequelize.sync();

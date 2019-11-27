@@ -2,7 +2,7 @@ const utils = require("../depends/utils");
 const Transaction = require("../depends/transaction");
 const { getAccountInfo } = require("./remote");
 const assert = require("assert");
-const { Account: AccountModel, TransactionsHistory: TransactionsHistoryModel } = process[Symbol.for("models")];
+const { Account: AccountModel, TransactionsHistory: TransactionsHistoryModel, Node: NodeModel } = process[Symbol.for("models")];
 const { QUERY_MAX_LIMIT, SUCCESS, OTH_ERR, PARAM_ERR } = require("../constant");
 const { COMMAND_TX } = require("../consensus_constracts/constant");
 const rp = require("request-promise");
@@ -13,6 +13,22 @@ const printErrorStack = process[Symbol.for("printErrorStack")];
 const Buffer = utils.Buffer;
 const BN = utils.BN;
 const toBuffer = utils.toBuffer;
+
+app.get("/getNodesInfo", function(req, res) {
+	NodeModel.findAll().then(nodes => {
+		res.send({
+			code: SUCCESS,
+			data: nodes
+		});
+	}).catch(e => {
+		printErrorStack(e);
+
+		res.send({
+			code: OTH_ERR,
+			msg: e.toString()
+		});
+	});
+})
 
 app.get("/importAccount", function (req, res) {
 	if (!req.query.privateKey) {
