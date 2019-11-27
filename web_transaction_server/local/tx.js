@@ -3,12 +3,14 @@ const Transaction = require("../../depends/transaction");
 const { getAccountInfo } = require("../remote");
 const assert = require("assert");
 const { Account: AccountModel, TransactionsHistory: TransactionsHistoryModel } = process[Symbol.for("models")];
-const { SUCCESS, OTH_ERR, PARAM_ERR } = require("../../constant");
+const { SUCCESS, OTH_ERR, PARAM_ERR, TRANSACTION_STATE_PACKED } = require("../../constant");
 const { COMMAND_TX } = require("../../consensus_constracts/constant");
 const rp = require("request-promise");
 
 const app = process[Symbol.for("app")];
 const printErrorStack = process[Symbol.for("printErrorStack")];
+
+const logger = process[Symbol.for("logger")];
 
 const Buffer = utils.Buffer;
 const BN = utils.BN;
@@ -90,15 +92,20 @@ app.post("/batchSendTransactions", (req, res) => {
 
       // send tx
       const txHash = await module.exports.sendTransaction(req.body.url, tx.from, tx.to, tx.value, data, tx.privateKey);
+      
+      // check
+      const state = await checkTransaction(req.body.url, txHash)
 
       // record
       returnData.push({
+        index: tx.index,
         form: tx.from,
         to: tx.to,
         value: tx.value,
         data: req.body.data,
         privateKey: req.body.privateKey,
-        txHash: txHash
+        txHash: txHash,
+        state: state
       });
     }
   })().catch(e => {
@@ -110,6 +117,56 @@ app.post("/batchSendTransactions", (req, res) => {
     })
   })
 });
+
+const CHECK_TRANSACTION_STATE_MAX_TRY_TIMES = 20;
+const TX_HANDLE_FAILED = 0;
+const TX_HANDLE_SUCCESS = 1;
+
+const checkTransaction = async (url, txHash) => {
+
+  assert(typeof url === 'string', `checkTransaction url should be a String, now is ${url}`);
+  assert(typeof txHash === 'string', `checkTransaction txHash should be a String, now is ${txHash}`);
+
+  let index = 0;
+
+  let data;
+  do {
+    try {
+      ({ data } = await rp({
+        method: "POST",
+        uri: `${url}/getTransactionState`,
+        body: {
+          hash: txHash
+        },
+        json: true
+      }));
+    } catch (e) {
+      printErrorStack(e)
+    }
+    
+
+    if(index !== 0)
+    {
+      await new Promise((resolve, reject) => {
+        setTimeout(() => {
+          resolve();
+        }, 100)
+      });
+    }
+
+    index ++;
+
+  } while (data !== TRANSACTION_STATE_PACKED && index < CHECK_TRANSACTION_STATE_MAX_TRY_TIMES)
+
+  if(index < CHECK_TRANSACTION_STATE_MAX_TRY_TIMES)
+  {
+    return TX_HANDLE_SUCCESS;
+  }
+  else
+  {
+    return TX_HANDLE_FAILED;
+  }
+}
 
 /**
  * @param {String} url
