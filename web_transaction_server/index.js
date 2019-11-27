@@ -10,7 +10,7 @@ const log4js= require("./logConfig");
 const logger = log4js.getLogger();
 
 process[Symbol.for("logger")] = logger;
-process[Symbol.for("printErrorStack")] = e => {
+const printErrorStack = process[Symbol.for("printErrorStack")] = e => {
   const errLogger = log4js.getLogger("err");
 
   e = utils.getStackInfo(e);

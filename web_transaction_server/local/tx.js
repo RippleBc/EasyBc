@@ -50,7 +50,7 @@ app.get("/sendTransaction", function (req, res) {
     data = utils.rlp([toBuffer(COMMAND_TX), Buffer.from(req.query.data)]).toString("hex");
   }
 
-  module.exports.sendTransaction(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(transactionHash => {
+  module.exports.sendTransactions(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(([transactionHash]) => {
     res.send({
       code: SUCCESS,
       data: transactionHash
@@ -62,7 +62,71 @@ app.get("/sendTransaction", function (req, res) {
       code: OTH_ERR,
       msg: e.toString()
     });
-  })
+  });
+});
+
+app.post("/batchSendTransactionsWithSameFrom", (req, res) => {
+  if (!req.body.url) {
+    return res.send({
+      code: PARAM_ERR,
+      msg: "param error, need url"
+    });
+  }
+
+  if (!req.body.tos) {
+    return res.send({
+      code: PARAM_ERR,
+      msg: "param error, need tos"
+    });
+  }
+
+  if (!req.body.value) {
+    return res.send({
+      code: PARAM_ERR,
+      msg: "param error, need value"
+    });
+  }
+
+  // reconstruct data
+  let data;
+  if (tx.data) {
+    data = utils.rlp([toBuffer(COMMAND_TX), Buffer.from(req.body.data)]).toString("hex");
+  }
+
+  //
+  let returnData = [];
+  (async () => {
+    const txsHash = await module.exports.sendTransactions(req.body.url, req.body.from, tx.tos, req.body.value, data, req.body.privateKey)
+    
+    //
+    for(let [index, txHash] of txsHash)
+    {
+      const tx = tx.tos[index];
+
+      // check
+      const txState = await checkTransaction(req.body.url, txHash)
+
+      //
+      returnData.push({
+        index: tx.index,
+        to: tx.to,
+        value: tx.value,
+        txHash: txHash,
+        state: txState
+      })
+    }
+
+  })().catch(e => {
+    res.json({
+      code: OTH_ERR,
+      data: e
+    });
+  }).finally(() => {
+    res.json({
+      code: SUCCESS,
+      data: returnData
+    });
+  });
 });
 
 app.post("/batchSendTransactions", (req, res) => {
@@ -91,7 +155,7 @@ app.post("/batchSendTransactions", (req, res) => {
       }
 
       // send tx
-      const txHash = await module.exports.sendTransaction(req.body.url, tx.from, tx.to, tx.value, data, tx.privateKey);
+      const [txHash] = await module.exports.sendTransactions(req.body.url, tx.from, tx.to, tx.value, data, tx.privateKey);
       
       // check
       const state = await checkTransaction(req.body.url, txHash)
@@ -124,8 +188,8 @@ const TX_HANDLE_SUCCESS = 1;
 
 const checkTransaction = async (url, txHash) => {
 
-  assert(typeof url === 'string', `checkTransaction url should be a String, now is ${url}`);
-  assert(typeof txHash === 'string', `checkTransaction txHash should be a String, now is ${txHash}`);
+  assert(typeof url === 'string', `checkTransaction url should be a String, now is ${typeof url}`);
+  assert(typeof txHash === 'string', `checkTransaction txHash should be a String, now is ${typeof txHash}`);
 
   let index = 0;
 
@@ -171,50 +235,63 @@ const checkTransaction = async (url, txHash) => {
 /**
  * @param {String} url
  * @param {String} from
- * @param {String} to
+ * @param {Array} tos
  * @param {String} value
  * @param {String} data
  * @param {String} privateKey
  */
-module.exports.sendTransaction = async (url, from, to, value, data, privateKey) => {
+module.exports.sendTransactions = async (url, from, tos, value, data, privateKey) => {
   // check url
-  assert(typeof url === "string", `sendTransaction, url should be a String, now is ${typeof url}`);
+  assert(typeof url === "string", `sendTransactions, url should be a String, now is ${typeof url}`);
 
   // check privateKey
   if (privateKey) {
-    assert(typeof privateKey === "string", `sendTransaction, privateKey should be an String, now is ${typeof privateKey}`);
+    assert(typeof privateKey === "string", `sendTransactions, privateKey should be an String, now is ${typeof privateKey}`);
     if (privateKey.length !== 64) {
-      await Promise.reject("sendTransaction, invalid privateKey")
+      await Promise.reject("sendTransactions, invalid privateKey")
     }
   }
 
   // check from
   if (from) {
-    assert(typeof from === "string", `sendTransaction, from should be an String, now is ${typeof from}`);
+    assert(typeof from === "string", `sendTransactions, from should be an String, now is ${typeof from}`);
     if (from.length !== 40) {
-      await Promise.reject("sendTransaction, invalid from address")
+      await Promise.reject("sendTransactions, invalid from address")
     }
   }
 
   if (data) {
-    assert(typeof data === "string", `sendTransaction, data should be an String, now is ${typeof data}`);
+    assert(typeof data === "string", `sendTransactions, data should be an String, now is ${typeof data}`);
   }
+
   // check to
-  assert(typeof to === "string", `sendTransaction, to should be an String, now is ${typeof to}`);
-  if (to.length !== 40) {
-    await Promise.reject("sendTransaction, invalid to address")
+  if (typeof tos === "string")
+  {
+    if (tos.length !== 40) {
+      await Promise.reject("sendTransactions, invalid tos address")
+    }
+
+    tos = [tos];
+  }
+  else if(Array.isArray(tos))
+  {
+
+  }
+  else
+  {
+    await Promise.reject(`sendTransactions, to should be an String or Array, now is ${typeof to}`)
   }
 
   // check value
-  assert(typeof value === "string", `sendTransaction, value should be an String, now is ${typeof value}`);
+  assert(typeof value === "string", `sendTransactions, value should be an String, now is ${typeof value}`);
   if (value === "") {
-    await Promise.reject("sendTransaction, invalid value");
+    await Promise.reject("sendTransactions, invalid value");
   }
 
   if (privateKey === undefined) {
     // fetch privateKey from db according from
     if (from === undefined) {
-      await Promise.reject("sendTransaction, when privateKey is undefined, from must be supplied")
+      await Promise.reject("sendTransactions, when privateKey is undefined, from must be supplied")
     }
 
     ({ privateKey } = await AccountModel.findOne({
@@ -225,7 +302,7 @@ module.exports.sendTransaction = async (url, from, to, value, data, privateKey) 
     }))
 
     if (privateKey === undefined || privateKey === null) {
-      await Promise.reject(`sendTransaction, from ${from}'s corresponding privateKey is not exist`)
+      await Promise.reject(`sendTransactions, from ${from}'s corresponding privateKey is not exist`)
     }
   }
   else {
@@ -236,37 +313,44 @@ module.exports.sendTransaction = async (url, from, to, value, data, privateKey) 
 
   // get account
   const accountInfo = await getAccountInfo(url, from);
+  
+  //
+  let currentNonceBn = new BN(accountInfo.nonce);
+  let txHashes = [];
+  
+  for (let to of tos)
+  {
+    currentNonceBn.iaddn(1);
 
-  // init tx
-  const tx = new Transaction();
-  tx.nonce = (new BN(accountInfo.nonce).addn(1)).toArrayLike(Buffer);
-  tx.timestamp = Date.now();
-  tx.value = Buffer.from(value, "hex");
-  tx.data = data ? Buffer.from(data, "hex") : Buffer.alloc(0);
-  tx.to = Buffer.from(to, "hex");
-  tx.sign(Buffer.from(privateKey, "hex"));
+    // init tx
+    const tx = new Transaction();
+    tx.nonce = currentNonceBn.toArrayLike(Buffer);
+    tx.timestamp = Date.now();
+    tx.value = Buffer.from(value, "hex");
+    tx.data = data ? Buffer.from(data, "hex") : Buffer.alloc(0);
+    tx.to = Buffer.from(to, "hex");
+    tx.sign(Buffer.from(privateKey, "hex"));
 
-  // save transaction history
-  await TransactionsHistoryModel.create({
-    from: from,
-    to: to,
-    value: value
-  })
+    // save transaction history
+    await TransactionsHistoryModel.create({
+      from: from,
+      to: to,
+      value: value
+    });
 
-  const options = {
-    method: "POST",
-    uri: `${url}/sendTransaction`,
-    body: {
-      tx: tx.serialize().toString("hex")
-    },
-    json: true
-  };
+    // send
+    rp({
+      method: "POST",
+      uri: `${url}/sendTransaction`,
+      body: {
+        tx: tx.serialize().toString("hex")
+      },
+      json: true
+    });
 
-
-  const response = await rp(options);
-  if (response.code !== SUCCESS) {
-    await Promise.reject(response.msg);
+    // record hash
+    txHashes.push(tx.hash().toString('hex'))
   }
-
-  return tx.hash().toString("hex");
+  
+  return txHashes;
 }

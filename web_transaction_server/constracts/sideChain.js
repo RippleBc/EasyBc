@@ -1,5 +1,5 @@
 const utils = require("../../depends/utils");
-const { sendTransaction } = require("../local/tx");
+const { sendTransactions } = require("../local/tx");
 const assert = require("assert");
 const { SUCCESS, OTH_ERR, PARAM_ERR } = require("../../constant");
 const SideChainConstract = require("../../consensus_constracts/sideChainConstract");
@@ -95,7 +95,7 @@ app.get("/createSideChainConstract", (req, res) => {
     toBuffer(parseInt(req.query.threshold)),
     authorityAddressesBuffer]).toString("hex");
 
-  sendTransaction(req.query.url, req.query.from, to.toString("hex"), req.query.value, data, req.query.privateKey).then(transactionHash => {
+  sendTransactions(req.query.url, req.query.from, to.toString("hex"), req.query.value, data, req.query.privateKey).then(([transactionHash]) => {
     res.send({
       code: SUCCESS,
       data: {
@@ -231,7 +231,7 @@ app.get("/newSideChainConstract", (req, res) => {
     toBuffer(COMMAND_NEW_AUTHORITY_ADDRESSES),
     newAuthorityAddressesBuffer]).toString("hex");
 
-  sendTransaction(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(transactionHash => {
+  sendTransactions(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(([transactionHash]) => {
     res.send({
       code: SUCCESS,
       data: transactionHash
@@ -294,7 +294,7 @@ app.get("/delSideChainConstract", (req, res) => {
     toBuffer(COMMAND_DEL_AUTHORITY_ADDRESSES),
     delAuthorityAddressesBuffer]).toString("hex");
 
-  sendTransaction(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(transactionHash => {
+  sendTransactions(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(([transactionHash]) => {
     res.send({
       code: SUCCESS,
       data: transactionHash
@@ -340,7 +340,7 @@ app.get("/agreeSideChainConstract", (req, res) => {
 
   const data = rlp.encode([toBuffer(COMMAND_AGREE), toBuffer(parseInt(req.query.timestamp))]).toString("hex");
 
-  sendTransaction(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(transactionHash => {
+  sendTransactions(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(([transactionHash]) => {
     res.send({
       code: SUCCESS,
       data: transactionHash
@@ -386,7 +386,7 @@ app.get("/rejectSideChainConstract", (req, res) => {
 
   const data = rlp.encode([toBuffer(COMMAND_REJECT), toBuffer(parseInt(req.query.timestamp))]).toString("hex");
 
-  sendTransaction(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(transactionHash => {
+  sendTransactions(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(([transactionHash]) => {
     res.send({
       code: SUCCESS,
       data: transactionHash
@@ -425,7 +425,7 @@ app.get("/appendGuaranteeSideChainConstract", (req, res) => {
 
   const data = rlp.encode([toBuffer(COMMAND_APPEND_GUARANTEE)]).toString("hex");
 
-  sendTransaction(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(transactionHash => {
+  sendTransactions(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(([transactionHash]) => {
     res.send({
       code: SUCCESS,
       data: transactionHash
