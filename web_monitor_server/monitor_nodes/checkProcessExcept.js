@@ -34,22 +34,17 @@ class CheckProcessExcept {
     this.localLastestLogIndex = undefined;
   }
 
-  open() {
-    this.state = CHECK_PROCESS_EXCEPTION_STATE_CHECKING;
-  }
-
   close() {
     this.state = CHECK_PROCESS_EXCEPTION_STATE_CLOSE;
   }
 
   async fetchLastestLogs() {
-    if (this.state === CHECK_PROCESS_EXCEPTION_STATE_CLOSE) {
+    if (this.state === CHECK_PROCESS_EXCEPTION_STATE_CLOSE
+      || this.state === CHECK_PROCESS_EXCEPTION_STATE_CHECKED) {
       return;
     }
 
-
     let logs;
-
     try {
       ({ data: { logs } } = await rp({
         method: "POST",
@@ -63,13 +58,6 @@ class CheckProcessExcept {
       }));
     }
     catch (e) {
-
-      if (this.state !== CHECK_PROCESS_EXCEPTION_STATE_CHECKING) {
-        logger.error(`CheckProcessExcept fetchLastestLogs, fetch log from light server, ${e}`);
-
-        return;
-      }
-
       //
       this.exceptLogs.push(`can not connect to ${this.name}, ${this.address}, ${this.host}, ${this.port}, ${this.remarks}`);
 
@@ -86,12 +74,6 @@ class CheckProcessExcept {
     if (undefined === this.localLastestLogIndex) {
       this.localLastestLogIndex = lastestLogIndex
     }
-
-    // check state
-    if (this.state !== CHECK_PROCESS_EXCEPTION_STATE_CHECKING) {
-      return;
-    }
-
 
     // there exists new log
     if (lastestLogIndex > this.localLastestLogIndex) {
@@ -117,8 +99,6 @@ class CheckAllProcessExcept
 {
   constructor()
   {
-    this.state = CHECK_PROCESS_EXCEPTION_STATE_CLOSE;
-
     this.checkers = new Map();
 
     // init
@@ -137,13 +117,6 @@ class CheckAllProcessExcept
     for (let { name, address, host, port, remarks } of nodes) {
       this.checkers.set(`${address}-ERROR`, new CheckProcessExcept({ name, address, host, port, remarks, type: 'ERROR' }));
       this.checkers.set(`${address}-FATAL`, new CheckProcessExcept({ name, address, host, port, remarks, type: 'FATAL' }));
-    }
-
-    //
-    for (let checkProcessExceptInstance of this.checkers.values())
-    {
-      checkProcessExceptInstance.open(); 
-      await checkProcessExceptInstance.fetchLastestLogs();
     }
   }
 
@@ -167,54 +140,80 @@ class CheckAllProcessExcept
     assert(typeof address === 'string', `CheckAllProcessExcept openCheckProcessException, address should be a String, now is ${typeof address}`);
 
     const checkProcessExceptErrorInstance = this.checkers.get(`${address}-ERROR`);
-    const checkProcessExceptFatalInstance = this.checkers.get(`${address}-FATAL`);
-
     if (!checkProcessExceptErrorInstance)
     {
       throw new Error(`CheckAllProcessExcept openCheckProcessException, instance ${address}-ERROR not exist`);
     }
 
-    if (!checkProcessExceptFatalInstance)
+    // begin to monit process error exception
+    if (checkProcessExceptErrorInstance.state === CHECK_PROCESS_EXCEPTION_STATE_CLOSE
+      || checkProcessExceptErrorInstance.state === CHECK_PROCESS_EXCEPTION_STATE_CHECKED)
     {
+      checkProcessExceptErrorInstance.reset();
+    }
+
+    const checkProcessExceptFatalInstance = this.checkers.get(`${address}-FATAL`);
+    if (!checkProcessExceptFatalInstance) {
       throw new Error(`CheckAllProcessExcept openCheckProcessException, instance ${address}-FATAL not exist`);
     }
 
-    //
-    if (checkProcessExceptErrorInstance.state === CHECK_PROCESS_EXCEPTION_STATE_CLOSE)
-    {
-      checkProcessExceptErrorInstance.reset();
-    }
-
-    //
-    if (checkProcessExceptErrorInstance.state === CHECK_PROCESS_EXCEPTION_STATE_CLOSE) {
-      checkProcessExceptErrorInstance.reset();
+    // begin to monit process fatal exception
+    if (checkProcessExceptFatalInstance.state === CHECK_PROCESS_EXCEPTION_STATE_CLOSE
+      || checkProcessExceptFatalInstance.state === CHECK_PROCESS_EXCEPTION_STATE_CHECKED) {
+      checkProcessExceptFatalInstance.reset();
     }
   }
 
   async checkProcessException()
   {
-    const exceptInfo = [];
+    const errorExceptInfo = [];
+    const fatalExceptInfo = [];
 
-    for (let checkProcessExceptInstance of this.checkers.values()) {
+    for (let [key, checkProcessExceptInstance] of this.checkers.entiries()) {
+      //
+      if (checkProcessExceptInstance.state === CHECK_PROCESS_EXCEPTION_STATE_CLOSE
+        || checkProcessExceptInstance.state === CHECK_PROCESS_EXCEPTION_STATE_CHECKED)
+      {
+        continue;
+      }
+
+      //
       await checkProcessExceptInstance.fetchLastestLogs();
 
+      // 
       if(checkProcessExceptInstance.state === CHECK_PROCESS_EXCEPTION_STATE_CHECKED)
       {
-        exceptInfo.push(`name: ${checkProcessExceptInstance.name}, address: ${checkProcessExceptInstance.address}, host: ${checkProcessExceptInstance.host}, port: ${checkProcessExceptInstance.port}, remarks: ${checkProcessExceptInstance.remarks}, type: ${checkProcessExceptInstance.type}, exceptLogs: ${checkProcessExceptInstance.exceptLogs.join(";")}`);
-        
+        if (key.includes('ERROR'))
+        {
+          errorExceptInfo.push(`name: ${checkProcessExceptInstance.name}, address: ${checkProcessExceptInstance.address}, host: ${checkProcessExceptInstance.host}, port: ${checkProcessExceptInstance.port}, remarks: ${checkProcessExceptInstance.remarks}, type: ${checkProcessExceptInstance.type}, exceptLogs: ${checkProcessExceptInstance.exceptLogs.join(";")}`);
+        }
 
-        // close
+        if(key.include('FATAL'))
+        {
+          fatalExceptInfo.push(`name: ${checkProcessExceptInstance.name}, address: ${checkProcessExceptInstance.address}, host: ${checkProcessExceptInstance.host}, port: ${checkProcessExceptInstance.port}, remarks: ${checkProcessExceptInstance.remarks}, type: ${checkProcessExceptInstance.type}, exceptLogs: ${checkProcessExceptInstance.exceptLogs.join(";")}`);
+        }
+
+        // close monit
         checkProcessExceptInstance.close();
       }
     }
 
-    if (exceptInfo.length > 0)
+    if (errorExceptInfo.length > 0)
     {
-      const text = exceptInfo.join("\n");
-      console.log(text);
+      const text = errorExceptInfo.join("\n");
+
+      logger.info(`sendEMailAlarm, ${text}`)
 
       // sendEMailAlarm(text);
-      // sendSMSAlarm();
+    }
+
+    if(fatalExceptInfo.length > 0)
+    {
+      const text = fatalExceptInfo.join("\n");
+
+      logger.info(`sendSMSAlarm, ${text}`)
+
+      // sendSMSAlarm(text);
     }
   }
 }
