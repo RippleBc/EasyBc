@@ -73,7 +73,7 @@ class ConnectionsManager extends AsyncEventEmitter
 
 	closeAll()
 	{
-		for(let connnection of this.connections.entries())
+		for(let connnection of this.connections)
 		{
 			connnection.logger.warn(`ConnectionsManager closeAll, address ${connnection.address.toString('hex')}`);
 
