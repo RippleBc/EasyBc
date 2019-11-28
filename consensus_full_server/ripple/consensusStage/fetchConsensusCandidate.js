@@ -35,7 +35,7 @@ class FetchConsensusCandidate
     if (this.state !== STAGE_STATE_EMPTY) {
       logger.fatal(`FetchConsensusCandidate run, state should be ${STAGE_STATE_EMPTY}, now is ${this.state}, ${process[Symbol.for("getStackInfo")]()}`);
 
-      process.exit(1);
+      process[Symbol.for("gentlyExitProcess")]();
     }
 
     logger.info(`FetchConsensusCandidate run begin, sequence: ${this.ripple.sequence.toString('hex')}, hash: ${this.ripple.hash.toString('hex')}, number: ${this.ripple.number.toString('hex')}, view: ${this.ripple.view.toString('hex')}`);

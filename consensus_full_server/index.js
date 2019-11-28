@@ -17,11 +17,27 @@ process[Symbol.for("mysql")] = new Mysql();
 process[Symbol.for("mongo")] = require("../depends/mongo_wrapper");
 process[Symbol.for("getStackInfo")] = utils.getStackInfo;
 
+process[Symbol.for("gentlyExitProcess")] = () => {
+    // close tcp connection
+    process[Symbol.for("p2p")].connectionsManager.closeAll();
+
+    // close http server
+    process[Symbol.for("httpServer")].close();
+
+    // reset
+    process[Symbol.for('processor')].close();
+
+    //
+    setTimeout(() => {
+        process.exit(1);   
+    }, 2000);
+}
+
 //
 process.on("uncaughtException", function(err) {
     logger.fatal(process[Symbol.for("getStackInfo")](err))
     
-    process.exit(1);
+    process[Symbol.for("gentlyExitProcess")]();
 });
 
 (async function() {

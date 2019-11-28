@@ -15,7 +15,7 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(bodyParser.json({limit: "1mb"}));
 
-const server = app.listen(port, host, function () {
+process[Symbol.for("httpServer")] = app.listen(port, host, function () {
   logger.info(`server listening at http://${host}:${port}`);
 });
 

@@ -27,7 +27,7 @@ class ViewChangeForConsensusFail extends ConsensusStage {
     if (this.state !== STAGE_STATE_EMPTY) {
       logger.fatal(`ViewChangeForConsensusFail run, state should be ${STAGE_STATE_EMPTY}, now is ${this.state}, ${process[Symbol.for("getStackInfo")]()}`);
 
-      process.exit(1);
+      process[Symbol.for("gentlyExitProcess")]();
     }
 
     logger.info(`ViewChangeForConsensusFail run begin, sequence: ${this.ripple.sequence.toString('hex')}, hash: ${this.ripple.hash.toString('hex')}, number: ${this.ripple.number.toString('hex')}, view: ${this.ripple.view.toString('hex')}`);
@@ -98,7 +98,7 @@ class ViewChangeForConsensusFail extends ConsensusStage {
         // consensus failed
         logger.fatal(`ViewChangeForConsensusFail handler, view change consensus failed`);
 
-        process.exit(1);
+        process[Symbol.for("gentlyExitProcess")]();
       }
     }
   }

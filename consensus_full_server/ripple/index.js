@@ -8,8 +8,7 @@ const ViewChangeForTimeout = require("./abnormalStage/viewChangeForTimeout");
 const FetchProcessState = require("./abnormalStage/fetchProcessState");
 const NewView = require("./abnormalStage/newView");
 const utils = require("../../depends/utils");
-const { STAGE_STATE_EMPTY, 
-	CHEAT_REASON_INVALID_PROTOCOL_CMD, 
+const { CHEAT_REASON_INVALID_PROTOCOL_CMD, 
 	RIPPLE_STATE_EMPTY, 
 	MAX_PROCESS_TRANSACTIONS_SIZE,
 	RIPPLE_LEADER_EXPIRATION,
@@ -109,6 +108,11 @@ class Ripple
 		this.cheatedNodes = [];
 	}
 
+	close()
+	{
+		this.state = RIPPLE_STATE_EMPTY;
+	}
+
 	get highWaterLine()
 	{
 		return this.lowWaterLine.addn(WATER_LINE_STEP_LENGTH);
@@ -188,7 +192,7 @@ class Ripple
 				mysql.saveCheatedNode(address, reason).catch(e => {
 					logger.fatal(`Ripple flush cheated nodes, saveCheatedNode throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 
-					process.exit(1);
+					process[Symbol.for("gentlyExitProcess")]();
 				});
 			}
 		}, FLUSH_CHEATED_NODES_INTERVAL);
@@ -202,6 +206,12 @@ class Ripple
 		//
 		while(1)
 		{
+			if(this.state === RIPPLE_STATE_EMPTY)
+			{
+				return;
+			}
+
+
 			/*********************** first handle process state sync msgs **********************/
 			if(this.state === RIPPLE_STATE_FETCH_BLOCK_CHAIN)
 			{
@@ -386,7 +396,7 @@ class Ripple
 						{
 							logger.fatal(`Ripple run, invalid RIPPLE_STATE_CONSENSUS stage ${this.stage}`);
 
-							process.exit(1);
+							process[Symbol.for("gentlyExitProcess")]();
 						}
 				}
 			}
@@ -482,7 +492,7 @@ class Ripple
 			if (result === PROCESS_BLOCK_PARENT_BLOCK_NOT_EXIST) {
 				logger.fatal(`Ripple processConsensusCandidate, parent block is not exist, there may be a bifurcate, please cleat storage`);
 
-				process.exit(1);
+				process[Symbol.for("gentlyExitProcess")]();
 			}
 
 			//
@@ -513,7 +523,7 @@ class Ripple
 		})().catch(e => {
 			logger.fatal(`Ripple processConsensusCandidate, throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 
-			process.exit(1);
+			process[Symbol.for("gentlyExitProcess")]();
 		});
 	}
 
@@ -618,7 +628,7 @@ class Ripple
 
 		logger.fatal(`Ripple nextViewLeaderAddress, nextViewLeaderIndex: ${nextViewLeaderIndex}, not exist, ${process[Symbol.for("getStackInfo")]()}`);
 		
-		process.exit(1);
+		process[Symbol.for("gentlyExitProcess")]();
 	}
 
 	get threshould() 
@@ -718,7 +728,7 @@ class Ripple
 			{
 				logger.fatal(`Ripple fetchMsgWithSequence, invalid sequenceMode ${sequenceMode}`);
 				
-				process.exit(1);
+				process[Symbol.for("gentlyExitProcess")]();
 			}
 			
 		}

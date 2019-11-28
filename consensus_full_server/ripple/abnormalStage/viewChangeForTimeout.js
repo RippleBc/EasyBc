@@ -167,7 +167,7 @@ class ViewChangeForTimeout {
         {
           logger.fatal(`ViewChangeForTimeout validateAndProcessExchangeData, updateTrimedViewChangesByHash, inner exception`);
           
-          process.exit(1);
+          process[Symbol.for("gentlyExitProcess")]();
         }
       }     
     }

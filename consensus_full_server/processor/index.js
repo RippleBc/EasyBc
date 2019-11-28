@@ -37,6 +37,11 @@ class Processor
 		this.consensus = new Consensus(self);
 	}
 
+	close()
+	{
+		this.consensus.close();
+	}
+
 	run()
 	{
 		this.consensus.run().then(() => {
@@ -44,7 +49,7 @@ class Processor
 		}).catch(e => {
 			loggerConsensus.fatal(`Processor run, throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 
-			process.exit(1)
+			process[Symbol.for("gentlyExitProcess")]()
 		});
 	}
 
@@ -138,12 +143,12 @@ class Processor
 			else if (state === RUN_BLOCK_CHAIN_VALIDATE_FAILED)
 			{
 				loggerConsensus.fatal(`Processor processBlock, block is invalid, ${msg}, ${process[Symbol.for("getStackInfo")]()}`);
-				process.exit(1);
+				process[Symbol.for("gentlyExitProcess")]();
 			}
 			else
 			{
 				loggerConsensus.fatal(`Processor processBlock, invalid return state, ${state}, ${process[Symbol.for("getStackInfo")]()}`);
-				process.exit(1);
+				process[Symbol.for("gentlyExitProcess")]();
 			}
 		}
 		while(true);

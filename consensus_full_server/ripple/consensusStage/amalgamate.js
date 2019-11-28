@@ -32,7 +32,7 @@ class Amalgamate extends LeaderStage
 		if (this.state !== STAGE_STATE_EMPTY) {
 			logger.fatal(`Amalgamate run, state should be ${STAGE_STATE_EMPTY}, now is ${this.state}, ${process[Symbol.for("getStackInfo")]()}`);
 
-			process.exit(1);
+			process[Symbol.for("gentlyExitProcess")]();
 		}
 		
 		//
@@ -46,7 +46,7 @@ class Amalgamate extends LeaderStage
 		if (sequenceBN.lt(this.ripple.lowWaterLine)) {
 			logger.fatal(`Amalgamate run, sequence should largger or equal to ${this.ripple.lowWaterLine.toBuffer().toString('hex')}, now is ${this.ripple.sequence.toString('hex')}`);
 
-			process.exit(1);
+			process[Symbol.for("gentlyExitProcess")]();
 		}
 
 		// check if it is the time to change view

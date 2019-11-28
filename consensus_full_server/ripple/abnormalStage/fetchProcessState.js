@@ -28,7 +28,7 @@ class FetchProcessState extends ConsensusStage {
     if (this.state !== STAGE_STATE_EMPTY) {
       logger.fatal(`FetchProcessState run, state should be ${STAGE_STATE_EMPTY}, now is ${this.state}, ${process[Symbol.for("getStackInfo")]()}`);
 
-      process.exit(1);
+      process[Symbol.for("gentlyExitProcess")]();
     }
 
     //

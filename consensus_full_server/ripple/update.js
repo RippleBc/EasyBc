@@ -99,7 +99,7 @@ class Update
 			{
 				logger.fatal(`Update init, blockChain.runBlockChain, ${result.msg}, ${process[Symbol.for("getStackInfo")]()}`)
 
-				process.exit(1);
+				process[Symbol.for("gentlyExitProcess")]();
 			}
 
 			return;
@@ -197,7 +197,7 @@ class Update
 					{
 						logger.fatal(`Update synchronize, runBlockChain failed, please clear the entrie database and synchronize again, ${result.msg}, ${process[Symbol.for("getStackInfo")]()}`);
 						
-						process.exit(1);
+						process[Symbol.for("gentlyExitProcess")]();
 					}
 
 					// 
