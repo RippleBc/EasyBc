@@ -14,13 +14,13 @@ class SMSAlarm {
 
     /**
      * @param {String} mobile
-     * @param {String} content
+     * @param {String} text
      */
-    sendSms({mobile = "18605807725", content}) {
+    sendSms({mobile = "18605807725", text}) {
         const ts = Date.now();
         const sign = crypto.createHash('md5').update(`${SMS_USERID}${ts}${SMS_APIKEY}`).digest('hex');
 
-        const url = `http://118.31.170.102:8081/api/sms/send?userid=${SMS_USERID}&ts=${ts}&sign=${sign}&mobile=${mobile}&msgcontent=${"%e3%80%90"}${urlencode("我能")}${"%e3%80%91"}${urlencode(content)}&time=&extnum=`;
+        const url = `http://118.31.170.102:8081/api/sms/send?userid=${SMS_USERID}&ts=${ts}&sign=${sign}&mobile=${mobile}&msgcontent=${"%e3%80%90"}${urlencode("我能")}${"%e3%80%91"}${urlencode(text)}&time=&extnum=`;
 
         logger.warn(url);
 
