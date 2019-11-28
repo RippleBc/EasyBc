@@ -97,16 +97,19 @@ const run = async function(dir, logsBufferMaxSize)
 
 		while(true)
 		{
-			let line = await rl.readLine();
+			let { line, num } = await rl.readLine();
 
-			logger.trace(`fileName: ${files[index]}, line: ${line}`)
+			if(line)
+			{
+				logger.trace(`fileName: ${files[index]}, line: ${line}`)
+			}
 
 			if(line === null)
 			{
 				await mysql.saveLogs(logs);
 				await mysql.saveOffset(dir, offset);
 
-				if(index === (files.length - 1) && Date.now() - new Date(files[index].match(/(?<=-)[\d- ]+/g)).valueOf() < (65 * 1000))
+				if (index === (files.length - 1) && Date.now() - new Date(files[index].match(/(?<=-)[\d-: ]+/g)).valueOf() < (65 * 1000))
 				{
 					// read log file has finished and may be there will have new logs to write in, wait a moment and try to read this log file again
 					return new Promise((resolve, reject) => {
@@ -126,7 +129,7 @@ const run = async function(dir, logsBufferMaxSize)
 			}
 
 			//
-			offset += line.length;
+			offset += num;
 
 			const [timeStr] = line.match(/(?<=\[)[\d-:\.T]+(?=\])/g) || []
 			const time = new Date(timeStr).valueOf();
@@ -136,6 +139,9 @@ const run = async function(dir, logsBufferMaxSize)
 
 			if (!isNaN(time) && typeof time === 'number' && typeof type === 'string' && typeof title === 'string' && typeof data === 'string') {
 				logs.push({ time, type, title, data });
+			}
+			else{
+				logger.error(`logParser run, ${logFile}, invalid line ${line}`);
 			}
 
 			if (logs.length >= logsBufferMaxSize) {
