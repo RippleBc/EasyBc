@@ -50,7 +50,12 @@ app.get("/sendTransaction", function (req, res) {
     data = utils.rlp([toBuffer(COMMAND_TX), Buffer.from(req.query.data)]).toString("hex");
   }
 
-  module.exports.sendTransactions(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(([transactionHash]) => {
+  let transactionHash;
+  (async () => {
+    ([transactionHash] = await module.exports.sendTransactions(req.query.url, req.query.from, [req.query.to, req.query.value, data], req.query.privateKey));
+
+    await checkTransaction(req.query.url, transactionHash);
+  })().then(() => {
     res.send({
       code: SUCCESS,
       data: transactionHash
@@ -63,70 +68,7 @@ app.get("/sendTransaction", function (req, res) {
       msg: e.toString()
     });
   });
-});
-
-app.post("/batchSendTransactionsWithSameFrom", (req, res) => {
-  if (!req.body.url) {
-    return res.send({
-      code: PARAM_ERR,
-      msg: "param error, need url"
-    });
-  }
-
-  if (!req.body.tos) {
-    return res.send({
-      code: PARAM_ERR,
-      msg: "param error, need tos"
-    });
-  }
-
-  if (!req.body.value) {
-    return res.send({
-      code: PARAM_ERR,
-      msg: "param error, need value"
-    });
-  }
-
-  // reconstruct data
-  let data;
-  if (tx.data) {
-    data = utils.rlp([toBuffer(COMMAND_TX), Buffer.from(req.body.data)]).toString("hex");
-  }
-
-  //
-  let returnData = [];
-  (async () => {
-    const txsHash = await module.exports.sendTransactions(req.body.url, req.body.from, tx.tos, req.body.value, data, req.body.privateKey)
-    
-    //
-    for(let [index, txHash] of txsHash)
-    {
-      const tx = tx.tos[index];
-
-      // check
-      const txState = await checkTransaction(req.body.url, txHash)
-
-      //
-      returnData.push({
-        index: tx.index,
-        to: tx.to,
-        value: tx.value,
-        txHash: txHash,
-        state: txState
-      })
-    }
-
-  })().catch(e => {
-    res.json({
-      code: OTH_ERR,
-      data: e
-    });
-  }).finally(() => {
-    res.json({
-      code: SUCCESS,
-      data: returnData
-    });
-  });
+  
 });
 
 app.post("/batchSendTransactions", (req, res) => {
@@ -144,34 +86,83 @@ app.post("/batchSendTransactions", (req, res) => {
     });
   }
 
+  //
   let returnData = [];
 
-  (async () => {
-    for (let tx of req.body.txs) {
-      // reconstruct data
-      let data;
-      if (tx.data) {
-        data = utils.rlp([toBuffer(COMMAND_TX), Buffer.from(tx.data)]).toString("hex");
-      }
+  // sort txs
+  const sortedTxsByFrom = new Map();
+  for (let tx of req.body.txs)
+  {
+    let sortedTxWithSameFrom = sortedTxsByFrom.get(tx.from);
 
-      // send tx
-      const [txHash] = await module.exports.sendTransactions(req.body.url, tx.from, tx.to, tx.value, data, tx.privateKey);
-      
-      // check
-      const state = await checkTransaction(req.body.url, txHash)
+    //
+    if (!sortedTxWithSameFrom)
+    {
+      sortedTxWithSameFrom = {
+        privateKey: tx.privateKey,
+        toDetails: []
+      };
+    }
 
-      // record
+    //
+    sortedTxWithSameFrom.toDetails.push(tx.to);
+    sortedTxWithSameFrom.toDetails.push(tx.value);
+
+    // reconstruct data
+    let data;
+    if (tx.data) {
+      data = utils.rlp([toBuffer(COMMAND_TX), Buffer.from(tx.data)]).toString("hex");
+    }
+    sortedTxWithSameFrom.toDetails.push(data);
+
+    //
+    sortedTxsByFrom.set(tx.from, sortedTxWithSameFrom);
+  }
+
+
+  /**
+   * 
+   * @param {String} from 
+   * @param {String} privateKey 
+   * @param {Array} toDetails 
+   */
+  const sendTransactionsWithSameFrom = async (from, privateKey, toDetails) => {
+    assert(typeof from === 'string', `sendTransactionsWithSameFrom from should be a String, now is ${typeof from}`);
+    assert(typeof privateKey === 'string', `sendTransactionsWithSameFrom privateKey should be a String, now is ${typeof privateKey}`);
+    assert(Array.isArray(toDetails), `sendTransactionsWithSameFrom from should be an Array, now is ${typeof toDetails}`);
+
+    // send tx
+    const txHashes = await module.exports.sendTransactions(req.body.url, from, toDetails, privateKey);
+
+    // check tx
+    const checkPromises = []
+    for (let txHash of txHashes) {
+      checkPromises.push(checkTransaction(req.body.url, txHash));
+    }
+    const stateResults = await Promise.all(checkPromises);
+
+    // record
+    for (let [index, txHash] of txHashes.entries()) {
       returnData.push({
-        index: tx.index,
-        form: tx.from,
-        to: tx.to,
-        value: tx.value,
-        data: req.body.data,
-        privateKey: req.body.privateKey,
+        form: from,
+        to: toDetails[index * 3],
+        value: toDetails[index * 3 + 1],
+        data: toDetails[index * 3 + 2],
         txHash: txHash,
-        state: state
+        state: stateResults[index]
       });
     }
+  }
+
+  (async () => {
+    const sendTxsWithSameFromPromises = [];
+
+    for (let [from, { privateKey, toDetails }] of sortedTxsByFrom.entries()) {
+      
+      sendTxsWithSameFromPromises.push(sendTransactionsWithSameFrom(from, privateKey, toDetails))
+    }
+
+    await Promise.all(sendTxsWithSameFromPromises);
   })().catch(e => {
     printErrorStack(e);
   }).finally(() => {
@@ -235,12 +226,11 @@ const checkTransaction = async (url, txHash) => {
 /**
  * @param {String} url
  * @param {String} from
- * @param {Array} tos
- * @param {String} value
- * @param {String} data
+ * @param {Array} toDetails
  * @param {String} privateKey
+ * @return {Array}
  */
-module.exports.sendTransactions = async (url, from, tos, value, data, privateKey) => {
+module.exports.sendTransactions = async (url, from, toDetails, privateKey) => {
   // check url
   assert(typeof url === "string", `sendTransactions, url should be a String, now is ${typeof url}`);
 
@@ -260,33 +250,8 @@ module.exports.sendTransactions = async (url, from, tos, value, data, privateKey
     }
   }
 
-  if (data) {
-    assert(typeof data === "string", `sendTransactions, data should be an String, now is ${typeof data}`);
-  }
-
-  // check to
-  if (typeof tos === "string")
-  {
-    if (tos.length !== 40) {
-      await Promise.reject("sendTransactions, invalid tos address")
-    }
-
-    tos = [tos];
-  }
-  else if(Array.isArray(tos))
-  {
-
-  }
-  else
-  {
-    await Promise.reject(`sendTransactions, to should be an String or Array, now is ${typeof to}`)
-  }
-
-  // check value
-  assert(typeof value === "string", `sendTransactions, value should be an String, now is ${typeof value}`);
-  if (value === "") {
-    await Promise.reject("sendTransactions, invalid value");
-  }
+  // check toDetails
+  assert(Array.isArray(toDetails), `sendTransactions, toDetails should be an Array`)
 
   if (privateKey === undefined) {
     // fetch privateKey from db according from
@@ -318,8 +283,29 @@ module.exports.sendTransactions = async (url, from, tos, value, data, privateKey
   let currentNonceBn = new BN(accountInfo.nonce);
   let txHashes = [];
   
-  for (let to of tos)
+  for(let i = 0; i < toDetails.length; i += 3)
   {
+    const toAddress = toDetails[i];
+    const value = toDetails[i + 1];
+    const data = toDetails[i + 2];
+
+    if (toAddress) {
+      assert(typeof toAddress === "string", `sendTransactions, toAddress should be an String, now is ${typeof toAddress}`);
+    }
+    if (value) {
+      assert(typeof value === "string", `sendTransactions, value should be an String, now is ${typeof value}`);
+    }
+    if (data) {
+      assert(typeof data === "string", `sendTransactions, data should be an String, now is ${typeof data}`);
+    }
+
+    // check value
+    assert(typeof value === "string", `sendTransactions, value should be an String, now is ${typeof value}`);
+    if (value === "") {
+      await Promise.reject("sendTransactions, invalid value");
+    }
+
+    // update nonce
     currentNonceBn.iaddn(1);
 
     // init tx
@@ -328,26 +314,30 @@ module.exports.sendTransactions = async (url, from, tos, value, data, privateKey
     tx.timestamp = Date.now();
     tx.value = Buffer.from(value, "hex");
     tx.data = data ? Buffer.from(data, "hex") : Buffer.alloc(0);
-    tx.to = Buffer.from(to, "hex");
+    tx.to = Buffer.from(toAddress, "hex");
     tx.sign(Buffer.from(privateKey, "hex"));
 
-    // save transaction history
+    // send
+    try {
+      await rp({
+        method: "POST",
+        uri: `${url}/sendTransaction`,
+        body: {
+          tx: tx.serialize().toString("hex")
+        },
+        json: true
+      });
+    } catch (e) {
+      printErrorStack(e);
+    }
+
+    // save transaction
     await TransactionsHistoryModel.create({
       from: from,
-      to: to,
+      to: toAddress,
       value: value
     });
-
-    // send
-    rp({
-      method: "POST",
-      uri: `${url}/sendTransaction`,
-      body: {
-        tx: tx.serialize().toString("hex")
-      },
-      json: true
-    });
-
+    
     // record hash
     txHashes.push(tx.hash().toString('hex'))
   }

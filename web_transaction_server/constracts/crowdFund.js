@@ -90,7 +90,7 @@ app.get("/createCrowdFundConstract", (req, res) => {
     Buffer.from(req.query.target, "hex"), 
     Buffer.from(req.query.limit, "hex")]).toString("hex");
 
-  sendTransactions(req.query.url, req.query.from, to.toString("hex"), req.query.value, data, req.query.privateKey).then(([transactionHash]) => {
+  sendTransactions(req.query.url, req.query.from, [to.toString("hex"), req.query.value, data], req.query.privateKey).then(([transactionHash]) => {
     res.send({
       code: SUCCESS,
       data: {
@@ -196,7 +196,7 @@ app.get("/fundCrowdFundConstract", (req, res) => {
 
   const data = rlp.encode([toBuffer(COMMAND_FUND)]).toString("hex");
 
-  sendTransactions(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(([transactionHash]) => {
+  sendTransactions(req.query.url, req.query.from, [req.query.to, req.query.value, data], req.query.privateKey).then(([transactionHash]) => {
     res.send({
       code: SUCCESS,
       data: transactionHash
@@ -235,7 +235,7 @@ app.get("/reFundCrowdFundConstract", (req, res) => {
 
   const data = rlp.encode([toBuffer(COMMAND_REFUND)]).toString("hex");
 
-  sendTransactions(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(([transactionHash]) => {
+  sendTransactions(req.query.url, req.query.from, [req.query.to, req.query.value, data], req.query.privateKey).then(([transactionHash]) => {
     res.send({
       code: SUCCESS,
       data: transactionHash
@@ -274,7 +274,7 @@ app.get("/receiveCrowdFundConstract", (req, res) => {
 
   const data = rlp.encode([toBuffer(COMMAND_RECEIVE)]).toString("hex");
 
-  sendTransactions(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(([transactionHash]) => {
+  sendTransactions(req.query.url, req.query.from, [req.query.to, req.query.value, data], req.query.privateKey).then(([transactionHash]) => {
     res.send({
       code: SUCCESS,
       data: transactionHash

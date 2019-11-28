@@ -88,7 +88,7 @@ app.get("/createMultiSignConstract", (req, res) => {
         toBuffer(parseInt(req.query.threshold)),
         authorityAddressesBuffer]).toString("hex");
 
-    sendTransactions(req.query.url, req.query.from, to.toString("hex"), req.query.value, data, req.query.privateKey).then(([transactionHash]) => {
+    sendTransactions(req.query.url, req.query.from, [to.toString("hex"), req.query.value, data], req.query.privateKey).then(([transactionHash]) => {
         res.send({
             code: SUCCESS,
             data: {
@@ -205,7 +205,7 @@ app.get("/sendMultiSignConstract", (req, res) => {
         Buffer.from(req.query.constractTo, "hex"), 
         Buffer.from(req.query.constractValue, "hex")]).toString("hex");
 
-    sendTransactions(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(([transactionHash]) => {
+    sendTransactions(req.query.url, req.query.from, [req.query.to, req.query.value, data], req.query.privateKey).then(([transactionHash]) => {
         res.send({
             code: SUCCESS,
             data: transactionHash
@@ -251,7 +251,7 @@ app.get("/agreeMultiSignConstract", (req, res) => {
 
     const data = rlp.encode([toBuffer(COMMAND_AGREE), toBuffer(parseInt(req.query.timestamp))]).toString("hex");
 
-    sendTransactions(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(([transactionHash]) => {
+    sendTransactions(req.query.url, req.query.from, [req.query.to, req.query.value, data], req.query.privateKey).then(([transactionHash]) => {
         res.send({
             code: SUCCESS,
             data: transactionHash
@@ -297,7 +297,7 @@ app.get("/rejectMultiSignConstract", (req, res) => {
 
     const data = rlp.encode([toBuffer(COMMAND_REJECT), toBuffer(parseInt(req.query.timestamp))]).toString("hex");
 
-    sendTransactions(req.query.url, req.query.from, req.query.to, req.query.value, data, req.query.privateKey).then(([transactionHash]) => {
+    sendTransactions(req.query.url, req.query.from, [req.query.to, req.query.value, data], req.query.privateKey).then(([transactionHash]) => {
         res.send({
             code: SUCCESS,
             data: transactionHash
