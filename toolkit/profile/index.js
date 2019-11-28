@@ -7,21 +7,21 @@ const assert = require("assert");
 
 const BN = utils.BN;
 
-//
-const g_exitedProcess = [];
-
 // processec txs num each process
 const g_childProcessedTxNumBNArray = [];
 
 // total processed txs num
 const g_totalProcessedTxNumBN = new BN();
 
+//
+const allChildProcesses = [];
+
 const now = Date.now();
 const printInfo = () => {
   const elapsedSecondsBN = new BN().addn(Math.round((Date.now() - now) / 1000));
   const tps = g_totalProcessedTxNumBN.divRound(elapsedSecondsBN);
 
-  const info = `total txs: ${ g_totalProcessedTxNumBN.toString('hex') }\ntx num per second: ${ tps }\nchild processed tx num: \n${ g_childProcessedTxNumBNArray.map((el, index) => `process ${index}, url: ${el.url} num: ${el.txNum.toString('hex')}, time: ${el.consumedTime}\n`).join('')}exited child process: \n${g_exitedProcess.map(el => `index: ${el.index}, consumedTime: ${el.consumedTime}, err: ${el.err}\n`).join('')}`
+  const info = `total txs: ${ g_totalProcessedTxNumBN.toString('hex') }\ntx num per second: ${ tps }\nchild processed tx num: \n${ g_childProcessedTxNumBNArray.map((el, index) => `process ${index}, url: ${el.url} num: ${el.txNum.toString('hex')}, time: ${el.consumedTime}\n`).join('')}`;
 
   slog(info);
 }
@@ -72,14 +72,27 @@ module.exports = async (urls, range, total) => {
     //
     const child = fork(path.join(__dirname, "./startProfile"));
     
+    //
+    allChildProcesses.push(child);
+
+    //
     child.send(allProcessArgs[i]);
     child.on("message", ({ processedTxNum, consumedTime, err }) => {
       if (!!err) {
-        g_exitedProcess.push({
-          index: i,
-          consumedTime: consumedTime,
-          err: err
-        });
+        console.error(`index: ${i}, consumedTime: ${consumedTime}, err: ${err}`);
+        
+        // terminate child process
+        for (let childProcess of allChildProcesses)
+        {
+          childProcess.kill()
+        }
+          
+        //
+        setTimeout(() => {
+          process.exit(1);
+        }, 5000);
+
+        return;
       }
 
       if (processedTxNum) {
