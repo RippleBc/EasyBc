@@ -128,24 +128,22 @@ const run = async function(dir, logsBufferMaxSize)
 			//
 			offset += line.length;
 
-	  	const [timeStr] = line.match(/(?<=\[)[\d-:\.T]+(?=\])/g) || []
-	  	const time = new Date(timeStr).valueOf();
-	  	const [type] = line.match(/(?<=\[)[A-Z]+(?=\])/g) || [];
-	  	const [title] = line.match(/[a-zA-Z\d]+(?=\s)/) || [];
-	  	const data = line.substring(line.search(/\s-\s/) + 3);
+			const [timeStr] = line.match(/(?<=\[)[\d-:\.T]+(?=\])/g) || []
+			const time = new Date(timeStr).valueOf();
+			const [type] = line.match(/(?<=\[)[A-Z]+(?=\])/g) || [];
+			const [title] = line.match(/[a-zA-Z\d]+(?=\s)/) || [];
+			const data = line.substring(line.search(/\s-\s/) + 3);
 
-	  	if(!isNaN(time) && typeof time === 'number' && typeof type === 'string' && typeof title === 'string' && typeof data === 'string')
-	  	{
-	  		logs.push({time, type, title, data});
-	  	}
+			if (!isNaN(time) && typeof time === 'number' && typeof type === 'string' && typeof title === 'string' && typeof data === 'string') {
+				logs.push({ time, type, title, data });
+			}
 
-	  	if(logs.length >= logsBufferMaxSize)
-	  	{
-	  		await mysql.saveLogs(logs);
+			if (logs.length >= logsBufferMaxSize) {
+				await mysql.saveLogs(logs);
 				await mysql.saveOffset(dir, offset);
-	  		
-	  		logs = [];
-	  	}
+
+				logs = [];
+			}
 		}
 	}
 
