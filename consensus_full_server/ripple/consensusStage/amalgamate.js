@@ -112,7 +112,7 @@ class Amalgamate extends LeaderStage
 	{
 		if(code !== STAGE_FINISH_SUCCESS)
 		{
-			logger.info(`Amalgamate handler, failed because of ${code}`);
+			logger.error(`Amalgamate handler, failed because of ${code}`);
 		}
 
 		// node is leader
