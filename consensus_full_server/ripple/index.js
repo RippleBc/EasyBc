@@ -115,7 +115,7 @@ class Ripple
 
 	get eachRoundMaxFetchTransactionsSize()
 	{
-		parseInt(MAX_PROCESS_TRANSACTIONS_SIZE / unlManager.unlFullSize);
+		return parseInt(MAX_PROCESS_TRANSACTIONS_SIZE / unlManager.unlFullSize);
 	}
 
 	get highWaterLine()
