@@ -333,8 +333,10 @@ module.exports.sendTransactions = async (url, from, toDetails, privateKey) => {
 
     // save transaction
     await TransactionsHistoryModel.create({
+      txHash: tx.hash().toString('hex'),
       from: from,
       to: toAddress,
+      nonce: tx.nonce.toString('hex'),
       value: value
     });
     
