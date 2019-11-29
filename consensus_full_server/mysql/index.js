@@ -89,6 +89,8 @@ class Mysql
 
         for(let rawTransaction of rawTransactions)
         {
+          logger.info(`Mysql getRawTransactions, del tx, hash: ${rawTransaction.hash}`);
+
           await rawTransaction.destroy();
         }
 

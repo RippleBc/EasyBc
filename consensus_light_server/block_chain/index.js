@@ -10,6 +10,7 @@ const accountTrie = process[Symbol.for("accountTrie")];
 const blockDb = process[Symbol.for("blockDb")];
 const app = process[Symbol.for('app')];
 const printErrorStack = process[Symbol.for("printErrorStack")]
+const logger = process[Symbol.for("logger")];
 
 app.post("/sendTransaction", function(req, res) {
     if(!req.body.tx) {
@@ -50,7 +51,10 @@ app.post("/sendTransaction", function(req, res) {
         }
 
         // record
-        await saveRawTransaction(transaction.hash().toString('hex'), req.body.tx);
+        const txHash = transaction.hash().toString('hex');
+        await saveRawTransaction(txHash, req.body.tx);
+
+        logger.info(`sendTransaction, save tx, ${txHash}`);
     })().then(() => {
         res.json({
             code: SUCCESS,

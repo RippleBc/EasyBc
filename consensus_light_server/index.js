@@ -11,6 +11,7 @@ const log4js = require("./logConfig");
 const logger = log4js.getLogger();
 
 process[Symbol.for("mysql")] = new Mysql();
+process[Symbol.for("logger")] = logger;
 
 const printErrorStack = process[Symbol.for("printErrorStack")] = e => {
   e = utils.getStackInfo(e);
