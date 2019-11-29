@@ -500,6 +500,11 @@ class Ripple
 				const randomLocalTx = this.localTransactions[new BN(randomBytes(2)).modn(this.localTransactions.length)];
 
 				ifLocalTxHasBeenConsensused = !!consensusedTxs.find(tx => tx.toString('hex') === randomLocalTx.toString('hex'))
+			
+				if (!ifLocalTxHasBeenConsensused)
+				{
+					logger.error(`Ripple processConsensusCandidate, txHash: ${utils.sha256(randomLocalTx).toString('hex')}, should be in candidate`);
+				}
 			}
 			else
 			{
