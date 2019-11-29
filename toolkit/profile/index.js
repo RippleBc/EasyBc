@@ -27,6 +27,8 @@ process.on("uncaughtException", function (err) {
 
   //
   setTimeout(() => {
+    console.info(`exitTime: ${new Date().toString()}`);
+    
     process.exit(1);
   }, 5000);
 });
@@ -116,7 +118,7 @@ module.exports = async (urls, range, total, validate) => {
         //
         setTimeout(() => {
           
-          console.info(`exitTime: ${Date.now().toString()}`);
+          console.info(`exitTime: ${new Date().toString()}`);
 
           process.exit(1);
         }, 5000);
