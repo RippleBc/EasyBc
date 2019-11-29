@@ -16,6 +16,22 @@ const g_totalProcessedTxNumBN = new BN();
 //
 const allChildProcesses = [];
 
+//
+process.on("uncaughtException", function (err) {
+  console.fatal(err);
+
+  // terminate child process
+  for (let childProcess of allChildProcesses) {
+    childProcess.kill()
+  }
+
+  //
+  setTimeout(() => {
+    process.exit(1);
+  }, 5000);
+});
+
+
 const now = Date.now();
 const printInfo = () => {
   const elapsedSecondsBN = new BN().addn(Math.round((Date.now() - now) / 1000));
@@ -30,11 +46,13 @@ const printInfo = () => {
  * @param {Array} urls
  * @param {Number} range
  * @param {Number} total
+ * @param {Boolean} validate
  */
-module.exports = async (urls, range, total) => {
+module.exports = async (urls, range, total, validate) => {
   assert(Array.isArray(urls), `profile, urls should be an Array, now is ${typeof urls}`);
   assert(typeof range === 'number', `profile, range should be an Number, now is ${typeof range}`);
   assert(typeof total === 'number', `profile, total should be an Number, now is ${typeof total}`);
+  assert(typeof validate === 'boolean', `profile, validate should be an Boolean, now is ${typeof validate}`);
 
   const traverseAddressNum = keyPiar.length > total ? total : keyPiar.length;
 
@@ -55,7 +73,8 @@ module.exports = async (urls, range, total) => {
       url: urls[parseInt(i / range) % urls.length],
       selfKeyPairs: keyPiar.slice(i, i + range),
       targetKeyPairs: [...keyPiar.slice(0, i), ...keyPiar.slice(i + range, traverseAddressNum)],
-      value: "01"
+      value: "01",
+      validate
     });
   }
 

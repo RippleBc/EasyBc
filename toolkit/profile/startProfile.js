@@ -15,6 +15,7 @@ var g_accounts = [];
 var g_selfKeyPairs;
 var g_targetKeyPairs;
 var g_value;
+var g_validate;
 
 /**
  * @param {String} url 
@@ -85,6 +86,12 @@ async function runProfile(url)
   }
   await Promise.all(sendTxPromises);
 
+  //
+  if (!g_validate)
+  {
+    return processedTxNum;
+  }
+
   // validate
   let i = 0;
   while (txhashes.length > 0 && i < 10) {
@@ -123,8 +130,9 @@ async function runProfile(url)
  * @param {Array} selfKeyPairs
  * @param {Array} targetKeyPairs
  * @param {Number} value
+ * @param {Boolean} validate
  */
-process.on('message', ({ url, selfKeyPairs, targetKeyPairs, value }) => {
+process.on('message', ({ url, selfKeyPairs, targetKeyPairs, value, validate }) => {
   assert(typeof url === 'string', `startProfile, url should be a String, now is ${typeof url}`);
   assert(Array.isArray(selfKeyPairs), `startProfile, selfKeyPairs should be an Array, now is ${typeof selfKeyPairs}`);
   assert(Array.isArray(targetKeyPairs), `startProfile, targetKeyPairs should be an Array, now is ${typeof targetKeyPairs}`);
@@ -133,6 +141,7 @@ process.on('message', ({ url, selfKeyPairs, targetKeyPairs, value }) => {
   g_selfKeyPairs = selfKeyPairs;
   g_targetKeyPairs = targetKeyPairs;
   g_value = Buffer.from(value, 'hex');
+  g_validate = validate;
 
   let beginTime;
   (async () => {
