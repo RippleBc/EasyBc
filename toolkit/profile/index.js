@@ -115,6 +115,9 @@ module.exports = async (urls, range, total, validate) => {
           
         //
         setTimeout(() => {
+          
+          console.info(`exitTime: ${Date.now().toString()}`);
+
           process.exit(1);
         }, 5000);
 
