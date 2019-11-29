@@ -100,6 +100,8 @@ class Commit extends ConsensusStage {
 
     // fetch consensus candidate
     if (this.ripple.consensusCandidateDigest.hash(false).toString('hex') !== this.ripple.candidateDigest.hash(false).toString('hex')) {
+      logger.warn(`Commit handler, candidateDigest consensus success, invalid candidateDigest, localTransactions hash: ${this.ripple.localTransactions.map(tx => utils.sha256(tx).toString('hex')).join(' ')}`);
+      
       this.ripple.fetchConsensusCandidate.run(() => {
         this.ripple.processConsensusCandidate();
       })
