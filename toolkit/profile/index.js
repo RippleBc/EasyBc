@@ -18,7 +18,7 @@ const allChildProcesses = [];
 
 //
 process.on("uncaughtException", function (err) {
-  console.fatal(err);
+  console.error(err);
 
   // terminate child process
   for (let childProcess of allChildProcesses) {

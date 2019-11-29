@@ -9,7 +9,7 @@ const FetchProcessState = require("./abnormalStage/fetchProcessState");
 const NewView = require("./abnormalStage/newView");
 const utils = require("../../depends/utils");
 const { CHEAT_REASON_INVALID_PROTOCOL_CMD, 
-	RIPPLE_STATE_EMPTY, 
+	RIPPLE_STATE_EMPTY,
 	MAX_PROCESS_TRANSACTIONS_SIZE,
 	RIPPLE_LEADER_EXPIRATION,
 	RIPPLE_NEW_VIEW_FOR_INVALID_SEQUENCE_EXPIRATION,
@@ -113,6 +113,11 @@ class Ripple
 		this.state = RIPPLE_STATE_EMPTY;
 	}
 
+	get eachRoundMaxFetchTransactionsSize()
+	{
+		parseInt(MAX_PROCESS_TRANSACTIONS_SIZE / unlManager.unlFullSize);
+	}
+
 	get highWaterLine()
 	{
 		return this.lowWaterLine.addn(WATER_LINE_STEP_LENGTH);
@@ -198,7 +203,7 @@ class Ripple
 		}, FLUSH_CHEATED_NODES_INTERVAL);
 
 		// fetch new txs
-		({ transactions: this.localTransactions, deleteTransactions: this.deleteTransactions } = await mysql.getRawTransactions(MAX_PROCESS_TRANSACTIONS_SIZE));
+		({ transactions: this.localTransactions, deleteTransactions: this.deleteTransactions } = await mysql.getRawTransactions(this.eachRoundMaxFetchTransactionsSize));
 
 		// sync block chain and process state
 		await this.syncProcessState();
@@ -506,7 +511,7 @@ class Ripple
 				await this.deleteTransactions();
 
 				// fetch new txs
-				({ transactions: this.localTransactions, deleteTransactions: this.deleteTransactions } = await mysql.getRawTransactions(MAX_PROCESS_TRANSACTIONS_SIZE));
+				({ transactions: this.localTransactions, deleteTransactions: this.deleteTransactions } = await mysql.getRawTransactions(this.eachRoundMaxFetchTransactionsSize));
 			}
 
 			if (result === PROCESS_BLOCK_NO_TRANSACTIONS)
@@ -515,7 +520,7 @@ class Ripple
 				await this.deleteTransactions();
 
 				// fetch new txs
-				({ transactions: this.localTransactions, deleteTransactions: this.deleteTransactions } = await mysql.getRawTransactions(MAX_PROCESS_TRANSACTIONS_SIZE));
+				({ transactions: this.localTransactions, deleteTransactions: this.deleteTransactions } = await mysql.getRawTransactions(this.eachRoundMaxFetchTransactionsSize));
 			}
 
 			// notice view may have been changed
