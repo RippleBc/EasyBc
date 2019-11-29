@@ -503,12 +503,12 @@ class Ripple
 			
 				if (!ifLocalTxHasBeenConsensused)
 				{
-					logger.error(`Ripple processConsensusCandidate, txHash: ${utils.sha256(randomLocalTx).toString('hex')}, should be in candidate`);
+					logger.error(`Ripple processConsensusCandidate, random, txHash: ${utils.sha256(randomLocalTx).toString('hex')}, should be in candidate`);
 				}
 			}
 			else
 			{
-				logger.error(`Ripple processConsensusCandidate, txHash: ${utils.sha256(this.localTransactions[0]).toString('hex')}, should be in candidate`);
+				logger.error(`Ripple processConsensusCandidate, zero, txHash: ${utils.sha256(this.localTransactions[0]).toString('hex')}, should be in candidate`);
 
 				ifLocalTxHasBeenConsensused = false;
 			}
