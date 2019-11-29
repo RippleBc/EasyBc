@@ -121,7 +121,7 @@ class Processor
 			}
 			else if (state === RUN_BLOCK_CHAIN_SOME_TRANSACTIONS_INVALID)
 			{
-				loggerConsensus.error(`Processor processBlock, throw exception, ${msg}`);
+				loggerConsensus.warn(`Processor processBlock, throw exception, ${msg}`);
 
 				// del invalid transactions
 				block.delInvalidTransactions(transactions);
