@@ -508,6 +508,8 @@ class Ripple
 			}
 			else
 			{
+				logger.error(`Ripple processConsensusCandidate, txHash: ${utils.sha256(this.localTransactions[0]).toString('hex')}, should be in candidate`);
+
 				ifLocalTxHasBeenConsensused = false;
 			}
 		}
