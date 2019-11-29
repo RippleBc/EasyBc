@@ -61,7 +61,7 @@ async function runProfile(url)
 
   // send specified valid txs
   const sendTxPromises = [];
-  let txhashes = [];
+  let txsInf = [];
   for (let [index, account] of g_accounts.entries()) {
     if (new BN(account.balance).lt(new BN(g_value))) {
       continue;
@@ -78,7 +78,14 @@ async function runProfile(url)
     sendTxPromises.push(sendTransaction(url, txRaw));
 
     // record tx hash
-    txhashes.push(hash);
+    txsInf.push({
+      txHash: hash,
+      privateKey: g_selfKeyPairs[index].privateKey,
+      nonce: new BN(account.nonce).addn(1).toBuffer().toString('hex'),
+      from: g_selfKeyPairs[index].address,
+      to: toAddressHex,
+      value: g_value.toString('hex')
+    });
 
     // update account nonce and balance
     account.nonce = new BN(account.nonce).addn(1).toBuffer();
@@ -94,20 +101,20 @@ async function runProfile(url)
 
   // validate
   let i = 0;
-  while (txhashes.length > 0 && i < 10) {
+  while (txsInf.length > 0 && i < 10) {
     const checkIfTxPackedPromises = []
-    for (let txHash of txhashes) {
+    for (let { txHash } of txsInf) {
       checkIfTxPackedPromises.push(checkIfTransactionPacked(url, txHash));
     }
     const checkResults = await Promise.all(checkIfTxPackedPromises);
 
-    const tmpTxHashes = []
+    const tmpTxsInfo = []
     for (let [index, ifTxPacked] of checkResults.entries()) {
       if (ifTxPacked !== TRANSACTION_STATE_PACKED) {
-        tmpTxHashes.push(txhashes[index]);
+        tmpTxsInfo.push(txsInf[index]);
       }
     }
-    txhashes = tmpTxHashes;
+    txsInf = tmpTxsInfo;
 
     await new Promise(resolve => {
       setTimeout(() => {
@@ -118,8 +125,15 @@ async function runProfile(url)
     i++;
   }
 
-  if (txhashes.length > 0) {
-    await Promise.reject(`some tx has not packed, ${txhashes}`);
+  if (txsInf.length > 0) {
+    await Promise.reject(`some tx has not packed:\n ${txsInf.map(({
+      txHash, 
+      privateKey,
+      nonce,
+      from,
+      to,
+      value
+    }) => `txHash: ${txHash}, privateKey: ${privateKey}, nonce: ${nonce}, from: ${from}, to: ${to}, value: ${value}`).join('\n')}`);
   }
 
   return processedTxNum;

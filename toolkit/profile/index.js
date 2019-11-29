@@ -34,8 +34,14 @@ process.on("uncaughtException", function (err) {
 
 const now = Date.now();
 const printInfo = () => {
-  const elapsedSecondsBN = new BN().addn(Math.round((Date.now() - now) / 1000));
-  const tps = g_totalProcessedTxNumBN.divRound(elapsedSecondsBN);
+  const elapsedSeconds = Math.round((Date.now() - now) / 1000);
+
+  let tps = new BN();
+  if (elapsedSeconds)
+  {
+    tps = g_totalProcessedTxNumBN.divn(elapsedSeconds);
+  }
+  
 
   const info = `total txs: ${ g_totalProcessedTxNumBN.toString('hex') }\ntx num per second: ${ tps }\nchild processed tx num: \n${ g_childProcessedTxNumBNArray.map((el, index) => `process ${index}, url: ${el.url} num: ${el.txNum.toString('hex')}, time: ${el.consumedTime}\n`).join('')}`;
 
@@ -64,7 +70,8 @@ module.exports = async (urls, range, total, validate) => {
       address: "21d21b68ded27ce2ef619651d382892c1f77baa4"
     }],
     targetKeyPairs: keyPiar.slice(0, traverseAddressNum),
-    value: "0100"
+    value: "0100",
+    validate
   }];
 
   //
