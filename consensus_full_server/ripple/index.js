@@ -8,6 +8,7 @@ const ViewChangeForTimeout = require("./abnormalStage/viewChangeForTimeout");
 const FetchProcessState = require("./abnormalStage/fetchProcessState");
 const NewView = require("./abnormalStage/newView");
 const utils = require("../../depends/utils");
+const { randomBytes } = require("crypto");
 const { CHEAT_REASON_INVALID_PROTOCOL_CMD, 
 	RIPPLE_STATE_EMPTY,
 	MAX_PROCESS_TRANSACTIONS_SIZE,
@@ -487,6 +488,30 @@ class Ripple
 
 		this.stage = STAGE_PROCESS_CONSENSUS_CANDIDATE;
 
+		// check if include localTransaction
+		let ifLocalTxHasBeenConsensused;
+		
+		if (this.localTransactions.length > 0)
+		{
+			const consensusedTxs = rlp.decode(this.candidate.transactions);
+
+			if (consensusedTxs.length > 0)
+			{
+				const randomLocalTx = this.localTransactions[new BN(randomBytes(2)).modn(this.localTransactions.length)];
+
+				ifLocalTxHasBeenConsensused = !!consensusedTxs.find(tx => tx.toString('hex') === randomLocalTx.toString('hex'))
+			}
+			else
+			{
+				ifLocalTxHasBeenConsensused = false;
+			}
+		}
+		else
+		{
+			ifLocalTxHasBeenConsensused = true;
+		}
+		
+		//
 		(async () => {
 			// process block
 			const result = await this.processor.processBlock({
@@ -508,19 +533,26 @@ class Ripple
 				this.number = consensusBlock.header.number;
 
 				//
-				await this.deleteTransactions();
+				if (ifLocalTxHasBeenConsensused)
+				{
+					//
+					await this.deleteTransactions();
 
-				// fetch new txs
-				({ transactions: this.localTransactions, deleteTransactions: this.deleteTransactions } = await mysql.getRawTransactions(this.eachRoundMaxFetchTransactionsSize));
+					// fetch new txs
+					({ transactions: this.localTransactions, deleteTransactions: this.deleteTransactions } = await mysql.getRawTransactions(this.eachRoundMaxFetchTransactionsSize));
+				}
+				
 			}
 
 			if (result === PROCESS_BLOCK_NO_TRANSACTIONS)
 			{
-				//
-				await this.deleteTransactions();
+				if (ifLocalTxHasBeenConsensused) {
+					//
+					await this.deleteTransactions();
 
-				// fetch new txs
-				({ transactions: this.localTransactions, deleteTransactions: this.deleteTransactions } = await mysql.getRawTransactions(this.eachRoundMaxFetchTransactionsSize));
+					// fetch new txs
+					({ transactions: this.localTransactions, deleteTransactions: this.deleteTransactions } = await mysql.getRawTransactions(this.eachRoundMaxFetchTransactionsSize));
+				}
 			}
 
 			// notice view may have been changed
