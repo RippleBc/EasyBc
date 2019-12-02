@@ -31,11 +31,12 @@ Date:   Wed Sep 25 14:34:10 2019 +0800
 
 ------------------------------------- 2019年12月2日 -------------------------------------
 
-commit 1d023fac4c986a81223d6a96f6dff0f375ec8019 (HEAD -> online, origin/online, origin/master, master)
-Author: walker <565828928@qq.com>
-Date:   Mon Dec 2 14:33:49 2019 +0800
+commit 1d99772f2f4c2251aa577b369eb3653
+7eb11ddfb
+Author: ChineseFish <565828928@qq.com>
+Date:   Mon Dec 2 16:37:19 2019 +0800
 
-    add log change
+    add single mode
     
 功能：
 1：优化了ripple共识协议（noleader模式改为leader模式，增加带有消息缓冲功能的message system）
