@@ -216,7 +216,7 @@
                             nodesInfo.set(node.address, nodeInfo);
 
                             //
-                            this.nodes = nodesInfo.values();
+                            this.nodes = [...nodesInfo.values()];
                         }
                     });
                 } 
