@@ -15,55 +15,11 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(bodyParser.json({limit: "1mb"}));
 
-const server = app.listen(port, host, function () {
+process[Symbol.for("httpServer")] = app.listen(port, host, function () {
   logger.info(`server listening at http://${host}:${port}`);
 });
 
 log4js.useLogger(app, logger);
-
-app.post("/perishNode", (req, res) => {
-  if (!req.body.address) {
-    return res.send({
-      code: PARAM_ERR,
-      msg: "param error, need address"
-    });
-  }
-
-  if(processor.consensus.perishNode(Buffer.from(req.body.address, 'hex')))
-  {
-    res.json({
-      code: SUCCESS
-    })
-  }
-  else
-  {
-    res.json({
-      code: PARAM_ERR,
-      msg: "perish is processing"
-    })
-  }
-});
-
-app.post("/pardonNodes", (req, res) => {
-  if (!req.body.addresses) {
-    return res.send({
-      code: PARAM_ERR,
-      msg: "param error, need address"
-    });
-  }
-
-  processor.consensus.pardonNodes(req.body.addresses).then(() => {
-    res.json({
-      code: SUCCESS
-    })
-  }).catch(e => {
-    res.json({
-      code: OTH_ERR,
-      msg: e.toString()
-    })
-  })
-});
-
 
 app.post("/addNodes", (req, res) => {
   if(!req.body.nodes)
@@ -125,11 +81,16 @@ app.post("/deleteNodes", (req, res) => {
       msg: e.toString()
     })
   })
-})
+});
 
-app.post("/getAllConnections", (req, res) => {
-  res.send({
+app.post("/processState", (req, res) => {
+  res.json({
     code: SUCCESS,
-    data: p2p.getAllConnections()
-  })
+    data: {
+      sequence: processor.consensus.sequence.toString('hex'),
+      view: processor.consensus.view.toString('hex'),
+      hash: processor.consensus.hash.toString('hex'),
+      number: processor.consensus.number.toString('hex'),
+    }
+  });
 })

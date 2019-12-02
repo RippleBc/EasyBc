@@ -5,39 +5,18 @@ const { host, port } = require("./config.json");
 const Mysql = require("./mysql");
 const Trie = require("../depends/merkle_patricia_tree");
 const { mongo: mongoConfig } = require("./config");
+const utils = require("../depends/utils");
 
 const log4js = require("./logConfig");
 const logger = log4js.getLogger();
 
 process[Symbol.for("mysql")] = new Mysql();
+process[Symbol.for("logger")] = logger;
 
 const printErrorStack = process[Symbol.for("printErrorStack")] = e => {
-  let err;
+  e = utils.getStackInfo(e);
 
-  if(e)
-  {
-      err = e
-  } 
-  else
-  {
-      try
-      {
-          throw new Error('call stack')
-      }
-      catch(e)
-      {
-          err = e;
-      }
-  }
-  
-  if(e.stack)
-  {
-    logger.error(err.stack);
-  }
-  else
-  {
-    logger.error(e.toString());
-  }
+  logger.error(e);
 }
 
 //

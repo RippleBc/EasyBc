@@ -1,5 +1,10 @@
 const assert = require('assert')
 const Block = require('../block')
+const { RUN_BLOCK_CHAIN_SUCCESS, 
+  RUN_BLOCK_CHAIN_SOME_TRANSACTIONS_INVALID, 
+  RUN_BLOCK_CHAIN_PARENT_BLOCK_NOT_EXIST, 
+  RUN_BLOCK_CHAIN_VALIDATE_FAILED } = require("./constants");
+
 /**
  * processes block and add to the blockchain
  * @param {Object} opts
@@ -23,7 +28,7 @@ module.exports = async function(opts)
     if(!parentBlock)
     {
       return {
-        state: 2
+        state: RUN_BLOCK_CHAIN_PARENT_BLOCK_NOT_EXIST
       }
     }
   }
@@ -33,7 +38,7 @@ module.exports = async function(opts)
   if(false === result.state)
   {
     return {
-      state: 3,
+      state: RUN_BLOCK_CHAIN_VALIDATE_FAILED,
       msg: result.msg
     }
   }
@@ -54,7 +59,7 @@ module.exports = async function(opts)
   }
 
   return {
-    state: result.state === true ? 0 : 1,
+    state: result.state === true ? RUN_BLOCK_CHAIN_SUCCESS : RUN_BLOCK_CHAIN_SOME_TRANSACTIONS_INVALID,
     msg: result.msg,
     transactions: result.transactions
   };

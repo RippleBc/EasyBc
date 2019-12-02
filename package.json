@@ -32,6 +32,8 @@
     "mongoose": "^5.6.0",
     "multiparty": "^4.2.1",
     "mysql2": "^1.6.5",
+    "node-schedule": "^1.3.2",
+    "nodemailer": "^6.3.1",
     "passport": "^0.4.0",
     "passport-local": "^1.0.0",
     "readable-stream": "^3.4.0",
@@ -45,6 +47,7 @@
     "sequelize": "^5.7.6",
     "strip-hex-prefix": "^1.0.0",
     "underscore": "^1.9.1",
+    "urlencode": "^1.1.0",
     "v-charts": "^1.19.0",
     "vue": "^2.6.10",
     "vue-router": "^3.0.6",
@@ -90,9 +93,6 @@
     "dev_monitor_client": "webpack-dev-server --progress --config ./web_monitor_client/build/webpack.dev.js",
     "build_monitor_client": "webpack --config ./web_monitor_client/build/webpack.prod.js",
     "monitor_server": "pm2 start ./web_monitor_server/index.js --name=monitor",
-    "dev_browser_client": "webpack-dev-server --progress --config ./browser_client/build/webpack.dev.js",
-    "build_browser_client": "webpack --config ./browser_client/build/webpack.prod.js",
-    "browser_server": "pm2 start ./browser_server/index.js --name=browser",
     "test": "mocha depends/test/account.js && mocha depends/test/transaction.js && mocha depends/test/block.js && mocha depends/test/cache.js && mocha depends/test/stateManager.js && mocha depends/test/runBlockChain.js && mocha depends/test/net.js"
   },
   "keywords": [

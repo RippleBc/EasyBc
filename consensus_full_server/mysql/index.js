@@ -2,9 +2,7 @@ const mysqlConfig = require("../config.json").mysql;
 const utils = require("../../depends/utils");
 const assert = require("assert");
 const rawTransactionModelConfig = require('../../depends/mysql_model/rawTransaction');
-const timeConsumeModelConfig = require('../../depends/mysql_model/timeConsume');
 const abnormalNodeModelConfig = require('../../depends/mysql_model/abnormalNode');
-const perishHashModelConfig = require('../../depends/mysql_model/perishHash');
 const sideChainConstractModelConfig = require('../../depends/mysql_model/sideChainConstract');
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
@@ -37,9 +35,7 @@ class Mysql
   async init()
   {
     this.RawTransaction = this.sequelize.define(...rawTransactionModelConfig);
-    this.TimeConsume = this.sequelize.define(...timeConsumeModelConfig);
     this.AbnormalNode = this.sequelize.define(...abnormalNodeModelConfig);
-    this.PerishHash = this.sequelize.define(...perishHashModelConfig);
     this.SideChainConstract = this.sequelize.define(...sideChainConstractModelConfig);
 
     await this.sequelize.authenticate();
@@ -79,7 +75,7 @@ class Mysql
 
     const result = rawTransactions.map(rawTransaction => {
       return Buffer.from(rawTransaction.data, 'hex');
-    })    
+    })
 
     return {
       transactions: result,
@@ -93,44 +89,14 @@ class Mysql
 
         for(let rawTransaction of rawTransactions)
         {
+          logger.info(`Mysql getRawTransactions, del tx, hash: ${rawTransaction.hash}`);
+
           await rawTransaction.destroy();
         }
 
         ifDeletingRawTransactions = false;
       }
     };
-  }
-  
-  /**
-   * @param {Number} stage
-   * @param {Number} timeConsume
-   */
-  async saveDataExchangeTimeConsume(stage, timeConsume)
-  {
-    assert(typeof stage === 'number', `Mysql saveDataExchangeTimeConsume, stage should be a Number, now is ${typeof stage}`);
-    assert(typeof timeConsume === 'number', `Mysql saveDataExchangeTimeConsume, timeConsume should be a Number, now is ${typeof timeConsume}`);
-
-    await this.TimeConsume.create({ 
-      stage: stage, 
-      type: 1,
-      data: timeConsume 
-    });
-  }
-
-  /**
-   * @param {Number} stage
-   * @param {Number} timeConsume
-   */
-  async saveStageSynchronizeTimeConsume(stage, timeConsume)
-  {
-    assert(typeof stage === 'number', `Mysql saveStageSynchronizeTimeConsume, stage should be a Number, now is ${typeof stage}`);
-    assert(typeof timeConsume === 'number', `Mysql saveStageSynchronizeTimeConsume, timeConsume should be a Number, now is ${typeof timeConsume}`);
-
-    await this.TimeConsume.create({ 
-      stage: stage, 
-      type: 2,
-      data: timeConsume 
-    });
   }
 
   /**
@@ -163,27 +129,6 @@ class Mysql
       type: 2,
       reason: reason
     })
-  }
-
-  /**
-   * @param {String} hash
-   */
-  async checkIfPerishRepeated(hash)
-  {
-    assert(typeof hash === 'string', `Mysql checkIfPerishRepeated, hash should be a String, now is ${typeof hash}`);
-
-    const [, created] = await this.PerishHash.findOrCreate({
-      where: {
-        hash: hash
-      }
-    });
-    
-    if(created)
-    {
-      return false;
-    }
-    
-    return true;
   }
 
   /**

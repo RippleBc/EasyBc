@@ -75,7 +75,7 @@ class BlockHeader
     // check block number
     if(new BN(this.number).cmp(new BN(parentBlock.header.number).addn(1)) !== 0)
     {
-      errors.push(`property number should bigger 1 than ${parentBlock.header.number.toString("hex")}, now is ${this.number.toString("hex")}`);
+      errors.push(`property number should bigger than ${parentBlock.header.number.toString("hex")}, now is ${this.number.toString("hex")}`);
     }
 
     // check block timestamp

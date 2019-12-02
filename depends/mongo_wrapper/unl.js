@@ -26,5 +26,9 @@ module.exports = new Schema({
     state: {
         type: Number,
         required: true
+    },
+    index: {
+        type: Number,
+        required: true
     }
 });

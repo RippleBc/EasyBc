@@ -3,48 +3,30 @@ const path = require("path");
 const { port, host } = require("./config.json");
 const cors = require("cors");
 const Models = require("./models");
+const utils = require("../depends/utils");
+const bodyParser = require("body-parser");
 
 const log4js= require("./logConfig");
 const logger = log4js.getLogger();
 
-const printErrorStack = function(e) {
+process[Symbol.for("logger")] = logger;
+const printErrorStack = process[Symbol.for("printErrorStack")] = e => {
   const errLogger = log4js.getLogger("err");
 
-  let err;
+  e = utils.getStackInfo(e);
 
-  if(e)
-  {
-      err = e
-  } 
-  else
-  {
-      try
-      {
-          throw new Error('call stack')
-      }
-      catch(e)
-      {
-          err = e;
-      }
-  }
-  
-  if(e.stack)
-  {
-    errLogger.error(err.stack);
-  }
-  else
-  {
-    errLogger.error(e.toString());
-  }
-}
-
+  errLogger.error(e);
+};
 const models = process[Symbol.for("models")] = new Models();
-process[Symbol.for("printErrorStack")] = printErrorStack;
 
 (async () => {
   await models.init();
 
   const app = express();
+  app.use(bodyParser.urlencoded({
+    extended: true
+  }));
+  app.use(bodyParser.json({ limit: "1mb" }));
   app.use(cors({
     credentials: true, 
     origin: 'http://localhost:7998', // web前端服务器地址

@@ -1,0 +1,11 @@
+{
+	"http": {
+		"host": "localhost",
+		"port": 8084
+	},
+	"p2pProxy": {
+		"open": false,
+		"host": "localhost",
+		"port": 7070
+	}
+}

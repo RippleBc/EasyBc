@@ -1,6 +1,6 @@
 <template>
     <div>
-        <el-col>
+        <el-col>   
             <el-row v-for="(node, index) in nodes" :key="index" style="margin-bottom:20px;">
                 <el-card>
                     <div style="margin-bottom:20px;">
@@ -18,6 +18,26 @@
                                 </el-breadcrumb-item>
                             </el-breadcrumb>
                         </div>
+                    </div>
+                    <div style="display: flex;padding:40px; border-bottom: 1px solid #ddd;margin-right: 20%;margin-bottom: 20px;">
+                        <div style="display: flex;margin-right: 20px;border-right: 1px solid #ddd;align-items:center;">
+                            <span style="margin: 10px;">错误监控状态</span>
+                            <span v-if="node.state.error===1" style="background:rgb(119,136,153);" class="monitorState">关闭</span>
+                            <span v-else-if="node.state.error===2" style="background:rgb(0,191,255);" class="monitorState">进行中</span>
+                            <span v-else-if="node.state.error===3" style="background:rgb(255,255,0);" class="monitorState">发现错误</span>
+                            <span v-else class="monitorState">已经报警</span>
+                        </div>
+                            
+                        <div style="display: flex;margin-right: 20px;border-right: 1px solid #ddd;align-items:center;">
+                            <span style="margin: 10px;">奔溃监控状态</span>
+                            <span v-if="node.state.fatal===1" style="background:rgb(119,136,153)" class="monitorState">关闭</span>
+                            <span v-else-if="node.state.fatal===2" style="background:rgb(0,191,255)" class="monitorState">进行中</span>
+                            <span v-else-if="node.state.fatal===3" style="background:rgb(255,255,0)" class="monitorState">发现异常</span>
+                            <span v-else class="monitorState">已经报警</span>
+                        </div>
+                        
+                        <el-button type="primary" @click = "openCheckProcessException(node.address)" style="margin-right: 20px;">开始/重置 监控</el-button>
+                        <el-button type="primary" @click = "closeCheckProcessException(node.address)">关闭监控</el-button>
                     </div>
                     <div style="display: flex;">
                         <template v-for="(block, index) in node.blocks">
@@ -84,15 +104,47 @@
         },
         watch: {
             unl: function() {
-                this.getNodesBlocksInfo()
+                this.getNodesInfo()
             }
         },
         created() {
-            this.getNodesBlocksInfo()
+            this.getNodesInfo()
         },
         methods: {
-            getNodesBlocksInfo() {
-                const nodeInfoSet = [];
+
+            openCheckProcessException(address) {
+                this.$axios.post('/openCheckProcessException', {
+                    address: address
+                }).then(res => {
+                    if(res.code !== 0)
+                    {
+                        this.$message.error(res.msg);
+                    }
+                    else
+                    {
+                       this.$message.success("sucess")
+                    }
+                });
+            },
+
+            closeCheckProcessException(address)
+            {
+                this.$axios.post('/closeCheckProcessException', {
+                    address: address
+                }).then(res => {
+                    if(res.code !== 0)
+                    {
+                        this.$message.error(res.msg);
+                    }
+                    else
+                    {
+                       this.$message.success("sucess")
+                    }
+                });
+            },
+
+            getNodesInfo() {
+                const nodesInfo = new Map;
             
                 for(let node of this.unl)
                 {
@@ -105,21 +157,66 @@
                         }
                         else
                         {
+                            // add show filed
                             for(let index of res.data.keys())
                             {
                                 res.data[index].show = false;
                             }
 
-                            let nodeInfo = {...{
-                                id: node.id,
-                                name: node.name,
-                                host: node.host,
-                                port: node.port
-                            }, ...{blocks: res.data}}
+                            // get nodeInfo
+                            let nodeInfo = nodesInfo.get(node.address);
+                            if(!nodeInfo)
+                            {
+                                nodeInfo = {
+                                    id: node.id,
+                                    address: node.address,
+                                    name: node.name,
+                                    host: node.host,
+                                    port: node.port
+                                }
+                            }
 
-                            nodeInfoSet.push(nodeInfo);
+                            // add block info
+                            Object.assign(nodeInfo, {blocks: res.data});
 
-                            this.nodes = nodeInfoSet;
+                            // 
+                            nodesInfo.set(node.address, nodeInfo);
+
+                            //
+                            this.nodes = nodesInfo.values();
+                        }
+                    });
+
+                    this.$axios.post('/fetchCheckProcessExceptionState', {
+                        address: node.address
+                    }).then(res => {
+                        if(res.code !== 0)
+                        {
+                            this.$message.error(res.msg);
+                        }
+                        else
+                        {
+                            // get nodeInfo
+                            let nodeInfo = nodesInfo.get(node.address);
+                            if(!nodeInfo)
+                            {
+                                nodeInfo = {
+                                    id: node.id,
+                                    address: node.address,
+                                    name: node.name,
+                                    host: node.host,
+                                    port: node.port
+                                }
+                            }
+
+                            // add process state
+                            Object.assign(nodeInfo, {state: res.data});
+
+                            // 
+                            nodesInfo.set(node.address, nodeInfo);
+
+                            //
+                            this.nodes = nodesInfo.values();
                         }
                     });
                 } 
@@ -185,6 +282,16 @@
     height: 80px;
     transition: all 2s;
     flex-shrink: 0;
+}
+
+.monitorState
+{
+    color: white;
+    text-align:center;
+    width:100px;
+    margin:10px;
+    background:rgb(220,20,60);
+    border-radius:5px;
 }
 
 </style>

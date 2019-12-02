@@ -6,42 +6,19 @@ const cookieParser = require('cookie-parser')
 const cors = require('cors')
 const { host, port } = require('./config.json')
 const Models = require('./models');
+const utils = require("../depends/utils");
+const log4js = require('./logConfig')
 
-const printErrorStack = process[Symbol.for("printErrorStack")] = e => {
+const logger = process[Symbol.for('logger')] = log4js.getLogger()
+process[Symbol.for('errLogger')] = log4js.getLogger("err");
+process[Symbol.for('dbLogger')] = log4js.getLogger('db');
+process[Symbol.for("printErrorStack")] = e => {
 	const errLogger = process[Symbol.for('errLogger')];
 
-  let err;
+	e = utils.getStackInfo(e);
 
-  if(e)
-  {
-      err = e
-  } 
-  else
-  {
-      try
-      {
-          throw new Error('call stack')
-      }
-      catch(e)
-      {
-          err = e;
-      }
-  }
-  
-  if(e.stack)
-  {
-    errLogger.error(err.stack);
-  }
-  else
-  {
-    errLogger.error(e.toString());
-  }
+	errLogger.error(e);
 }
-
-const log4js = require('./logConfig')
-const logger = process[Symbol.for('logger')] = log4js.getLogger()
-const errLogger = process[Symbol.for('errLogger')] = log4js.getLogger("err");
-const dbLogger = process[Symbol.for('dbLogger')] = log4js.getLogger('db');
 const models = process[Symbol.for('models')] = new Models();
 process[Symbol.for('cookieSet')] = new Set();
 
@@ -74,7 +51,7 @@ process[Symbol.for('cookieSet')] = new Set();
 	log4js.useLogger(app, logger)
 
 	process.on('uncaughtException', err => {
-	  printErrorStack(err);
+	  process[Symbol.for("printErrorStack")](err);
 
 	  process.exit(1)
 	})
@@ -98,7 +75,7 @@ process[Symbol.for('cookieSet')] = new Set();
 })().then(() => {
 	logger.info("server init success")
 }).catch(e => {
-  printErrorStack(e);
+  process[Symbol.for("printErrorStack")](e);
 
   process.exit(1)
 });

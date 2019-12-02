@@ -17,7 +17,7 @@ class UnlDb
       this.Unl.find({
         
       }, 
-      'address host queryPort p2pPort state', 
+      'address host queryPort p2pPort state index', 
       { 
         lean: true 
       }, 
@@ -60,7 +60,8 @@ class UnlDb
         host: node.host,
         queryPort: node.queryPort,
         p2pPort: node.p2pPort,
-        state: 1
+        state: 1,
+        index: node.index,
       }
     })
 
@@ -73,13 +74,13 @@ class UnlDb
    */
   async updateNodes(nodes)
   {
-    assert(Array.isArray(nodes), `UnlManager updateNodes, nodes should be a String, now is ${typeof nodes}`)
+    assert(Array.isArray(nodes), `UnlDb updateNodes, nodes should be a String, now is ${typeof nodes}`)
 
     const updateTasks = []
 
     for(let node of nodes)
     {
-      assert(typeof node.address === 'string', `UnlManager updateNodes node.address should be a String, now is ${typeof node.address}`);
+      assert(typeof node.address === 'string', `UnlDb updateNodes node.address should be a String, now is ${typeof node.address}`);
 
       const updateField = {}
       if(undefined !== node.host)
@@ -95,13 +96,16 @@ class UnlDb
       if (undefined !== node.state) {
         updateField.state = node.state
       }
+      if (undefined !== node.index) {
+        updateField.index = node.index
+      }
 
       const promise = new Promise((resolve, reject) => {
         this.Unl.update({
           address: node.address
         }, updateField, err => {
             if (!!err) {
-              reject(`UnlManager updateNodes, updateOne failed, address: ${address}`)
+              reject(`UnlDb updateNodes, updateOne failed, address: ${address}`)
             }
 
             resolve();
@@ -120,7 +124,7 @@ class UnlDb
    */
   async deleteNodes(nodes)
   {
-    assert(Array.isArray(nodes), `UnlManager deleteNodes, nodes should be a String, now is ${typeof nodes}`)
+    assert(Array.isArray(nodes), `UnlDb deleteNodes, nodes should be a String, now is ${typeof nodes}`)
 
     const promise = new Promise((resolve, reject) => {
       this.Unl.deleteMany({
@@ -129,7 +133,7 @@ class UnlDb
         }
       }, err => {
         if (!!err) {
-          reject(`UnlManager updateNodes, updateOne failed, address: ${address}`)
+          reject(`UnlDb updateNodes, updateOne failed, address: ${address}`)
         }
 
         resolve();

@@ -1,11 +1,64 @@
 const { SUCCESS, PARAM_ERR, OTH_ERR } = require('../../constant')
 const rp = require("request-promise");
 const assert = require("assert");
+const CheckProcessExcept = require("./checkProcessExcept");
 
 const app = process[Symbol.for('app')]
 const { Node } = process[Symbol.for('models')]
 const logger = process[Symbol.for('logger')];
 const printErrorStack = process[Symbol.for("printErrorStack")]
+
+const checkProcessExcept = new CheckProcessExcept()
+
+app.post('/fetchCheckProcessExceptionState', (req, res) => {
+  const address = req.body.address;
+
+  if (!!!address) {
+    return res.json({
+      code: OTH_ERR,
+      msg: 'invalid address'
+    });
+  }
+
+  res.json({
+    code: SUCCESS,
+    data: checkProcessExcept.getState(address)
+  });
+});
+
+app.post('/openCheckProcessException', (req, res) => {
+  const address = req.body.address;
+
+  if (!!!address) {
+    return res.json({
+      code: OTH_ERR,
+      msg: 'invalid address'
+    });
+  }
+
+  checkProcessExcept.openCheckProcessException(address);
+
+  res.json({
+    code: SUCCESS
+  });
+});
+
+app.post('/closeCheckProcessException', (req, res) => {
+  const address = req.body.address;
+
+  if (!!!address) {
+    return res.json({
+      code: OTH_ERR,
+      msg: 'invalid address'
+    });
+  }
+
+  checkProcessExcept.closeCheckProcessException(address);
+
+  res.json({
+    code: SUCCESS
+  });
+});
 
 app.post('/monitorNodes', (req, res) => {
 	Node.findAll().then(nodes => {
@@ -225,7 +278,6 @@ app.post('/deleteMonitorNode', (req, res) => {
 
 app.use((req, res, next) => {
   if (req.url.includes("logs")
-    || req.url.includes("timeConsume")
     || req.url.includes("abnormalNodes"))
   { 
     if (!req.body.url) {

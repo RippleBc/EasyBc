@@ -32,12 +32,12 @@
                 </el-table-column>
                 <el-table-column prop="p2pPort" label="点对点端口">
                 </el-table-column>
-                <el-table-column prop="state" label="状态码">
+                <el-table-column prop="state" label="状态码, 0 is online, 1 is offline, 2 is invalid">
+                </el-table-column>
+                <el-table-column prop="index" label="processIndex">
                 </el-table-column>
                 <el-table-column label="操作" width="240" align="center">
                     <template slot-scope="scope">
-                        <el-button type="text" @click="handlePerish(scope.row)">自爆</el-button>
-                        <el-button type="text" @click="handlePardon(scope.row)">原谅</el-button>
                         <el-button type="text" @click="handleEdit(scope.row)">编辑</el-button>
                         <el-button type="text" class="red" @click="handleDelete(scope.row)">删除</el-button>
                     </template>
@@ -67,6 +67,9 @@
                 <el-form-item label="点对点端口">
                     <el-input v-model="currentHandleNode.p2pPort"></el-input>
                 </el-form-item>
+                <el-form-item label="processIndex">
+                    <el-input v-model="currentHandleNode.index"></el-input>
+                </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="addVisible = false">取 消</el-button>
@@ -94,6 +97,9 @@
                 </el-form-item>
                 <el-form-item label="状态码">
                     <el-input v-model="currentHandleNode.state"></el-input>
+                </el-form-item>
+                <el-form-item label="processIndex">
+                    <el-input v-model="currentHandleNode.index"></el-input>
                 </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
@@ -137,38 +143,6 @@
                 <el-button type="primary" @click="saveBatchDelete">确 定</el-button>
             </span>
         </el-dialog>
-
-        <!-- 毁灭节点提示框 -->
-        <el-dialog title="毁灭节点" :visible.sync="perishVisible" width="30%" center>
-            <el-form :model="currentHandleNode" label-width="90px">
-                <el-form-item label="公钥">
-                   <strong style="padding: 20px;">{{currentHandleNode.address}}</strong>
-                </el-form-item>
-                <el-form-item label="密钥">
-                    <el-input v-model="privateKey"></el-input>
-                </el-form-item>
-            </el-form>
-            <span slot="footer" class="dialog-footer">
-                <el-button @click="perishVisible=false">取 消</el-button>
-                <el-button type="primary" @click="savePerish">确 定</el-button>
-            </span>
-        </el-dialog>
-
-        <!-- 原谅节点提示框 -->
-        <el-dialog title="原谅节点" :visible.sync="pardonVisible" width="30%" center>
-            <el-form :model="currentHandleNode" label-width="90px">
-                <el-form-item label="公钥">
-                   <strong style="padding: 20px;">{{currentHandleNode.address}}</strong>
-                </el-form-item>
-                <el-form-item label="密钥">
-                    <el-input v-model="privateKey"></el-input>
-                </el-form-item>
-            </el-form>
-            <span slot="footer" class="dialog-footer">
-                <el-button @click="pardonVisible=false">取 消</el-button>
-                <el-button type="primary" @click="savePardon">确 定</el-button>
-            </span>
-        </el-dialog>
     </div>
 </template>
 
@@ -190,15 +164,14 @@
                 addVisible: false,
                 editVisible: false,
                 delVisible: false,
-                perishVisible: false,
-                pardonVisible: false,
                 batchDelVisible: false,
                 currentHandleNode: {
                     address: '',
                     host: '',
                     queryPort: '',
                     p2pPort: '',
-                    state: ''
+                    state: '',
+                    index: 0
                 }
             }
         },
@@ -277,16 +250,6 @@
             handleCurrentChange(page) {
                 this.cur_page = page;
             },
-            handlePerish(row) {
-                Object.assign(this.currentHandleNode, row);
-
-                this.perishVisible = true;
-            },
-            handlePardon(row) {
-                Object.assign(this.currentHandleNode, row);
-
-                this.pardonVisible = true;
-            },
             handleEdit(row) {
                 Object.assign(this.currentHandleNode, row);
 
@@ -337,7 +300,8 @@
                         address: this.currentHandleNode.address,
                         host: this.currentHandleNode.host,
                         queryPort: parseInt(this.currentHandleNode.queryPort),
-                        p2pPort: parseInt(this.currentHandleNode.p2pPort)
+                        p2pPort: parseInt(this.currentHandleNode.p2pPort),
+                        index: parseInt(this.currentHandleNode.index)
                     }],
                     privateKey: this.privateKey
                 }).then(res => {
@@ -365,7 +329,8 @@
                         host: this.currentHandleNode.host,
                         queryPort: parseInt(this.currentHandleNode.queryPort),
                         p2pPort: parseInt(this.currentHandleNode.p2pPort),
-                        state: parseInt(this.currentHandleNode.state)
+                        state: parseInt(this.currentHandleNode.state),
+                        index: parseInt(this.currentHandleNode.index)
                     }],
                     privateKey: this.privateKey
                 }).then(res => {
@@ -400,52 +365,6 @@
                     else
                     {
                         this.$message.success('删除成功');
-
-                        this.getAllData();
-                    }
-                }).catch(err => {
-                    this.$message.error(err);
-                });
-            },
-            savePerish()
-            {
-                this.perishVisible = false;
-
-                this.$axios.post('/perishNode', {
-                    url: `${this.currentNode.host}:${this.currentNode.port}`,
-                    data: this.currentHandleNode.address,
-                    privateKey: this.privateKey
-                }).then(res => {
-                    if(res.code !== 0)
-                    {
-                        this.$message.error(res.msg);
-                    }
-                    else
-                    {
-                        this.$message.success('毁灭提交成功');
-
-                        this.getAllData();
-                    }
-                }).catch(err => {
-                    this.$message.error(err);
-                });
-            },
-            savePardon()
-            {
-                this.delVisible = false;
-
-                this.$axios.post('/pardonNodes', {
-                    url: `${this.currentNode.host}:${this.currentNode.port}`,
-                    data: [this.currentHandleNode.address],
-                    privateKey: this.privateKey
-                }).then(res => {
-                    if(res.code !== 0)
-                    {
-                        this.$message.error(res.msg);
-                    }
-                    else
-                    {
-                        this.$message.success('原谅节点成功');
 
                         this.getAllData();
                     }

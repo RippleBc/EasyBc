@@ -1,17 +1,68 @@
-const Amalgamate = require("./stage/amalgamate");
-const CandidateAgreement = require("./stage/candidateAgreement");
-const BlockAgreement = require("./stage/blockAgreement");
-const { STAGE_STATE_EMPTY, RIPPLE_STAGE_AMALGAMATE, RIPPLE_STAGE_CANDIDATE_AGREEMENT, RIPPLE_STAGE_BLOCK_AGREEMENT, RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES, RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK, RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS, CHEAT_REASON_INVALID_PROTOCOL_CMD, RIPPLE_STAGE_PERISH, RIPPLE_STAGE_EMPTY, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE, RIPPLE_STAGE_COUNTER, MAX_PROCESS_TRANSACTIONS_SIZE } = require("../constant");
-const assert = require("assert");
-const Counter = require("./stage/counter");
-const Perish = require("./stage/perish");
+const Amalgamate = require("./consensusStage/amalgamate");
+const PrePrepare = require("./consensusStage/prePrepare");
+const Prepare = require("./consensusStage/prepare");
+const Commit = require("./consensusStage/commit");
+const FetchConsensusCandidate = require("./consensusStage/fetchConsensusCandidate");
+const ViewChangeForConsensusFail = require("./abnormalStage/viewChangeForConsensusFail");
+const ViewChangeForTimeout = require("./abnormalStage/viewChangeForTimeout");
+const FetchProcessState = require("./abnormalStage/fetchProcessState");
+const NewView = require("./abnormalStage/newView");
+const utils = require("../../depends/utils");
+const { randomBytes } = require("crypto");
+const { CHEAT_REASON_INVALID_PROTOCOL_CMD, 
+	RIPPLE_STATE_EMPTY,
+	MAX_PROCESS_TRANSACTIONS_SIZE,
+	RIPPLE_LEADER_EXPIRATION,
+	RIPPLE_NEW_VIEW_FOR_INVALID_SEQUENCE_EXPIRATION,
 
-const p2p = process[Symbol.for("p2p")];
+	STAGE_AMALGAMATE, 
+	STAGE_PRE_PREPARE, 
+	STAGE_PREPARE, 
+	STAGE_COMMIT, 
+	STAGE_FETCH_CANDIDATE, 
+	STAGE_PROCESS_CONSENSUS_CANDIDATE,
+	STAGE_VIEW_CHANGE_FOR_CONSENSUS_FAIL,
+
+	RIPPLE_STATE_CONSENSUS,
+	RIPPLE_STATE_NEW_VIEW,
+	RIPPLE_STATE_FETCH_PROCESS_STATE,
+	RIPPLE_STATE_FETCH_BLOCK_CHAIN,
+
+	PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ,
+	PROTOCOL_CMD_TRANSACTION_AMALGAMATE_RES,
+	PROTOCOL_CMD_PRE_PREPARE_REQ,
+	PROTOCOL_CMD_PRE_PREPARE_RES,
+	PROTOCOL_CMD_PREPARE,
+	PROTOCOL_CMD_COMMIT,
+	PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ,
+	PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES,
+	PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL,
+	PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT,
+	PROTOCOL_CMD_NEW_VIEW_REQ,
+	PROTOCOL_CMD_NEW_VIEW_RES,
+	PROTOCOL_CMD_PROCESS_STATE_REQ,
+	PROTOCOL_CMD_PROCESS_STATE_RES } = require("./constants");
+const { PROCESS_BLOCK_SUCCESS, PROCESS_BLOCK_PARENT_BLOCK_NOT_EXIST, PROCESS_BLOCK_NO_TRANSACTIONS } = require("../constants");
+
+const assert = require("assert");
+const Block = require("../../depends/block");
+const Update = require("./update");
+
+const BN = utils.BN;
+const rlp = utils.rlp;
+
 const logger = process[Symbol.for("loggerConsensus")];
 const mysql = process[Symbol.for("mysql")];
-const loggerStageConsensus = process[Symbol.for("loggerStageConsensus")];
-const loggerPerishNode = process[Symbol.for("loggerPerishNode")];
-const unlManager = process[Symbol.for("unlManager")]
+const unlManager = process[Symbol.for("unlManager")];
+
+const WATER_LINE_STEP_LENGTH = 1111 + 926;
+const SYSTEM_LOOP_DELAY_TIME = 20;
+
+const SEQUENCE_MODE_MATCH = 1;
+const SEQUENCE_MODE_LARGER = 2;
+const SEQUENCE_MODE_MATCH_OR_LARGER = 3;
+
+const FLUSH_CHEATED_NODES_INTERVAL = 60 * 1000;
 
 class Ripple
 {
@@ -19,145 +70,723 @@ class Ripple
 	{
 		this.processor = processor;
 
-		this.stage = RIPPLE_STAGE_EMPTY;
+		this.state = RIPPLE_STATE_EMPTY;
+		
+		// 
+		this.localTransactions = [];
+		this.amalgamatedTransactions = new Set();
+		this.candidate = undefined;
+		this.candidateDigest = undefined;
+		this.consensusCandidateDigest = undefined;
 
-		this.counter = new Counter(this);
-		this.perish = new Perish(this);
+		//
 		this.amalgamate = new Amalgamate(this);
-		this.candidateAgreement = new CandidateAgreement(this);
-		this.blockAgreement = new BlockAgreement(this);
+		this.prePrepare = new PrePrepare(this);
+		this.prepare = new Prepare(this);
+		this.commit = new Commit(this);
+		this.fetchConsensusCandidate = new FetchConsensusCandidate(this);
+		this.viewChangeForConsensusFail = new ViewChangeForConsensusFail(this);
+		this.fetchProcessState = new FetchProcessState(this);
+		this.viewChangeForTimeout = new ViewChangeForTimeout(this);
+		this.newView = new NewView(this);
 
-		// used for cache transactions that is consensusing
-		this.processingTransactions = [];
+		//
+		this.msgBuffer = new Map();
 
-		// used for cache amalgamate message
-		this.amalgamateMessagesCacheBlockAgreement = [];
-		this.amalgamateMessagesCacheCounter = [];
-		this.amalgamateMessagesCachePerish = [];
+		//
+		this.sequence = Buffer.alloc(0);
+		this.hash = undefined;
+		this.number = undefined;
+		this.view = Buffer.alloc(0);
+
+		//
+		this.update = new Update();
+
+		//
+		this.newViewForInvalidSequenceTimes = 0;
+
+		//
+		this.cheatedNodes = [];
 	}
 
-	/**
-	 * @param {Array} transactions 
-	 */
-	run({fetchingNewTransaction = false, transactions} = {fetchingNewTransaction: false})
+	close()
 	{
-		if(fetchingNewTransaction)
-		{
-			assert(Array.isArray(transactions), `Ripple run, transactions should be an Array, now is ${typeof transactions}`)
-
-			this.processingTransactions = transactions;
-		}
-		
-		this.amalgamate.run(this.processingTransactions);
+		this.state = RIPPLE_STATE_EMPTY;
 	}
 
-	/*
-	 * @return {Object} 
-	 *  - {Array} transactions
-	 *  - {Function} deleteTransactions
-	 */
-	async getNewTransactions()
+	get eachRoundMaxFetchTransactionsSize()
 	{
-		return await mysql.getRawTransactions(MAX_PROCESS_TRANSACTIONS_SIZE);
+		return parseInt(MAX_PROCESS_TRANSACTIONS_SIZE / unlManager.unlFullSize);
 	}
 
-	/**
-	 * @param {Array}
-	 */
-	setProcessingTransactions(transactions)
+	get highWaterLine()
 	{
-		assert(Array.isArray(transactions), `Ripple setProcessingTransactions, transactions should be an Array, now is ${typeof transactions}`);
-
-		this.processingTransactions = transactions;
+		return this.lowWaterLine.addn(WATER_LINE_STEP_LENGTH);
 	}
 
-	checkIfInTransactionConsensusProcessing()
+	get lowWaterLine()
 	{
-		return this.stage === RIPPLE_STAGE_AMALGAMATE 
-		|| this.stage === RIPPLE_STAGE_CANDIDATE_AGREEMENT 
-		|| this.stage === RIPPLE_STAGE_BLOCK_AGREEMENT 
-		|| this.stage === RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK
-	}
-
-	/**
-	 * @param {String} sponsorNode
-	 * @param {String} perishNode
-	 */
-	async handlePerishNode(sponsorNode, perishNode)
-	{
-		assert(typeof sponsorNode === 'string', `Ripple handlePerishNode, sponsorNode should be an String, now is ${typeof sponsorNode}`);
-		assert(typeof perishNode === 'string', `Ripple handlePerishNode, perishNode should be an String, now is ${typeof perishNode}`);
-		
-		await unlManager.setNodesMalicious([sponsorNode, perishNode])
-	}
-
-	/**
-	 * @param {Array} cheatedNodes
-	 */
-	handleCheatedNodes(cheatedNodes)
-	{
-		assert(Array.isArray(cheatedNodes), `Ripple handleCheatedNodes, cheatedNodes should be an Buffer, now is ${typeof cheatedNodes}`);
-
-		cheatedNodes.forEach(cheatedNode => {
-			mysql.saveCheatedNode(cheatedNode.address, cheatedNode.reason).catch(e => {
-				logger.fatal(`Ripple handleCheatedNodes, saveCheatedNode throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
-				
-				process.exit(1)
-			});
-		});
-	}
-
-	/**
-	 * @param {Array} timeoutNodes
-	 */
-	handleTimeoutNodes(timeoutNodes)
-	{
-		assert(Array.isArray(timeoutNodes), `Ripple handleTimeoutNodes, timeoutNodes should be an Array, now is ${typeof timeoutNodes}`);
-		
-		timeoutNodes.forEach(timeoutNode => {
-			mysql.saveTimeoutNode(timeoutNode.address, timeoutNode.reason).catch(e => {
-				logger.fatal(`Ripple handleTimeoutNodes, saveTimeoutNode throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
-				
-				process.exit(1)
-			})
-		});
+		return new BN(this.view).muln(WATER_LINE_STEP_LENGTH);
 	}
 
 	/**
 	 * @param {Buffer} address
-	 * @return {Boolean}
+	 * @param {Number} cmd
+	 * @param {Buffer} data
 	 */
-	perishNode(address)
-	{
-		if (this.perish.state !== STAGE_STATE_EMPTY)
-		{
-			return false;
-		}
-		else
-		{
-			this.perish.startPerishNodeSpreadMode({
-				address: address
-			});
+	handleMessage({ address, cmd, data }) {
+		assert(Buffer.isBuffer(address), `Ripple handleMessage, address should be an Buffer, now is ${typeof address}`);
+		assert(typeof cmd === 'number', `Ripple handleMessage, cmd should be a Number, now is ${typeof cmd}`);
+		assert(Buffer.isBuffer(data), `Ripple handleMessage, data should be an Buffer, now is ${typeof data}`);
 
-			return true;
+		switch (cmd) {
+			case PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ:
+			case PROTOCOL_CMD_TRANSACTION_AMALGAMATE_RES:
+			case PROTOCOL_CMD_PRE_PREPARE_REQ:
+			case PROTOCOL_CMD_PRE_PREPARE_RES:
+			case PROTOCOL_CMD_PREPARE:
+			case PROTOCOL_CMD_COMMIT:
+			case PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ:
+			case PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES:
+			case PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL:
+			case PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT:
+			case PROTOCOL_CMD_NEW_VIEW_REQ:
+			case PROTOCOL_CMD_NEW_VIEW_RES:
+			case PROTOCOL_CMD_PROCESS_STATE_RES:
+				{
+					//
+					let msgsDifferByCmd = this.msgBuffer.get(cmd);
+					const [sequence] = rlp.decode(data);
+
+					//
+					if (!msgsDifferByCmd)
+					{
+						msgsDifferByCmd = [];
+					}	
+					
+					// 
+					logger.info(`Ripple handleMessage, receive msg, cmd: ${cmd}, sequence: ${sequence.toString('hex')}, address: ${address.toString('hex')}`)
+
+					// update msg buffer
+					msgsDifferByCmd.push({ sequence, address, data });
+					this.msgBuffer.set(cmd, msgsDifferByCmd);
+				}
+				break;
+			case PROTOCOL_CMD_PROCESS_STATE_REQ:
+				{
+					if(this.hash !== undefined || this.number !== undefined)
+					{
+						this.fetchProcessState.handleMessage(address, cmd, data);
+					}
+				}
+				break;
+			default:
+				{
+					this.cheatedNodes.push({
+						address: address.toString('hex'),
+						reason: CHEAT_REASON_INVALID_PROTOCOL_CMD
+					});
+				}
+		}
+	}
+
+	async run()
+	{
+		//
+		this.flushCheatedNodesTimer = setTimeout(() => {
+			for (let { address, reason } of this.cheatedNodes) {
+				mysql.saveCheatedNode(address, reason).catch(e => {
+					logger.fatal(`Ripple flush cheated nodes, saveCheatedNode throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+
+					process[Symbol.for("gentlyExitProcess")]();
+				});
+			}
+		}, FLUSH_CHEATED_NODES_INTERVAL);
+
+		// fetch new txs
+		({ transactions: this.localTransactions, deleteTransactions: this.deleteTransactions } = await mysql.getRawTransactions(this.eachRoundMaxFetchTransactionsSize));
+
+		// sync block chain and process state
+		await this.syncProcessState();
+		
+		//
+		while(1)
+		{
+			if(this.state === RIPPLE_STATE_EMPTY)
+			{
+				return;
+			}
+
+
+			/*********************** first handle process state sync msgs **********************/
+			if(this.state === RIPPLE_STATE_FETCH_BLOCK_CHAIN)
+			{
+				await new Promise(resolve => {
+					setTimeout(() => {
+						resolve();
+					}, SYSTEM_LOOP_DELAY_TIME);
+				});
+
+				continue;
+			}
+
+			if(this.state === RIPPLE_STATE_FETCH_PROCESS_STATE)
+			{
+				const msg = this.fetchMsgWithSequence({
+					cmd: PROTOCOL_CMD_PROCESS_STATE_RES,
+					sequenceMode: SEQUENCE_MODE_MATCH_OR_LARGER
+				});
+				if (msg) {
+					this.fetchProcessState.handleMessage(msg.address, msg.cmd, msg.data);
+
+					continue;
+				}
+
+				//
+				await new Promise(resolve => {
+					setTimeout(() => {
+						resolve();
+					}, SYSTEM_LOOP_DELAY_TIME);
+				});
+
+				continue;
+			}
+
+			/*********************** hanlde new view msgs, this may be lead to view change action **********************/
+			let msgNewViewReq = this.fetchMsgWithoutSequence({
+				cmd: PROTOCOL_CMD_NEW_VIEW_REQ
+			});
+			if (msgNewViewReq) {
+				this.newView.handleMessage(msgNewViewReq.address, msgNewViewReq.cmd, msgNewViewReq.data);
+			}
+
+			/*********************** handle view change for timeout, this may lead to view change action **********************/
+			let msgViewChangeForTimeout = this.fetchMsgWithoutSequence({
+				cmd: PROTOCOL_CMD_VIEW_CHANGE_FOR_TIMEOUT
+			});
+			if(msgViewChangeForTimeout)
+			{
+				this.viewChangeForTimeout.handleMessage(msgViewChangeForTimeout.address, msgViewChangeForTimeout.cmd, msgViewChangeForTimeout.data);
+			}
+			if(this.state === RIPPLE_STATE_NEW_VIEW)
+			{	
+				const msg = this.fetchMsgWithoutSequence({
+					cmd: PROTOCOL_CMD_NEW_VIEW_RES
+				});
+				if (msg) {
+					this.newView.handleMessage(msg.address, msg.cmd, msg.data);
+
+					continue;
+				}
+			}
+			
+			if (this.state === RIPPLE_STATE_CONSENSUS) {
+
+				//
+				const msg = this.fetchMsgWithSequence({
+					cmd: PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ,
+					sequenceMode: SEQUENCE_MODE_MATCH
+				});
+				if (msg) {
+					this.fetchConsensusCandidate.handleMessage(msg.address, msg.cmd, msg.data);
+				}
+
+				//
+				switch (this.stage) {
+					case STAGE_AMALGAMATE:
+						{
+							const msg1 = this.fetchMsgWithSequence({
+								cmd: PROTOCOL_CMD_TRANSACTION_AMALGAMATE_REQ, 
+								sequenceMode: SEQUENCE_MODE_LARGER
+							});
+							if(msg1)
+							{
+								this.amalgamate.handleMessage(msg1.address, msg1.cmd, msg1.data);
+
+								continue;
+							}
+
+							const msg2 = this.fetchMsgWithSequence({
+								cmd: PROTOCOL_CMD_TRANSACTION_AMALGAMATE_RES, 
+								sequenceMode: SEQUENCE_MODE_MATCH
+							});
+							if (msg2) {
+								this.amalgamate.handleMessage(msg2.address, msg2.cmd, msg2.data);
+
+								continue;
+							}
+						}
+						break;
+					case STAGE_PRE_PREPARE:
+						{
+							const msg1 = this.fetchMsgWithSequence({
+								cmd: PROTOCOL_CMD_PRE_PREPARE_REQ, 
+								sequenceMode: SEQUENCE_MODE_MATCH
+							});
+							if (msg1) {
+								this.prePrepare.handleMessage(msg1.address, msg1.cmd, msg1.data);
+
+								continue;
+							}
+
+							const msg2 = this.fetchMsgWithSequence({
+								cmd: PROTOCOL_CMD_PRE_PREPARE_RES, 
+								sequenceMode: SEQUENCE_MODE_MATCH
+							});
+							if (msg2) {
+								this.prePrepare.handleMessage(msg2.address, msg2.cmd, msg2.data);
+
+								continue;
+							}
+						}
+						break;
+					case STAGE_PREPARE:
+						{
+							const msg = this.fetchMsgWithSequence({
+								cmd: PROTOCOL_CMD_PREPARE, 
+								sequenceMode: SEQUENCE_MODE_MATCH
+							});
+							if (msg) {
+								this.prepare.handleMessage(msg.address, msg.cmd, msg.data);
+
+								continue;
+							}
+						}
+						break;
+					case STAGE_COMMIT:
+						{
+							const msg = this.fetchMsgWithSequence({
+								cmd: PROTOCOL_CMD_COMMIT, 
+								sequenceMode: SEQUENCE_MODE_MATCH
+							});
+							if (msg) {
+								this.commit.handleMessage(msg.address, msg.cmd, msg.data);
+
+								continue;
+							}
+						}
+						break;
+					case STAGE_FETCH_CANDIDATE:
+						{
+							const msg = this.fetchMsgWithSequence({
+								cmd: PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES, 
+								sequenceMode: SEQUENCE_MODE_MATCH
+							});
+							if (msg) {
+								this.fetchConsensusCandidate.handleMessage(msg.address, msg.cmd, msg.data);
+							
+								continue;
+							}
+						}
+						break;
+					case STAGE_PROCESS_CONSENSUS_CANDIDATE:
+						{
+							
+						}
+						break;
+					case STAGE_VIEW_CHANGE_FOR_CONSENSUS_FAIL:
+						{
+							const msg = this.fetchMsgWithSequence({
+								cmd: PROTOCOL_CMD_VIEW_CHANGE_FOR_CONSENSUS_FAIL,
+								sequenceMode: SEQUENCE_MODE_MATCH
+							});
+
+							if (msg) {
+								this.viewChangeForConsensusFail.handleMessage(msg.address, msg.cmd, msg.data);
+								
+								continue;
+							}
+						}
+						break;
+					default: 
+						{
+							logger.fatal(`Ripple run, invalid RIPPLE_STATE_CONSENSUS stage ${this.stage}`);
+
+							process[Symbol.for("gentlyExitProcess")]();
+						}
+				}
+			}
+			
+			await new Promise(resolve => {
+				setTimeout(() => {
+					resolve();
+				}, SYSTEM_LOOP_DELAY_TIME);
+			});
 		}
 	}
 
 	/**
-	 * @param {Array/String} address
+	 * 
 	 */
-	async pardonNodes(addresses)
+	runNewConsensusRound()
 	{
-		assert(Array.isArray(addresses), `Ripple pardonNodes, addresses should be an Array, now is ${typeof addresses}`)
+		//
+		this.amalgamatedTransactions.clear();
+		this.candidate = undefined;
+		this.candidateDigest = undefined;
+		this.consensusCandidateDigest = undefined;
 
-		await unlManager.setNodesRighteous(addresses)
+		//
+		this.amalgamate.reset();
+		this.prePrepare.reset();
+		this.prepare.reset();
+		this.commit.reset();
+		this.fetchConsensusCandidate.reset();
+		this.viewChangeForConsensusFail.reset();
+
+		//
+		this.clearLeaderTimer();
+
+		//
+		this.clearNewViewTimerForInvalidSequence();
+
+		//
+		this.state = RIPPLE_STATE_CONSENSUS;
+
+		//
+		this.amalgamate.run();
+	}
+
+	async syncProcessState()
+	{
+		if(this.state === RIPPLE_STATE_NEW_VIEW)
+		{
+			logger.info("Ripple syncProcessState, current state can not be RIPPLE_STATE_NEW_VIEW");
+
+			return;
+		}
+
+		this.state = RIPPLE_STATE_FETCH_BLOCK_CHAIN;
+
+		// update block chain
+		await this.update.run();
+	
+		// init number
+		this.number = this.update.lastestBlockNumber;
+
+		// init hash
+		this.hash = this.update.lastestBlockHash;
+
+		// update process state
+		this.fetchProcessState.run();
+		
+	}
+
+	/**
+	 * 
+	 */
+	processConsensusCandidate()
+	{
+		const consensusBlock = new Block({
+			header: {
+				number: new BN(this.candidate.number).addn(1),
+				parentHash: this.candidate.blockHash,
+				timestamp: this.candidate.timestamp
+			},
+			transactions: this.candidate.transactions
+		});
+
+		this.stage = STAGE_PROCESS_CONSENSUS_CANDIDATE;
+
+		// check if include localTransaction
+		let ifLocalTxHasBeenConsensused;
+		
+		if (this.localTransactions.length > 0)
+		{
+			const consensusedTxs = rlp.decode(this.candidate.transactions);
+
+			if (consensusedTxs.length > 0)
+			{
+				const randomLocalTx = this.localTransactions[new BN(randomBytes(2)).modn(this.localTransactions.length)];
+
+				ifLocalTxHasBeenConsensused = !!consensusedTxs.find(tx => tx.toString('hex') === randomLocalTx.toString('hex'))
+			
+				if (!ifLocalTxHasBeenConsensused)
+				{
+					logger.error(`Ripple processConsensusCandidate, random, txHash: ${utils.sha256(randomLocalTx).toString('hex')}, should be in candidate`);
+				}
+			}
+			else
+			{
+				logger.error(`Ripple processConsensusCandidate, zero, txHash: ${utils.sha256(this.localTransactions[0]).toString('hex')}, should be in candidate`);
+
+				ifLocalTxHasBeenConsensused = false;
+			}
+		}
+		else
+		{
+			ifLocalTxHasBeenConsensused = true;
+		}
+		
+		//
+		(async () => {
+			// process block
+			const result = await this.processor.processBlock({
+				block: consensusBlock
+			});
+			
+			// block chain out of data
+			if (result === PROCESS_BLOCK_PARENT_BLOCK_NOT_EXIST) {
+				logger.fatal(`Ripple processConsensusCandidate, parent block is not exist, there may be a bifurcate, please cleat storage`);
+
+				process[Symbol.for("gentlyExitProcess")]();
+			}
+
+			//
+			if (result === PROCESS_BLOCK_SUCCESS)
+			{
+				// update hash and number
+				this.hash = consensusBlock.hash();
+				this.number = consensusBlock.header.number;
+
+				//
+				if (ifLocalTxHasBeenConsensused)
+				{
+					//
+					await this.deleteTransactions();
+
+					// fetch new txs
+					({ transactions: this.localTransactions, deleteTransactions: this.deleteTransactions } = await mysql.getRawTransactions(this.eachRoundMaxFetchTransactionsSize));
+				}
+				
+			}
+
+			if (result === PROCESS_BLOCK_NO_TRANSACTIONS)
+			{
+				if (ifLocalTxHasBeenConsensused) {
+					//
+					await this.deleteTransactions();
+
+					// fetch new txs
+					({ transactions: this.localTransactions, deleteTransactions: this.deleteTransactions } = await mysql.getRawTransactions(this.eachRoundMaxFetchTransactionsSize));
+				}
+			}
+
+			// notice view may have been changed
+			this.runNewConsensusRound();
+		})().catch(e => {
+			logger.fatal(`Ripple processConsensusCandidate, throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+
+			process[Symbol.for("gentlyExitProcess")]();
+		});
+	}
+
+	startNewViewForInvalidSequenceTimer()
+	{
+		this.newViewForInvalidSequenceTimer = setTimeout(() => {
+			//
+			if (this.state === RIPPLE_STATE_NEW_VIEW) {
+				logger.info("Ripple startNewViewForInvalidSequenceTimer, current state can not be RIPPLE_STATE_NEW_VIEW");
+
+				return;
+			}
+
+			if (this.newViewForInvalidSequenceTimes >= unlManager.unlFullSize)
+			{
+				logger.info("Ripple startNewViewForInvalidSequenceTimer, try time threshould is reach");
+
+				this.syncProcessState();
+
+				return;
+			}
+
+			/**************** new view failed, try to enter next view ****************/
+			
+			//
+			this.newViewForInvalidSequenceTimes += 1;
+			
+			// try to change to next view
+			this.viewChangeForTimeout.run(new BN(this.view).addn(this.newViewForInvalidSequenceTimes).toBuffer());
+
+			// wait new leader is on position
+			// if failed, try to sync process state
+			this.startNewViewForInvalidSequenceTimer();
+		}, RIPPLE_NEW_VIEW_FOR_INVALID_SEQUENCE_EXPIRATION);
+	}
+
+	clearNewViewTimerForInvalidSequence()
+	{
+		if (this.newViewForInvalidSequenceTimer) {
+			clearTimeout(this.newViewForInvalidSequenceTimer);
+		}
+
+		this.newViewForInvalidSequenceTimer = undefined;
+		this.newViewForInvalidSequenceTimes = 0;
+	}
+
+	startLeaderTimer()
+	{
+		this.leaderTimeout = setTimeout(() => {
+			// try to view change
+			this.viewChangeForTimeout.run();
+
+			// try to sync state
+			this.syncProcessState();
+		}, RIPPLE_LEADER_EXPIRATION);
+	}
+
+	clearLeaderTimer()
+	{
+		if (this.leaderTimeout)
+		{
+			clearTimeout(this.leaderTimeout);
+		}
+		
+		this.leaderTimeout = undefined;
+	}
+
+	/**
+	 * 
+	 * @param {String} address 
+	 */
+	checkLeader(address)
+	{
+		assert(typeof address === 'string', `Ripple checkLeader, address should be a String, now is ${typeof address}`);
+
+		let leaderIndex = new BN(this.view).modn(unlManager.unlFullSize);
+		for (let node of unlManager.unlIncludeSelf) {
+			if (node.index === leaderIndex && node.address === address) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * @param {Buffer} view
+	 * @return {Buffer} address
+	 */
+	nextViewLeaderAddress(view = this.view)
+	{
+		assert(Buffer.isBuffer(view), `Ripple nextViewLeaderAddress, view should be a Buffer, now is ${typeof view}`);
+
+		let nextViewLeaderIndex = new BN(view).addn(1).modn(unlManager.unlFullSize);
+		for (let node of unlManager.unlIncludeSelf)
+		{
+			if (node.index === nextViewLeaderIndex)
+			{
+				return Buffer.from(node.address, 'hex');
+			}
+		}
+
+		logger.fatal(`Ripple nextViewLeaderAddress, nextViewLeaderIndex: ${nextViewLeaderIndex}, not exist, ${process[Symbol.for("getStackInfo")]()}`);
+		
+		process[Symbol.for("gentlyExitProcess")]();
+	}
+
+	get threshould() 
+	{
+		return parseInt(unlManager.unlFullSize * 2 / 3 + 1);
+	}
+
+	/**
+	 * @param {Number} cmd
+	 * @return {Object}
+	 */
+	fetchMsgWithoutSequence({ cmd })
+	{
+		assert(typeof cmd === 'number', `Ripple fetchMsgWithoutSequence, cmd should be a Number, now is ${typeof cmd}`);
+
+		const msgsDifferByCmd = this.msgBuffer.get(cmd) || [];
+
+		const msg = msgsDifferByCmd.shift();
+		if (msg)
+		{
+			return {
+				address: msg.address,
+				cmd: cmd,
+				data: msg.data
+			};
+		}
+	}
+
+	/**
+	 * @param {Number} cmd 
+	 * @param {NUmber} sequenceMode
+	 * @return {Object} 
+	 */
+	fetchMsgWithSequence({ cmd, sequenceMode })
+	{
+		assert(typeof cmd === 'number', `Ripple fetchMsgWithSequence, cmd should be a Number, now is ${typeof cmd}`);
+		assert(typeof sequenceMode === 'number', `Ripple fetchMsgWithSequence, sequenceMode should be a Number, now is ${typeof sequenceMode}`);
+
+		const msgsDifferByCmd = this.msgBuffer.get(cmd) || [];
+
+		//
+		let correspondMsg = undefined;
+		
+		// delete expired msgs
+		const filteredMsgs = [];
+		for (let msg of msgsDifferByCmd)
+		{
+			// filter msg with invalid seuqnce
+			if(new BN(msg.sequence).lt(new BN(this.sequence)))
+			{
+				continue;
+			}
+
+			// correpond msg has found, record follow msg
+			if (correspondMsg !== undefined) {
+				filteredMsgs.push(msg);
+
+				continue;
+			}
+
+			// find correspond msg
+			if(sequenceMode === SEQUENCE_MODE_MATCH)
+			{
+				if (msg.sequence.toString('hex') === this.sequence.toString('hex')) {
+					correspondMsg = {
+						address: msg.address,
+						cmd: cmd,
+						data: msg.data
+					};
+				}
+				else {
+					filteredMsgs.push(msg);
+				}
+			}
+			else if (sequenceMode === SEQUENCE_MODE_LARGER)
+			{
+				if (new BN(msg.sequence).gt(new BN(this.sequence))) {
+					correspondMsg = {
+						address: msg.address,
+						cmd: cmd,
+						data: msg.data
+					};
+				}
+				else {
+					filteredMsgs.push(msg);
+				}
+			}
+			else if (sequenceMode === SEQUENCE_MODE_MATCH_OR_LARGER)
+			{
+				correspondMsg = {
+					address: msg.address,
+					cmd: cmd,
+					data: msg.data
+				};
+			}
+			else
+			{
+				logger.fatal(`Ripple fetchMsgWithSequence, invalid sequenceMode ${sequenceMode}`);
+				
+				process[Symbol.for("gentlyExitProcess")]();
+			}
+			
+		}
+
+		// update msg buffer
+		this.msgBuffer.set(cmd, filteredMsgs);
+		
+		return correspondMsg;
 	}
 
 	/**
 	 * @param {Array} nodes 
 	 */
-	async addNodes(nodes)
-	{
+	async addNodes(nodes) {
 		assert(Array.isArray(nodes), `Ripple addNodes, nodes should be an Array, now is ${typeof nodes}`)
 
 		await unlManager.addNodes(nodes);
@@ -166,8 +795,7 @@ class Ripple
 	/**
 	 * @param {Array} nodes 
 	 */
-	async updateNodes(nodes)
-	{
+	async updateNodes(nodes) {
 		assert(Array.isArray(nodes), `Ripple updateNodes, nodes should be an Array, now is ${typeof nodes}`)
 
 		await unlManager.updateNodes({
@@ -182,210 +810,6 @@ class Ripple
 		assert(Array.isArray(nodes), `Ripple deleteNodes, nodes should be an Array, now is ${typeof nodes}`)
 
 		await unlManager.deleteNodes(nodes);
-	}
-
-	/**
-	 * @param {Buffer} address
-	 * @param {Number} cmd
-	 * @param {Buffer} data
-	 */
-	handleMessage(address, cmd, data)
-	{	
-		assert(Buffer.isBuffer(address), `Ripple handleMessage, address should be an Buffer, now is ${typeof address}`);
-		assert(typeof cmd === "number", `Ripple handleMessage, cmd should be a Number, now is ${typeof cmd}`);
-		assert(Buffer.isBuffer(data), `Ripple handleMessage, data should be an Buffer, now is ${typeof data}`);
-
-		if (this.stage === RIPPLE_STAGE_EMPTY)
-		{
-			logger.info(`Ripple handleMessage, ripple has not begin, do not process messages`);
-
-			return;
-		}
-
-		if(cmd >= 100 && cmd < 200)
-		{
-			if(this.stage === RIPPLE_STAGE_PERISH)
-			{
-				if(this.perish.checkIfDataExchangeIsFinish())
-				{
-					loggerPerishNode.info("Ripple handleMessage, perish node success because of node notification");
-
-					this.perish.handler({
-						ifSuccess: true,
-						ifCheckState: true
-					});
-				}
-				else
-				{
-					return loggerPerishNode.info(`Ripple handleMessage, address ${address.toString("hex")}, perish data exchange, do not handle transaction amalgamate messages`);
-				}
-			}
-
-			if(this.stage === RIPPLE_STAGE_COUNTER)
-			{
-				if(this.counter.checkIfDataExchangeIsFinish())
-				{
-					loggerStageConsensus.info("Ripple handleMessage, sync stage success because of node notification");
-
-					this.counter.handler({
-						ifSuccess: true,
-						ifCheckState: true
-					});
-				}
-				else
-				{
-					return loggerStageConsensus.info(`Ripple handleMessage, address ${address.toString("hex")}, counter date exchange, do not handle transaction amalgamate messages`);
-				}
-			}
-
-			if(this.stage === RIPPLE_STAGE_BLOCK_AGREEMENT)
-			{
-				if (this.blockAgreement.checkIfDataExchangeIsFinish())
-				{
-					logger.info(`Ripple handleMessage, block agreement is over because of node notification`);
-
-					this.blockAgreement.handler({
-						ifSuccess: true,
-						ifCheckState: true
-					});
-				}
-				else
-				{
-					return loggerStageConsensus.info(`Ripple handleMessage, address ${address.toString("hex")}, block agreement data exchange, do not handle transaction amalgamate messages`);
-				}
-			}
-			
-
-			if(this.stage === RIPPLE_STAGE_BLOCK_AGREEMENT_PROCESS_BLOCK)
-			{
-				this.amalgamateMessagesCacheBlockAgreement.push({
-					address: address,
-					cmd: cmd,
-					data: data
-				});
-			}
-			else if(this.stage === RIPPLE_STAGE_COUNTER_FETCHING_NEW_TRANSACTIONS)
-			{
-				this.amalgamateMessagesCacheCounter.push({
-					address: address,
-					cmd: cmd,
-					data: data
-				});
-			}
-			else if(this.stage === RIPPLE_STAGE_PERISH_PROCESSING_CHEATED_NODES)
-			{
-				this.amalgamateMessagesCachePerish.push({
-					address: address,
-					cmd: cmd,
-					data: data
-				});
-			}
-			else if(this.amalgamate.checkDataExchangeIsProceeding() || this.amalgamate.checkIfDataExchangeIsFinish())
-			{
-				this.amalgamate.handleMessage(address, cmd, data);
-			}
-			else
-			{
-				logger.info(`Ripple handleMessage, address ${address.toString("hex")}, own stage ${this.stage}, other stage is amalgamate`);
-
-				p2p.send(address, PROTOCOL_CMD_INVALID_AMALGAMATE_STAGE);
-			}
-		}
-		else if(cmd >= 200 && cmd < 300)
-		{
-			if(this.stage === RIPPLE_STAGE_PERISH)
-			{
-				return loggerPerishNode.info(`Ripple handleMessage, address ${address.toString("hex")}, processor is perishing node, do not handle transaction consensus messages`);
-			}
-
-			if(this.stage === RIPPLE_STAGE_COUNTER)
-			{
-				return loggerStageConsensus.info(`Ripple handleMessage, address ${address.toString("hex")}, processor is synchronizing stage, do not handle candidates agreement messages`);
-			}
-
-			if(this.amalgamate.checkIfDataExchangeIsFinish())
-			{
-				logger.info(`Ripple handleMessage, amalgamate is over because of node notification`);
-
-				this.amalgamate.handler({
-					ifSuccess: true,
-					ifCheckState: true
-				});
-			}
-
-			if(this.candidateAgreement.checkDataExchangeIsProceeding() || this.candidateAgreement.checkIfDataExchangeIsFinish())
-			{
-				this.candidateAgreement.handleMessage(address, cmd, data);
-			}
-			else
-			{
-				logger.info(`Ripple handleMessage, address ${address.toString("hex")}, own stage ${this.stage}, other stage is candidateAgreement`);
-
-				p2p.send(address, PROTOCOL_CMD_INVALID_CANDIDATE_AGREEMENT_STAGE);
-			}
-		}
-		else if(cmd >= 300 && cmd < 400)
-		{
-			if(this.stage === RIPPLE_STAGE_PERISH)
-			{
-				return loggerPerishNode.info(`Ripple handleMessage, address ${address.toString("hex")}, processor is perishing node, do not handle transaction consensus messages`);
-			}
-
-			if(this.stage === RIPPLE_STAGE_COUNTER)
-			{
-				return loggerStageConsensus.info(`Ripple handleMessage, address ${address.toString("hex")}, processor is synchronizing stage, do not handle blocks agreement messages`);
-			}
-
-			if(this.candidateAgreement.checkIfDataExchangeIsFinish())
-			{
-				logger.info(`Ripple handleMessage, candidate agreement is over because of node notification`);
-
-				this.candidateAgreement.handler({
-					ifSuccess: true,
-					ifCheckState: true
-				});
-			}
-			
-			if(this.blockAgreement.checkDataExchangeIsProceeding() || this.blockAgreement.checkIfDataExchangeIsFinish())
-			{
-				this.blockAgreement.handleMessage(address, cmd, data);
-			}
-			else
-			{
-				logger.info(`Ripple handleMessage, address ${address.toString("hex")}, own stage ${this.stage}, other stage is blockAgreement`);
-
-				p2p.send(address, PROTOCOL_CMD_INVALID_BLOCK_AGREEMENT_STAGE);
-			}
-		}
-		else if(cmd >= 400 && cmd < 500)
-		{
-			if(this.stage === RIPPLE_STAGE_PERISH)
-			{
-				return loggerPerishNode.info(`Ripple handleMessage, address ${address.toString("hex")}, processor is perishing node, do not handle stage synchronize messages`);
-			}
-
-			this.counter.handleMessage(address, cmd, data);
-		}
-		else if(cmd >= 500 && cmd < 600)
-		{
-			this.perish.handleMessage(address, cmd, data);
-		}
-		else
-		{
-			logger.error(`Ripple handleMessage, address ${address.toString("hex")}, invalid cmd: ${cmd}`);
-
-			this.handleCheatedNodes({
-				address: address.toString("hex"),
-				reason: CHEAT_REASON_INVALID_PROTOCOL_CMD
-			});
-		}
-	}
-
-	reset()
-	{
-		this.amalgamate.reset();
-		this.candidateAgreement.reset();
-		this.blockAgreement.reset();
 	}
 }
 

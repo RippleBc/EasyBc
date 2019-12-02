@@ -377,7 +377,7 @@ export default {
     },
     search: function() {
       axios.get("getSideChainConstract", {
-        url: this.currentNode.url,
+        url: `${this.currentNode.host}:${this.currentNode.port}`,
         address: this.constractAddress
       }).then(({ code, data, msg }) => {
         if(code === 0)
@@ -416,7 +416,7 @@ export default {
     },
     create: function() {
       axios.get("createSideChainConstract", Object.assign({
-        url: this.currentNode.url,
+        url: `${this.currentNode.host}:${this.currentNode.port}`,
         privateKey: this.privateKey,
         value: 10,
       }, this.createConstractDetail)).then(({ code, data, msg }) => {
@@ -457,7 +457,7 @@ export default {
       }
 
       axios.get("newSideChainConstract", {
-        url: this.currentNode.url,
+        url: `${this.currentNode.host}:${this.currentNode.port}`,
         to: this.constractAddress,
         value: 10,
         privateKey: this.privateKey,
@@ -499,7 +499,7 @@ export default {
       }
 
       axios.get("delSideChainConstract", {
-        url: this.currentNode.url,
+        url: `${this.currentNode.host}:${this.currentNode.port}`,
         to: this.constractAddress,
         value: 10,
         privateKey: this.privateKey,
@@ -541,7 +541,7 @@ export default {
       }
       
       axios.get("agreeSideChainConstract", {
-        url: this.currentNode.url,
+        url: `${this.currentNode.host}:${this.currentNode.port}`,
         to: this.constractAddress,
         privateKey: this.privateKey,
         value: 10,
@@ -581,7 +581,7 @@ export default {
       }
 
       axios.get("rejectSideChainConstract", {
-        url: this.currentNode.url,
+        url: `${this.currentNode.host}:${this.currentNode.port}`,
         to: this.constractAddress,
         privateKey: this.privateKey,
         value: 10,
@@ -613,7 +613,7 @@ export default {
     appendGuarantee()
     {
       axios.get("appendGuaranteeSideChainConstract", {
-        url: this.currentNode.url,
+        url: `${this.currentNode.host}:${this.currentNode.port}`,
         to: this.constractAddress,
         privateKey: this.privateKey,
         value: this.appendGuaranteeValue

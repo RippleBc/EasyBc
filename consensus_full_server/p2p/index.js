@@ -1,7 +1,11 @@
 const { tcp } = require("../config.json");
 const utils = require("../../depends/utils");
-const { createClient, createServer, connectionsManager } = require("../../depends/fly");
+const Fly = require("../../depends/fly");
 const assert = require("assert");
+const { PROTOCOL_HEART_BEAT } = require("../constants");
+const AuthConnectionsManager = require("./authManager");
+const ProxyConnectionsManager = require("./proxyManager");
+const { p2pProxy } = require("../../p2p_proxy_server/config.json");
 
 const Buffer = utils.Buffer;
 
@@ -9,7 +13,7 @@ const loggerP2p = process[Symbol.for("loggerP2p")];
 const loggerNet = process[Symbol.for("loggerNet")];
 const unlManager = process[Symbol.for("unlManager")];
 
-const CHECK_CONNECT_INTERVAL = 10 * 1000;
+const CHECK_CONNECT_INTERVAL = 5 * 1000;
 
 class P2p
 {
@@ -22,54 +26,66 @@ class P2p
 		assert(typeof tcp.host === "string", `P2p constructor, tcp.host should be a String, now is ${typeof tcp.host}`);
 		assert(typeof tcp.port === "number", `P2p constructor, tcp.port should be a Number, now is ${typeof tcp.port}`);
 
-		this.dispatcher = dispatcher;
+		let auth;
+		if(p2pProxy.open)
+		{
+			this.connectionsManager = new ProxyConnectionsManager();
 
-		connectionsManager.on("addressConnected", address => {
-			assert(typeof address === 'string', `addressConnected handler, address shoule be an Array, now is ${typeof address}`)
+			auth = false;
+		}
+		else
+		{
+			this.connectionsManager = new AuthConnectionsManager();
 
-			if(unlManager.fullUnl.find(node => node.address === address))
-			{
+			auth = true;
+		}
+
+		this.fly = new Fly({
+			dispatcher: dispatcher,
+			logger: loggerNet,
+			connectionsManager: this.connectionsManager,
+			auth: auth
+		});	
+
+		this.connectionsManager.on("addressConnected", address => {
+			assert(typeof address === 'string', `P2p constructor, addressConnected handler, address shoule be an Array, now is ${typeof address}`)
+
+			if (unlManager.unlNotIncludeSelf.find(node => node.address === address)) {
 				unlManager.setNodesOnline([address])
 			}
-			
+
 		});
 
-		connectionsManager.on("addressClosed", address => {
+		this.connectionsManager.on("addressClosed", address => {
 
-			assert(typeof address === 'string', `addressClosed handler, address shoule be an Array, now is ${typeof address}`)
+			assert(typeof address === 'string', `P2p constructor, addressClosed handler, address shoule be an Array, now is ${typeof address}`)
 
-			if(unlManager.fullUnl.find(node => node.address === address))
-			{
+			if (unlManager.unlNotIncludeSelf.find(node => node.address === address)) {
 				unlManager.setNodesOffline([address])
 			}
-		});
+		});	
 	}
 
 	async init()
 	{
-		const fullUnl = unlManager.fullUnl;
+		const unlNotIncludeSelf = unlManager.unlNotIncludeSelf;
 
 		// init server
-		const server = await createServer({
+		await this.fly.createServer({
 			host: tcp.host,
 			port: tcp.port,
-			dispatcher: this.dispatcher,
-			logger: loggerNet
+			privateKey: process[Symbol.for("privateKey")]
 		});
 
 		// init conn
-		for(let i = 0; i < fullUnl.length; i++)
+		for(let node of unlNotIncludeSelf)
 		{
-			const node = fullUnl[i];
-
 			try
 			{
-				const connection = await createClient({
+				await this.fly.createClient({
 					host: node.host,
 					port: node.p2pPort,
-					dispatcher: this.dispatcher,
-					logger: loggerNet,
-					address: Buffer.from(node.address, "hex")
+					privateKey: process[Symbol.for("privateKey")]
 				});
 			}
 			catch(e)
@@ -83,23 +99,25 @@ class P2p
 
 		// check connections
 		setInterval(() => {
-			const fullUnl = unlManager.fullUnl;
-
-			// clear invalid connections
-			connectionsManager.clearInvalidConnections(fullUnl.map(node => node.address))
-
 			// try to reconnect other nodes
 			this.reconnectAll();
 
+			// broadcast  heartbeat
+			this.sendAll(PROTOCOL_HEART_BEAT)
 		}, CHECK_CONNECT_INTERVAL);
 	}
 
+	/**
+	 * @param {Buffer} address 
+	 * @param {Number} cmd 
+	 * @param {*} data 
+	 */
 	send(address, cmd, data)
 	{
 		assert(typeof cmd === "number", `P2p send, cmd should be a Number, now is ${typeof cmd}`);
 		assert(Buffer.isBuffer(address), `P2p send, data should be an Buffer, now is ${typeof address}`);
-		
-		const connection = connectionsManager.get(address);
+
+		const connection = this.connectionsManager.get(address);
 		if(connection && connection.checkIfCanWrite())
 		{
 			try
@@ -108,92 +126,50 @@ class P2p
 			}
 			catch(e)
 			{
-				loggerP2p.error(`P2p send, send msg to address: ${connection.address}, host: ${connection.address().address}, port: ${connection.address().port}, ${process[Symbol.for("getStackInfo")](e)}`);
-			}
-		}
-	}
-
-	sendAll(cmd, data)
-	{
-		assert(typeof cmd === "number", `P2p sendAll, cmd should be a Number, now is ${typeof cmd}`);
-
-		const unl = unlManager.unl;
-		
-		for(let i = 0; i < unl.length; i++)
-		{
-			const connection = connectionsManager.get(Buffer.from(unl[i].address, "hex"));
-			if(connection && connection.checkIfCanWrite())
-			{
-				try
-				{
-					connection.write(cmd, data);
-				}
-				catch(e)
-				{
-					loggerP2p.error(`P2p sendAll, send msg to address: ${connection.address}, host: ${connection.address().address}, port: ${connection.address().port}, ${process[Symbol.for("getStackInfo")](e)}`);
-				}
+				loggerP2p.error(`P2p send, send msg to address: ${connection.address}, host: ${connection.host}, port: ${connection.port}, ${process[Symbol.for("getStackInfo")](e)}`);
 			}
 		}
 	}
 
 	/**
-	 * @param {Buffer} address
-	 * @return {Boolean}
+	 * @param {Number} cmd 
+	 * @param {*} data 
 	 */
-	checkIfConnectionIsOpen(address)
+	sendAll(cmd, data)
 	{
-		assert(Buffer.isBuffer(address), `P2p checkIfConnectionIsOpen, address should be an Buffer, now is ${typeof address}`);
+		assert(typeof cmd === "number", `P2p sendAll, cmd should be a Number, now is ${typeof cmd}`);
 
-		const connection = connectionsManager.get(address);
-
-		if(!connection || connection.checkIfClosed())
-		{
-			return false;
-		}
-
-		return true;
+		this.connectionsManager.sendAll(cmd, data);
 	}
 
 	async reconnectAll()
 	{
-		const fullUnl = unlManager.fullUnl;
-
-		for(let i = 0; i < fullUnl.length; i++)
+		for (let node of unlManager.unlNotIncludeSelf)
 		{
-			const node = fullUnl[i];
-			const connection = connectionsManager.get(Buffer.from(node.address, "hex"));
+			const connection = this.connectionsManager.get(Buffer.from(node.address, "hex"));
 
 			if(!connection || connection.checkIfClosed())
 			{
 				try
 				{
-					const connection = await createClient({
+					await this.fly.createClient({
 						host: node.host,
 						port: node.p2pPort,
-						dispatcher: this.dispatcher,
-						logger: loggerNet,
-						address: Buffer.from(node.address, "hex")
+						privateKey: process[Symbol.for("privateKey")]
 					});
 
 					loggerP2p.info(`P2p reconnectAll, connect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort}, successed`);
+				
 				}
 				catch(e)
 				{
 					// 
-					unlManager.setNodesOffline([node.address])
+					unlManager.setNodesOffline([node.address]);
 
 					loggerP2p.error(`P2p reconnectAll, connect to address: ${node.address}, host: ${node.host}, port: ${node.p2pPort}, ${process[Symbol.for("getStackInfo")](e)}`);
 				}
-			}	
+			}
 		}
-	}
-
-	/**
-	 * @return {Array}
-	 */
-	getAllConnections()
-	{
-		return connectionsManager.getAllConnections();
 	}
 }
 

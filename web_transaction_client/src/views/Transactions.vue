@@ -124,7 +124,7 @@ import axios from '../net/axios.js'
 	  		axios.get('/getTransactions', {
 	  			offset: 0,
 	  			limit: 100,
-	  			url: this.currentNode.url,
+	  			url: `${this.currentNode.host}:${this.currentNode.port}`,
 	  			hash: this.hash,
 	  			from: this.from,
 	  			to: this.to,

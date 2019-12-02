@@ -1,5 +1,5 @@
 const { QUERY_MAX_LIMIT, SUCCESS, PARAM_ERR, OTH_ERR } = require("../../constant");
-const { getLogs, getTimeConsume, getAbnormalNodes } = require("./db");
+const { getLogs, getAbnormalNodes } = require("./db");
 
 const app =  process[Symbol.for('app')];
 const printErrorStack = process[Symbol.for("printErrorStack")];
@@ -52,54 +52,7 @@ app.post('/logs', (req, res) => {
       msg: e.toString()
     });
   });
-})
-
-app.post("/timeConsume", (req, res) => {
-	if(undefined === req.body.offset)
-  {
-      return res.json({
-          code: PARAM_ERR,
-          msg: "param error, need offset"
-      });
-  }
-
-  if(undefined === req.body.limit)
-  {
-      return res.json({
-          code: PARAM_ERR,
-          msg: "param error, need limit"
-      });
-  }
-
-  if(req.body.limit >= QUERY_MAX_LIMIT)
-  {
-      return res.json({
-          code: PARAM_ERR,
-          msg: `param error, limit must little than ${QUERY_MAX_LIMIT}`
-      })
-  }
-
-	getTimeConsume({ 
-		offset: req.body.offset,
-		limit: req.body.limit,
-		type: req.body.type,
-		stage: req.body.stage,
-		beginTime: req.body.beginTime,
-		endTime: req.body.endTime
-	}).then(timeConsume => {
-		res.json({
-			code: SUCCESS,
-			data: timeConsume
-		})
-	}).catch(e => {
-		printErrorStack(e)
-
-    res.json({
-      code: OTH_ERR,
-      msg: e.toString()
-    });
-  });
-})
+});
 
 app.post("/abnormalNodes", (req, res) => {
 	if(undefined === req.body.offset)

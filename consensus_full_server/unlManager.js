@@ -1,6 +1,9 @@
 const assert = require("assert")
+const { index: processIndex } = require("../globalConfig.json")
 
 const mongo = process[Symbol.for("mongo")];
+
+const FLUSH_UNL_TO_DB_INTERVAL = 10000;
 
 class UnlManager
 {
@@ -13,14 +16,36 @@ class UnlManager
     async init()
     {
         this._unl = await this.unlDb.getUnl();
+
+        // 
+        this.timer = setInterval(() => {
+            this.unlDb.updateNodes(this._unl);
+        }, FLUSH_UNL_TO_DB_INTERVAL)
     }
 
-    get fullUnl()
+    get unlIncludeSelf()
+    {
+        return [...this._unl.filter(node => node.state !== 2), {
+            address: process[Symbol.for("address")],
+            host: "",
+            queryPort: 0,
+            p2pPort: 0,
+            state: 0,
+            index: processIndex
+        }];
+    }
+
+    get unlNotIncludeSelf()
     {
         return this._unl.filter(node => node.state !== 2);
     }
 
-    get unl()
+    get unlFullSize()
+    {
+        return this.unlNotIncludeSelf.length + 1;
+    }
+
+    get unlOnline()
     {
         return this._unl.filter(node => node.state === 0);
     }
@@ -40,8 +65,7 @@ class UnlManager
         });
 
         await this.updateNodes({
-            nodes: nodes,
-            firstUpdateMemory: true
+            nodes: nodes
         });
     }
 
@@ -56,45 +80,6 @@ class UnlManager
             return {
                 address: address,
                 state: 0
-            }
-        });
-
-        await this.updateNodes({
-            nodes: nodes,
-            firstUpdateMemory: true
-        });
-    }
-
-    /**
-     * @param {Array/String} addresses
-     */
-    async setNodesMalicious(addresses)
-    {
-        assert(Array.isArray(addresses), `UnlManager setNodesMalicious, addresses should be an Array, now is ${typeof addresses}`)
-
-        const nodes = addresses.map(address => {
-            return {
-                address: address,
-                state: 2
-            }
-        });
-
-        await this.updateNodes({
-            nodes: nodes
-        });
-    }
-
-    /**
-     * @param {Array/String} addresses
-     */
-    async setNodesRighteous(addresses)
-    {
-        assert(Array.isArray(addresses), `UnlManager setNodesRighteous, addresses should be an Array, now is ${typeof addresses}`)
-
-        const nodes = addresses.map(address => {
-            return {
-                address: address,
-                state: 1
             }
         });
 
@@ -131,6 +116,7 @@ class UnlManager
                 queryPort: node.queryPort,
                 p2pPort: node.p2pPort,
                 address: node.address,
+                index: node.index,
                 state: 1
             })
         }
@@ -139,80 +125,48 @@ class UnlManager
     /**
 	 * @param {Array} nodes 
 	 */
-    async updateNodes({nodes, firstUpdateMemory = false}) {
+    async updateNodes({nodes}) {
         assert(Array.isArray(nodes), `UnlManager updateNodes, nodes should be an Array, now is ${typeof nodes}`);
 
-        if(firstUpdateMemory)
-        {
-            for (let node of nodes) {
-                const existNode = this._unl.find(_node => _node.address === node.address)
+        for (let node of nodes) {
+            const existNode = this._unl.find(_node => _node.address === node.address)
 
-                if (existNode) {
-                    // update unl in memory
-                    if (undefined !== node.host) {
-                        assert(typeof node.host === 'string', `UnlManager updateNodes, node.host should be a String, now is ${typeof node.host}`);
+            if (existNode) {
+                // update unl in memory
+                if (undefined !== node.host) {
+                    assert(typeof node.host === 'string', `UnlManager updateNodes, node.host should be a String, now is ${typeof node.host}`);
 
-                        existNode.host = node.host;
-                    }
+                    existNode.host = node.host;
+                }
 
-                    if (undefined !== node.queryPort) {
-                        assert(typeof node.queryPort === 'number', `UnlManager updateNodes, node.queryPort should be a Number, now is ${typeof node.queryPort}`);
+                if (undefined !== node.queryPort) {
+                    assert(typeof node.queryPort === 'number', `UnlManager updateNodes, node.queryPort should be a Number, now is ${typeof node.queryPort}`);
 
-                        existNode.queryPort = node.queryPort;
-                    }
+                    existNode.queryPort = node.queryPort;
+                }
 
-                    if (undefined !== node.p2pPort) {
-                        assert(typeof node.p2pPort === 'number', `UnlManager updateNodes, node.p2pPort should be a Number, now is ${typeof node.p2pPort}`);
+                if (undefined !== node.p2pPort) {
+                    assert(typeof node.p2pPort === 'number', `UnlManager updateNodes, node.p2pPort should be a Number, now is ${typeof node.p2pPort}`);
 
-                        existNode.p2pPort = node.p2pPort;
-                    }
+                    existNode.p2pPort = node.p2pPort;
+                }
 
-                    if (undefined !== node.state) {
-                        assert(typeof node.state === 'number', `UnlManager updateNodes, node.state should be a Number, now is ${typeof node.state}`);
+                if (undefined !== node.index) {
+                    assert(typeof node.index === 'number', `UnlManager updateNodes, node.index should be a Number, now is ${typeof node.index}`);
 
-                        existNode.state = node.state;
-                    }
+                    existNode.index = node.index;
+                }
+
+                if (undefined !== node.state) {
+                    assert(typeof node.state === 'number', `UnlManager updateNodes, node.state should be a Number, now is ${typeof node.state}`);
+
+                    existNode.state = node.state;
                 }
             }
         }
 
+        //
         await this.unlDb.updateNodes(nodes);
-
-        if(!firstUpdateMemory)
-        {
-            for (let node of nodes) 
-            {
-                const existNode = this._unl.find(_node => _node.address === node.address)
-
-                if (existNode) 
-                {
-                    // update unl in memory
-                    if (undefined !== node.host) {
-                        assert(typeof node.host === 'string', `UnlManager updateNodes, node.host should be a String, now is ${typeof node.host}`);
-
-                        existNode.host = node.host;
-                    }
-
-                    if (undefined !== node.queryPort) {
-                        assert(typeof node.queryPort === 'number', `UnlManager updateNodes, node.queryPort should be a Number, now is ${typeof node.queryPort}`);
-
-                        existNode.queryPort = node.queryPort;
-                    }
-
-                    if (undefined !== node.p2pPort) {
-                        assert(typeof node.p2pPort === 'number', `UnlManager updateNodes, node.p2pPort should be a Number, now is ${typeof node.p2pPort}`);
-
-                        existNode.p2pPort = node.p2pPort;
-                    }
-
-                    if (undefined !== node.state) {
-                        assert(typeof node.state === 'number', `UnlManager updateNodes, node.state should be a Number, now is ${typeof node.state}`);
-
-                        existNode.state = node.state;
-                    }
-                }
-            }
-        }
     }
 
     /**

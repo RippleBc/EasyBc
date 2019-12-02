@@ -1,6 +1,7 @@
 const log4js= require("./logConfig");
 const logger = log4js.getLogger("consensus");
 const mongoConfig = require("./config").mongo;
+const { p2pProxy } = require("../p2p_proxy_server/config.json");
 
 process[Symbol.for("loggerConsensus")] = logger;
 process[Symbol.for("loggerP2p")] = log4js.getLogger("p2p");
@@ -8,57 +9,35 @@ process[Symbol.for("loggerNet")] = log4js.getLogger("net");
 process[Symbol.for("loggerMysql")] = log4js.getLogger("mysql");
 process[Symbol.for("loggerUpdate")] = log4js.getLogger("update");
 process[Symbol.for("loggerStageConsensus")] = log4js.getLogger("stageConsensus");
-process[Symbol.for("loggerPerishNode")] = log4js.getLogger("perishNode");
 
 const utils = require("../depends/utils");
 const Mysql = require("./mysql");
 
 process[Symbol.for("mysql")] = new Mysql();
 process[Symbol.for("mongo")] = require("../depends/mongo_wrapper");
-process[Symbol.for("getStackInfo")] = function(e) {
+process[Symbol.for("getStackInfo")] = utils.getStackInfo;
 
-    let err;
+process[Symbol.for("gentlyExitProcess")] = () => {
+    // close tcp connection
+    process[Symbol.for("p2p")].connectionsManager.closeAll();
 
-    if(e)
-    {
-        err = e
-    } 
-    else
-    {
-        try
-        {
-            throw new Error('call stack')
-        }
-        catch(e)
-        {
-            err = e;
-        }
-    }
-    
+    // close http server
+    process[Symbol.for("httpServer")].close();
 
-    if(err.stack)
-    {
-        if(err.stack.split('\r\n').length > 1)
-        {
-            return err.stack.split('\r\n').join('');
-        }
-        else
-        {
-            return err.stack.split('\n').join('');
-        }
-    }
-    else
-    {
-        return err
-    }
-    
+    // reset
+    process[Symbol.for('processor')].close();
+
+    //
+    setTimeout(() => {
+        process.exit(1);   
+    }, 2000);
 }
 
 //
 process.on("uncaughtException", function(err) {
     logger.fatal(process[Symbol.for("getStackInfo")](err))
     
-    process.exit(1);
+    process[Symbol.for("gentlyExitProcess")]();
 });
 
 (async function() {
@@ -83,7 +62,23 @@ process.on("uncaughtException", function(err) {
     /************************************** p2p **************************************/
     const P2p = require("./p2p");
     const p2p = process[Symbol.for("p2p")] = new P2p(function(message) {
-        processor.handleMessage(this.address, message);
+        if (p2pProxy.open)
+        {
+            let address = Buffer.alloc(32);
+            
+            if (message.data && message.data.length > 0)
+            {
+                let data;
+                ([address, data] = utils.rlp.decode(message.data));
+                message.data = data;
+            }
+
+            processor.handleMessage(address, message);
+        }
+        else
+        {
+            processor.handleMessage(this.address, message);
+        }
     });
 
     /************************************** consensus **************************************/

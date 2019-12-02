@@ -28,13 +28,6 @@
                         </el-card>
                     </template>
                 </el-tab-pane>
-                <el-tab-pane label="共识情况" name="last">
-                    <template v-if="message === 'last'">
-                        <el-card shadow="hover">
-                            <ve-line :data="timeConsume" :resizeable="true"></ve-line>
-                        </el-card>
-                    </template>
-                </el-tab-pane>
             </el-tabs>
         </div>
     </div>
@@ -63,10 +56,6 @@
                 axisSite: { right: ['作弊频率'] },
                 yAxisType: ['normal', 'normal'],
                 yAxisName: ['作弊次数', '作弊频率/小时']
-            },
-            timeConsume: {
-                columns: ['createdAt', 'consume'],
-                rows: []
             }
         }),
         created(){
@@ -74,36 +63,12 @@
             const nodeInfo = this.$store.state.unl.find(n => nodeIndex == n.id)
             this.currentNode = nodeInfo;
             
-            this.getTimeConsume();
             this.getCheatedNodes();
             this.getTimeoutNodes();
         },
 
         methods:
         {
-            getTimeConsume() {
-                this.$axios.post("timeConsume", {
-                    url: `${this.currentNode.host}:${this.currentNode.port}`,
-                    beginTime: Date.now() - 2 * 60 * 60 * 1000,
-                    endTime: Date.now(),
-                    offset: 0,
-                    limit: 100
-                }).then(res => {
-                    if(res.code !== 0)
-                    {
-                        this.$message.error(res.msg);
-                    }
-                    else
-                    {
-                        this.timeConsume.rows = res.data.map(n => {
-                            return {
-                                createdAt: new Date(n.createdAt).toLocaleString(),
-                                consume: n.data
-                            }
-                        }).reverse();
-                    }
-                });
-            },
             getTimeoutNodes() {
                 this.$axios.post("abnormalNodes", {
                     url: `${this.currentNode.host}:${this.currentNode.port}`,

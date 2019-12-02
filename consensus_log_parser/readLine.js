@@ -28,19 +28,20 @@ class ReadLine {
 	}
 
 	/**
-	 * @return {Object} null表示流已经结束
-	 *   @prop {String} line
-	 *   @prop {String} remain
+	 * @return {Object}
 	 */
 	async readLine() {
 		do
 		{
-			let { line, remain } = getLineAndRemain(this.stringBuffer)
+			let { line, remain, num } = getLineAndRemain(this.stringBuffer)
 
 			if(line) {
 				this.stringBuffer = remain;
 
-				return line;
+				return {
+					line,
+					num
+				};
 			}
 
 			const chunkString = this.input.read(READ_SIZE);
@@ -48,7 +49,9 @@ class ReadLine {
 			{
 				if(this.end)
 				{
-					return null;
+					return {
+						line: null
+					};
 				}
 				else
 				{
@@ -69,33 +72,46 @@ class ReadLine {
 
 /**
  * @param {String} content
+ * @return {Object}
+ *   @prop {String} line
+ *   @prop {String} remain
+ * 	 @prop {Number} num
  */
 const getLineAndRemain = content => {
 	assert(typeof content === 'string', `ReadLine getLineAndRemain, content should be a String, now is ${typeof content}`)
 
-	let newLineIndex = content.indexOf("\r\n")
+	// window platform
+	let newLineIndex = content.indexOf("\n\r")
 	if(newLineIndex !== -1)
 	{
+		const line = content.substring(0, newLineIndex)
 		return {
-			line: content.substring(0, newLineIndex),
+			num: line.length + 2,
+			line: line,
 			remain: content.substring(newLineIndex + 2)
 		};
 	}
 
+	// linux platform
 	newLineIndex = content.indexOf("\n")
 	if(newLineIndex !== -1)
 	{
+		const line = content.substring(0, newLineIndex)
 		return {
-			line: content.substring(0, newLineIndex),
+			num: line.length + 1,
+			line: line,
 			remain: content.substring(newLineIndex + 1)
 		};
 	}
 
+	// mac platform
 	newLineIndex = content.indexOf("\r")
 	if(newLineIndex !== -1)
 	{
+		const line = content.substring(0, newLineIndex)
 		return {
-			line: content.substring(0, newLineIndex),
+			num: line.length + 1,
+			line: line,
 			remain: content.substring(newLineIndex + 1)
 		};
 	}

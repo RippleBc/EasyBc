@@ -1,24 +1,20 @@
 {
-	"tcp":
-	{
+	"tcp": {
 		"host": "0.0.0.0",
 		"port": 9090
 	},
-	"http":
-	{
+	"http": {
 		"host": "localhost",
 		"port": 8080
 	},
-	"mysql":
-	{
+	"mysql": {
 		"host": "localhost",
 		"port": 3306,
 		"user": "root",
 		"password": "root",
 		"dbName": "consensus"
 	},
-	"mongo":
-	{
+	"mongo": {
 		"host": "localhost",
 		"port": 4406,
 		"user": "blockChain",

@@ -9,5 +9,6 @@ program.version("1.0.0")
   .command("profile", "calculate transaction consensus threshould")
   .command("ab", "ab test")
   .command("benchmark", "benchmark test")
+  .command("config", "config change")
   .parse(process.argv)
 	

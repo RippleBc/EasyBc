@@ -7,7 +7,6 @@ const Buffer = utils.Buffer;
 const rlp = utils.rlp;
 
 /**
- * 
  * @param {JSON Object} data 
  * @param {Buffer} privateKey 
  */
@@ -35,9 +34,7 @@ app.use((req, res, next) => {
     if (req.url.includes("unl")
         || req.url.includes("addNodes")
         || req.url.includes("updateNodes")
-        || req.url.includes("deleteNodes")
-        || req.url.includes("perishNode")
-        || req.url.includes("pardonNodes")) {
+        || req.url.includes("deleteNodes")) {
 
         if(!req.body.url)
         {
@@ -59,9 +56,7 @@ app.use((req, res, next) => {
 
         if(req.url.includes("addNodes")
         || req.url.includes("updateNodes")
-        || req.url.includes("deleteNodes")
-        || req.url.includes("perishNode")
-        || req.url.includes("pardonNodes"))
+        || req.url.includes("deleteNodes"))
         {
             if (!req.body.data) {
                 return res.send({

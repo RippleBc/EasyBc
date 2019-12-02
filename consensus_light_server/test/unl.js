@@ -76,6 +76,7 @@ describe("block check", function () {
                 "queryPort": 8084,
                 "p2pPort": 8083,
                 "host": "localhost1",
+                "index": 0,
                 "state": 1
             },
             {
@@ -83,6 +84,7 @@ describe("block check", function () {
                 "queryPort": 8086,
                 "p2pPort": 8085,
                 "host": "localhost1",
+                "index": 1,
                 "state": 1
             }
         ];

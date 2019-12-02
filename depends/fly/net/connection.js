@@ -1,6 +1,5 @@
 const assert = require("assert");
 const Message = require("./message");
-const MessageChunk = require("./message_chunk");
 const MessageChunkQueue = require("./message_chunk_queue");
 const Socket = require("net").Socket;
 const Token = require("../manager/token");
@@ -11,6 +10,7 @@ const utils = require("../../utils");
 const { AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT, AUTHORIZE_FAILED_BECAUSE_OF_OTHER_INVALID_SIGNATURE, AUTHORIZE_FAILED_BECAUSE_OF_SELF_INVALID_SIGNATURE } = require("../constant");
 
 const Buffer = utils.Buffer;
+const BN = utils.BN;
 
 const END_CLEAR_SEND_BUFFER_TIME_DEAY = 1000 * 5;
 const HEART_BEAT_TIME = 1000 * 10;
@@ -21,33 +21,34 @@ const AUTHORIZE_RES_CMD = 2;
 const AUTHORIZE_SUCCESS_CMD = 3;
 const AUTHORIZE_FAILED_CMD = 4;
 
-const MAX_CONNECTION_ID = 19901112;
-
-let id = 0;
-
 class Connection extends AsyncEventEmitter
 {
-	constructor(opts)
+	constructor({ socket, host, port, dispatcher, logger, privateKey, auth })
 	{
 		super();
 
-		assert(opts.socket instanceof Socket, `Connection	constructor, opts.socket should be a Socket Object, now is ${typeof opts.socket}`);
-		assert(typeof opts.dispatcher	=== "function", `Connection	constructor, opts.dispatcher should be a Function, now is ${typeof opts.dispatcher}`);
-		assert(typeof opts.logger	=== "object", `Connection	constructor, opts.logger should be an Object, now is ${typeof opts.logger}`);
+		assert(socket instanceof Socket, `Connection constructor, socket should be a Socket Object, now is ${typeof socket}`);
+		assert(typeof host === 'string', `Connection constructor, host should be a String, now is ${typeof host}`);
+		assert(typeof port === 'number', `Connection constructor, port should be a Number, now is ${typeof port}`)
+		assert(typeof dispatcher	=== "function", `Connection	constructor, dispatcher should be a Function, now is ${typeof dispatcher}`);
+		assert(typeof logger	=== "object", `Connection constructor, logger should be an Object, now is ${typeof logger}`);
+		assert(Buffer.isBuffer(privateKey), `Connection constructor, privateKey should be an Object, now is ${typeof privateKey}`)
+		assert(typeof auth === "boolean", `Connection constructor, auth should be a Number, now is ${typeof auth}`);
 
 		//
-		id ++;
-		if (id > MAX_CONNECTION_ID)
-		{
-			id = 0;
-		}
+		const nowBuffer = utils.toBuffer(Date.now());
+		this.id = new BN(crypto.randomBytes(16)).add(new BN(nowBuffer)).toBuffer();
 
-		this.id = id;
+		//
+		this.socket = socket;
+		this.host = host;
+		this.port = port;
+		this.dispatcher = dispatcher;
+		this.logger = logger;
+		this.privateKey = privateKey;
+		this.auth = auth;
 
-		this.socket = opts.socket;
-		this.dispatcher = opts.dispatcher;
-		this.logger = opts.logger;
-
+		//
 		this.nonce = crypto.randomBytes(32);
 
 		// if other end's write channel is closed
@@ -296,8 +297,6 @@ class Connection extends AsyncEventEmitter
 			{
 				case AUTHORIZE_REQ_CMD:
 				{
-					const privateKey = process[Symbol.for("privateKey")];
-
 					let token;
 					try
 					{
@@ -316,7 +315,7 @@ class Connection extends AsyncEventEmitter
 						return;
 					}
 				
-					token.sign(privateKey);
+					token.sign(this.privateKey);
 
 					this.write(AUTHORIZE_RES_CMD, token.serialize());
 				}
@@ -369,7 +368,7 @@ class Connection extends AsyncEventEmitter
 
 				default: 
 				{
-					if (this.ifAuthorizeSuccess)
+					if (!this.auth || this.ifAuthorizeSuccess)
 					{
 						this.dispatcher(message);
 					}
