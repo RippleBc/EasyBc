@@ -42,13 +42,38 @@ pm2 stop all
 #
 mysql -uroot -proot
 
-#
-use database transaction
+# select db
+use transaction;
 
 #
-drop table transactionsHistories
+drop table transactionsHistories;
 
-3：更新前端代码
+3：新增nodes数据
+CREATE TABLE `nodes` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `address` varchar(255) NOT NULL,
+  `host` varchar(255) NOT NULL,
+  `port` varchar(255) NOT NULL,
+  `remarks` varchar(255) NOT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `nodes_name` (`name`),
+  UNIQUE KEY `nodes_host_port` (`host`,`port`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+INSERT INTO `transaction`.`nodes`
+(`name`, `address`, `host`, `port`, `remarks`, `createdAt`, `updatedAt`)
+VALUES
+("http://123.157.68.243:10011", "5a8fbde736795f7ef2ebff7cda09d8133da34d0b", "http://123.157.68.243", "10011", "http://123.157.68.243:10011", "2019-06-27 02:09:02", "2019-06-27 02:09:02"),
+("http://123.157.68.243:10051", "68ecab823675efa71e2edbe26a56b7a0d765dcde", "http://123.157.68.243", "10051", "http://123.157.68.243:10051", "2019-07-05 05:53:49", "2019-11-25 06:43:13"),
+("http://115.233.227.46:35003", "a20e4e1f76c64d8ba70237df08e15dfeb4c5f0f1", "http://115.233.227.46", "35003", "http://115.233.227.46:35003", "2019-07-18 08:10:00", "2019-11-25 06:42:36"),
+("http://115.233.227.46:35008", "059f8dc90879230fa7d51b6177b91d75c12bde4e", "http://115.233.227.46", "35008", "http://115.233.227.46:35008", "2019-11-25 06:43:35", "2019-11-25 06:43:35");
+
+SELECT * FROM `transaction`.`nodes`;
+
+4：更新前端代码
 
 npm run build_transaction_client
 
@@ -80,7 +105,7 @@ db.unls.update({
   }
 }, {
   $set: {
-    "index": 0
+    "index": NumberInt(0)
   }
 });
 
@@ -90,7 +115,7 @@ db.unls.update({
   }
 }, {
   $set: {
-    "index": 1
+    "index": NumberInt(1)
   }
 });
 
@@ -100,7 +125,7 @@ db.unls.update({
   }
 }, {
   $set: {
-    "index": 2
+    "index": NumberInt(2)
   }
 });
 
@@ -110,7 +135,7 @@ db.unls.update({
   }
 }, {
   $set: {
-    "index": 3
+    "index": NumberInt(3)
   }
 });
 
