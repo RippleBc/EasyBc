@@ -162,6 +162,12 @@ class ViewChangeForTimeout {
             data: viewChange,
             count: 1
           });
+
+          if (1 >= this.threshould) {
+            this.consensusViewChange = viewChange;
+
+            this.handler();
+          }
         }
         else
         {
