@@ -16,6 +16,8 @@ const Buffer = utils.Buffer;
 const BN = utils.BN;
 const toBuffer = utils.toBuffer;
 
+const BATCH_SEND_TXS_MAX_SIZE = 50;
+
 app.get("/sendTransaction", function (req, res) {
   if (!req.query.url) {
     return res.send({
@@ -252,6 +254,9 @@ module.exports.sendTransactions = async (url, from, toDetails, privateKey) => {
 
   // check toDetails
   assert(Array.isArray(toDetails), `sendTransactions, toDetails should be an Array`)
+  if (toDetails.length > BATCH_SEND_TXS_MAX_SIZE) {
+    await Promise.reject(`sendTransactions, amount of transactions should little than ${BATCH_SEND_TXS_MAX_SIZE}, now is ${toDetails.length}`);
+  }
 
   if (privateKey === undefined) {
     // fetch privateKey from db according from
