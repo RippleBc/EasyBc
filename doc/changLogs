@@ -1,4 +1,4 @@
-2019年9月24日
+------------------------------------- 2019年9月24日------------------------------------- 
 
 功能：
 1：增加对合约事件的支持。
@@ -23,4 +23,119 @@
   pm2 log
 
 
-2019
+------------------------------------- 2019年12月2日 -------------------------------------
+
+功能：
+1：优化了ripple共识协议（noleader模式改为leader模式，增加带有消息缓冲功能的message system）
+2：优化监控服务器（增加邮件以及短信报警，增加定时服务状态报告）
+3：优化p2p协议（connection增加id字段，id根据时间戳自动生成，修复了部分bug）
+4：优化交易服务器（增加批量操作的接口，增加）
+
+更新流程：
+
+####### 交易服务器 #######
+
+1：首先关闭所有的服务
+pm2 stop all
+
+2：清除transactionsHistories
+#
+mysql -uroot -proot
+
+#
+use database transaction
+
+#
+drop table transactionsHistories
+
+3：更新前端代码
+
+npm run build_transaction_client
+
+npm run build_monitor_client
+
+4：启动服务
+pm2 start all
+
+
+####### 全服务器 #######
+
+1：首先删除所有的服务
+  pm2 delete all
+
+2：更新unl表（添加index字段）
+
+# login
+mongo --port 4406 -u "blockChain" -p "blockChain" --authenticationDatabase "admin"
+
+# select collections
+use blockChain
+
+# check unls
+db.unls.find().pretty();
+
+db.unls.update({
+  "address": {
+    $eq: "5a8fbde736795f7ef2ebff7cda09d8133da34d0b"
+  }
+}, {
+  $set: {
+    "index": 0
+  }
+});
+
+db.unls.update({
+  "address": {
+    $eq: "68ecab823675efa71e2edbe26a56b7a0d765dcde"
+  }
+}, {
+  $set: {
+    "index": 1
+  }
+});
+
+db.unls.update({
+  "address": {
+    $eq: "a20e4e1f76c64d8ba70237df08e15dfeb4c5f0f1"
+  }
+}, {
+  $set: {
+    "index": 2
+  }
+});
+
+db.unls.update({
+  "address": {
+    $eq: "059f8dc90879230fa7d51b6177b91d75c12bde4e"
+  }
+}, {
+  $set: {
+    "index": 3
+  }
+});
+
+# check unls
+db.unls.find().pretty();
+
+3：更新配置文件
+
+# for node 0
+node toolkit/index.js config -c '{"processIndex":0,"dbIndex": 0, "privateKey":"bfd549bfbbb41498b290bfdbefc1810aacf83463ba949569975220b3ceaaa1e0","p2pProxyOpen":false}'
+
+# for node 1
+node toolkit/index.js config -c '{"processIndex":1,"dbIndex": 0, "privateKey":"e29f99d13a92f788e46cec235ffbde9e64360bd1bd9e68e18ecac2e433fd6fce","p2pProxyOpen":false}'
+
+# for node 2
+node toolkit/index.js config -c '{"processIndex":2,"dbIndex": 0, "privateKey":"a8ae1cedfe4cde02f45df6cf684a5612f59e110b29bbbeeec5e5886e6d2a6c0c","p2pProxyOpen":false}'
+
+# for node 3
+node toolkit/index.js config -c '{"processIndex":3,"dbIndex": 0, "privateKey":"c579cce6ddb05ea154369a4bbe5d56a2ecd4f94916207751541a204bca6c608f","p2pProxyOpen":false}'
+
+# check
+git diff
+
+4：启动服务器
+pm2 start
+
+5：保存服务
+pm2 save
