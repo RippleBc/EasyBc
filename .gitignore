@@ -4,6 +4,7 @@ depends/test/data2/*
 depends/test/data3/*
 web_monitor_server/logs/*
 web_monitor_server/dist/*
+web_monitor_server/levelUpData/*
 web_transaction_server/logs/*
 web_transaction_server/dist/*
 consensus_full_server/logs/*

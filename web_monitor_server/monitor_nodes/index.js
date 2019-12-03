@@ -10,6 +10,46 @@ const printErrorStack = process[Symbol.for("printErrorStack")]
 
 const checkProcessExcept = new CheckProcessExcept()
 
+app.post('/openReportMonitorState', (req, res) => {
+  checkProcessExcept.openReportMonitorState().then(() => {
+    res.json({
+      code: SUCCESS
+    })
+  }).catch(e => {
+    res.json({
+      code: OTH_ERR,
+      msg: e
+    })
+  })
+});
+
+app.post('/closeReportMonitorState', (req, res) => {
+  checkProcessExcept.closeReportMonitorState().then(() => {
+    res.json({
+      code: SUCCESS
+    })
+  }).catch(e => {
+    res.json({
+      code: OTH_ERR,
+      msg: e
+    })
+  })
+});
+
+app.post('/getReportMonitorState', (req, res) => {
+  checkProcessExcept.getReportMonitorState().then(state => {
+    res.json({
+      code: SUCCESS,
+      data: state
+    })
+  }).catch(e => {
+    res.json({
+      code: OTH_ERR,
+      msg: e
+    })
+  })
+});
+
 app.post('/fetchCheckProcessExceptionState', (req, res) => {
   const address = req.body.address;
 

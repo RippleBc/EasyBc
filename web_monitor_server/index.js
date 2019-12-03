@@ -7,7 +7,8 @@ const cors = require('cors')
 const { host, port } = require('./config.json')
 const Models = require('./models');
 const utils = require("../depends/utils");
-const log4js = require('./logConfig')
+const log4js = require('./logConfig');
+const leveldown = require('leveldown');
 
 const logger = process[Symbol.for('logger')] = log4js.getLogger()
 process[Symbol.for('errLogger')] = log4js.getLogger("err");
@@ -21,9 +22,21 @@ process[Symbol.for("printErrorStack")] = e => {
 }
 const models = process[Symbol.for('models')] = new Models();
 process[Symbol.for('cookieSet')] = new Set();
+const levelDownInstance = process[Symbol.for('levelDownInstance')] = leveldown(path.join(__dirname, "./levelUpData"));
 
 (async () => {
 	await models.init();
+
+	await new Promise((resolve, reject) => {
+		levelDownInstance.open(e => {
+			if(e)
+			{
+				reject(`open leveldown throw exception, ${e}`);
+			}
+
+			resolve();
+		});
+	});
 
 	// express
 	const app = express()

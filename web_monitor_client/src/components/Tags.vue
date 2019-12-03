@@ -176,9 +176,10 @@
         position: absolute;
         display: flex;
         align-items: center;
-        right: 0;
+        right: 10px;
         top: 0;
         box-sizing: border-box;
+        width: 120px;
         height: 100%;
         background: #fff;
         z-index: 10;
@@ -189,7 +190,5 @@
         align-items: center;
         box-sizing: border-box;
         margin-right: 3px;
-        height: 35px;  
-        line-height: 30px
     }
 </style>

@@ -182,8 +182,16 @@
                             // 
                             nodesInfo.set(node.address, nodeInfo);
 
-                            //
-                            this.nodes = nodesInfo.values();
+                            // 优先显示连接成功以及id比较小的节点的节点
+                            this.nodes = [...nodesInfo.values()].sort((a, b) => { 
+                                const comp1 = (b.blocks ? 1 : 0) - (a.blocks ? 1 : 0) 
+                                if(comp1 !== 0)
+                                {
+                                    return comp1;
+                                }
+
+                                return a.id - b.id;
+                            });
                         }
                     });
 

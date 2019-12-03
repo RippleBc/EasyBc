@@ -8,6 +8,13 @@
         <div class="header-right">
             <div class="header-user-con">
                 <!-- 全屏显示 -->
+                <div class="tags-report-state">
+                    <span style="margin-right: 10px;">{{reportMonitorState ? '监控服务状态已开启' : '监控服务状态已关闭'}}</span>
+                    <el-button style="margin-right: 10px;" v-if="reportMonitorState" type="primary" @click="closeReportMonitorState">关闭状态报警</el-button>
+                    <el-button style="margin-right: 10px;" v-else type="primary" @click="openReportMonitorState">开启状态报警</el-button>
+                </div>
+                
+                <!-- 全屏显示 -->
                 <div class="btn-fullscreen" @click="handleFullScreen">
                     <el-tooltip effect="dark" :content="fullscreen? `取消全屏`:`全屏`" placement="bottom">
                         <i class="el-icon-rank"></i>
@@ -50,13 +57,27 @@
             return {
                 collapse: false,
                 fullscreen: false,
-                
+                reportMonitorState: false,
             }
         },
         computed:{
             username(){
                 return localStorage.getItem('ms_username');
             }
+        },
+        created() {
+            this.$axios.post('/getReportMonitorState', {}).then(res => {
+                if(res.code !== 0)
+                {
+                    this.$message.error(res.msg);
+                }
+                else
+                {
+                    this.reportMonitorState = res.data;
+                }
+            }).catch(err => {
+                this.$message.error(err);
+            });
         },
         methods:{
             // 用户名下拉菜单选择事件
@@ -97,6 +118,40 @@
                     }
                 }
                 this.fullscreen = !this.fullscreen;
+            },
+            openReportMonitorState()
+            {
+                this.$axios.post('/openReportMonitorState', {}).then(res => {
+                    if(res.code !== 0)
+                    {
+                        this.$message.error(res.msg);
+                    }
+                    else
+                    {
+                        this.reportMonitorState = true;
+
+                        this.$message.success("开启监控服务状态报告成功");
+                    }
+                }).catch(err => {
+                    this.$message.error(err);
+                });
+            },
+            closeReportMonitorState()
+            {
+                this.$axios.post('/closeReportMonitorState', {}).then(res => {
+                    if(res.code !== 0)
+                    {
+                        this.reportMonitorState = false;
+
+                        this.$message.error(res.msg);
+                    }
+                    else
+                    {
+                        this.$message.success("关闭监控服务状态报告成功");
+                    }
+                }).catch(err => {
+                    this.$message.error(err);
+                });
             }
         },
         mounted(){
@@ -179,5 +234,11 @@
     }
     .el-dropdown-menu__item{
         text-align: center;
+    }
+    .tags-report-state {
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        box-sizing: border-box;
     }
 </style>

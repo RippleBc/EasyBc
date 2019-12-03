@@ -6,6 +6,7 @@ const schedule = require('node-schedule');
 
 const logger = process[Symbol.for('logger')];
 const { Node } = process[Symbol.for('models')]
+const levelDownInstance = process[Symbol.for('levelDownInstance')];
 
 const CHECK_PROCESS_EXCEPTION_INTERVAL = 10000;
 
@@ -13,6 +14,8 @@ const CHECK_PROCESS_EXCEPTION_STATE_CLOSE = 1;
 const CHECK_PROCESS_EXCEPTION_STATE_CHECKING = 2;
 const CHECK_PROCESS_EXCEPTION_STATE_CHECKED = 3;
 const CHECK_PROCESS_EXCEPTION_STATE_ALARMED = 4;
+
+const LEVEL_DOWM_MONITOR_STATE_KEY = 'reportMonitorState';
 
 class CheckProcessExcept {
   constructor({ name, address, host, port, remarks, type }) {
@@ -129,6 +132,11 @@ class CheckAllProcessExcept
 
       // send a email every 7:30 am to notify every thing is ok
       this.reporterSchedule = schedule.scheduleJob('30 7 * * *', () => {
+        if(!this.reportMonitorState)
+        {
+          return;
+        }
+
         sendEMailAlarm({
           subject: '监控进程运行正常',
           text: [...this.checkers.values()].map(checker => {
@@ -139,6 +147,10 @@ class CheckAllProcessExcept
 
       // send a email every 6:30 pm to notify every thing is ok
       this.reporterSchedule = schedule.scheduleJob('30 18 * * *', () => {
+        if (!this.reportMonitorState) {
+          return;
+        }
+
         sendEMailAlarm({
           subject: '监控进程运行正常',
           text: [...this.checkers.values()].map(checker => {
@@ -149,6 +161,10 @@ class CheckAllProcessExcept
 
       // notify monitor has begun
       setTimeout(() => {
+        if (!this.reportMonitorState) {
+          return;
+        }
+
         sendEMailAlarm({
           subject: '监控进程开始运行',
           text: [...this.checkers.values()].map(checker => {
@@ -161,6 +177,8 @@ class CheckAllProcessExcept
 
   async init()
   {
+    this.reportMonitorState = await this.getReportMonitorState();
+
     const nodes = await Node.findAll();
     
     //
@@ -242,6 +260,53 @@ class CheckAllProcessExcept
     }
     checkProcessExceptFatalInstance.state = CHECK_PROCESS_EXCEPTION_STATE_CLOSE;
   }
+
+  async openReportMonitorState()
+  {
+    await new Promise((resolve, reject) => {
+      levelDownInstance.put(LEVEL_DOWM_MONITOR_STATE_KEY, "ok", e => {
+        if(e)
+        {
+          reject(e);
+        }
+
+        //
+        this.reportMonitorState = true;
+
+        resolve();
+      })
+    });
+  }
+
+  async closeReportMonitorState()
+  {
+    await new Promise((resolve, reject) => {
+      levelDownInstance.del(LEVEL_DOWM_MONITOR_STATE_KEY, e => {
+        if (e) {
+          reject(e);
+        }
+
+        //
+        this.reportMonitorState = false;
+
+        resolve();
+      })
+    });
+  }
+
+  async getReportMonitorState()
+  {
+    return await new Promise((resolve, reject) => {
+      levelDownInstance.get(LEVEL_DOWM_MONITOR_STATE_KEY,  (e, value) => {
+        if (e && e.message !== "NotFound: ") {
+          reject(e);
+        }
+
+        resolve(value ? true : false);
+      })
+    });
+  }
+
 
   async checkProcessException()
   {
