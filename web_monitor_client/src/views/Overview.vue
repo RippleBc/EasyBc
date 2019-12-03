@@ -146,88 +146,98 @@
             getNodesInfo() {
                 const nodesInfo = new Map;
             
+
+                const nodesInfoPromises = [];
+
                 for(let node of this.unl)
                 {
-                    this.$axios.post('/blocks', {
-                        url: `${node.host}:${node.port}`
-                    }).then(res => {
-                        if(res.code !== 0)
-                        {
-                            this.$message.error(res.msg);
-                        }
-                        else
-                        {
-                            // add show filed
-                            for(let index of res.data.keys())
+                    nodesInfoPromises.push(new Promise((resolve, reject) => {
+                        this.$axios.post('/blocks', {
+                            url: `${node.host}:${node.port}`
+                        }).then(res => {
+                            if(res.code !== 0)
                             {
-                                res.data[index].show = false;
+                                this.$message.error(res.msg);
                             }
-
-                            // get nodeInfo
-                            let nodeInfo = nodesInfo.get(node.address);
-                            if(!nodeInfo)
+                            else
                             {
-                                nodeInfo = {
-                                    id: node.id,
-                                    address: node.address,
-                                    name: node.name,
-                                    host: node.host,
-                                    port: node.port
-                                }
-                            }
-
-                            // add block info
-                            Object.assign(nodeInfo, {blocks: res.data});
-
-                            // 
-                            nodesInfo.set(node.address, nodeInfo);
-
-                            // 优先显示连接成功以及id比较小的节点的节点
-                            this.nodes = [...nodesInfo.values()].sort((a, b) => { 
-                                const comp1 = (b.blocks ? 1 : 0) - (a.blocks ? 1 : 0) 
-                                if(comp1 !== 0)
+                                // add show filed
+                                for(let index of res.data.keys())
                                 {
-                                    return comp1;
+                                    res.data[index].show = false;
                                 }
 
-                                return a.id - b.id;
-                            });
-                        }
-                    });
-
-                    this.$axios.post('/fetchCheckProcessExceptionState', {
-                        address: node.address
-                    }).then(res => {
-                        if(res.code !== 0)
-                        {
-                            this.$message.error(res.msg);
-                        }
-                        else
-                        {
-                            // get nodeInfo
-                            let nodeInfo = nodesInfo.get(node.address);
-                            if(!nodeInfo)
-                            {
-                                nodeInfo = {
-                                    id: node.id,
-                                    address: node.address,
-                                    name: node.name,
-                                    host: node.host,
-                                    port: node.port
+                                // get nodeInfo
+                                let nodeInfo = nodesInfo.get(node.address);
+                                if(!nodeInfo)
+                                {
+                                    nodeInfo = {
+                                        id: node.id,
+                                        address: node.address,
+                                        name: node.name,
+                                        host: node.host,
+                                        port: node.port
+                                    }
                                 }
+
+                                // add block info
+                                Object.assign(nodeInfo, {blocks: res.data});
+
+                                // 
+                                nodesInfo.set(node.address, nodeInfo);
                             }
 
-                            // add process state
-                            Object.assign(nodeInfo, {state: res.data});
+                            resolve();
+                        });
+                    }));
 
-                            // 
-                            nodesInfo.set(node.address, nodeInfo);
+                    nodesInfoPromises.push(new Promise((resolve, reject) => {
+                        this.$axios.post('/fetchCheckProcessExceptionState', {
+                            address: node.address
+                        }).then(res => {
+                            if(res.code !== 0)
+                            {
+                                this.$message.error(res.msg);
+                            }
+                            else
+                            {
+                                // get nodeInfo
+                                let nodeInfo = nodesInfo.get(node.address);
+                                if(!nodeInfo)
+                                {
+                                    nodeInfo = {
+                                        id: node.id,
+                                        address: node.address,
+                                        name: node.name,
+                                        host: node.host,
+                                        port: node.port
+                                    }
+                                }
 
-                            //
-                            this.nodes = [...nodesInfo.values()];
+                                // add process state
+                                Object.assign(nodeInfo, {state: res.data});
+
+                                // 
+                                nodesInfo.set(node.address, nodeInfo);
+                            }
+
+                            resolve();
+                        });
+                    }));
+                }
+
+                Promise.all(nodesInfoPromises).finally(() => {
+                    // 优先显示连接成功以及id比较小的节点的节点
+                    this.nodes = [...nodesInfo.values()].sort((a, b) => { 
+                        const comp1 = (b.blocks ? 1 : 0) - (a.blocks ? 1 : 0) 
+                        if(comp1 !== 0)
+                        {
+                            return comp1;
                         }
+
+                        return a.id - b.id;
                     });
-                } 
+                });
             }
         }
     }
