@@ -110,3 +110,19 @@ DROP DATABASE consensus;
 
 #
 CREATE DATABASE consensus;
+
+/********************************************* 初始化transaction服务的节点列表 *********************************************/
+#
+mysql -uroot -proot
+
+#
+use transaction
+
+#
+INSERT INTO `transaction`.`nodes`
+(`name`, `address`, `host`, `port`, `remarks`, `createdAt`, `updatedAt`)
+VALUES
+("http://localhost:8081", "5a8fbde736795f7ef2ebff7cda09d8133da34d0b", "http://localhost", "8081", "http://localhost:8081", "2019-06-27 02:09:02", "2019-06-27 02:09:02"),
+("http://localhost:8181", "68ecab823675efa71e2edbe26a56b7a0d765dcde", "http://localhost", "8181", "http://localhost:8181", "2019-07-05 05:53:49", "2019-11-25 06:43:13"),
+("http://localhost:8281", "a20e4e1f76c64d8ba70237df08e15dfeb4c5f0f1", "http://localhost", "8281", "http://localhost:8281", "2019-07-18 08:10:00", "2019-11-25 06:42:36"),
+("http://localhost:8381", "059f8dc90879230fa7d51b6177b91d75c12bde4e", "http://localhost", "8381", "http://localhost:8381", "2019-11-25 06:43:35", "2019-11-25 06:43:35");

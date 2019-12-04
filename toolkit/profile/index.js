@@ -68,7 +68,7 @@ module.exports = async (urls, range, total, validate) => {
   const allProcessArgs = [{
     url: urls[0],
     selfKeyPairs: [{
-      privateKey: "ed09a7280c5a0d3c04839ca5603fe507b4d1d4572601e62aadafd923f55f7bf9",
+      privateKey: "9d6ae99d516fec86d7c922d2b3b455205b25cc65d2467d8ecbc47d513cba3841",
       address: "21d21b68ded27ce2ef619651d382892c1f77baa4"
     }],
     targetKeyPairs: keyPiar.slice(0, traverseAddressNum),
