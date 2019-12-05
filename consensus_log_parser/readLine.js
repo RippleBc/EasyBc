@@ -80,44 +80,18 @@ class ReadLine {
 const getLineAndRemain = content => {
 	assert(typeof content === 'string', `ReadLine getLineAndRemain, content should be a String, now is ${typeof content}`)
 
-	// window platform
-	let newLineIndex = content.indexOf("\n\r")
+	// find newline symbol
+	newLineIndex = content.indexOf(os.EOL);
+
+	//
 	if(newLineIndex !== -1)
 	{
 		const line = content.substring(0, newLineIndex)
 		return {
-			num: line.length + 2,
+			num: line.length + os.EOL.length,
 			line: line,
-			remain: content.substring(newLineIndex + 2)
+			remain: content.substring(newLineIndex + os.EOL.length)
 		};
-	}
-
-	// linux platform
-	newLineIndex = content.indexOf("\n")
-	if(newLineIndex !== -1)
-	{
-		const line = content.substring(0, newLineIndex)
-		return {
-			num: line.length + 1,
-			line: line,
-			remain: content.substring(newLineIndex + 1)
-		};
-	}
-
-	// mac platform
-	newLineIndex = content.indexOf("\r")
-	if(newLineIndex !== -1)
-	{
-		const line = content.substring(0, newLineIndex)
-		return {
-			num: line.length + 1,
-			line: line,
-			remain: content.substring(newLineIndex + 1)
-		};
-	}
-
-	return {
-		line: null
 	}
 }
 
