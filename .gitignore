@@ -14,3 +14,4 @@ consensus_transaction_parser/logs/*
 p2p_proxy_server/logs/*
 block_chain_data/*
 .nyc_output/*
+tests/index.js
