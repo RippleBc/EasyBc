@@ -1,52 +1,16 @@
 const vm = require('vm');
-const sendToken = require('./utils/sendToken');
-const destroy = require('./utils/destroy');
-const exit = require('./utils/exit');
-
-const sendBox = {};
 
 //
-Reflect.defineProperty(sendBox, 'sendToken', {
-  configurable: false,
-  enumerable: false,
-  writable: false,
-  value: sendToken
-});
+const sandbox = { globalVar: 1, console };
+contextifySandBox = vm.createContext(sandbox);
 
 //
-Reflect.defineProperty(sendBox, 'destroy', {
-  configurable: false,
-  enumerable: false,
-  writable: false,
-  value: destroy
-});
+const code = 'while (globalVar < 10) { console.log(globalVar ++); }'
 
 //
-Reflect.defineProperty(sendBox, 'exit', {
-  configurable: false,
-  enumerable: false,
-  writable: false,
-  value: exit
-});
+const scriptInstance = new vm.Script(code)
 
 //
-const vmContext = vm.createContext(sendBox);
+scriptInstance.runInNewContext(contextifySandBox);
 
-//
-
-vm.runInContext(
-  'sendToken(); destroy(); exit();',
-  vmContext,
-  {
-    timeout: 5000
-  }
-);
-
-vm.runInContext(
-  'console.log(1)',
-  vmContext,
-  {
-    timeout: 5000
-  }
-);
 
