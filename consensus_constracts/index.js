@@ -7,10 +7,21 @@ const StateManager = require("../depends/block_chain/stateManager");
 const ReceiptManager = require("../depends/block_chain/receiptManager");
 const Account = require("../depends/account");
 const Transaction = require("../depends/transaction");
-const { ACCOUNT_TYPE_NORMAL, ACCOUNT_TYPE_CONSTRACT, COMMAND_TX, COMMAND_CREATE, TX_TYPE_TRANSACTION, TX_TYPE_CREATE_CONSTRACT, TX_TYPE_UPDATE_CONSTRACT } = require("./constant");
+const { 
+  ACCOUNT_TYPE_NORMAL, 
+  ACCOUNT_TYPE_CONSTRACT, 
+  COMMAND_TX, 
+  COMMAND_STATIC_CREATE, 
+  COMMAND_DYNAMIC_CREATE,
+  COMMAND_DYNAMIC_UPDATE,
+  TX_TYPE_TRANSACTION, 
+  TX_TYPE_CREATE_CONSTRACT, 
+  TX_TYPE_UPDATE_CONSTRACT, } = require("./constant");
+const vm = require("vm");
 
 const rlp = utils.rlp;
 const bufferToInt = utils.bufferToInt;
+const Buffer = utils.Buffer;
 
 class ContractsManager
 {
@@ -44,9 +55,27 @@ class ContractsManager
     const commands = rlp.decode(tx.data)
     const commandId = bufferToInt(commands[0]);
 
+    //
+    if (commandId === COMMAND_DYNAMIC_CREATE) {
+      // save code
+      toAccount.data = Buffer.from(commands[1], 'hex');
+
+      return;
+    }
+
+    if (commandId === COMMAND_DYNAMIC_UPDATE)
+    {
+      // 
+      let [code, data] = Buffer.from(toAccount.data)
+
+      vm.runInNewContext()
+
+      return;
+    }
+
     // fetch contract id
     let constractId;
-    if (commandId === COMMAND_CREATE)
+    if (commandId === COMMAND_STATIC_CREATE)
     {
       // contract is not exist
       constractId = commands[1].toString("hex");
@@ -109,7 +138,7 @@ class ContractsManager
       return TX_TYPE_TRANSACTION;
     }
     
-    if (commandId === COMMAND_CREATE)
+    if (commandId === COMMAND_STATIC_CREATE || commandId === COMMAND_DYNAMIC_CREATE)
     {
       return TX_TYPE_CREATE_CONSTRACT;
     }

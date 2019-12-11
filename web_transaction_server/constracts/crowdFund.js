@@ -5,7 +5,7 @@ const { SUCCESS, OTH_ERR, PARAM_ERR } = require("../../constant");
 const CrowdFundConstract = require("../../consensus_constracts/crowdFundConstract");
 const { getAccountInfo } = require("../remote")
 const crowdFundConstractId = require("../../consensus_constracts/crowdFundConstract").id;
-const { COMMAND_CREATE } = require("../../consensus_constracts/constant");
+const { COMMAND_STATIC_CREATE } = require("../../consensus_constracts/constant");
 
 const app = process[Symbol.for("app")];
 const printErrorStack = process[Symbol.for("printErrorStack")];
@@ -82,7 +82,7 @@ app.get("/createCrowdFundConstract", (req, res) => {
   const to = publicToAddress(publicKey)
 
   const data = rlp.encode([
-    toBuffer(COMMAND_CREATE), 
+    toBuffer(COMMAND_STATIC_CREATE), 
     Buffer.from(crowdFundConstractId, "hex"), 
     toBuffer(parseInt(req.query.beginTime)), 
     toBuffer(parseInt(req.query.endTime)), 

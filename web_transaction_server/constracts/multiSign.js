@@ -5,7 +5,7 @@ const { SUCCESS, OTH_ERR, PARAM_ERR } = require("../../constant");
 const MultiSignConstract = require("../../consensus_constracts/multiSignConstract");
 const { getAccountInfo } = require("../remote")
 const multiSignConstractId = require("../../consensus_constracts/multiSignConstract").id;
-const { COMMAND_CREATE } = require("../../consensus_constracts/constant");
+const { COMMAND_STATIC_CREATE } = require("../../consensus_constracts/constant");
 
 const app = process[Symbol.for("app")];
 const printErrorStack = process[Symbol.for("printErrorStack")];
@@ -82,7 +82,7 @@ app.get("/createMultiSignConstract", (req, res) => {
     const to = publicToAddress(publicKey)
 
     const data = rlp.encode([
-        toBuffer(COMMAND_CREATE), 
+        toBuffer(COMMAND_STATIC_CREATE), 
         Buffer.from(multiSignConstractId, "hex"), 
         toBuffer(parseInt(req.query.expireInterval)), 
         toBuffer(parseInt(req.query.threshold)),

@@ -5,7 +5,7 @@ const { SUCCESS, OTH_ERR, PARAM_ERR } = require("../../constant");
 const SideChainConstract = require("../../consensus_constracts/sideChainConstract");
 const { getAccountInfo } = require("../remote")
 const SideChainConstractId = SideChainConstract.id;
-const { COMMAND_CREATE } = require("../../consensus_constracts/constant");
+const { COMMAND_STATIC_CREATE } = require("../../consensus_constracts/constant");
 
 const app = process[Symbol.for("app")];
 const printErrorStack = process[Symbol.for("printErrorStack")];
@@ -88,7 +88,7 @@ app.get("/createSideChainConstract", (req, res) => {
   const to = publicToAddress(publicKey)
 
   const data = rlp.encode([
-    toBuffer(COMMAND_CREATE),
+    toBuffer(COMMAND_STATIC_CREATE),
     Buffer.from(SideChainConstractId, "hex"),
     Buffer.from(req.query.code, "hex"),
     toBuffer(parseInt(req.query.expireInterval)),

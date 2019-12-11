@@ -4,7 +4,7 @@ const utils = require("../depends/utils");
 const StateManager = require("../depends/block_chain/stateManager");
 const ReceiptManager = require("../depends/block_chain/receiptManager");
 const Transaction = require("../depends/transaction");
-const { COMMAND_CREATE, STATE_DESTROYED, STATE_LIVE } = require("./constant");
+const { COMMAND_STATIC_CREATE, STATE_DESTROYED, STATE_LIVE } = require("./constant");
 
 const rlp = utils.rlp;
 const BN = utils.BN;
@@ -35,7 +35,7 @@ class Constract
 
     const commands = rlp.decode(tx.data)
 
-    if (new BN(commands[0]).eqn(COMMAND_CREATE))
+    if (new BN(commands[0]).eqn(COMMAND_STATIC_CREATE))
     {
       this.id = Buffer.from(this.contractId, "hex");
       this.state = STATE_LIVE;
