@@ -17,6 +17,8 @@ const {
   TX_TYPE_TRANSACTION, 
   TX_TYPE_CREATE_CONSTRACT, 
   TX_TYPE_UPDATE_CONSTRACT, } = require("./constant");
+const ConstractExit = require('./api/exit');
+
 const vm = require("vm");
 
 const rlp = utils.rlp;
@@ -57,18 +59,88 @@ class ContractsManager
 
     //
     if (commandId === COMMAND_DYNAMIC_CREATE) {
-      // save code
-      toAccount.data = Buffer.from(commands[1], 'hex');
+
+      const [codeAccountAddress, code] = commands.slice(1);
+
+      // fetch a code account
+      const codeAccount = await stateManager.getAccount(codeAccountAddress);
+
+      //
+      if (!codeAccount.isEmpty())
+      {
+        await Promise.reject(`ContractsManager run, create a dynamic constract, codeAccount should be emtpy`);
+      }
+
+      //
+      codeAccount.data = code;
+
+      // save code account
+      await stateManager.putAccount(codeAccountAddress, codeAccount.serialize());
+
+      // save constractCodeAddress
+      toAccount.data = rlp.encode([codeAccountAddress]);
 
       return;
     }
 
+    //
     if (commandId === COMMAND_DYNAMIC_UPDATE)
     {
-      // 
-      let [code, data] = Buffer.from(toAccount.data)
+      // fetch code address and basic data
+      let [codeAccountAddress, constractData] = rlp.decode(toAccount.data);
 
-      vm.runInNewContext()
+      // fetch code
+      const codeAccount = await stateManager.getAccount(codeAccountAddress);
+      if (codeAccount.isEmpty())
+      {
+        await Promise.reject(`ContractsManager run, codeAccount ${codeAccountAddress.toString('hex')} is empty`);
+      }
+
+      //
+      let code = codeAccount.data.toString();
+
+      // 
+      const exitInstance = new ConstractExit();
+
+      //
+
+      const evaluateCode = `
+      const { rlp } = require("../depends/utils");
+
+      ${code}
+
+      const constract = new Constract(constractData);
+      constract.run(...commands).then(() => {
+        exit(null, rlp.encode(constract.raw).toString('hex'));
+      }).catch(e => {
+        exit(e);
+      });
+      `;
+
+      vm.runInNewContext(evaluateCode, {
+          require,
+          timestamp,
+          stateManager, 
+          receiptManager,
+          mysql, 
+          tx, 
+          fromAccount, 
+          toAccount,
+          constractData,
+          commands: commands.slice(1),
+          exit: exitInstance.exit.bind(exitInstance),
+          bufferToInt,
+          toBufer: utils.toBuffer,
+          console
+      }, {
+        timeout: 2000
+      });
+
+      //
+      const updatedConstractData = await exitInstance.fetchUpdatedContractData();
+
+      //
+      toAccount.data = rlp.encode([codeAccountAddress, Buffer.from(updatedConstractData, "hex")]);
 
       return;
     }

@@ -76,9 +76,9 @@ module.exports = async function(opts)
     }
 
     if (txType === TX_TYPE_UPDATE_CONSTRACT && toAccount.isEmpty())
-      {
-        await Promise.reject(`runTx, to address ${tx.to.toString("hex")} not exist, can not update`);
-      }
+    {
+      await Promise.reject(`runTx, to address ${tx.to.toString("hex")} not exist, can not update`);
+    }
 
     // add coin
     newBalance = new BN(toAccount.balance).add(new BN(tx.value));
