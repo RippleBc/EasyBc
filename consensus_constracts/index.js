@@ -139,8 +139,7 @@ class ContractsManager
           exit: exitInstance.exit.bind(exitInstance),
           bufferToInt,
           toBufer: utils.toBuffer,
-          raw,
-          console
+          raw
       }, {
         displayErrors: true,
         timeout: 2000
