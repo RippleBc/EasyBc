@@ -11,51 +11,7 @@ const intToBuffer = utils.intToBuffer;
 const rlp = utils.rlp;
 const BN = utils.BN;
 
-const testCode = `
-  class Constract {
-    constructor(...args)
-    {
-      console.log('constructor args:');
-      for(let el of args)
-      {
-        if(el)
-        {
-          console.log(bufferToInt(el));
-        }
-      }
 
-      this.raw = args || [];
-    }
-
-    async run(commandId, ...args)
-    {
-      console.log('origin raw:');
-      for(let el of this.raw)
-      {
-        if(el)
-        {
-          console.log(bufferToInt(el));
-        }
-      }
-
-      console.log('data:');
-      console.log(tx.data.toString('hex'))
-
-      console.log('commandId:');
-      console.log(commandId ? bufferToInt(commandId) : 'no command id');
-
-      console.log('udpated raw:');
-      this.raw = args;
-      for(let el of this.raw)
-      {
-        if(el)
-        {
-          console.log(bufferToInt(el));
-        }
-      }
-    }
-  }
-`
 
 const url = "http://localhost:8081";
 
@@ -68,6 +24,9 @@ const codeAccountAddress = randomBytes(20);
 
 console.info(`toAccountAddress: ${toAccountAddress.toString('hex')}`);
 console.info(`codeAccountAddress: ${codeAccountAddress.toString('hex')}`);
+
+// todo
+const gambleCode = undefined;
 
 tape('testing dynamic constract opt', function (tester) {
   
@@ -85,7 +44,7 @@ tape('testing dynamic constract opt', function (tester) {
         value: 1,
         timestamp: Date.now(),
         nonce: new BN(fromAccount.nonce).addn(1).toBuffer(),
-        data: rlp.encode([intToBuffer(COMMAND_DYNAMIC_CREATE), codeAccountAddress, Buffer.from(testCode)])
+        data: rlp.encode([intToBuffer(COMMAND_DYNAMIC_CREATE), codeAccountAddress, Buffer.from(gambleCode)])
       });
 
       // sign

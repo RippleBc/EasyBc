@@ -60,7 +60,7 @@ class ContractsManager
     //
     if (commandId === COMMAND_DYNAMIC_CREATE) {
 
-      const [codeAccountAddress, code] = commands.slice(1);
+      const [codeAccountAddress, code, ...createArgs] = commands.slice(1);
 
       // fetch a code account
       const codeAccount = await stateManager.getAccount(codeAccountAddress);
@@ -77,8 +77,56 @@ class ContractsManager
       // save code account
       await stateManager.putAccount(codeAccountAddress, codeAccount.serialize());
 
-      // save constractCodeAddress
-      toAccount.data = rlp.encode([codeAccountAddress, []]);
+      // init
+      const exitInstance = new ConstractExit();
+
+      //
+      const evaluateCode = `
+      ${code}
+
+      const constract = new Constract();
+
+      constract.create(...createArgs).then(() => {
+        for(let el of constract.raw)
+        {
+          raw.push(el);
+        }
+        
+        exit();
+      }).catch(e => {
+        exit(e);
+      });
+      `;
+
+      //
+      let raw = [];
+
+      vm.runInNewContext(evaluateCode, {
+        require,
+        timestamp,
+        stateManager,
+        receiptManager,
+        mysql,
+        tx,
+        fromAccount,
+        toAccount,
+        constractData,
+        createArgs,
+        exit: exitInstance.exit.bind(exitInstance),
+        bufferToInt,
+        toBufer: utils.toBuffer,
+        BN: utils.BN,
+        raw,
+      }, {
+        displayErrors: true,
+        timeout: 2000
+      });
+
+      //
+      await exitInstance.updateContractData();
+
+      //
+      toAccount.data = rlp.encode([codeAccountAddress, raw]);
 
       return;
     }
@@ -126,20 +174,21 @@ class ContractsManager
       let raw = [];
 
       vm.runInNewContext(evaluateCode, {
-          require,
-          timestamp,
-          stateManager, 
-          receiptManager,
-          mysql, 
-          tx, 
-          fromAccount, 
-          toAccount,
-          constractData,
-          commands: commands.slice(1),
-          exit: exitInstance.exit.bind(exitInstance),
-          bufferToInt,
-          toBufer: utils.toBuffer,
-          raw
+        require,
+        timestamp,
+        stateManager, 
+        receiptManager,
+        mysql, 
+        tx, 
+        fromAccount, 
+        toAccount,
+        constractData,
+        commands: commands.slice(1),
+        exit: exitInstance.exit.bind(exitInstance),
+        bufferToInt,
+        toBufer: utils.toBuffer,
+        BN: utils.BN,
+        raw,
       }, {
         displayErrors: true,
         timeout: 2000
