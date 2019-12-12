@@ -78,7 +78,7 @@ class ContractsManager
       await stateManager.putAccount(codeAccountAddress, codeAccount.serialize());
 
       // save constractCodeAddress
-      toAccount.data = rlp.encode([codeAccountAddress]);
+      toAccount.data = rlp.encode([codeAccountAddress, []]);
 
       return;
     }
@@ -103,19 +103,27 @@ class ContractsManager
       const exitInstance = new ConstractExit();
 
       //
-
       const evaluateCode = `
       const { rlp } = require("../depends/utils");
 
       ${code}
 
-      const constract = new Constract(constractData);
+      const constract = new Constract(...constractData);
+
       constract.run(...commands).then(() => {
-        exit(null, rlp.encode(constract.raw).toString('hex'));
+        for(let el of constract.raw)
+        {
+          raw.push(el);
+        }
+        
+        exit();
       }).catch(e => {
         exit(e);
       });
       `;
+
+      //
+      let raw = [];
 
       vm.runInNewContext(evaluateCode, {
           require,
@@ -131,16 +139,18 @@ class ContractsManager
           exit: exitInstance.exit.bind(exitInstance),
           bufferToInt,
           toBufer: utils.toBuffer,
+          raw,
           console
       }, {
+        displayErrors: true,
         timeout: 2000
       });
 
       //
-      const updatedConstractData = await exitInstance.fetchUpdatedContractData();
+      await exitInstance.updateContractData();
 
       //
-      toAccount.data = rlp.encode([codeAccountAddress, Buffer.from(updatedConstractData, "hex")]);
+      toAccount.data = rlp.encode([codeAccountAddress, raw]);
 
       return;
     }

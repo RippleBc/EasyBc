@@ -13,15 +13,46 @@ const BN = utils.BN;
 
 const testCode = `
   class Constract {
-    constructor(args)
+    constructor(...args)
     {
-      this.raw = [];
+      console.log('constructor args:');
+      for(let el of args)
+      {
+        if(el)
+        {
+          console.log(bufferToInt(el));
+        }
+      }
+
+      this.raw = args || [];
     }
 
     async run(commandId, ...args)
     {
+      console.log('origin raw:');
+      for(let el of this.raw)
+      {
+        if(el)
+        {
+          console.log(bufferToInt(el));
+        }
+      }
+
+      console.log('data:');
       console.log(tx.data.toString('hex'))
+
+      console.log('commandId:');
       console.log(commandId ? bufferToInt(commandId) : 'no command id');
+
+      console.log('udpated raw:');
+      this.raw = args;
+      for(let el of this.raw)
+      {
+        if(el)
+        {
+          console.log(bufferToInt(el));
+        }
+      }
     }
   }
 `
@@ -90,5 +121,28 @@ tape('testing dynamic constract opt', function (tester) {
     }).catch(e => {
       t.error(e);
     })    
+  })
+
+  it('update dynamic constract', function (t) {
+    (async () => {
+      // construct a tx
+      const tx = new Transaction({
+        to: toAccountAddress,
+        value: 1,
+        timestamp: Date.now(),
+        nonce: new BN(fromAccount.nonce).addn(3).toBuffer(),
+        data: rlp.encode([intToBuffer(COMMAND_DYNAMIC_UPDATE), intToBuffer(4), intToBuffer(5), intToBuffer(6)])
+      });
+
+      // sign
+      tx.sign(Buffer.from(fromAccountKeyPair.privateKey, 'hex'));
+
+      //
+      await sendTransaction(url, tx.serialize().toString('hex'));
+    })().then(() => {
+      t.end();
+    }).catch(e => {
+      t.error(e);
+    })
   })
 })
