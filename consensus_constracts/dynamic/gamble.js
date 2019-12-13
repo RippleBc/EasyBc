@@ -1,9 +1,9 @@
-import { BN, intToBuffer } from "../../depends/utils";
-import { TX_TYPE_CREATE_CONSTRACT } from "../constant";
+const { randomBytes } = require("crypto");
 
-let MIN = 100;
-let duration = 10 * 60 * 1000;
-
+const MIN = 100;
+const DURATION = 10 * 60 * 1000;
+const SERVICE_CHARGE = 500;
+const PARTICIPANT_LIMIT = 500;
 
 const BET = 1;
 const DRAW = 2;
@@ -12,8 +12,9 @@ const STATE_PROCESSING = 1;
 const STATE_FINISH = 2;
 
 class Constract {
-  constructor(state, beginTime, gambleResult, max) {
-    if (args.length < 0) {
+  constructor(state, beginTime, gambleResult, maxRandomNum) {
+    if (state === undefined) {
+      //
       return;
     }
 
@@ -24,34 +25,46 @@ class Constract {
     this.beginTime = beginTime;
 
     // gamble result
-    this.gambleResult = new WeakMap();
+    this.gambleResult = new Map();
     for (let [key, val] of gambleResult)
     {
-      gambleResult.set(key, val);
+      this.gambleResult.set(key, val);
     }
 
     //
-    this.max = max;
+    this.maxRandomNum = maxRandomNum;
   }
 
   async create() {
     // state
-    this.raw[0] = STATE_PROCESSING;
+    this.state = STATE_PROCESSING;
 
     // begin time
-    this.raw[1] = timestamp;
+    this.beginTime = timestamp;
 
     // gamble result
-    this.raw[2] = [];
+    this.gambleResult = [];
 
-    // max
-    this.raw[3] = Buffer.alloc(0);
+    // maxRandomNum
+    this.maxRandomNum = Buffer.alloc(0);
   }
 
   async run(commandId) {
 
     // check val
     if (new BN(tx.value).lt(new BN(MIN)))
+    {
+      return;
+    }
+
+    // check state
+    if (this.state === STATE_FINISH)
+    {
+      return;
+    }
+
+    // check participant limit
+    if (PARTICIPANT_LIMIT >= this.gambleResult.keys().length) 
     {
       return;
     }
@@ -65,9 +78,13 @@ class Constract {
       if (key.toString('hex') === from.toString('hex'))
       {
 
+        // draw command and gamble has expired and dice is biggest and value is gte service charge
         if (bufferToInt(commandId) === DRAW
-          && new BN(timestamp).subn(this.beginTime).gtn(duration))
+          && new BN(timestamp).subn(this.beginTime).gtn(DURATION)
+          && new BN(this.gambleResult.get(key)).eq(new BN(this.maxRandomNum))
+          && new BN(this.value).gten(SERVICE_CHARGE))
         {
+          //
           this.state = STATE_FINISH;
 
           //
@@ -76,31 +93,34 @@ class Constract {
           toAccount.balance = 0;
         }
 
-        this.serialize();
-
         return;
       }
     }
 
+    // command is bet and gamble has no expired
     if (bufferToInt(commandId) === BET
-      && new BN(timestamp).subn(this.beginTime).lten(duration)) {
-      gambleResult.set(from, tx.value);
+      && new BN(timestamp).subn(this.beginTime).lten(DURATION)
+      && this.gambleResult.keys().length < PARTICIPANT_LIMIT) {
 
-      if (new BN(this.max).lt(new BN(tx.value)))
+      // generate dice
+      const dice = randomBytes(20)
+
+      //
+      this.gambleResult.set(from, dice);
+
+      if (new BN(this.maxRandomNum).lt(new BN(dice)))
       {
-        this.max = tx.value;
+        this.maxRandomNum = dice;
       }
     }
-
-    this.serialize();
   }
 
   serialize() {
    this.raw = [
      this.state,
      this.beginTime,
-     ...gambleResult,
-     this.max
+     ...this.gambleResult.entries(),
+     this.maxRandomNum
    ]
   }
 }

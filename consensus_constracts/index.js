@@ -87,6 +87,9 @@ class ContractsManager
       const constract = new Constract();
 
       constract.create(...createArgs).then(() => {
+        
+        constract.serialize();
+
         for(let el of constract.raw)
         {
           raw.push(el);
@@ -110,12 +113,12 @@ class ContractsManager
         tx,
         fromAccount,
         toAccount,
-        constractData,
         createArgs,
         exit: exitInstance.exit.bind(exitInstance),
         bufferToInt,
         toBufer: utils.toBuffer,
         BN: utils.BN,
+        Buffer,
         raw,
       }, {
         displayErrors: true,
@@ -159,6 +162,8 @@ class ContractsManager
       const constract = new Constract(...constractData);
 
       constract.run(...commands).then(() => {
+        constract.serialize();
+
         for(let el of constract.raw)
         {
           raw.push(el);
@@ -188,6 +193,7 @@ class ContractsManager
         bufferToInt,
         toBufer: utils.toBuffer,
         BN: utils.BN,
+        Buffer,
         raw,
       }, {
         displayErrors: true,

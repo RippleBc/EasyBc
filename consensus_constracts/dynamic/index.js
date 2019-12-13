@@ -5,13 +5,13 @@ const { COMMAND_DYNAMIC_CREATE,
 const Transaction = require("../../depends/transaction");
 const { getAccountInfo, sendTransaction } = require("../../toolkit/profile/utils");
 const { randomBytes } = require("crypto");
+const fs = require("fs");
+const path = require("path");
 
 const Buffer = utils.Buffer;
 const intToBuffer = utils.intToBuffer;
 const rlp = utils.rlp;
 const BN = utils.BN;
-
-
 
 const url = "http://localhost:8081";
 
@@ -25,8 +25,10 @@ const codeAccountAddress = randomBytes(20);
 console.info(`toAccountAddress: ${toAccountAddress.toString('hex')}`);
 console.info(`codeAccountAddress: ${codeAccountAddress.toString('hex')}`);
 
-// todo
-const gambleCode = undefined;
+
+const gambleCode = fs.readFileSync(path.join(__dirname, "./gamble.js"), {
+  encoding: 'utf8'
+});
 
 tape('testing dynamic constract opt', function (tester) {
   
