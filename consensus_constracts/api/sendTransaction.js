@@ -55,7 +55,7 @@ class SendTransaction
       return;
     }
 
-    if (new BN(fromAccount.value).lt(new BN(value)))
+    if (new BN(fromAccount.balance).lt(new BN(value)))
     {
       return;
     }

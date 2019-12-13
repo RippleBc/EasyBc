@@ -108,10 +108,10 @@ class Constract {
             //
             this.state = STATE_FINISH;
 
-            console.log(`run DRAW, reward: ${toAccountBalance.toString('hex')}, from: ${from.toString('hex')}, maxRandomNum: ${this.maxRandomNum.toString('hex')}`);
+            console.log(`run DRAW, reward: ${toAccountBalance.toString('hex')}, from: ${fetchAddressFromKey(key).toString('hex')}, maxRandomNum: ${this.maxRandomNum.toString('hex')}`);
 
             //
-            sendTransaction(tx.to, from, toAccountBalance);
+            sendTransaction(tx.to, fetchAddressFromKey(key), toAccountBalance);
 
             return;
           }

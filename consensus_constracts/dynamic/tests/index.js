@@ -16,15 +16,11 @@ const BN = utils.BN;
 const url = "http://localhost:8081";
 
 const fromAccountKeyPair = {
-  privateKey: "9d6ae99d516fec86d7c922d2b3b455205b25cc65d2467d8ecbc47d513cba3841",
-  address: "14f8d8e6e23fecd75b4145a4b71a40ba4c9e7739"
+  privateKey: "ed09a7280c5a0d3c04839ca5603fe507b4d1d4572601e62aadafd923f55f7bf9",
+  address: "21d21b68ded27ce2ef619651d382892c1f77baa4"
 }
 const toAccountAddress = randomBytes(20);
 const codeAccountAddress = randomBytes(20);
-
-console.info(`toAccountAddress: ${toAccountAddress.toString('hex')}`);
-console.info(`codeAccountAddress: ${codeAccountAddress.toString('hex')}`);
-
 
 const gambleCode = fs.readFileSync(path.join(__dirname, "./gamble.js"), {
   encoding: 'utf8'
@@ -39,6 +35,7 @@ tape('testing dynamic constract opt', function (tester) {
 
     (async () => {
       fromAccount = await getAccountInfo(url, fromAccountKeyPair.address)
+      console.log(`fromBalance: ${fromAccount.balance.toString('hex')}\n\n`)
 
       // construct a tx
       const tx = new Transaction({
@@ -59,6 +56,32 @@ tape('testing dynamic constract opt', function (tester) {
     }).catch(e => {
       t.error(e);
     })    
+  });
+
+  it('check', t => {
+    (async () => {
+      await new Promise(resolve => {
+        setTimeout(() => {
+          resolve();
+        }, 2000);
+      });
+
+      const toAccount = await getAccountInfo(url, toAccountAddress.toString('hex'));
+
+      const [, args] = rlp.decode(toAccount.data);
+
+      console.log(`state: ${args[0].toString('hex')}, beginTime: ${args[1].toString('hex')}, maxRandomNum: ${args[3].toString('hex')}`);
+      console.log('gambleResult: ')
+      for (let [key, value] of args[2]) {
+        console.log(`address: ${key.slice(0, 20).toString('hex')}, nonce: ${key.slice(20).toString('hex')}, dice: ${value.toString('hex')}`);
+      }
+
+      console.log();
+    })().then(() => {
+      t.end();
+    }).catch(e => {
+      t.error(e);
+    })
   });
 
   it('bet 100', function (t) {
@@ -84,6 +107,33 @@ tape('testing dynamic constract opt', function (tester) {
     })    
   })
 
+  it('check 100', t => {
+    (async () => {
+      await new Promise(resolve => {
+        setTimeout(() => {
+          resolve();
+        }, 2000);
+      });
+
+      const toAccount = await getAccountInfo(url, toAccountAddress.toString('hex'));
+
+      const [, args] = rlp.decode(toAccount.data);
+
+      console.log(`state: ${args[0].toString('hex')}, beginTime: ${args[1].toString('hex')}, maxRandomNum: ${args[3].toString('hex')}`);
+      console.log('gambleResult: ')
+      for (let [key, value] of args[2])
+      {
+        console.log(`address: ${key.slice(0, 20).toString('hex')}, nonce: ${key.slice(20).toString('hex')}, dice: ${value.toString('hex')}`);
+      }
+
+      console.log();
+    })().then(() => {
+      t.end();
+    }).catch(e => {
+      t.error(e);
+    })  
+  });
+
   it('bet 200', function (t) {
     (async () => {
       // construct a tx
@@ -107,14 +157,40 @@ tape('testing dynamic constract opt', function (tester) {
     });
   })
 
+  it('check 200', t => {
+    (async () => {
+      await new Promise(resolve => {
+        setTimeout(() => {
+          resolve();
+        }, 2000);
+      });
+
+      const toAccount = await getAccountInfo(url, toAccountAddress.toString('hex'));
+
+      const [, args] = rlp.decode(toAccount.data);
+
+      console.log(`state: ${args[0].toString('hex')}, beginTime: ${args[1].toString('hex')}, maxRandomNum: ${args[3].toString('hex')}`);
+      console.log('gambleResult: ')
+      for (let [key, value] of args[2]) {
+        console.log(`address: ${key.slice(0, 20).toString('hex')}, nonce: ${key.slice(20).toString('hex')}, dice: ${value.toString('hex')}`);
+      }
+
+      console.log();
+    })().then(() => {
+      t.end();
+    }).catch(e => {
+      t.error(e);
+    })
+  });
+
   it('draw', function (t) {
     (async () => {
 
       await new Promise(resolve => {
         setTimeout(() => {
           resolve();
-        }, 8000);
-      })
+        }, 2000);
+      });
 
       // construct a tx
       const tx = new Transaction({
@@ -136,4 +212,33 @@ tape('testing dynamic constract opt', function (tester) {
       t.error(e);
     });
   })
+
+  it('check draw', t => {
+    (async () => {
+      await new Promise(resolve => {
+        setTimeout(() => {
+          resolve();
+        }, 2000);
+      });
+
+      const toAccount = await getAccountInfo(url, toAccountAddress.toString('hex'));
+
+      const [, args] = rlp.decode(toAccount.data);
+
+      console.log(`state: ${args[0].toString('hex')}, beginTime: ${args[1].toString('hex')}, maxRandomNum: ${args[3].toString('hex')}`);
+      console.log('gambleResult: ')
+      for (let [key, value] of args[2]) {
+        console.log(`address: ${key.slice(0, 20).toString('hex')}, nonce: ${key.slice(20).toString('hex')}, dice: ${value.toString('hex')}`);
+      }
+
+      console.log();
+
+      const fromAccount = await getAccountInfo(url, fromAccountKeyPair.address)
+      console.log(`fromBalance: ${fromAccount.balance.toString('hex')}\n\n`)
+    })().then(() => {
+      t.end();
+    }).catch(e => {
+      t.error(e);
+    })
+  });
 })
