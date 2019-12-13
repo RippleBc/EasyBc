@@ -108,10 +108,8 @@ class Constract {
             //
             this.state = STATE_FINISH;
 
-            console.log(`run DRAW, reward: ${toAccountBalance.toString('hex')}, from: ${fetchAddressFromKey(key).toString('hex')}, maxRandomNum: ${this.maxRandomNum.toString('hex')}`);
-
             //
-            sendTransaction(tx.to, fetchAddressFromKey(key), toAccountBalance);
+            await sendTransaction(tx.to, fetchAddressFromKey(key), toAccountBalance);
 
             return;
           }
@@ -139,8 +137,6 @@ class Constract {
           if (new BN(this.maxRandomNum).lt(new BN(dice))) {
             this.maxRandomNum = dice;
           }
-
-          console.log(`run BET, dice: ${dice.toString('hex')}, from: ${from.toString('hex')}, maxRandomNum: ${this.maxRandomNum.toString('hex')}`)
         }
         break;
     }

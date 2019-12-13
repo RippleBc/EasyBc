@@ -26,7 +26,7 @@ module.exports = async ({ commands, timestamp, stateManager, receiptManager, mys
   const exitInstance = new ConstractExit();
 
   //
-  const sendTransactionInstance = new ConstractSendTransaction(tx.from, fromAccount, tx.to, toAccount);
+  const sendTransactionInstance = new ConstractSendTransaction(stateManager, [tx.from, fromAccount], [tx.to, toAccount]);
 
   //
   const evaluateCode = `

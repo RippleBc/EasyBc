@@ -1,28 +1,21 @@
 const assert = require("assert");
-const Account = require("../../depends/account");
 const { BN } = require("../../depends/utils");
 
 const accountMapKey = Symbol('accountMap');
+const stateManagerKey = Symbol('stateManager');
 
 class SendTransaction
 {
-  /**
-   * @param {Buffer} fromAddress 
-   * @param {Account} fromAccount 
-   * @param {Buffer} toAddress
-   * @param {Account} toAccount
-   */
-  constructor(fromAddress, fromAccount, toAddress, toAccount)
+  constructor(stateManager, ...args)
   {
-    assert(Buffer.isBuffer(fromAddress), `SendTransaction constructor, fromAddress should be an Buffer, now is ${typeof fromAddress}`);
-    assert(fromAccount instanceof Account, `SendTransaction constructor, fromAccount should be an Account, now is ${typeof fromAccount}`);
-    assert(Buffer.isBuffer(toAddress), `SendTransaction constructor, toAddress should be an Buffer, now is ${typeof toAddress}`);
-    assert(toAccount instanceof Account, `SendTransaction constructor, toAccount should be an Account, now is ${typeof toAccount}`);
 
+    this[stateManagerKey] = stateManager;
     this[accountMapKey] = new Map();
 
-    this[accountMapKey].set(fromAddress.toString('hex'), fromAccount);
-    this[accountMapKey].set(toAddress.toString('hex'), toAccount);
+    for (let [address, account] of args)
+    {
+      this[accountMapKey].set(address.toString('hex'), account);
+    }
   }
 
   /**
@@ -30,7 +23,7 @@ class SendTransaction
    * @param {Buffer} toAddress
    * @param {Buffer} value
    */
-  send(fromAddress, toAddress, value)
+  async send(fromAddress, toAddress, value)
   {
     assert(Buffer.isBuffer(fromAddress), `SendTransaction send, fromAddress should be an Buffer, now is ${typeof fromAddress}`);
     assert(Buffer.isBuffer(toAddress), `SendTransaction send, toAddress should be an Buffer, now is ${typeof toAddress}`);
@@ -43,14 +36,8 @@ class SendTransaction
     }
 
     const fromAccount = this[accountMapKey].get(fromAddress.toString('hex'));
-    const toAccount = this[accountMapKey].get(toAddress.toString('hex'));
 
     if (!fromAccount)
-    {
-      return;
-    }
-
-    if (!toAccount)
     {
       return;
     }
@@ -58,6 +45,12 @@ class SendTransaction
     if (new BN(fromAccount.balance).lt(new BN(value)))
     {
       return;
+    }
+
+    let toAccount = this[accountMapKey].get(toAddress.toString('hex'));
+    if (!toAccount)
+    {
+      toAccount = await this[stateManagerKey].getAccount(toAddress);
     }
 
     fromAccount.balance = new BN(fromAccount.balance).sub(new BN(value)).toBuffer();
