@@ -18,6 +18,7 @@ const {
   TX_TYPE_CREATE_CONSTRACT, 
   TX_TYPE_UPDATE_CONSTRACT, } = require("./constant");
 const ConstractExit = require('./api/exit');
+const ConstractSendTransaction = require("./api/sendTransaction");
 
 const vm = require("vm");
 
@@ -81,6 +82,9 @@ class ContractsManager
       const exitInstance = new ConstractExit();
 
       //
+      const sendTransactionInstance = new ConstractSendTransaction(tx.from, fromAccount, tx.to, toAccount);
+
+      //
       const evaluateCode = `
       ${code}
 
@@ -105,14 +109,15 @@ class ContractsManager
       let raw = [];
 
       vm.runInNewContext(evaluateCode, {
+        console,
         require,
         timestamp,
-        stateManager,
-        receiptManager,
-        mysql,
         tx,
-        fromAccount,
-        toAccount,
+        sendTransaction: sendTransactionInstance.send.bind(sendTransactionInstance),
+        fromAccountNonce: fromAccount.nonce,
+        fromAccountBalance: fromAccount.balance,
+        toAccountNonce: toAccount.nonce,
+        toAccountBalance: toAccount.balance,
         createArgs,
         exit: exitInstance.exit.bind(exitInstance),
         bufferToInt,
@@ -154,6 +159,9 @@ class ContractsManager
       const exitInstance = new ConstractExit();
 
       //
+      const sendTransactionInstance = new ConstractSendTransaction(tx.from, fromAccount, tx.to, toAccount);
+
+      //
       const evaluateCode = `
       const { rlp } = require("../depends/utils");
 
@@ -179,14 +187,15 @@ class ContractsManager
       let raw = [];
 
       vm.runInNewContext(evaluateCode, {
+        console,
         require,
         timestamp,
-        stateManager, 
-        receiptManager,
-        mysql, 
-        tx, 
-        fromAccount, 
-        toAccount,
+        tx,
+        sendTransaction: sendTransactionInstance.send.bind(sendTransactionInstance),
+        fromAccountNonce: fromAccount.nonce,
+        fromAccountBalance: fromAccount.balance,
+        toAccountNonce: toAccount.nonce,
+        toAccountBalance: toAccount.balance,
         constractData,
         commands: commands.slice(1),
         exit: exitInstance.exit.bind(exitInstance),

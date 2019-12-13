@@ -1,7 +1,7 @@
 const { randomBytes } = require("crypto");
 
 const MIN = 100;
-const DURATION = 10 * 60 * 1000;
+const DURATION = 5 * 1000;
 const SERVICE_CHARGE = 500;
 const PARTICIPANT_LIMIT = 500;
 
@@ -10,6 +10,20 @@ const DRAW = 2;
 
 const STATE_PROCESSING = 1;
 const STATE_FINISH = 2;
+
+const generateMapKey = (from) => {
+  // padding nonce to 32 bytes
+  const nonce = Buffer.alloc(32);
+  fromAccountNonce.copy(nonce, 32 - fromAccountNonce.length);
+
+  return Buffer.concat([from, nonce]);
+}
+
+const fetchAddressFromKey = (key) => {
+  let from = key.slice(0, 20);
+
+  return from;
+}
 
 class Constract {
   constructor(state, beginTime, gambleResult, maxRandomNum) {
@@ -26,8 +40,7 @@ class Constract {
 
     // gamble result
     this.gambleResult = new Map();
-    for (let [key, val] of gambleResult)
-    {
+    for (let [key, val] of gambleResult) {
       this.gambleResult.set(key, val);
     }
 
@@ -43,84 +56,102 @@ class Constract {
     this.beginTime = timestamp;
 
     // gamble result
-    this.gambleResult = [];
+    this.gambleResult = new Map();
 
     // maxRandomNum
-    this.maxRandomNum = Buffer.alloc(0);
+    this.maxRandomNum = Buffer.alloc(6);
   }
 
   async run(commandId) {
-
     // check val
-    if (new BN(tx.value).lt(new BN(MIN)))
-    {
+    if (new BN(tx.value).ltn(MIN)) {
       return;
     }
 
     // check state
-    if (this.state === STATE_FINISH)
-    {
+    if (this.state === STATE_FINISH) {
       return;
     }
 
     // check participant limit
-    if (PARTICIPANT_LIMIT >= this.gambleResult.keys().length) 
-    {
+    if (PARTICIPANT_LIMIT <= this.gambleResult.size) {
       return;
     }
 
     //
     const from = tx.from;
 
-    //
-    for (let key of this.gambleResult.keys())
-    {
-      if (key.toString('hex') === from.toString('hex'))
-      {
-
-        // draw command and gamble has expired and dice is biggest and value is gte service charge
-        if (bufferToInt(commandId) === DRAW
-          && new BN(timestamp).subn(this.beginTime).gtn(DURATION)
-          && new BN(this.gambleResult.get(key)).eq(new BN(this.maxRandomNum))
-          && new BN(this.value).gten(SERVICE_CHARGE))
+    switch (bufferToInt(commandId)) {
+      case DRAW:
         {
-          //
-          this.state = STATE_FINISH;
+          // should be expired
+          if (new BN(timestamp).sub(new BN(this.beginTime)).ltn(DURATION)) {
+            return;
+          }
 
-          //
-          fromAccount.balance = new BN(fromAccount.balance).add(new BN(toAccount.balance)).toBuffer();
+          // check service charge
+          if (new BN(tx.value).ltn(SERVICE_CHARGE)) {
+            return;
+          }
 
-          toAccount.balance = 0;
+          for (let key of this.gambleResult.keys()) {
+            //
+            if (fetchAddressFromKey(key).toString('hex') !== from.toString('hex')) {
+              continue;
+            }
+
+            // check dice
+            if (new BN(this.gambleResult.get(key)).lt(new BN(this.maxRandomNum))) {
+              continue;
+            }
+
+            //
+            this.state = STATE_FINISH;
+
+            console.log(`run DRAW, reward: ${toAccountBalance.toString('hex')}, from: ${from.toString('hex')}, maxRandomNum: ${this.maxRandomNum.toString('hex')}`);
+
+            //
+            sendTransaction(tx.to, from, toAccountBalance);
+
+            return;
+          }
         }
+        break;
+      case BET:
+        {
+          // should not expired
+          if (new BN(timestamp).sub(new BN(this.beginTime)).gtn(DURATION)) {
+            return;
+          }
 
-        return;
-      }
-    }
+          // shoud not reach limit
+          if (this.gambleResult.size >= PARTICIPANT_LIMIT) {
+            return;
+          }
 
-    // command is bet and gamble has no expired
-    if (bufferToInt(commandId) === BET
-      && new BN(timestamp).subn(this.beginTime).lten(DURATION)
-      && this.gambleResult.keys().length < PARTICIPANT_LIMIT) {
+          // generate dice
+          const dice = randomBytes(6);
 
-      // generate dice
-      const dice = randomBytes(20)
+          //
+          this.gambleResult.set(generateMapKey(from), dice);
 
-      //
-      this.gambleResult.set(from, dice);
+          //
+          if (new BN(this.maxRandomNum).lt(new BN(dice))) {
+            this.maxRandomNum = dice;
+          }
 
-      if (new BN(this.maxRandomNum).lt(new BN(dice)))
-      {
-        this.maxRandomNum = dice;
-      }
+          console.log(`run BET, dice: ${dice.toString('hex')}, from: ${from.toString('hex')}, maxRandomNum: ${this.maxRandomNum.toString('hex')}`)
+        }
+        break;
     }
   }
 
   serialize() {
-   this.raw = [
-     this.state,
-     this.beginTime,
-     ...this.gambleResult.entries(),
-     this.maxRandomNum
-   ]
+    this.raw = [
+      this.state,
+      this.beginTime,
+      [...this.gambleResult.entries()],
+      this.maxRandomNum
+    ];
   }
 }

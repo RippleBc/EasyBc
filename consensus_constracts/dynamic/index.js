@@ -61,15 +61,15 @@ tape('testing dynamic constract opt', function (tester) {
     })    
   });
 
-  it('update dynamic constract', function (t) {
+  it('bet 100', function (t) {
     (async () => {
       // construct a tx
       const tx = new Transaction({
         to: toAccountAddress,
-        value: 1,
+        value: 100,
         timestamp: Date.now(),
         nonce: new BN(fromAccount.nonce).addn(2).toBuffer(),
-        data: rlp.encode([intToBuffer(COMMAND_DYNAMIC_UPDATE), intToBuffer(1), intToBuffer(2), intToBuffer(3)])
+        data: rlp.encode([intToBuffer(COMMAND_DYNAMIC_UPDATE), intToBuffer(1)])
       });
 
       // sign
@@ -84,15 +84,15 @@ tape('testing dynamic constract opt', function (tester) {
     })    
   })
 
-  it('update dynamic constract', function (t) {
+  it('bet 200', function (t) {
     (async () => {
       // construct a tx
       const tx = new Transaction({
         to: toAccountAddress,
-        value: 1,
+        value: 100,
         timestamp: Date.now(),
         nonce: new BN(fromAccount.nonce).addn(3).toBuffer(),
-        data: rlp.encode([intToBuffer(COMMAND_DYNAMIC_UPDATE), intToBuffer(4), intToBuffer(5), intToBuffer(6)])
+        data: rlp.encode([intToBuffer(COMMAND_DYNAMIC_UPDATE), intToBuffer(1)])
       });
 
       // sign
@@ -104,6 +104,36 @@ tape('testing dynamic constract opt', function (tester) {
       t.end();
     }).catch(e => {
       t.error(e);
-    })
+    });
+  })
+
+  it('draw', function (t) {
+    (async () => {
+
+      await new Promise(resolve => {
+        setTimeout(() => {
+          resolve();
+        }, 8000);
+      })
+
+      // construct a tx
+      const tx = new Transaction({
+        to: toAccountAddress,
+        value: 500,
+        timestamp: Date.now(),
+        nonce: new BN(fromAccount.nonce).addn(4).toBuffer(),
+        data: rlp.encode([intToBuffer(COMMAND_DYNAMIC_UPDATE), intToBuffer(2)])
+      });
+
+      // sign
+      tx.sign(Buffer.from(fromAccountKeyPair.privateKey, 'hex'));
+
+      //
+      await sendTransaction(url, tx.serialize().toString('hex'));
+    })().then(() => {
+      t.end();
+    }).catch(e => {
+      t.error(e);
+    });
   })
 })
