@@ -17,8 +17,8 @@ const {
   TX_TYPE_TRANSACTION, 
   TX_TYPE_CREATE_CONSTRACT, 
   TX_TYPE_UPDATE_CONSTRACT, } = require("./constant");
-const ConstractExit = require('./api/exit');
-const ConstractSendTransaction = require("./api/sendTransaction");
+const createDynamicConstract = require('./dynamic/create');
+const updateDynamicConstract = require("./dynamic/update");
 
 const vm = require("vm");
 
@@ -61,80 +61,16 @@ class ContractsManager
     //
     if (commandId === COMMAND_DYNAMIC_CREATE) {
 
-      const [codeAccountAddress, code, ...createArgs] = commands.slice(1);
-
-      // fetch a code account
-      const codeAccount = await stateManager.getAccount(codeAccountAddress);
-
-      //
-      if (!codeAccount.isEmpty())
-      {
-        await Promise.reject(`ContractsManager run, create a dynamic constract, codeAccount should be emtpy`);
-      }
-
-      //
-      codeAccount.data = code;
-
-      // save code account
-      await stateManager.putAccount(codeAccountAddress, codeAccount.serialize());
-
-      // init
-      const exitInstance = new ConstractExit();
-
-      //
-      const sendTransactionInstance = new ConstractSendTransaction(tx.from, fromAccount, tx.to, toAccount);
-
-      //
-      const evaluateCode = `
-      ${code}
-
-      const constract = new Constract();
-
-      constract.create(...createArgs).then(() => {
-        
-        constract.serialize();
-
-        for(let el of constract.raw)
-        {
-          raw.push(el);
-        }
-        
-        exit();
-      }).catch(e => {
-        exit(e);
-      });
-      `;
-
-      //
-      let raw = [];
-
-      vm.runInNewContext(evaluateCode, {
-        console,
-        require,
-        timestamp,
-        tx,
-        sendTransaction: sendTransactionInstance.send.bind(sendTransactionInstance),
-        fromAccountNonce: fromAccount.nonce,
-        fromAccountBalance: fromAccount.balance,
-        toAccountNonce: toAccount.nonce,
-        toAccountBalance: toAccount.balance,
-        createArgs,
-        exit: exitInstance.exit.bind(exitInstance),
-        bufferToInt,
-        toBufer: utils.toBuffer,
-        BN: utils.BN,
-        Buffer,
-        raw,
-      }, {
-        displayErrors: true,
-        timeout: 2000
-      });
-
-      //
-      await exitInstance.updateContractData();
-
-      //
-      toAccount.data = rlp.encode([codeAccountAddress, raw]);
+      await createDynamicConstract({ 
+        commands: commands.slice(1),
+        timestamp, 
+        stateManager, 
+        receiptManager, 
+        mysql, 
+        tx, 
+        fromAccount, 
+        toAccount,
+       })
 
       return;
     }
@@ -142,78 +78,16 @@ class ContractsManager
     //
     if (commandId === COMMAND_DYNAMIC_UPDATE)
     {
-      // fetch code address and basic data
-      let [codeAccountAddress, constractData] = rlp.decode(toAccount.data);
-
-      // fetch code
-      const codeAccount = await stateManager.getAccount(codeAccountAddress);
-      if (codeAccount.isEmpty())
-      {
-        await Promise.reject(`ContractsManager run, codeAccount ${codeAccountAddress.toString('hex')} is empty`);
-      }
-
-      //
-      let code = codeAccount.data.toString();
-
-      // 
-      const exitInstance = new ConstractExit();
-
-      //
-      const sendTransactionInstance = new ConstractSendTransaction(tx.from, fromAccount, tx.to, toAccount);
-
-      //
-      const evaluateCode = `
-      const { rlp } = require("../depends/utils");
-
-      ${code}
-
-      const constract = new Constract(...constractData);
-
-      constract.run(...commands).then(() => {
-        constract.serialize();
-
-        for(let el of constract.raw)
-        {
-          raw.push(el);
-        }
-        
-        exit();
-      }).catch(e => {
-        exit(e);
-      });
-      `;
-
-      //
-      let raw = [];
-
-      vm.runInNewContext(evaluateCode, {
-        console,
-        require,
-        timestamp,
-        tx,
-        sendTransaction: sendTransactionInstance.send.bind(sendTransactionInstance),
-        fromAccountNonce: fromAccount.nonce,
-        fromAccountBalance: fromAccount.balance,
-        toAccountNonce: toAccount.nonce,
-        toAccountBalance: toAccount.balance,
-        constractData,
+      await updateDynamicConstract({
         commands: commands.slice(1),
-        exit: exitInstance.exit.bind(exitInstance),
-        bufferToInt,
-        toBufer: utils.toBuffer,
-        BN: utils.BN,
-        Buffer,
-        raw,
-      }, {
-        displayErrors: true,
-        timeout: 2000
-      });
-
-      //
-      await exitInstance.updateContractData();
-
-      //
-      toAccount.data = rlp.encode([codeAccountAddress, raw]);
+        timestamp,
+        stateManager,
+        receiptManager,
+        mysql,
+        tx,
+        fromAccount,
+        toAccount,
+      })
 
       return;
     }

@@ -1,9 +1,9 @@
 const tape = require('tape');
-const utils = require("../../depends/utils");
+const utils = require("../../../depends/utils");
 const { COMMAND_DYNAMIC_CREATE,
-  COMMAND_DYNAMIC_UPDATE } = require("../constant");
-const Transaction = require("../../depends/transaction");
-const { getAccountInfo, sendTransaction } = require("../../toolkit/profile/utils");
+  COMMAND_DYNAMIC_UPDATE } = require("../../constant");
+const Transaction = require("../../../depends/transaction");
+const { getAccountInfo, sendTransaction } = require("../../../toolkit/profile/utils");
 const { randomBytes } = require("crypto");
 const fs = require("fs");
 const path = require("path");

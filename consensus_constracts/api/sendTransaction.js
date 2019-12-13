@@ -1,11 +1,8 @@
 const assert = require("assert");
 const Account = require("../../depends/account");
+const { BN } = require("../../depends/utils");
 
-const fromAccountKey = Symbol('fromAccount');
-const toAccountKey = Symbol('toAccount');
-
-const fromAddressKey = Symbol('fromAddress');
-const toAddressKey = Symbol('toAddress');
+const accountMapKey = Symbol('accountMap');
 
 class SendTransaction
 {
@@ -22,38 +19,49 @@ class SendTransaction
     assert(Buffer.isBuffer(toAddress), `SendTransaction constructor, toAddress should be an Buffer, now is ${typeof toAddress}`);
     assert(toAccount instanceof Account, `SendTransaction constructor, toAccount should be an Account, now is ${typeof toAccount}`);
 
-    this[fromAddressKey] = fromAddress;
-    this[fromAccountKey] = fromAccount;
+    this[accountMapKey] = new Map();
 
-    this[toAddressKey] = toAddress;
-    this[toAccountKey] = toAccount;
+    this[accountMapKey].set(fromAddress.toString('hex'), fromAccount);
+    this[accountMapKey].set(toAddress.toString('hex'), toAccount);
   }
 
   /**
    * @param {Buffer} fromAddress 
    * @param {Buffer} toAddress
+   * @param {Buffer} value
    */
-  send(fromAddress, toAddress)
+  send(fromAddress, toAddress, value)
   {
     assert(Buffer.isBuffer(fromAddress), `SendTransaction send, fromAddress should be an Buffer, now is ${typeof fromAddress}`);
     assert(Buffer.isBuffer(toAddress), `SendTransaction send, toAddress should be an Buffer, now is ${typeof toAddress}`);
-    
+    assert(Buffer.isBuffer(value), `SendTransaction send, value should be an Buffer, now is ${typeof value}`);
+
     //
     if(fromAddress.toString('hex') === toAddress.toString('hex'))
     {
       return;
     }
 
-    if (this[fromAddressKey].toString('hex') !== fromAddress.toString('hex')
-      && this[toAddressKey].toString('hex') !== fromAddress.toString('hex'))
-      {
-        return;
-      }
+    const fromAccount = this[accountMapKey].get(fromAddress.toString('hex'));
+    const toAccount = this[accountMapKey].get(toAddress.toString('hex'));
 
-    if (this[fromAddressKey].toString('hex') !== toAddress.toString('hex')
-      && this[toAddressKey].toString('hex') !== toAddress.toString('hex')) {
+    if (!fromAccount)
+    {
       return;
     }
+
+    if (!toAccount)
+    {
+      return;
+    }
+
+    if (new BN(fromAccount.value).lt(new BN(value)))
+    {
+      return;
+    }
+
+    fromAccount.balance = new BN(fromAccount.balance).sub(new BN(value)).toBuffer();
+    toAccount.balance = new BN(toAccount.balance).add(new BN(value)).toBuffer();
   }
 }
 
