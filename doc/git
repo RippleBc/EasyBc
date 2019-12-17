@@ -5,3 +5,14 @@ git config --global http.postBuffer 524288000
 
 # 只拉取最近一次commit的内容
 git pull --depth=1
+
+# 看到fileName相关的commit记录
+git log filename
+
+# 显示每次提交的diff
+git log -p filenam
+
+# 只看某次提交中的某个文件变化，可以直接加上fileName
+git show c5e69804bbd9725b5dece57f8cbece4a96b9f80b filename
+
+
