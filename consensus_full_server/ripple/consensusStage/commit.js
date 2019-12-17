@@ -11,14 +11,13 @@ const { STAGE_COMMIT,
 
 const Buffer = utils.Buffer;
 
-const unlManager = process[Symbol.for("unlManager")];
 const p2p = process[Symbol.for("p2p")];
 const logger = process[Symbol.for("loggerConsensus")];
 const privateKey = process[Symbol.for("privateKey")];
 
 class Commit extends ConsensusStage {
   constructor(ripple) {
-    super({ name: 'commit', expiration: STAGE_COMMIT_EXPIRATION, threshould: parseInt(unlManager.unlFullSize / 3 + 1) })
+    super({ name: 'commit', expiration: STAGE_COMMIT_EXPIRATION})
 
     this.ripple = ripple;
   }
@@ -63,7 +62,7 @@ class Commit extends ConsensusStage {
     if (code === STAGE_FINISH_SUCCESS) {
       assert(candidateDigest instanceof CandidateDigest, `Commit handler, data should be an instanceof CandidateDigest, now is ${typeof candidateDigest}`);
 
-      this.ripple.consensusCandidateDigest = new CandidateDigest({
+      this.ripple.decidedCandidateDigest = new CandidateDigest({
         sequence: candidateDigest.sequence,
         blockHash: candidateDigest.blockHash,
         number: candidateDigest.number,
@@ -71,14 +70,14 @@ class Commit extends ConsensusStage {
         view: candidateDigest.view,
         digest: candidateDigest.digest,
       });
-      this.ripple.consensusCandidateDigest.sign(privateKey);
+      this.ripple.decidedCandidateDigest.sign(privateKey);
     }
     else {
       logger.info(`Commit handler, failed because of ${code}`);
     }
 
     //
-    if (!this.ripple.consensusCandidateDigest)
+    if (!this.ripple.decidedCandidateDigest)
     {
       logger.error("Commit handler, candidateDigest consensus failed, enter to view change state");
 
@@ -88,10 +87,10 @@ class Commit extends ConsensusStage {
     }
 
     //
-    if (this.ripple.hash.toString('hex') !== this.ripple.consensusCandidateDigest.blockHash.toString('hex')
-      || this.ripple.number.toString('hex') !== this.ripple.consensusCandidateDigest.number.toString('hex'))
+    if (this.ripple.hash.toString('hex') !== this.ripple.decidedCandidateDigest.blockHash.toString('hex')
+      || this.ripple.number.toString('hex') !== this.ripple.decidedCandidateDigest.number.toString('hex'))
     {
-      logger.error(`Commit handler, candidateDigest consensus success, hash, number should be ${this.ripple.hash.toString('hex')}, ${this.ripple.number.toString('hex')}, now is ${this.ripple.consensusCandidateDigest.blockHash.toString('hex')}, ${this.ripple.consensusCandidateDigest.number.toString('hex')}}, enter to view change state`);
+      logger.error(`Commit handler, candidateDigest consensus success, hash, number should be ${this.ripple.hash.toString('hex')}, ${this.ripple.number.toString('hex')}, now is ${this.ripple.decidedCandidateDigest.blockHash.toString('hex')}, ${this.ripple.decidedCandidateDigest.number.toString('hex')}}, enter to view change state`);
 
       this.ripple.viewChangeForConsensusFail.run();
 
@@ -99,7 +98,7 @@ class Commit extends ConsensusStage {
     }
 
     // fetch consensus candidate
-    if (this.ripple.consensusCandidateDigest.hash(false).toString('hex') !== this.ripple.candidateDigest.hash(false).toString('hex')) {
+    if (this.ripple.decidedCandidateDigest.hash(false).toString('hex') !== this.ripple.candidateDigest.hash(false).toString('hex')) {
       logger.error(`Commit handler, candidateDigest consensus success, invalid candidateDigest, localTransactions hash: ${this.ripple.localTransactions.map(tx => utils.sha256(tx).toString('hex')).join(' ')}`);
       
       this.ripple.fetchConsensusCandidate.run(() => {

@@ -28,4 +28,8 @@ class Constract {
   async run(commandId, ...args) {
     
   }
+
+  serialize() {
+    
+  }
 }

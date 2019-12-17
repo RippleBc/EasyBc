@@ -48,7 +48,7 @@ class FetchConsensusCandidate
     this.handler = handler;
 
     //
-    p2p.sendAll(PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ, this.ripple.consensusCandidateDigest.serialize());
+    p2p.sendAll(PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ, this.ripple.decidedCandidateDigest.serialize());
 
     this.timer = setTimeout(() => {
       logger.warn(`FetchConsensusCandidate run, fetch consensus candidate failed, ${process[Symbol.for("getStackInfo")]()}`);
@@ -157,19 +157,19 @@ class FetchConsensusCandidate
           }
 
           // check transactions digest
-          if (this.ripple.consensusCandidateDigest.digest.toString('hex') !== sha256(candidate.transactions).toString('hex')) {
-            logger.error(`FetchConsensusCandidate handleMessage, txs digest should be ${this.ripple.consensusCandidateDigest.digest.toString('hex')}, now is ${sha256(candidate.transactions).toString('hex')}`);
+          if (this.ripple.decidedCandidateDigest.digest.toString('hex') !== sha256(candidate.transactions).toString('hex')) {
+            logger.error(`FetchConsensusCandidate handleMessage, txs digest should be ${this.ripple.decidedCandidateDigest.digest.toString('hex')}, now is ${sha256(candidate.transactions).toString('hex')}`);
             
             return;
           }
 
           // init candidate
           this.ripple.candidate = new Candidate({
-            sequence: this.ripple.consensusCandidateDigest.sequence,
-            blockHash: this.ripple.consensusCandidateDigest.blockHash,
-            number: this.ripple.consensusCandidateDigest.number,
-            timestamp: this.ripple.consensusCandidateDigest.timestamp,
-            view: this.ripple.consensusCandidateDigest.view,
+            sequence: this.ripple.decidedCandidateDigest.sequence,
+            blockHash: this.ripple.decidedCandidateDigest.blockHash,
+            number: this.ripple.decidedCandidateDigest.number,
+            timestamp: this.ripple.decidedCandidateDigest.timestamp,
+            view: this.ripple.decidedCandidateDigest.view,
             transactions: candidate.transactions
           });
           this.ripple.candidate.sign(privateKey);

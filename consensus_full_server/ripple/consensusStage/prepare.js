@@ -41,11 +41,11 @@ class Prepare extends ConsensusStage
 		//
 		this.ripple.stage = STAGE_PREPARE;
 
-		// broadcast
-		p2p.sendAll(PROTOCOL_CMD_PREPARE, this.ripple.candidateDigest.serialize());
-
 		// begin timer
 		this.startTimer();
+
+		// broadcast
+		p2p.sendAll(PROTOCOL_CMD_PREPARE, this.ripple.candidateDigest.serialize());
 
 		//
 		this.validateAndProcessExchangeData(this.ripple.candidateDigest, process[Symbol.for("address")]);
@@ -78,7 +78,7 @@ class Prepare extends ConsensusStage
 		}
 
 		//
-		this.ripple.commit.run();
+		this.ripple.ready.run();
 	}
 
  	/**

@@ -1,6 +1,7 @@
 const Amalgamate = require("./consensusStage/amalgamate");
 const PrePrepare = require("./consensusStage/prePrepare");
 const Prepare = require("./consensusStage/prepare");
+const Ready = require("./consensusStage/ready");
 const Commit = require("./consensusStage/commit");
 const FetchConsensusCandidate = require("./consensusStage/fetchConsensusCandidate");
 const ViewChangeForConsensusFail = require("./abnormalStage/viewChangeForConsensusFail");
@@ -18,6 +19,7 @@ const { CHEAT_REASON_INVALID_PROTOCOL_CMD,
 	STAGE_AMALGAMATE, 
 	STAGE_PRE_PREPARE, 
 	STAGE_PREPARE, 
+	STAGE_READY,
 	STAGE_COMMIT, 
 	STAGE_FETCH_CANDIDATE, 
 	STAGE_PROCESS_CONSENSUS_CANDIDATE,
@@ -33,6 +35,7 @@ const { CHEAT_REASON_INVALID_PROTOCOL_CMD,
 	PROTOCOL_CMD_PRE_PREPARE_REQ,
 	PROTOCOL_CMD_PRE_PREPARE_RES,
 	PROTOCOL_CMD_PREPARE,
+	PROTOCOL_CMD_READY,
 	PROTOCOL_CMD_COMMIT,
 	PROTOCOL_CMD_CONSENSUS_CANDIDATE_REQ,
 	PROTOCOL_CMD_CONSENSUS_CANDIDATE_RES,
@@ -78,11 +81,13 @@ class Ripple
 		this.candidate = undefined;
 		this.candidateDigest = undefined;
 		this.consensusCandidateDigest = undefined;
+		this.decidedCandidateDigest = undefined;
 
 		//
 		this.amalgamate = new Amalgamate(this);
 		this.prePrepare = new PrePrepare(this);
 		this.prepare = new Prepare(this);
+		this.ready = new Ready(this);
 		this.commit = new Commit(this);
 		this.fetchConsensusCandidate = new FetchConsensusCandidate(this);
 		this.viewChangeForConsensusFail = new ViewChangeForConsensusFail(this);
@@ -353,6 +358,19 @@ class Ripple
 							}
 						}
 						break;
+					case STAGE_READY:
+						{
+							const msg = this.fetchMsgWithSequence({
+								cmd: PROTOCOL_CMD_READY,
+								sequenceMode: SEQUENCE_MODE_MATCH
+							});
+							if (msg) {
+								this.ready.handleMessage(msg.address, msg.cmd, msg.data);
+
+								continue;
+							}
+						}
+						break;
 					case STAGE_COMMIT:
 						{
 							const msg = this.fetchMsgWithSequence({
@@ -425,11 +443,13 @@ class Ripple
 		this.candidate = undefined;
 		this.candidateDigest = undefined;
 		this.consensusCandidateDigest = undefined;
+		this.decidedCandidateDigest = undefined;
 
 		//
 		this.amalgamate.reset();
 		this.prePrepare.reset();
 		this.prepare.reset();
+		this.ready.reset();
 		this.commit.reset();
 		this.fetchConsensusCandidate.reset();
 		this.viewChangeForConsensusFail.reset();

@@ -85,7 +85,7 @@ class ViewChangeForConsensusFail extends ConsensusStage {
     {
       logger.info(`ViewChangeForConsensusFail handler, failed because of ${code}`);
 
-      if (this.ripple.consensusCandidateDigest)
+      if (this.ripple.decidedCandidateDigest)
       {
         // consensus success
         // hash, number check failed(out of date)

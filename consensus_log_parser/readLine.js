@@ -1,6 +1,7 @@
 const assert = require("assert");
 const stream = require('stream');
 const log4js= require("./logConfig");
+const os = require('os');
 
 const READ_SIZE = 1000;
 
@@ -93,6 +94,10 @@ const getLineAndRemain = content => {
 			remain: content.substring(newLineIndex + os.EOL.length)
 		};
 	}
+
+	return {
+
+	};
 }
 
 module.exports = {
