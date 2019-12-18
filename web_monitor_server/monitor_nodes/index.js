@@ -8,7 +8,7 @@ const { Node } = process[Symbol.for('models')]
 const logger = process[Symbol.for('logger')];
 const printErrorStack = process[Symbol.for("printErrorStack")]
 
-const checkProcessExcept = new CheckProcessExcept()
+const checkProcessExcept = process[Symbol.for("checkProcessExcept")] = new CheckProcessExcept();
 
 app.post('/openReportMonitorState', (req, res) => {
   checkProcessExcept.openReportMonitorState().then(() => {
@@ -183,6 +183,15 @@ app.post('/addMonitorNode', (req, res) => {
       });
     }
     
+    //
+    checkProcessExcept.addMonitorNode({
+      name,
+      address,
+      host,
+      port,
+      remarks
+    });
+
     res.json({
       code: SUCCESS
     });
@@ -262,6 +271,9 @@ app.post('/modifyMonitorNode', (req, res) => {
 
     await node.save();
 
+    //
+    checkProcessExcept.modifyMonitorNode(node);
+
 		res.json({
       code: SUCCESS
     });
@@ -302,6 +314,9 @@ app.post('/deleteMonitorNode', (req, res) => {
     }
 
     await node.destroy();
+
+    //
+    checkProcessExcept.deleteMonitorNode(node);
 
 		res.json({
       code: SUCCESS
