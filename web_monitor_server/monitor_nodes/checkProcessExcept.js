@@ -381,7 +381,7 @@ class CheckAllProcessExcept
     assert(typeof name === 'string', `CheckAllProcessExcept addMonitorNode, name should be a String, now is ${typeof name}`);
     assert(typeof address === 'string', `CheckAllProcessExcept addMonitorNode, address should be a String, now is ${typeof address}`);
     assert(typeof host === 'string', `CheckAllProcessExcept addMonitorNode, host should be a String, now is ${typeof host}`);
-    assert(typeof port === 'number', `CheckAllProcessExcept addMonitorNode, port should be a Number, now is ${typeof port}`);
+    assert(typeof port === 'string', `CheckAllProcessExcept addMonitorNode, port should be a String, now is ${typeof port}`);
     assert(typeof remarks === 'string', `CheckAllProcessExcept addMonitorNode, remarks should be a String, now is ${typeof remarks}`);
 
     //
@@ -406,7 +406,7 @@ class CheckAllProcessExcept
     assert(typeof name === 'string', `CheckAllProcessExcept modifyMonitorNode, name should be a String, now is ${typeof name}`);
     assert(typeof address === 'string', `CheckAllProcessExcept modifyMonitorNode, address should be a String, now is ${typeof address}`);
     assert(typeof host === 'string', `CheckAllProcessExcept modifyMonitorNode, host should be a String, now is ${typeof host}`);
-    assert(typeof port === 'number', `CheckAllProcessExcept modifyMonitorNode, port should be a Number, now is ${typeof port}`);
+    assert(typeof port === 'string', `CheckAllProcessExcept modifyMonitorNode, port should be a String, now is ${typeof port}`);
     assert(typeof remarks === 'string', `CheckAllProcessExcept modifyMonitorNode, remarks should be a String, now is ${typeof remarks}`);
 
     // delete
@@ -435,7 +435,7 @@ class CheckAllProcessExcept
     assert(typeof name === 'string', `CheckAllProcessExcept deleteMonitorNode, name should be a String, now is ${typeof name}`);
     assert(typeof address === 'string', `CheckAllProcessExcept deleteMonitorNode, address should be a String, now is ${typeof address}`);
     assert(typeof host === 'string', `CheckAllProcessExcept deleteMonitorNode, host should be a String, now is ${typeof host}`);
-    assert(typeof port === 'number', `CheckAllProcessExcept deleteMonitorNode, port should be a Number, now is ${typeof port}`);
+    assert(typeof port === 'string', `CheckAllProcessExcept deleteMonitorNode, port should be a String, now is ${typeof port}`);
     assert(typeof remarks === 'string', `CheckAllProcessExcept deleteMonitorNode, remarks should be a String, now is ${typeof remarks}`);
 
     // delete
