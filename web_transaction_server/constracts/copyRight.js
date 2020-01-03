@@ -43,10 +43,24 @@ app.get("/createCopyRightConstract", (req, res) => {
     });
   }
 
+  if (req.query.owner.length !== 40) {
+    return res.send({
+      code: PARAM_ERR,
+      msg: "param error, owner should be 40 hex characters"
+    });
+  }
+
   if (!req.query.contentDigest) {
     return res.send({
       code: PARAM_ERR,
       msg: "param error, need contentDigest"
+    });
+  }
+
+  if (req.query.contentDigest.length !== 64) {
+    return res.send({
+      code: PARAM_ERR,
+      msg: "param error, contentDigest should be 64 hex characters"
     });
   }
 
@@ -161,6 +175,13 @@ app.get("/transferCopyRightConstract", (req, res) => {
     });
   }
 
+  if (req.query.owner.length !== 40) {
+    return res.send({
+      code: PARAM_ERR,
+      msg: "param error, owner should be 40 hex characters"
+    });
+  }
+  
   const data = rlp.encode([
     toBuffer(COMMAND_TRANSFER),
     Buffer.from(req.query.owner, "hex")]).toString("hex");
