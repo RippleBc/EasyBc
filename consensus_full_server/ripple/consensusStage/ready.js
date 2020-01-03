@@ -67,6 +67,10 @@ class Ready extends ConsensusStage {
       // already have consensusCandidateDigest
       if (this.ripple.consensusCandidateDigest)
       {
+        //
+        this.ripple.commit.run();
+
+        //
         return;
       }
 
