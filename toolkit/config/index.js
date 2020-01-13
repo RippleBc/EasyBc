@@ -18,7 +18,7 @@ module.exports = async (options) => {
     if (options.generatePrivateKey) {
         const keyPair = generateKeyPiar();
         
-        options.privateKey = keyPair.privateKey;
+        options.privateKey = keyPair.privateKey.toString("hex");
 
         var address = keyPair.address;
     }
@@ -29,8 +29,7 @@ module.exports = async (options) => {
 
     if(address)
     {
-        console.warn("!!!!!!!!!!!! please record the node address string, it will be use for authentication by other nodes");
-        console.warn(`node address: ${address.toString('hex')}`);
+        console.warn(`\n\n\n\n!!!!!!!!!!!! please record the node address string, it will be use for authentication by other nodes\nnode address: ${address.toString('hex')}`);
     }
 
     process.exit(1);
