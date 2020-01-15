@@ -25,7 +25,8 @@ module.exports = {
     mongooseInstance = await mongoose.connect(`mongodb://${host}:${port}`, {
       dbName: dbName, 
       user: user,
-      pass: password
+      pass: password,
+      useUnifiedTopology: true,
     });
   },
 
