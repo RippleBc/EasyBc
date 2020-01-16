@@ -24,11 +24,13 @@ db.auth("root", "root")
 
 # grant 副本集权限 to root
 db.grantRolesToUser(
-  {
-    "user" : "root",
-    "pwd" : "root",
-    roles: [ { "role" : "clusterAdmin", "db" : "admin" } ]
-  }
+	"root",
+  [ 
+		{ 
+			"role" : "clusterAdmin", 
+			"db" : "admin" 
+		} 	
+	]
 )
 
 # create account
