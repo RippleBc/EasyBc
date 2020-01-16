@@ -211,6 +211,9 @@ class Ripple
 		// fetch new txs
 		({ transactions: this.localTransactions, deleteTransactions: this.deleteTransactions } = await mysql.getRawTransactions(this.eachRoundMaxFetchTransactionsSize));
 
+		// sync nodes info
+		await this.waitNodesInfoFinished();
+
 		// sync block chain and process state
 		await this.syncProcessState();
 		
@@ -465,6 +468,27 @@ class Ripple
 
 		//
 		this.amalgamate.run();
+	}
+
+	async waitNodesInfoFinished()
+	{
+		do {
+			//
+			if (unlManager.unlFullSize >= process[Symbol.for("nodeIndex")])
+			{
+				break;
+			}
+
+			//
+			logger.warn(`Ripple waitNodesInfoFinished, min nodes size is ${process[Symbol.for("nodeIndex")]}, now is ${unlManager.unlFullSize}`);
+
+			await new Promise(resolve => {
+				setTimeout(() => {
+					resolve();
+				}, 2000);
+			});
+
+		} while (1);
 	}
 
 	async syncProcessState()
