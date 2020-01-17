@@ -54,12 +54,13 @@ process.on("uncaughtException", function(err) {
     process[Symbol.for("unlManager")] = unlManager;
     
     // init private key
-    const { privateKey, index: nodeIndex } = require("../globalConfig.json").blockChain
+    const { privateKey } = require("../globalConfig.json").blockChain;
     process[Symbol.for("privateKey")] = Buffer.from(privateKey, "hex");
     const publicKey = utils.privateToPublic(process[Symbol.for("privateKey")]);
     process[Symbol.for("address")] = utils.publicToAddress(publicKey).toString("hex");
 
     // init node index
+    const { index: nodeIndex } = require("../globalConfig.json");
     process[Symbol.for("nodeIndex")] = nodeIndex;
 
     /************************************** p2p **************************************/

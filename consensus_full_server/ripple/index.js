@@ -474,13 +474,13 @@ class Ripple
 	{
 		do {
 			//
-			if (unlManager.unlFullSize >= process[Symbol.for("nodeIndex")])
+			if (unlManager.unlFullSize >= process[Symbol.for("nodeIndex")] + 1)
 			{
 				break;
 			}
 
 			//
-			logger.warn(`Ripple waitNodesInfoFinished, min nodes size is ${process[Symbol.for("nodeIndex")]}, now is ${unlManager.unlFullSize}`);
+			logger.warn(`Ripple waitNodesInfoFinished, min nodes size is ${process[Symbol.for("nodeIndex")] + 1}, now is ${unlManager.unlFullSize}`);
 
 			await new Promise(resolve => {
 				setTimeout(() => {
