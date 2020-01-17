@@ -7,5 +7,22 @@
 		"port": 3306,
 		"user": "root",
 		"password": "root"
+	},
+	"alarm": {
+		"email": [{
+			"host": "smtp.qq.com",
+			"user": "565828928@qq.com",
+			"pass": "tflhsboubtjxbbfe",
+			"from": "565828928@qq.com",
+			"to": "zsdswalker@163.com"
+			
+		}, {
+			"host": "smtp.163.com",
+			"user": "zsdswalker@163.com",
+			"pass": "123456asdfgh",
+			"from": "zsdswalker@163.com",
+			"to": "565828928@qq.com"
+		}],
+		"mobile": "18605807725"
 	}
 }

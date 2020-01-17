@@ -1,14 +1,20 @@
 const nodemailer = require('nodemailer');
+const emailConfig = require("../config.json").alarm.email;
 
 const logger = process[Symbol.for("logger")];
 
 class EMailAlarm {
-  constructor({ host, user, pass }) {
+  constructor({ host, user, from, to, pass }) {
     this.host = host;
     this.user = user;
-    this.pass = pass;
-    this.clientIsValid = false;
 
+    this.from = from;
+    this.to = to;
+
+    this.pass = pass;
+
+    this.clientIsValid = false;
+    
     this.transporter = nodemailer.createTransport({
       host: host,
       secure: true,
@@ -38,7 +44,7 @@ class EMailAlarm {
     });
   }
 
-  sendMail({ from = '565828928@qq.com', to = 'zsdswalker@163.com', subject = 'Message', text = 'I hope this message gets read!' }) {
+  sendMail({ subject = 'Message', text = 'I hope this message gets read!' }) {
     if (!this.clientIsValid) {
       logger.warn(`${this.host}, ${this.user}, 由于未初始化成功，邮件客户端发送被拒绝`);
 
@@ -46,8 +52,8 @@ class EMailAlarm {
     }
 
     this.transporter.sendMail({
-      from,
-      to,
+      from: this.from,
+      to: this.to,
       subject,
       text
     }, (error, info) => {
@@ -61,51 +67,29 @@ class EMailAlarm {
   }
 }
 
-const qq = new EMailAlarm({
-  host: 'smtp.qq.com',
-  user: "565828928@qq.com",
-  pass: "tflhsboubtjxbbfe"
-});
-
-const w163 = new EMailAlarm({
-  host: 'smtp.163.com',
-  user: 'zsdswalker@163.com',
-  pass: "123456asdfgh"
-});
-
+//
+let emailAlarmInstanceArray = [];
+for(let config of emailConfig)
+{
+  emailAlarmInstanceArray.push(new EMailAlarm(config));
+}
 
 module.exports = ({ subject, text }) => {
   (async () => {
-    while (!w163.clientIsValid) {
-      await new Promise((resolve) => {
-        setTimeout(() => {
-          resolve();
-        }, 1000)
-      })
+    for (let alarmInstance of emailAlarmInstanceArray)
+    {
+      while (!alarmInstance.clientIsValid) {
+        await new Promise((resolve) => {
+          setTimeout(() => {
+            resolve();
+          }, 1000)
+        })
+      }
+
+      alarmInstance.sendMail({
+        subject,
+        text
+      });
     }
-
-    w163.sendMail({
-      from: 'zsdswalker@163.com',
-      to: "565828928@qq.com",
-      subject,
-      text
-    });
-  })();
-
-  (async () => {
-    while (!qq.clientIsValid) {
-      await new Promise((resolve) => {
-        setTimeout(() => {
-          resolve();
-        }, 1000)
-      })
-    }
-
-    qq.sendMail({
-      from: "565828928@qq.com",
-      to: 'zsdswalker@163.com',
-      subject,
-      text
-    })
   })();
 };

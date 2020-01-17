@@ -7,6 +7,8 @@ const logger = process[Symbol.for('logger')];
 const SMS_USERID = "100020";
 const SMS_APIKEY = "bdfd413e43a443b48046e8344b05d7ca";
 
+const { mobile: mobileNumber } = require("../config.json").alarm;
+
 class SMSAlarm {
     constructor() {
 
@@ -16,7 +18,7 @@ class SMSAlarm {
      * @param {String} mobile
      * @param {String} text
      */
-    sendSms({mobile = "18605807725", text}) {
+    sendSms({ mobile = mobileNumber, text}) {
         const ts = Date.now();
         const sign = crypto.createHash('md5').update(`${SMS_USERID}${ts}${SMS_APIKEY}`).digest('hex');
 

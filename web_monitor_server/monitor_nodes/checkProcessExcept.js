@@ -41,7 +41,10 @@ class CheckProcessExcept {
     this.fetchLastestLogsProceeding = false;
   }
 
-  async fetchLastestLogs() {
+  /**
+   * @param {Boolean} init
+   */
+  async fetchLastestLogs({ init = false } = { init: false }) {
     if (this.state === CHECK_PROCESS_EXCEPTION_STATE_CLOSE
       || this.state === CHECK_PROCESS_EXCEPTION_STATE_CHECKED
       || this.state === CHECK_PROCESS_EXCEPTION_STATE_ALARMED) {
@@ -74,6 +77,15 @@ class CheckProcessExcept {
       }));
     }
     catch (e) {
+      // network error
+      if (init) {
+        //
+        this.fetchLastestLogsProceeding = false;
+
+        //
+        return;
+      }
+
       //
       this.exceptLogs.push(`can not connect to ${this.name}, ${this.address}, ${this.host}, ${this.port}, ${this.remarks}`);
 
@@ -221,7 +233,9 @@ class CheckAllProcessExcept
       checkProcessExceptErrorInstance.reset();
 
       //
-      checkProcessExceptErrorInstance.fetchLastestLogs();
+      checkProcessExceptErrorInstance.fetchLastestLogs({
+        init: true
+      });
     }
 
     const checkProcessExceptFatalInstance = this.checkers.get(`${address}-FATAL`);
@@ -236,7 +250,9 @@ class CheckAllProcessExcept
       checkProcessExceptFatalInstance.reset();
 
       //
-      checkProcessExceptFatalInstance.fetchLastestLogs();
+      checkProcessExceptFatalInstance.fetchLastestLogs({
+        init: true
+      });
     }
   }
 
