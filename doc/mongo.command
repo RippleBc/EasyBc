@@ -145,3 +145,47 @@ mongodump --port 4406 -u "blockChain" -p "blockChain" --authenticationDatabase "
 
 
 mongorestore --port 4406 -u "blockChain" -p "blockChain" --authenticationDatabase "admin" -d [blockChain] ./mongoBackup/[blockChain]
+
+/********************************************* 批量部署节点 *********************************************/
+# login
+mongo --port 4406 -u "blockChain" -p "blockChain" --authenticationDatabase "admin"
+
+#
+use blockChain
+
+#
+unls.insert({
+	"address": "",
+	"host": "",
+	"queryPort": ,
+	"p2pPort": ,
+	"state": ,
+	"index": 
+}, {
+	"address": "",
+	"host": "",
+	"queryPort": ,
+	"p2pPort": ,
+	"state": ,
+	"index": 
+});
+
+# example
+db.unls.insert([
+	{
+		"address": "78ecab823675efa71e2edbe26a56b7a0d765dcde",
+		"host": "localhost",
+		"queryPort": 8181,
+		"p2pPort": 9190,
+		"state": 0,
+		"index": 1
+	}, 
+	{
+		"address": "b20e4e1f76c64d8ba70237df08e15dfeb4c5f0f1",
+		"host": "localhost",
+		"queryPort": 8281,
+		"p2pPort": 9190,
+		"state": 0,
+		"index": 2
+	}
+]);
