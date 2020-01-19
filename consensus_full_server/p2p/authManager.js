@@ -36,6 +36,8 @@ class AuthConnectionsManager extends ConnectionsManager {
 
         loggerP2p.error(`AuthConnectionsManager pushConnection, invalid address ${newConnection.address.toString('hex')}`)
         
+        //
+        newConnection.close();
     }
 
     /**
