@@ -189,3 +189,35 @@ db.unls.insert([
 		"index": 2
 	}
 ]);
+
+/********************************************* 创建超级帐号 *********************************************/
+# login
+mongo --port 4406 -u "admin" -p "admin" --authenticationDatabase "admin"
+
+#
+db.createRole({
+	role:'sysadmin',
+	roles:[],
+	privileges:[
+		{
+			resource:{
+				anyResource:true
+			},
+			actions:['anyAction']}
+	]
+})
+
+#
+db.createUser({
+	user:'supreme',
+	pwd:'supreme',
+	roles:[
+		{
+			role:'sysadmin',
+			db:'admin'
+		}
+	]
+})
+
+#
+mongo --port 4406 -u "supreme" -p "supreme" --authenticationDatabase "admin"
