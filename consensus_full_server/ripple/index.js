@@ -211,6 +211,9 @@ class Ripple
 		// fetch new txs
 		({ transactions: this.localTransactions, deleteTransactions: this.deleteTransactions } = await mysql.getRawTransactions(this.eachRoundMaxFetchTransactionsSize));
 
+		// init block chain
+		await this.update.init();
+
 		// sync nodes info
 		await this.waitNodesInfoFinished();
 
@@ -503,7 +506,7 @@ class Ripple
 		this.state = RIPPLE_STATE_FETCH_BLOCK_CHAIN;
 
 		// update block chain
-		await this.update.run();
+		await this.update.synchronize();
 	
 		// init number
 		this.number = this.update.lastestBlockNumber;

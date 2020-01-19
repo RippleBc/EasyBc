@@ -35,19 +35,6 @@ class Update
 		this.lastestBlockHash = undefined;
 	}
 
-	async run()
-	{
-		if(this.state === STATE_RUNNING)
-		{
-			return;
-		}
-
-		this.state = STATE_RUNNING;
-		await this.init();
-		await this.synchronize();
-		this.state = STAGE_STATE_EMPTY;
-	}
-
 	async init()
 	{
 		const blockChain = new BlockChain({
@@ -126,6 +113,14 @@ class Update
 
 	async synchronize()
 	{		
+		//
+		if (this.state === STATE_RUNNING) {
+			return;
+		}
+
+		this.state = STATE_RUNNING;
+
+		//
 		let blockNumberBn = new BN(this.blockChainHeight).addn(1);
 		while(true)
 		{
@@ -217,6 +212,9 @@ class Update
 				break;
 			}
 		}
+
+		//
+		this.state = STAGE_STATE_EMPTY;
 	}
 }
 
