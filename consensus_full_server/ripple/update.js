@@ -89,6 +89,11 @@ class Update
 				process[Symbol.for("gentlyExitProcess")]();
 			}
 
+			// 
+			this.lastestBlockHash = block.hash();
+			this.lastestBlockNumber = block.header.number;
+			
+			//
 			return;
 		}
 
