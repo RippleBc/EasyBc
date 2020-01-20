@@ -27,7 +27,6 @@ class Update
 {
 	constructor()
 	{
-		this.blockChainHeight = undefined;
 		this.blockChain = undefined;
 		this.state = STAGE_STATE_EMPTY;
 
@@ -43,10 +42,10 @@ class Update
 			blockDb: mongo.generateBlockDb()
 		});
 
-		this.blockChainHeight = await blockChain.getBlockChainHeight();
-		if(!this.blockChainHeight)
+		let blockChainHeight = await blockChain.getBlockChainHeight();
+		if(!blockChainHeight)
 		{
-			this.blockChainHeight = Buffer.alloc(0);
+			blockChainHeight = Buffer.alloc(0);
 
 			this.blockChain = new BlockChain({
 				receiptMptDb: mongo.generateReceiptMptDb(),
@@ -97,10 +96,10 @@ class Update
 			return;
 		}
 
-		const lastestBlock = await blockChain.getBlockByNumber(this.blockChainHeight);
+		const lastestBlock = await blockChain.getBlockByNumber(blockChainHeight);
 		if(!lastestBlock)
 		{
-			throw new Error(`Update init, blockChain.getBlockByNumber(${this.blockChainHeight.toString("hex")}) should not return undefined`);
+			throw new Error(`Update init, blockChain.getBlockByNumber(${blockChainHeight.toString("hex")}) should not return undefined`);
 		}
 
 		// 
@@ -126,7 +125,10 @@ class Update
 		this.state = STATE_RUNNING;
 
 		//
-		let blockNumberBn = new BN(this.blockChainHeight).addn(1);
+		let blockChainHeight = await this.blockChain.getBlockChainHeight();
+
+		//
+		let blockNumberBn = new BN(blockChainHeight).addn(1);
 		while(true)
 		{
 			let blocks = new Map();
