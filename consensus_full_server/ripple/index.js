@@ -473,10 +473,10 @@ class Ripple
 		unlManager.flushUnlToMemory().then(() => {
 			this.amalgamate.run();
 		}).catch(e => {
-			loggerConsensus.fatal(`Ripple runNewConsensusRound, throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+			logger.fatal(`Ripple runNewConsensusRound, throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 
 			process[Symbol.for("gentlyExitProcess")]()
-		})
+		});
 	}
 
 	async waitNodesInfoFinished()

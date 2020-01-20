@@ -104,8 +104,25 @@ class FetchProcessState extends ConsensusStage {
       //
       this.reset();
 
-      //
-      this.run();
+      // flush unl info
+      unlManager.flushUnlToMemory().then(() => {
+
+        // check if one node mode
+        if(unlManager.unlFullSize <= 1)
+        {
+          //
+          this.ripple.runNewConsensusRound();
+        }
+        else
+        {
+          // retry
+          this.run();
+        }
+      }).catch(e => {
+        logger.fatal(`FetchProcessState handler, throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+
+        process[Symbol.for("gentlyExitProcess")]()
+      });
     }
   }
 
