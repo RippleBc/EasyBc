@@ -124,8 +124,16 @@ class Update
 
 		this.state = STATE_RUNNING;
 
-		//
+		// init block chain height
 		let blockChainHeight = await this.blockChain.getBlockChainHeight();
+
+		// init lastestBlockHash and lastestBlockNumber
+		const lastestBlock = await this.blockChain.getBlockByNumber(blockChainHeight);
+		if (!lastestBlock) {
+			throw new Error(`Update synchronize, blockChain.getBlockByNumber(${blockChainHeight.toString("hex")}) should not return undefined`);
+		}
+		this.lastestBlockHash = lastestBlock.hash();
+		this.lastestBlockNumber = lastestBlock.header.number;
 
 		//
 		let blockNumberBn = new BN(blockChainHeight).addn(1);

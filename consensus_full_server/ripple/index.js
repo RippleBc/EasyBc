@@ -469,8 +469,14 @@ class Ripple
 		//
 		this.state = RIPPLE_STATE_CONSENSUS;
 
-		//
-		this.amalgamate.run();
+		// flush unl info
+		unlManager.flushUnlToMemory().then(() => {
+			this.amalgamate.run();
+		}).catch(e => {
+			loggerConsensus.fatal(`Ripple runNewConsensusRound, throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
+
+			process[Symbol.for("gentlyExitProcess")]()
+		})
 	}
 
 	async waitNodesInfoFinished()
@@ -853,9 +859,7 @@ class Ripple
 	async updateNodes(nodes) {
 		assert(Array.isArray(nodes), `Ripple updateNodes, nodes should be an Array, now is ${typeof nodes}`)
 
-		await unlManager.updateNodes({
-			nodes: nodes
-		});
+		await unlManager.updateNodes(nodes);
 	}
 
 	/**
