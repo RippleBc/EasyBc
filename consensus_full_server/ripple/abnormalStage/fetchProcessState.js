@@ -91,7 +91,7 @@ class FetchProcessState extends ConsensusStage {
 
         //
         this.ripple.syncProcessState().catch(e => {
-          logger.fatal(`FetchProcessState handler, throw exception, ${e}`);
+          logger.fatal(`FetchProcessState handler, throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 
           process[Symbol.for("gentlyExitProcess")]();
         });

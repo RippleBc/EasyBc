@@ -60,7 +60,7 @@ class FetchConsensusCandidate
       // try to fetch consensus candidate failed
       // try to sync state
       this.ripple.syncProcessState().catch(e => {
-        logger.fatal(`FetchConsensusCandidate run, throw exception, ${e}`);
+        logger.fatal(`FetchConsensusCandidate run, throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
 
         process[Symbol.for("gentlyExitProcess")]();
       });
