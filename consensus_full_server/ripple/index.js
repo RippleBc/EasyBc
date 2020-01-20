@@ -632,7 +632,11 @@ class Ripple
 			{
 				logger.info("Ripple startNewViewForInvalidSequenceTimer, try time threshould is reach");
 
-				this.syncProcessState();
+				this.syncProcessState().catch(e => {
+					logger.fatal(`Ripple startNewViewForInvalidSequenceTimer, throw exception, ${e}`);
+
+					process[Symbol.for("gentlyExitProcess")]();
+				});
 
 				return;
 			}
@@ -668,7 +672,11 @@ class Ripple
 			this.viewChangeForTimeout.run();
 
 			// try to sync state
-			this.syncProcessState();
+			this.syncProcessState().catch(e => {
+				logger.fatal(`Ripple startLeaderTimer, throw exception, ${e}`);
+
+				process[Symbol.for("gentlyExitProcess")]();
+			});
 		}, RIPPLE_LEADER_EXPIRATION);
 	}
 
