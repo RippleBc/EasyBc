@@ -54,9 +54,6 @@ class FetchProcessState extends ConsensusStage {
 
     // begin timer
     this.startTimer();
-
-    //
-    this.validateAndProcessExchangeData(reqCandidate, process[Symbol.for("address")]);
   }
 
   /**
