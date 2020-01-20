@@ -99,6 +99,9 @@ class P2p
 
 		// check connections
 		setInterval(() => {
+			// clear invalid connections
+			this.connectionsManager.clearConnections();
+
 			// try to reconnect other nodes
 			this.reconnectAll();
 

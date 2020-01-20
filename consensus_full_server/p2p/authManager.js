@@ -59,6 +59,16 @@ class AuthConnectionsManager extends ConnectionsManager {
         }
     }
 
+    clearConnections() {
+        for (let connection of this.connections) {
+            if (unlManager.unlNotIncludeSelf.find(node => node.address === connection.address.toString('hex'))) {
+                continue;
+            }
+
+            connection.close();
+        }
+    }
+
 	/**
 	 * @return {Array}
 	 */
