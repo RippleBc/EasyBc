@@ -6,7 +6,7 @@ const { STAGE_STATE_FINISH, STAGE_FINISH_SUCCESS } = require("../constants");
 const unlManager = process[Symbol.for("unlManager")];
 
 class LeaderStage extends Stage {
-  constructor({ name, expiration, threshould = unlManager.unlFullSize}) {
+  constructor({ name, expiration, threshould = () => unlManager.unlFullSize}) {
 
     super({ name, expiration, threshould });
   }
@@ -19,7 +19,7 @@ class LeaderStage extends Stage {
   {
     assert(candidate instanceof Base, `${this.name} LeaderStage, candidate should be an instance of Base, now is ${typeof candidate}`);
 
-    if (this.finishedNodes.size >= this.threshould) {
+    if (this.finishedNodes.size >= this.threshould()) {
       this.state = STAGE_STATE_FINISH;
 
       clearTimeout(this.timer);

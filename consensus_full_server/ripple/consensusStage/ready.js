@@ -18,7 +18,7 @@ const unlManager = process[Symbol.for("unlManager")];
 
 class Ready extends ConsensusStage {
   constructor(ripple) {
-    super({ name: 'ready', expiration: STAGE_READY_EXPIRATION, threshould: parseInt(unlManager.unlFullSize / 3 + 1) })
+    super({ name: 'ready', expiration: STAGE_READY_EXPIRATION, threshould: () => parseInt(unlManager.unlFullSize / 3 + 1) })
 
     this.ripple = ripple;
   }

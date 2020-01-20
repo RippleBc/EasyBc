@@ -17,7 +17,7 @@ class ViewChangeForTimeout {
   constructor(ripple) {
     this.ripple = ripple;
 
-    this.threshould = this.ripple.threshould;
+    this.threshould = () => this.ripple.threshould;
 
     this.trimedViewChangesByAddress = new Map();
     this.trimedViewChangesByHash = new Map();
@@ -139,7 +139,7 @@ class ViewChangeForTimeout {
 
           this.trimedViewChangesByHash.set(viewChangeHash, viewChangeByHashDetail); 
 
-          if (viewChangeByHashDetail.count >= this.threshould) {
+          if (viewChangeByHashDetail.count >= this.threshould()) {
             this.consensusViewChange = viewChangeByHashDetail.data;
 
             this.handler();
@@ -163,7 +163,7 @@ class ViewChangeForTimeout {
             count: 1
           });
 
-          if (1 >= this.threshould) {
+          if (1 >= this.threshould()) {
             this.consensusViewChange = viewChange;
 
             this.handler();

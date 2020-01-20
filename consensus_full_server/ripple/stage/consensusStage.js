@@ -11,7 +11,7 @@ class ConsensusStage extends Stage {
     if(!this.threshould)
     {
       process.nextTick(() => {
-        this.threshould = this.ripple.threshould;
+        this.threshould = () => this.ripple.threshould;
       });
     }
 
@@ -43,7 +43,7 @@ class ConsensusStage extends Stage {
     this.trimedCandidates.set(candidateHash, candidateDetail);
 
     // 
-    if (candidateDetail.count >= this.threshould) {
+    if (candidateDetail.count >= this.threshould()) {
       //
       this.state = STAGE_STATE_FINISH;
 
