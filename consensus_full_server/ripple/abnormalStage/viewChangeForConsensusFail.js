@@ -89,16 +89,18 @@ class ViewChangeForConsensusFail extends ConsensusStage {
       {
         // consensus success
         // hash, number check failed(out of date)
-        // try to sync state
+        // try to sync state and block chain
         this.ripple.syncProcessState();
       }
       else
       {
 
         // consensus failed
-        logger.fatal(`ViewChangeForConsensusFail handler, view change consensus failed`);
+        logger.error(`ViewChangeForConsensusFail handler, view change consensus failed`);
 
-        process[Symbol.for("gentlyExitProcess")]();
+        // consensus failed
+        // try to sync state and block chain
+        this.ripple.syncProcessState();
       }
     }
   }
