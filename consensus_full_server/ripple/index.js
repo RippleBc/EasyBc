@@ -491,11 +491,15 @@ class Ripple
 			//
 			logger.warn(`Ripple waitNodesInfoFinished, min nodes size is ${process[Symbol.for("nodeIndex")] + 1}, now is ${unlManager.unlFullSize}`);
 
+			//
 			await new Promise(resolve => {
 				setTimeout(() => {
 					resolve();
 				}, 2000);
 			});
+
+			// refresh unl
+			await unlManager.flushUnlToMemory();
 
 		} while (1);
 	}
