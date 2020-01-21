@@ -8,7 +8,7 @@ module.exports = async function (p2pProxyOpen) {
     // init unl
     const UnlManager = require("../../consensus_full_server/unlManager");
     const unlManager = new UnlManager();
-    await unlManager.init( );
+    await unlManager.flushUnlToMemory( );
 
     //
     let needUpdateMongodb = false;
