@@ -28,9 +28,7 @@ process[Symbol.for("gentlyExitProcess")] = () => {
     process[Symbol.for('processor')].close();
 
     //
-    setTimeout(() => {
-        process.exit(1);   
-    }, 2000);
+    process.exit(1);   
 }
 
 //
