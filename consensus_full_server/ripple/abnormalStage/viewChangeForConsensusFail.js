@@ -102,10 +102,6 @@ class ViewChangeForConsensusFail extends ConsensusStage {
         // consensus failed
         logger.error(`ViewChangeForConsensusFail handler, view change consensus failed`);
 
-        // reset sequence and view
-        this.ripple.sequence = Buffer.alloc(0);
-        this.ripple.view = Buffer.alloc(0);
-
         // try to sync state and block chain
         this.ripple.syncProcessState().catch(e => {
           logger.fatal(`ViewChangeForConsensusFail handler, throw exception, ${process[Symbol.for("getStackInfo")](e)}`);
