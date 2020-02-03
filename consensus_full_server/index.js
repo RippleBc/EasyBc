@@ -8,7 +8,6 @@ process[Symbol.for("loggerP2p")] = log4js.getLogger("p2p");
 process[Symbol.for("loggerNet")] = log4js.getLogger("net");
 process[Symbol.for("loggerMysql")] = log4js.getLogger("mysql");
 process[Symbol.for("loggerUpdate")] = log4js.getLogger("update");
-process[Symbol.for("loggerStageConsensus")] = log4js.getLogger("stageConsensus");
 
 const utils = require("../depends/utils");
 const Mysql = require("./mysql");
