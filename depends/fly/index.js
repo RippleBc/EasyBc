@@ -179,8 +179,12 @@ class Fly {
 				}).catch(errCode => {
 					if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_TIMEOUT) {
 						this.logger.error(`Fly createServer, authorize failed because of timeout, host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
-
-						connection.close();
+						
+						// check if conn had closed by remote end
+						if(!connection.checkIfClosed())
+						{
+							connection.close();
+						}
 					}
 					else if (errCode === AUTHORIZE_FAILED_BECAUSE_OF_OTHER_INVALID_SIGNATURE) {
 						this.logger.error(`Fly createServer, authorize failed because of other invalid signature, me do not trust host: ${socket.remoteAddress}, port: ${socket.remotePort}`)
